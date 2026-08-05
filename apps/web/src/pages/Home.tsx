@@ -88,7 +88,7 @@ export default function Home() {
         transition={spring}
         whileTap={{ scale: 0.98 }}
         onClick={() => navigate('/workout')}
-        className="card-hover fitness-hero mx-4 mt-3 flex w-[calc(100%-2rem)] items-center gap-3 overflow-hidden rounded-2xl px-4 py-3 text-start text-white shadow-sm"
+        className="card-hover fitness-hero relative mx-4 mt-3 flex w-[calc(100%-2rem)] items-center gap-3 overflow-hidden rounded-2xl px-4 py-3 text-start text-white shadow-sm"
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
           <CurlAnim className="h-7 w-7" />

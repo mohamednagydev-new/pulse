@@ -1,64 +1,16 @@
 {
-  "email": "e2e_1785972148017@test.local",
+  "email": "e2e_1785973635041@test.local",
   "findings": [
     {
-      "sev": "FAIL",
-      "step": "onboarding",
-      "msg": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"domcontentloaded\"\u001b[22m\n"
-    },
-    {
-      "sev": "FAIL",
-      "step": "register",
-      "msg": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/register\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/register\", waiting until \"domcontentloaded\"\u001b[22m\n"
-    },
-    {
-      "sev": "FAIL",
-      "step": "tabs",
-      "msg": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/programs\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/programs\", waiting until \"domcontentloaded\"\u001b[22m\n"
-    },
-    {
-      "sev": "FAIL",
-      "step": "quick session",
-      "msg": "page.evaluate: Execution context was destroyed, most likely because of a navigation"
-    },
-    {
-      "sev": "FAIL",
-      "step": "tracker + food log",
-      "msg": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/tracker\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/tracker\", waiting until \"domcontentloaded\"\u001b[22m\n"
-    },
-    {
-      "sev": "FAIL",
-      "step": "meal plan + grocery",
-      "msg": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/meals\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/meals\", waiting until \"domcontentloaded\"\u001b[22m\n"
-    },
-    {
-      "sev": "FAIL",
-      "step": "challenge join PULSE14",
-      "msg": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/achievements\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/achievements\", waiting until \"domcontentloaded\"\u001b[22m\n"
-    },
-    {
-      "sev": "FAIL",
-      "step": "week zero",
-      "msg": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/week-zero\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/week-zero\", waiting until \"domcontentloaded\"\u001b[22m\n"
-    },
-    {
-      "sev": "FAIL",
-      "step": "settings + gyms + help",
-      "msg": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/info\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/info\", waiting until \"domcontentloaded\"\u001b[22m\n"
-    },
-    {
-      "sev": "FAIL",
-      "step": "switch to Arabic",
-      "msg": "page.evaluate: Execution context was destroyed, most likely because of a navigation"
-    },
-    {
-      "sev": "FAIL",
-      "step": "wellness article (SEO + dark shell)",
-      "msg": "page.evaluate: TypeError: Failed to fetch\n    at eval (eval at evaluate (:311:30), <anonymous>:1:20)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+      "sev": "WARN",
+      "step": "join-by-code",
+      "msg": "code input not found on Achievements"
     }
   ],
   "consoleErrors": [
-    "Fetch API cannot load chrome-error://chromewebdata/api/categories?kind=article. URL scheme \"chrome-error\" is not supported."
+    "Failed to load resource: the server responded with a status of 401 ()"
   ],
-  "netFailures": []
+  "netFailures": [
+    "401 POST /api/gamification/challenges/join-code"
+  ]
 }

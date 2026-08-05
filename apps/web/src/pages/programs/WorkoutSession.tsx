@@ -371,7 +371,7 @@ export default function WorkoutSession() {
       ? `${mins} د ${String(secs).padStart(2, '0')} ث`
       : `${mins}m ${String(secs).padStart(2, '0')}s`;
     return (
-      <div className="fitness-hero flex min-h-screen flex-col items-center justify-center px-8 text-center text-white">
+      <div className="fitness-hero relative flex min-h-screen flex-col items-center justify-center px-8 text-center text-white">
         <Confetti />
         <Trophy size={72} className="text-brand-yellow" />
         <h1 className="mt-4 text-3xl font-extrabold">{t('session.complete')}</h1>

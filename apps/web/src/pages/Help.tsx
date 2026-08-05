@@ -458,7 +458,7 @@ function WhyDifferent({ isAr }: { isAr: boolean }) {
       transition={{ type: 'spring', stiffness: 240, damping: 26 }}
       className="overflow-hidden rounded-3xl bg-ink text-white shadow-lg"
     >
-      <div className="fitness-hero px-5 py-4">
+      <div className="fitness-hero relative px-5 py-4">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">
           {isAr ? 'ليه PULSE' : 'Why PULSE'}
         </p>

@@ -52,7 +52,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen">
-      <div className="rounded-b-[40%] fitness-hero pb-12 pt-14 text-center text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3.5rem)' }}>
+      <div className="relative rounded-b-[40%] fitness-hero pb-12 pt-14 text-center text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3.5rem)' }}>
         <div className="text-4xl font-extrabold italic">PULSE</div>
         <div className="mt-1 text-[11px] uppercase tracking-[0.25em] opacity-90">{t('auth.tagline')}</div>
       </div>

@@ -285,8 +285,14 @@ h3 {
 }
 
 /* Energetic blurred fitness backdrop (auth headers, drawer, heroes) */
+/* NOTE: these rules deliberately do NOT set `position`. They are emitted after
+   Tailwind's utilities, so `position: relative` here silently overrode the
+   `absolute` utility on any element combining both — which collapsed the
+   Programs workout/yoga tile backdrops to zero height (the "grey tiles" bug)
+   and mispositioned the drawer panel. Every usage site now carries its own
+   Tailwind positioning class (relative/absolute/sticky/fixed), which the
+   ::before glow anchors to. */
 .fitness-hero {
-  position: relative;
   overflow: hidden;
   isolation: isolate;
   background-color: #14100c;
@@ -315,7 +321,6 @@ h3 {
 .hero-green,
 .hero-teal,
 .hero-violet {
-  position: relative;
   overflow: hidden;
   isolation: isolate;
 }
