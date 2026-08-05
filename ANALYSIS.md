@@ -5,6 +5,21 @@
 
 ---
 
+## ✅ IMPLEMENTATION STATUS (2026-08-05, same day)
+
+The findings below were implemented in three commits (`git log` from the baseline snapshot):
+`d38455b` backend hardening · `b3ead43` frontend core · `f613d09` UX sweep.
+
+**Fixed:** B1–B4, B6–B10, B12–B14 · S1–S4 (rate limits), S6–S11 · U2 (first-run + PushToggle; drawer/Help inline-`isAr` pattern remains), U3, U4, U5 (zoom re-enabled; 14.5px root + gray-400 contrast audit remains), U6, U9 (autoComplete + retry affordances), U10 (code splitting + error boundary + offline banner + scroll restoration) · dark mode: `darkMode:'class'` + pastel-tint coverage + system-follow · schema: hot-path indexes, `JobRun`, dead `GeneratedPlan` dropped · orphans: meal-prefs UI built, push unsubscribe built, `/leaderboard` dead code deleted.
+
+**Verified false positive:** B11 (streak-freeze milestone) — the counter increments by exactly 1 in the freeze branch, so `% 7` milestones cannot be skipped.
+
+**Deliberately not done (decisions/scale, not bugs):** Stripe/monetization (product decision), AI coach chat screen (product decision), cursor pagination beyond caps, ffmpeg job queue, SQLite→Postgres, full `dark:`-variant rewrite, full type-scale/contrast audit, locale-file consolidation of the drawer/Help inline-bilingual pattern.
+
+**Requires manual action:** rotate the Google OAuth client secret (the `client_secret_*.json` at repo root was live; it is now gitignored but should be rotated and moved out of the repo) · optionally set `MEDIA_SIGN_SECRET` in `.env` (falls back to `JWT_ACCESS_SECRET`) · redeploy (deploy/install.ps1 runs `prisma migrate deploy`, which applies the new migration).
+
+---
+
 ## 0. Executive summary
 
 The app is **broad, genuinely functional, and mostly complete**. Every frontend API call resolves to a real backend route (0 broken contracts), locale files are 100% in parity (685 EN / 689 AR keys, 0 missing), and the domain logic (coaching engine, leagues, duels, AI budget, meal planner) is unusually well-reasoned. Most of the July AUDIT.md findings were since fixed.
