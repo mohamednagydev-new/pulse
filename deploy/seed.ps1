@@ -49,6 +49,8 @@ $scripts = @(
   'prisma\seed-videos.ts',               # YouTube lesson links (verified; --clear undoes it)
   'prisma\seed-exercise-videos.ts',      # YouTube exercise demos + woman-led variants
   'prisma\seed-contraindications.ts',    # tag exercises by the joint they load (injury-aware sessions)
+  'prisma\seed-progressions.ts',         # easier/harder ladder between exercises (session progression chips)
+  'prisma\seed-ramadan.ts',              # Ramadan fitness guide pack (bilingual initiative articles)
   'prisma\seed-content-videos.ts',       # recipe videos + article videos (institutional sources only)
   'prisma\seed-recipe-macros.ts',        # per-serving macros + meal slots — the meal planner skips recipes without them
   'prisma\seed-egyptian-recipes.ts',     # 20 Egyptian dishes + the breakfast category the library never had

@@ -3,7 +3,8 @@
 **Date:** 2026-08-05 · Follows the full-scan fixes in [ANALYSIS.md](ANALYSIS.md). Everything here is *forward* work — the bug/security backlog is already done.
 
 > **STATUS (same day):** implemented — 1.1 nightly backups (`VACUUM INTO`, keeps 14, `BACKUP_DIR` env), 1.2 serialized ffmpeg queue, 1.3 client-error telemetry (shows as `client-error` in Admin → Analytics top events), 2.1 milestone auto-share prompts, 2.2 comeback card + `?short=1` session mode, 2.3 rank-ring avatar cosmetics, 2.4 Friday league-cliffhanger push (17:00), 3.2 progression links (`easierId`/`harderId` on Exercise + session chips — fill the links in Admin → Exercises), 3.3 rest-timer education tips, 3.4 daily 2-minute reset card, 3.6 Week Zero on-ramp (`/week-zero`), 3.8 grocery list (API + sheet in Meal Plan).
-> **Still open (human/content work):** 3.1 film the top-20 form videos (pipeline ready — Admin → video import), 3.5 Ramadan program content, 3.7 featured-coach-of-the-week curation habit, 1.4/1.5/1.6 ops items (Postgres trigger-watch, uptime monitor, post-deploy smoke script).
+> **Also seeded (no admin work needed):** 3.2 progression content — `prisma/seed-progressions.ts` links 84 exercises into easier/harder ladders (ran locally; runs on deploy via seed.ps1); 3.5 Ramadan content — `prisma/seed-ramadan.ts` creates the "Ramadan Fitness" wellness category with 5 full bilingual guides (training windows, hydration, suhoor, muscle retention, the 3+1 week).
+> **Still open (genuinely human work):** 3.1 film the top-20 form videos (pipeline ready — Admin → video import), 3.7 featured-coach-of-the-week curation habit, 1.4/1.5/1.6 ops items (Postgres trigger-watch, uptime monitor, post-deploy smoke script).
 
 ---
 
