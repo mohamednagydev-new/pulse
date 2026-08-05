@@ -96,7 +96,14 @@ export default function Community() {
 
       {/* Feed | Reels switcher — Reels opens the full-screen vertical player */}
       <div className="mx-4 -mt-3 mb-3 flex rounded-full glass p-1 text-sm font-bold">
-        <button className="flex-1 rounded-full bg-white py-2 text-ink shadow-sm">Feed</button>
+        {/* Active tab is a solid explicit gradient — white-on-glass was near
+            invisible on light backgrounds (same fix as the Help tab pill). */}
+        <button
+          className="flex-1 rounded-full py-2 text-white shadow-sm"
+          style={{ backgroundImage: 'linear-gradient(135deg,#fb923c,#ea580c)' }}
+        >
+          Feed
+        </button>
         <button onClick={() => navigate('/reels')} className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-gray-500">
           <Clapperboard size={15} /> Reels
         </button>

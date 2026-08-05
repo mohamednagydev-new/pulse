@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Bell, Check, ChevronDown, ChevronLeft, Copy, Download, Gift, HelpCircle, Instagram, LayoutDashboard, LogOut, MessageSquare, RefreshCw, Share2, Unplug, Watch } from 'lucide-react';
+import { Bell, Check, ChevronDown, ChevronLeft, Copy, Download, Gift, Globe, HelpCircle, Instagram, LayoutDashboard, LogOut, MessageSquare, RefreshCw, Share2, SlidersHorizontal, Unplug, Watch, type LucideIcon } from 'lucide-react';
 import { api } from '../lib/api';
 import { toast } from '../lib/toast';
 import { ErrorMsg } from '../components/ui';
@@ -12,12 +12,14 @@ import LanguageToggle from '../components/LanguageToggle';
 import PushToggle from '../components/PushToggle';
 import MenuDrawer from '../components/MenuDrawer';
 import AmbientBg from '../components/AmbientBg';
+import ScreenHeader from '../components/ScreenHeader';
 
 const tapSpring = { type: 'spring', stiffness: 500, damping: 30 } as const;
 
 export default function Info() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
   const logout = useAuth((s) => s.logout);
   const [open, setOpen] = useState<string | null>('settings');
   const { data: me, isLoading: meLoading, isError: meError, refetch } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
@@ -30,34 +32,96 @@ export default function Info() {
   return (
     <div className="relative min-h-screen pb-10">
       <AmbientBg tone="cool" />
-      <header className="flex items-center gap-1 px-4 pt-12 pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
-        {/* Back first — Settings is a detail screen people arrive at from
-            Profile/the drawer and expect to leave the same way. */}
-        <button
-          onClick={() => {
-            const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
-            if (idx > 0) navigate(-1);
-            else navigate('/profile', { replace: true });
-          }}
-          aria-label={t('common.back')}
-          className="flex min-h-11 min-w-11 items-center justify-center"
-        >
-          <ChevronLeft size={26} className="rtl:rotate-180" />
-        </button>
-        <h1 className="mx-auto text-lg font-bold uppercase">{t('info.title')}</h1>
-        <MenuDrawer />
-      </header>
+      {/* Section tone: Settings shares Profile's teal — it is Profile's detail screen. */}
+      <ScreenHeader tone="teal" padBottom="pb-6">
+        <div className="flex items-center justify-between">
+          {/* Back first — Settings is a detail screen people arrive at from
+              Profile/the drawer and expect to leave the same way. */}
+          <button
+            onClick={() => {
+              const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+              if (idx > 0) navigate(-1);
+              else navigate('/profile', { replace: true });
+            }}
+            aria-label={t('common.back')}
+            className="-ms-2 flex min-h-11 min-w-11 items-center justify-center"
+          >
+            <ChevronLeft size={26} className="rtl:rotate-180" />
+          </button>
+          <h1 className="text-lg font-bold uppercase tracking-wide">{t('info.title')}</h1>
+          <MenuDrawer />
+        </div>
+      </ScreenHeader>
 
-      <div className="space-y-3 px-4">
+      <div className="space-y-3 px-4 pt-4">
         {/* The static settings below stay usable even if /api/me fails — this
             banner just surfaces the failure and offers a retry. */}
         {meError && <ErrorMsg onRetry={() => refetch()} />}
 
-        <Accordion id="settings" title={t('info.settings')} open={open} setOpen={setOpen}>
+        <SectionLabel>{t('info.settings')}</SectionLabel>
+
+        <Accordion
+          id="settings"
+          title={t('info.settings')}
+          subtitle={isAr ? 'الإيميل وكلمة السر' : 'Email & password'}
+          icon={SlidersHorizontal}
+          tint="bg-teal-50 text-brand-teal"
+          open={open}
+          setOpen={setOpen}
+        >
           <SettingsForms />
         </Accordion>
 
-        <Accordion id="membership" title={t('info.membership')} open={open} setOpen={setOpen}>
+        <div className="flex min-h-[64px] items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+            <Globe size={20} />
+          </span>
+          <span className="min-w-0 flex-1 font-bold">{t('info.language')} / اللغة</span>
+          <LanguageToggle />
+        </div>
+
+        {/* Wait for /api/me so the pickers open on the saved values instead of
+            rendering defaults and snapping once the response lands. */}
+        {!meLoading && <CountryPicker me={me} />}
+
+        {!meLoading && <ReminderSection me={me} />}
+
+        <SectionLabel>{isAr ? 'التطبيق' : 'App'}</SectionLabel>
+
+        {/* Install — works any time, even after dismissing the auto banner */}
+        {!window.matchMedia('(display-mode: standalone)').matches && (
+          <Row
+            icon={Download}
+            tint="text-white"
+            tintStyle={{ backgroundImage: 'linear-gradient(135deg,#fb923c,#ea580c)' }}
+            title={t('install.title')}
+            subtitle={t('install.desc')}
+            onClick={() => window.dispatchEvent(new CustomEvent('pulse:install-open'))}
+          />
+        )}
+
+        <Row
+          icon={HelpCircle}
+          tint="bg-brand-blue/10 text-brand-blue"
+          title={t('help.title')}
+          subtitle={t('help.intro')}
+          onClick={() => navigate('/help')}
+        />
+
+        <WearablesSection />
+
+        <InviteFriendsCard />
+
+        <SectionLabel>{isAr ? 'تواصل' : 'More'}</SectionLabel>
+
+        <Accordion
+          id="membership"
+          title={t('info.membership')}
+          icon={Gift}
+          tint="bg-green-50 text-brand-green"
+          open={open}
+          setOpen={setOpen}
+        >
           <div className="flex items-center gap-3">
             <span className="text-3xl">🎉</span>
             <div>
@@ -67,57 +131,14 @@ export default function Info() {
           </div>
         </Accordion>
 
-        <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <span className="font-bold">{t('info.language')} / اللغة</span>
-          <LanguageToggle />
-        </div>
-
-        {/* Wait for /api/me so the pickers open on the saved values instead of
-            rendering defaults and snapping once the response lands. */}
-        {!meLoading && <CountryPicker me={me} />}
-
-        <WearablesSection />
-
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          transition={tapSpring}
-          onClick={() => navigate('/help')}
-          className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-start shadow-sm"
+        <Accordion
+          id="support"
+          title={t('info.support')}
+          icon={MessageSquare}
+          tint="bg-blue-50 text-brand-blue"
+          open={open}
+          setOpen={setOpen}
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue/10 text-brand-blue">
-            <HelpCircle size={20} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-bold">{t('help.title')}</span>
-            <span className="block truncate text-xs text-gray-500">{t('help.intro')}</span>
-          </span>
-          <ChevronDown size={18} className="shrink-0 -rotate-90 text-gray-300 rtl:rotate-90" />
-        </motion.button>
-
-        {/* Install — works any time, even after dismissing the auto banner */}
-        {!window.matchMedia('(display-mode: standalone)').matches && (
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            transition={tapSpring}
-            onClick={() => window.dispatchEvent(new CustomEvent('pulse:install-open'))}
-            className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-start shadow-sm"
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundImage: 'linear-gradient(135deg,#fb923c,#ea580c)' }}>
-              <Download size={20} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-bold">{t('install.title')}</span>
-              <span className="block truncate text-xs text-gray-500">{t('install.desc')}</span>
-            </span>
-            <ChevronDown size={18} className="shrink-0 -rotate-90 text-gray-300 rtl:rotate-90" />
-          </motion.button>
-        )}
-
-        <InviteFriendsCard />
-
-        {!meLoading && <ReminderSection me={me} />}
-
-        <Accordion id="support" title={t('info.support')} open={open} setOpen={setOpen}>
           <div className="space-y-3">
             <p className="text-sm text-gray-600">{t('info.supportDesc')}</p>
             <motion.button
@@ -131,21 +152,91 @@ export default function Info() {
           </div>
         </Accordion>
 
-        <a href="https://instagram.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white p-4 font-semibold shadow-sm">
-          <Instagram size={18} /> {t('info.instagram')}
-        </a>
+        <Row
+          icon={Instagram}
+          tint="bg-pink-100 text-brand-pink"
+          title={t('info.instagram')}
+          subtitle={isAr ? 'تابعنا على انستجرام' : 'Follow us on Instagram'}
+          href="https://instagram.com"
+        />
 
         {me?.role === 'ADMIN' && (
-          <motion.button whileTap={{ scale: 0.98 }} transition={tapSpring} onClick={() => navigate('/admin')} className="flex w-full items-center gap-2 rounded-2xl bg-ink p-4 font-semibold text-white shadow-sm">
-            <LayoutDashboard size={18} /> Admin Dashboard
-          </motion.button>
+          <Row
+            icon={LayoutDashboard}
+            tint="bg-ink text-white"
+            title="Admin Dashboard"
+            onClick={() => navigate('/admin')}
+          />
         )}
 
-        <motion.button whileTap={{ scale: 0.98 }} transition={tapSpring} onClick={doLogout} className="flex w-full items-center gap-2 rounded-2xl border border-gray-200 bg-white p-4 font-semibold text-brand-red shadow-sm">
-          <LogOut size={18} /> {t('info.logout')}
-        </motion.button>
+        <Row
+          icon={LogOut}
+          tint="bg-red-50 text-brand-red"
+          title={t('info.logout')}
+          titleClass="text-brand-red"
+          chevron={false}
+          onClick={doLogout}
+        />
       </div>
     </div>
+  );
+}
+
+/** Small uppercase group label — same voice as Profile's "Explore". */
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <p className="px-1 pt-2 text-[11px] font-bold uppercase tracking-wide text-gray-400">{children}</p>;
+}
+
+/**
+ * The one tappable-row anatomy every plain action on this screen uses:
+ * tinted icon tile + bold title + xs gray subtitle + end chevron, on the
+ * house rounded-2xl bg-white shadow-sm card (no borders).
+ */
+function Row({
+  icon: Icon,
+  tint,
+  tintStyle,
+  title,
+  subtitle,
+  titleClass = '',
+  chevron = true,
+  onClick,
+  href,
+}: {
+  icon: LucideIcon;
+  tint: string;
+  tintStyle?: React.CSSProperties;
+  title: string;
+  subtitle?: string;
+  titleClass?: string;
+  chevron?: boolean;
+  onClick?: () => void;
+  href?: string;
+}) {
+  const body = (
+    <>
+      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tint}`} style={tintStyle}>
+        <Icon size={20} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={`block font-bold ${titleClass}`}>{title}</span>
+        {subtitle && <span className="block truncate text-xs text-gray-500">{subtitle}</span>}
+      </span>
+      {chevron && <ChevronDown size={18} className="shrink-0 -rotate-90 text-gray-300 rtl:rotate-90" />}
+    </>
+  );
+  const cls = 'flex min-h-[64px] w-full items-center gap-3 rounded-2xl bg-white p-4 text-start shadow-sm';
+  if (href) {
+    return (
+      <motion.a whileTap={{ scale: 0.98 }} transition={tapSpring} href={href} target="_blank" rel="noreferrer" className={cls}>
+        {body}
+      </motion.a>
+    );
+  }
+  return (
+    <motion.button whileTap={{ scale: 0.98 }} transition={tapSpring} onClick={onClick} className={cls}>
+      {body}
+    </motion.button>
   );
 }
 
@@ -192,7 +283,7 @@ function CountryPicker({ me }: { me: any }) {
   };
 
   return (
-    <div className="space-y-2 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="space-y-2 rounded-2xl bg-white p-4 shadow-sm">
       <label className="flex items-center justify-between gap-3">
         <span className="font-bold">{t('country.title')}</span>
         <select
@@ -246,7 +337,7 @@ function InviteFriendsCard() {
   };
 
   return (
-    <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
       <div className="flex items-center gap-2">
         <Gift size={18} className="text-brand-green" />
         <span className="font-bold">{t('invite.title')}</span>
@@ -303,7 +394,7 @@ function ReminderSection({ me }: { me: any }) {
   };
 
   return (
-    <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
       <div className="flex items-center gap-2">
         <Bell size={18} className="text-brand-green" />
         <span className="font-bold">{t('reminders.title')}</span>
@@ -330,12 +421,20 @@ function ReminderSection({ me }: { me: any }) {
   );
 }
 
-function Accordion({ id, title, open, setOpen, children }: { id: string; title: string; open: string | null; setOpen: (v: string | null) => void; children: React.ReactNode }) {
+function Accordion({ id, title, subtitle, icon: Icon, tint, open, setOpen, children }: { id: string; title: string; subtitle?: string; icon: LucideIcon; tint: string; open: string | null; setOpen: (v: string | null) => void; children: React.ReactNode }) {
   const isOpen = open === id;
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-      <button onClick={() => setOpen(isOpen ? null : id)} className="flex w-full items-center justify-between p-4 font-bold">
-        {title} <ChevronDown className={`transition ${isOpen ? 'rotate-180' : ''}`} />
+    <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+      {/* Same row anatomy as Row, with a rotating chevron instead of a "go" one. */}
+      <button onClick={() => setOpen(isOpen ? null : id)} className="flex min-h-[64px] w-full items-center gap-3 p-4 text-start">
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tint}`}>
+          <Icon size={20} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-bold">{title}</span>
+          {subtitle && <span className="block truncate text-xs text-gray-500">{subtitle}</span>}
+        </span>
+        <ChevronDown size={18} className={`shrink-0 text-gray-300 transition ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && <div className="border-t border-gray-100 p-4">{children}</div>}
     </div>
@@ -436,7 +535,7 @@ function WearablesSection() {
   };
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
           <Watch size={20} />

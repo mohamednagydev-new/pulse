@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRight,
   BadgeCheck,
@@ -310,7 +310,10 @@ export default function Help() {
                 {active && (
                   <motion.span
                     layoutId="help-tab-pill"
-                    className="fitness-hero absolute inset-0 rounded-full shadow-sm"
+                    /* Solid explicit gradient (no ::before/blur tricks): active must
+                       ALWAYS render orange with white text on every GPU/theme. */
+                    className="absolute inset-0 rounded-full shadow-sm"
+                    style={{ backgroundImage: 'linear-gradient(135deg,#fb923c,#ea580c)' }}
                     transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                   />
                 )}
@@ -326,7 +329,7 @@ export default function Help() {
           <>
             <WhyDifferent isAr={isAr} />
             <SectionHead title={t('help.userTitle')} chips={[t('help.free'), t('help.noFees')]} />
-            <CardList items={USER_BENEFITS} pick={pick} tone="orange" />
+            <CardList items={USER_BENEFITS} pick={pick} tone="orange" compact />
           </>
         )}
 
@@ -466,7 +469,7 @@ function WhyDifferent({ isAr }: { isAr: boolean }) {
 
       <ul className="divide-y divide-white/10">
         {DIFFERENCE.map((row) => (
-          <li key={row.usEn} className="px-5 py-3.5">
+          <li key={row.usEn} className="px-5 py-2.5">
             <p className="text-[12px] leading-relaxed text-white/45 line-through decoration-white/25">
               {isAr ? row.themAr : row.themEn}
             </p>
@@ -475,7 +478,7 @@ function WhyDifferent({ isAr }: { isAr: boolean }) {
         ))}
       </ul>
 
-      <p className="border-t border-white/10 px-5 py-3.5 text-[12px] leading-relaxed text-white/60">
+      <p className="border-t border-white/10 px-5 py-2.5 text-[12px] leading-relaxed text-white/60">
         {isAr
           ? 'من غير ستور ومن غير تحميل — دوس «إضافة للشاشة الرئيسية» وهيبقى تطبيق عندك، أصغر من صورة واحدة.'
           : 'No app store, no download — tap "Add to Home Screen" and it becomes an app, smaller than a single photo.'}
@@ -517,36 +520,107 @@ function CardList({
   items,
   pick,
   tone,
+  compact = false,
 }: {
   items: Benefit[];
   pick: (b: Benefit) => string;
   tone: Tone;
+  /** Dense 2-col grid of icon + short title, tap a cell to expand the full
+   *  sentence inline. Used by the long "for you" list; the shorter lists keep
+   *  the classic full-width card style. */
+  compact?: boolean;
 }) {
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  if (!compact) {
+    return (
+      <div className="space-y-2.5">
+        {items.map((item, i) => {
+          const Icon = item.icon;
+          const text = pick(item);
+          const [title, ...rest] = text.split(' — ');
+          return (
+            <motion.div
+              key={`${item.en}-${i}`}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: Math.min(i, 6) * 0.045, type: 'spring', stiffness: 280, damping: 26 }}
+              className="flex items-start gap-3 rounded-2xl bg-white p-3.5 shadow-sm"
+            >
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${TONE_TILE[tone]}`}>
+                <Icon size={20} />
+              </span>
+              <div className="min-w-0 flex-1 text-start">
+                <p className="text-[15px] font-bold leading-snug">{title}</p>
+                {rest.length > 0 && (
+                  <p className="mt-0.5 text-[13px] leading-snug text-gray-500">{rest.join(' — ')}</p>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Compact grid: chunk into rows of two so an expanded cell's detail can
+  // render as a full-width row directly beneath its own grid row.
+  const rows: number[][] = [];
+  for (let i = 0; i < items.length; i += 2) {
+    rows.push(items.length - i > 1 ? [i, i + 1] : [i]);
+  }
+
   return (
-    <div className="space-y-2.5">
-      {items.map((item, i) => {
-        const Icon = item.icon;
-        const text = pick(item);
-        const [title, ...rest] = text.split(' — ');
+    <div className="space-y-2">
+      {rows.map((row) => {
+        const openIdx = expanded !== null && row.includes(expanded) ? expanded : null;
         return (
-          <motion.div
-            key={`${item.en}-${i}`}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ delay: Math.min(i, 6) * 0.045, type: 'spring', stiffness: 280, damping: 26 }}
-            className="flex items-start gap-3 rounded-2xl bg-white p-3.5 shadow-sm"
-          >
-            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${TONE_TILE[tone]}`}>
-              <Icon size={20} />
-            </span>
-            <div className="min-w-0 flex-1 text-start">
-              <p className="text-[15px] font-bold leading-snug">{title}</p>
-              {rest.length > 0 && (
-                <p className="mt-0.5 text-[13px] leading-snug text-gray-500">{rest.join(' — ')}</p>
-              )}
+          <div key={row[0]}>
+            <div className="grid grid-cols-2 gap-2">
+              {row.map((i) => {
+                const item = items[i];
+                const Icon = item.icon;
+                const [title] = pick(item).split(' — ');
+                const isOpen = expanded === i;
+                return (
+                  <motion.button
+                    key={`${item.en}-${i}`}
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ delay: (i % 8) * 0.03, type: 'spring', stiffness: 280, damping: 26 }}
+                    onClick={() => setExpanded(isOpen ? null : i)}
+                    aria-expanded={isOpen}
+                    className={`flex min-h-[76px] flex-col items-start justify-start gap-1.5 rounded-2xl bg-white p-3 text-start shadow-sm transition active:scale-[0.97] ${
+                      isOpen ? 'ring-2 ring-brand-pink/40' : ''
+                    }`}
+                  >
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${TONE_TILE[tone]}`}>
+                      <Icon size={16} />
+                    </span>
+                    <span className="line-clamp-2 text-[12px] font-bold leading-snug">{title}</span>
+                  </motion.button>
+                );
+              })}
             </div>
-          </motion.div>
+            <AnimatePresence initial={false}>
+              {openIdx !== null && (
+                <motion.div
+                  key={openIdx}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 rounded-2xl bg-white p-3.5 text-[13px] leading-relaxed text-gray-600 shadow-sm">
+                    {pick(items[openIdx])}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         );
       })}
     </div>
