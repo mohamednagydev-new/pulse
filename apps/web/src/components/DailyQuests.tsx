@@ -2,11 +2,23 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Check, Gift, Sparkles } from 'lucide-react';
+import { CurlAnim } from './TrainingAnim';
+import { WaterAnim, MealAnim, FlameAnim } from './MicroAnims';
 import { api } from '../lib/api';
 import { toast } from '../lib/toast';
 import { celebrateFeedback } from '../lib/haptics';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
+
+/** Quest key → animated icon. Unmapped keys (reels, one-offs) keep their emoji. */
+function questAnim(key: string): ((p: { className?: string }) => JSX.Element) | null {
+  const k = key.toLowerCase();
+  if (/workout|train|exercise|session|move/.test(k)) return CurlAnim;
+  if (/water|hydrat|drink/.test(k)) return WaterAnim;
+  if (/food|meal|eat|nutrition/.test(k)) return MealAnim;
+  if (/streak|xp|combo|bonus/.test(k)) return FlameAnim;
+  return null;
+}
 
 interface Quest {
   key: string;
@@ -93,6 +105,7 @@ export default function DailyQuests() {
         {quests.map((q, i) => {
           const target = Math.max(1, q.target ?? 1);
           const pct = Math.min(100, Math.round(((q.progress ?? 0) / target) * 100));
+          const Anim = questAnim(q.key);
           return (
             <motion.div
               key={q.key}
@@ -104,11 +117,11 @@ export default function DailyQuests() {
             >
               <span
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
-                  q.done ? 'bg-emerald-100' : 'bg-orange-50'
+                  q.done ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-50 text-orange-500'
                 }`}
                 aria-hidden
               >
-                {q.icon || '🎯'}
+                {Anim ? <Anim className="h-7 w-7" /> : q.icon || '🎯'}
               </span>
 
               <div className="min-w-0 flex-1">

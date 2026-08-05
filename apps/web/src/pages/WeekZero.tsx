@@ -5,6 +5,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { CalendarDays, ClipboardList, Lock, Check } from 'lucide-react';
 import TopBar from '../components/TopBar';
+import { BreatheAnim, SquatAnim, PlankAnim, JumpAnim } from '../components/TrainingAnim';
+import { WalkAnim, StretchAnim, TrophyAnim } from '../components/MicroAnims';
 import { api } from '../lib/api';
 import { toast } from '../lib/toast';
 
@@ -12,7 +14,7 @@ const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 const STORE_KEY = 'pulse_weekzero';
 
 type DayText = { title: string; sub: string; items: [string, string, string] };
-type Day = { emoji: string; en: DayText; ar: DayText };
+type Day = { Anim: (p: { className?: string }) => JSX.Element; en: DayText; ar: DayText };
 
 /**
  * The 7-day on-ramp for absolute beginners. Editorial content lives here, not in
@@ -20,7 +22,7 @@ type Day = { emoji: string; en: DayText; ar: DayText };
  */
 const DAYS: Day[] = [
   {
-    emoji: '🌱',
+    Anim: BreatheAnim,
     en: {
       title: 'Gentle full-body mobility',
       sub: 'Wake the joints up — nothing should hurt today.',
@@ -41,7 +43,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    emoji: '🪑',
+    Anim: SquatAnim,
     en: {
       title: 'Learn the squat pattern',
       sub: 'Bodyweight only — sit back, chest up, heels down.',
@@ -62,7 +64,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    emoji: '🚶',
+    Anim: WalkAnim,
     en: {
       title: 'Walk + water day',
       sub: 'The most underrated workout there is.',
@@ -83,7 +85,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    emoji: '🧱',
+    Anim: PlankAnim,
     en: {
       title: 'Core basics',
       sub: 'A strong middle makes everything else easier.',
@@ -104,7 +106,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    emoji: '🧘',
+    Anim: StretchAnim,
     en: {
       title: 'Stretch + breathe',
       sub: 'Recovery is training too.',
@@ -125,7 +127,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    emoji: '🔁',
+    Anim: JumpAnim,
     en: {
       title: 'Light full-body circuit',
       sub: 'Put the week together — 2 easy rounds.',
@@ -146,7 +148,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    emoji: '🎉',
+    Anim: TrophyAnim,
     en: {
       title: 'Review + set yourself up',
       sub: 'You showed up 7 days. Now make it automatic.',
@@ -245,12 +247,17 @@ export default function WeekZero() {
             >
               <div className="flex items-center gap-3">
                 <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl ${
-                    complete ? 'bg-brand-green/15' : 'bg-gray-100'
+                  className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${
+                    complete ? 'bg-brand-green/15 text-brand-green' : 'bg-teal-50 text-brand-teal'
                   }`}
                   aria-hidden
                 >
-                  {complete ? '✅' : day.emoji}
+                  <day.Anim className={`h-11 w-11 ${complete ? 'opacity-40' : ''}`} />
+                  {complete && (
+                    <span className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-green text-white">
+                      <Check size={13} strokeWidth={3.5} />
+                    </span>
+                  )}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">

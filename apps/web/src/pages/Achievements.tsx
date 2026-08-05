@@ -14,9 +14,24 @@ import { shareMilestone } from '../lib/shareCard';
 import CountUp from '../components/CountUp';
 import { toast } from '../lib/toast';
 import { tapFeedback } from '../lib/haptics';
+import { CurlAnim } from '../components/TrainingAnim';
+import { CarryAnim } from '../components/MoveAnims';
+import { WaterAnim, FlameAnim, TrophyAnim } from '../components/MicroAnims';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 const tapSpring = { type: 'spring', stiffness: 500, damping: 30 } as const;
+
+/** goalType → animated icon for cover-less challenge cards. Keyed loosely on
+ *  purpose: the server may grow goal types beyond the current union. */
+const GOAL_ANIM: Record<string, (p: { className?: string }) => JSX.Element> = {
+  lessons: CurlAnim,
+  workout: CurlAnim,
+  water: WaterAnim,
+  streak: FlameAnim,
+  xp: TrophyAnim,
+  calories: FlameAnim,
+  lifts: CarryAnim,
+};
 
 type ChallengeKind = 'global' | 'personal' | 'group';
 type GoalType = 'lessons' | 'streak' | 'calories';
@@ -321,6 +336,7 @@ export default function Achievements() {
             const left = daysLeftOf(c.endsOn);
             const pct = c.goalValue > 0 ? Math.min(100, Math.max(0, (c.myProgress / c.goalValue) * 100)) : 0;
             const showProgress = c.joined || c.isMine;
+            const GoalAnim = c.coverImage ? undefined : GOAL_ANIM[c.goalType];
             return (
               <motion.div
                 key={c.id}
@@ -335,6 +351,11 @@ export default function Achievements() {
                 {c.coverImage && <MediaImage path={c.coverImage} label={c.title} className="h-28 w-full" seed={c.title.length} />}
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-3">
+                    {GoalAnim && (
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-pink/10 text-brand-pink" aria-hidden>
+                        <GoalAnim className="h-8 w-8" />
+                      </span>
+                    )}
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex flex-wrap items-center gap-1.5">
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${chip.cls}`}>

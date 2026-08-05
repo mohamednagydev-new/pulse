@@ -75,7 +75,11 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-8 py-20 text-center">
-      {icon && <div className="mb-1 text-gray-300">{icon}</div>}
+      {icon && (
+        <div className="mb-1 text-gray-300">
+          <span className="inline-block animate-float">{icon}</span>
+        </div>
+      )}
       <p className="font-semibold text-gray-600">{title}</p>
       {hint && <p className="text-sm text-gray-400">{hint}</p>}
       {action && <div className="mt-3">{action}</div>}

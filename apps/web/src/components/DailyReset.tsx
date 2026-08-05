@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import Sheet from './Sheet';
+import { BreatheAnim } from './TrainingAnim';
+import { StretchAnim, WalkAnim } from './MicroAnims';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
@@ -222,6 +224,14 @@ export default function DailyReset() {
   const [open, setOpen] = useState(false);
   const routine = ROUTINES[dayOfYear() % ROUTINES.length];
   const text = i18n.language.startsWith('ar') ? routine.ar : routine.en;
+  // Keyword check on the English title (stable in both languages): walking
+  // routines get the walker, breathing/rest ones the breath pulse, the rest
+  // — all stretches of one kind or another — the side-bend figure.
+  const Anim = /walk/i.test(routine.en.title)
+    ? WalkAnim
+    : /breath|eye/i.test(routine.en.title)
+      ? BreatheAnim
+      : StretchAnim;
 
   return (
     <>
@@ -249,7 +259,9 @@ export default function DailyReset() {
 
       <Sheet open={open} onClose={() => setOpen(false)} label={text.title}>
         <div className="p-5 pb-8">
-          <p className="text-center text-4xl" aria-hidden>{routine.emoji}</p>
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-teal-50 text-brand-teal" aria-hidden>
+            <Anim className="h-16 w-16" />
+          </div>
           <h2 className="mt-2 text-center text-lg font-extrabold">{text.title}</h2>
           <p className="mt-0.5 text-center text-xs font-semibold text-teal-600">{t('reset.min')}</p>
           <ol className="mt-4 space-y-3">
