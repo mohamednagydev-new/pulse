@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Building2, Clock, MapPin, Navigation, Phone } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Building2, ChevronRight, Clock, MapPin, Navigation, Phone, Star, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { priceLabel } from '../lib/money';
-import { Loader, ErrorMsg } from '../components/ui';
+import { Loader, ErrorMsg, EmptyState, MediaImage } from '../components/ui';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 
@@ -17,6 +17,11 @@ import AmbientBg from '../components/AmbientBg';
  * directory that only works with GPS is a directory that works for half its users.
  * Without a fix we fall back to filtering by city, which is how people describe where
  * they are anyway.
+ *
+ * Design notes: venues rarely have photos, so the card leans on MediaImage — its
+ * generated CoverArt fallback keeps every card visual instead of a wall of text.
+ * Filter pills follow the app's section-tone pattern (blue here), with a live
+ * result count and a single Clear affordance instead of hunting per-chip.
  */
 
 type Venue = {
@@ -42,19 +47,19 @@ type Venue = {
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
-const FACILITY_LABEL: Record<string, { en: string; ar: string }> = {
-  weights: { en: 'Weights', ar: 'أوزان' },
-  cardio: { en: 'Cardio', ar: 'كارديو' },
-  classes: { en: 'Classes', ar: 'حصص' },
-  pool: { en: 'Pool', ar: 'حمام سباحة' },
-  sauna: { en: 'Sauna', ar: 'ساونا' },
-  parking: { en: 'Parking', ar: 'باركينج' },
-  showers: { en: 'Showers', ar: 'دُش' },
-  lockers: { en: 'Lockers', ar: 'لوكرز' },
-  pt: { en: 'Personal training', ar: 'تدريب شخصي' },
-  crossfit: { en: 'CrossFit', ar: 'كروسفت' },
-  boxing: { en: 'Boxing', ar: 'ملاكمة' },
-  kids: { en: 'Kids area', ar: 'ركن أطفال' },
+const FACILITY_LABEL: Record<string, { en: string; ar: string; icon: string }> = {
+  weights: { en: 'Weights', ar: 'أوزان', icon: '🏋️' },
+  cardio: { en: 'Cardio', ar: 'كارديو', icon: '🏃' },
+  classes: { en: 'Classes', ar: 'حصص', icon: '🗓️' },
+  pool: { en: 'Pool', ar: 'حمام سباحة', icon: '🏊' },
+  sauna: { en: 'Sauna', ar: 'ساونا', icon: '🧖' },
+  parking: { en: 'Parking', ar: 'باركينج', icon: '🅿️' },
+  showers: { en: 'Showers', ar: 'دُش', icon: '🚿' },
+  lockers: { en: 'Lockers', ar: 'لوكرز', icon: '🔒' },
+  pt: { en: 'Personal training', ar: 'تدريب شخصي', icon: '🤝' },
+  crossfit: { en: 'CrossFit', ar: 'كروسفت', icon: '⚡' },
+  boxing: { en: 'Boxing', ar: 'ملاكمة', icon: '🥊' },
+  kids: { en: 'Kids area', ar: 'ركن أطفال', icon: '🧒' },
 };
 
 export default function Venues() {
@@ -100,19 +105,29 @@ export default function Venues() {
     },
   });
 
-  useEffect(() => {
-    document.title = 'PULSE';
-  }, []);
-
   const venues: Venue[] = data?.venues ?? [];
   const label = (key: string) => (isAr ? FACILITY_LABEL[key]?.ar : FACILITY_LABEL[key]?.en) ?? key;
+  const hasFilters = Boolean(city || facility || ladies);
+  const clearFilters = () => {
+    setCity('');
+    setFacility('');
+    setLadies(false);
+  };
 
   return (
     <div className="relative min-h-screen pb-16">
       <AmbientBg tone="cool" />
       <TopBar title={t('venues.title')} color="bg-gradient-to-b from-brand-blue to-blue-700" textColor="text-white" />
 
-      {!point && (
+      {/* Locate: one row that flips into a "sorted by distance" state. */}
+      {point ? (
+        <div className="mx-4 flex min-h-11 items-center justify-between gap-2 rounded-2xl bg-blue-50 px-4 py-2.5 text-sm font-semibold text-brand-blue">
+          <span className="flex items-center gap-2"><Navigation size={15} /> {t('venues.nearActive')}</span>
+          <button onClick={() => setPoint(null)} aria-label={t('common.close')} className="flex h-8 w-8 items-center justify-center rounded-full">
+            <X size={15} />
+          </button>
+        </div>
+      ) : (
         <motion.button
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -131,132 +146,170 @@ export default function Venues() {
               {denied ? t('venues.denied') : t('venues.nearSub')}
             </span>
           </span>
+          <ChevronRight size={18} className="shrink-0 text-gray-300 rtl:rotate-180" />
         </motion.button>
       )}
 
-      {/* Filters. Only rendered when there is something to filter by. */}
+      {/* Filters: cities (where), then facilities + ladies (what). Same pill
+          language as the rest of the app — section blue for active. */}
       {(data?.cities ?? []).length > 1 && (
-        <div className="mt-3 flex gap-1.5 overflow-x-auto px-4 pb-1">
+        <div className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto px-4 pb-1">
           <Chip active={!city} onClick={() => setCity('')} label={t('venues.allCities')} />
           {(data?.cities ?? []).map((c: { city: string; count: number }) => (
-            <Chip key={c.city} active={city === c.city} onClick={() => setCity(c.city)} label={`${c.city} (${c.count})`} />
+            <Chip key={c.city} active={city === c.city} onClick={() => setCity(city === c.city ? '' : c.city)} label={c.city} count={c.count} />
           ))}
         </div>
       )}
 
-      <div className="mt-2 flex gap-1.5 overflow-x-auto px-4 pb-1">
-        <Chip active={ladies} onClick={() => setLadies((v) => !v)} label={t('venues.ladiesOnly')} />
+      <div className="no-scrollbar mt-2 flex gap-1.5 overflow-x-auto px-4 pb-1">
+        <Chip tone="pink" active={ladies} onClick={() => setLadies((v) => !v)} label={`♀ ${t('venues.ladiesOnly')}`} />
         {(data?.facilities ?? []).map((f: { key: string; count: number }) => (
           <Chip
             key={f.key}
             active={facility === f.key}
             onClick={() => setFacility(facility === f.key ? '' : f.key)}
-            label={label(f.key)}
+            label={`${FACILITY_LABEL[f.key]?.icon ?? ''} ${label(f.key)}`.trim()}
           />
         ))}
       </div>
+
+      {/* Result count + one-tap reset — the answer to "why is this list short?" */}
+      {!isLoading && !isError && (
+        <div className="mt-2 flex min-h-8 items-center justify-between px-5">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">
+            {t('venues.results', { count: venues.length })}
+          </p>
+          <AnimatePresence>
+            {hasFilters && (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={clearFilters}
+                className="flex items-center gap-1 text-[11px] font-bold text-brand-blue"
+              >
+                <X size={12} /> {t('venues.clear')}
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {isLoading && <Loader />}
 
       {isError && <ErrorMsg error={error} onRetry={() => refetch()} />}
 
       {!isLoading && !isError && venues.length === 0 && (
-        <div className="mx-4 mt-6 rounded-2xl bg-white p-8 text-center shadow-sm">
-          <Building2 size={28} className="mx-auto text-gray-300" />
-          <p className="mt-3 text-sm font-semibold">{t('venues.empty')}</p>
-          <p className="mt-1 text-xs leading-relaxed text-gray-400">{t('venues.emptySub')}</p>
-        </div>
+        <EmptyState
+          icon={<Building2 size={28} />}
+          title={t('venues.empty')}
+          hint={t('venues.emptySub')}
+          action={hasFilters ? <button onClick={clearFilters} className="btn-pill btn-blue min-h-10 px-6 text-sm">{t('venues.clear')}</button> : undefined}
+        />
       )}
 
-      <div className="mt-3 space-y-3 px-4">
+      <div className="mt-1 space-y-3 px-4">
         {venues.map((v, i) => (
           <motion.div
             key={v.id}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...spring, delay: Math.min(i, 6) * 0.04 }}
+            className={`overflow-hidden rounded-2xl bg-white shadow-sm ${v.featured ? 'ring-1 ring-amber-200' : ''}`}
           >
-            <Link to={`/partner/${v.id}`} className="block overflow-hidden rounded-2xl bg-white shadow-sm">
-              {v.cover && <img src={v.cover} alt="" className="h-28 w-full object-cover" loading="lazy" />}
-              <div className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold">{v.name}</p>
-                    {v.tagline && <p className="truncate text-xs text-gray-400">{v.tagline}</p>}
-                  </div>
-                  {v.distanceKm != null && (
-                    <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-brand-blue" dir="ltr">
-                      {v.distanceKm} km
-                    </span>
-                  )}
-                </div>
+            <Link to={`/partner/${v.id}`} className="flex items-stretch gap-3 p-3">
+              {/* MediaImage falls back to generated cover art, so a gym without
+                  photos still gets a face instead of a bare text block. */}
+              <MediaImage
+                path={v.cover ?? v.logo}
+                label={v.name}
+                seed={i + 2}
+                className="h-24 w-24 shrink-0 rounded-xl"
+              />
 
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
-                  {v.city && (
-                    <span className="flex items-center gap-1">
-                      <MapPin size={11} /> {v.city}
-                    </span>
-                  )}
-                  {v.openNow !== null && (
-                    <span className={`flex items-center gap-1 font-semibold ${v.openNow ? 'text-brand-green' : 'text-gray-400'}`}>
-                      <Clock size={11} /> {v.openNow ? t('venues.open') : t('venues.closed')}
-                    </span>
-                  )}
-                  {priceLabel(
-                    { amount: v.priceFromAmount, display: v.priceFrom, currency: v.currency },
-                    i18n.language,
-                  ) && (
-                    <span className="font-semibold text-gray-600">
-                      {priceLabel(
-                        { amount: v.priceFromAmount, display: v.priceFrom, currency: v.currency },
-                        i18n.language,
-                      )}
-                    </span>
-                  )}
-                  {v.ladiesOnly && (
-                    <span className="rounded-full bg-pink-50 px-2 py-0.5 font-bold text-brand-pink">
-                      {t('venues.ladiesOnly')}
-                    </span>
-                  )}
-                </div>
-
-                {v.facilities.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {v.facilities.slice(0, 5).map((f) => (
-                      <span key={f} className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
-                        {label(f)}
+              <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="min-w-0 truncate font-bold leading-snug">
+                      {v.featured && <Star size={12} className="mb-0.5 me-1 inline text-amber-400" fill="currentColor" />}
+                      {v.name}
+                    </p>
+                    {v.distanceKm != null && (
+                      <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-brand-blue" dir="ltr">
+                        {v.distanceKm} km
                       </span>
-                    ))}
+                    )}
                   </div>
-                )}
+                  {v.tagline && <p className="mt-0.5 line-clamp-1 text-xs text-gray-400">{v.tagline}</p>}
+
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
+                    {v.city && (
+                      <span className="flex items-center gap-1"><MapPin size={11} /> {v.city}</span>
+                    )}
+                    {v.openNow !== null && (
+                      <span className={`flex items-center gap-1 font-semibold ${v.openNow ? 'text-brand-green' : 'text-gray-400'}`}>
+                        <Clock size={11} /> {v.openNow ? t('venues.open') : t('venues.closed')}
+                      </span>
+                    )}
+                    {priceLabel({ amount: v.priceFromAmount, display: v.priceFrom, currency: v.currency }, i18n.language) && (
+                      <span className="font-semibold text-gray-600" dir="ltr">
+                        {priceLabel({ amount: v.priceFromAmount, display: v.priceFrom, currency: v.currency }, i18n.language)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {v.ladiesOnly && (
+                    <span className="rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-bold text-brand-pink">
+                      ♀ {t('venues.ladiesOnly')}
+                    </span>
+                  )}
+                  {v.facilities.slice(0, 3).map((f) => (
+                    <span key={f} className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
+                      {label(f)}
+                    </span>
+                  ))}
+                  {v.facilities.length > 3 && (
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-400" dir="ltr">
+                      +{v.facilities.length - 3}
+                    </span>
+                  )}
+                </div>
               </div>
             </Link>
 
-            {(v.whatsapp || v.phone) && (
-              <div className="mt-1.5 flex gap-2">
-                {v.whatsapp && (
-                  <a
-                    href={`https://wa.me/${v.whatsapp}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={() => api.post(`/api/store/partners/${v.id}/contact`).catch(() => {})}
-                    className="btn-pill flex min-h-[38px] flex-1 items-center justify-center gap-1.5 bg-emerald-500 py-2 text-sm font-semibold text-white"
-                  >
-                    <Phone size={14} /> {t('venues.contact')}
-                  </a>
-                )}
-                {v.mapUrl && (
-                  <a
-                    href={v.mapUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-pill flex min-h-[38px] items-center justify-center gap-1.5 border border-gray-200 bg-white px-4 py-2 text-sm font-semibold"
-                  >
-                    <MapPin size={14} /> {t('venues.directions')}
-                  </a>
-                )}
-              </div>
-            )}
+            {/* Action row inside the card — the same border-t pattern as the
+                rest of the app's cards, not floating buttons under it. */}
+            <div className="flex divide-x divide-gray-100 border-t border-gray-100 rtl:divide-x-reverse">
+              {v.whatsapp && (
+                <a
+                  href={`https://wa.me/${v.whatsapp}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => api.post(`/api/store/partners/${v.id}/contact`).catch(() => {})}
+                  className="flex min-h-11 flex-1 items-center justify-center gap-1.5 text-sm font-bold text-emerald-600 transition active:bg-emerald-50"
+                >
+                  <Phone size={14} /> {t('venues.contact')}
+                </a>
+              )}
+              {v.mapUrl && (
+                <a
+                  href={v.mapUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-h-11 flex-1 items-center justify-center gap-1.5 text-sm font-bold text-brand-blue transition active:bg-blue-50"
+                >
+                  <MapPin size={14} /> {t('venues.directions')}
+                </a>
+              )}
+              <Link
+                to={`/partner/${v.id}`}
+                className="flex min-h-11 flex-1 items-center justify-center gap-1 text-sm font-bold text-gray-500 transition active:bg-gray-50"
+              >
+                {t('venues.programs')} <ChevronRight size={14} className="rtl:rotate-180" />
+              </Link>
+            </div>
           </motion.div>
         ))}
       </div>
@@ -264,15 +317,34 @@ export default function Venues() {
   );
 }
 
-function Chip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+function Chip({
+  active,
+  onClick,
+  label,
+  count,
+  tone = 'blue',
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count?: number;
+  tone?: 'blue' | 'pink';
+}) {
+  const activeCls = tone === 'pink' ? 'bg-brand-pink text-white shadow-sm' : 'bg-brand-blue text-white shadow-sm';
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold transition ${
-        active ? 'bg-gray-900 text-white' : 'border border-gray-200 bg-white text-gray-500'
+      aria-pressed={active}
+      className={`flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-bold transition active:scale-95 ${
+        active ? activeCls : 'border border-gray-200 bg-white text-gray-500'
       }`}
     >
       {label}
+      {count != null && (
+        <span className={`rounded-full px-1.5 text-[10px] ${active ? 'bg-white/20' : 'bg-gray-100 text-gray-400'}`} dir="ltr">
+          {count}
+        </span>
+      )}
     </button>
   );
 }
