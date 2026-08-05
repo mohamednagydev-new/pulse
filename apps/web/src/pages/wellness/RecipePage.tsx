@@ -45,8 +45,15 @@ export default function RecipePage() {
     fn(n);
   };
 
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorMsg error={error} />;
+  // Loading/error keep the dark shell + a back affordance — no white flash, never stranded.
+  if (isLoading || error) {
+    return (
+      <div className="min-h-screen bg-gray-900 pb-12 text-white">
+        <TopBar title={t('wellness.kitchen')} color="bg-transparent" textColor="text-white" />
+        {isLoading ? <Loader /> : <ErrorMsg error={error} />}
+      </div>
+    );
+  }
 
   const stats = [
     recipe.calories && { icon: Flame, value: recipe.calories, label: 'kcal' },
@@ -60,7 +67,7 @@ export default function RecipePage() {
 
   return (
     <div className="min-h-screen bg-gray-900 pb-12 text-white">
-      <TopBar title="Wellness Kitchen" color="bg-transparent" textColor="text-white" />
+      <TopBar title={t('wellness.kitchen')} color="bg-transparent" textColor="text-white" />
       <div className="px-4">
         <div className="relative">
           <MediaImage path={recipe.coverImage} label={recipe.title} className="h-52 w-full rounded-2xl" seed={2} />

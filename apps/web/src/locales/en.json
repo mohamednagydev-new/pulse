@@ -25,7 +25,14 @@
     "cancel": "Cancel",
     "edit": "Edit",
     "next": "Next",
-    "copyFailed": "Couldn't copy"
+    "copyFailed": "Couldn't copy",
+    "somethingWrong": "Something went wrong",
+    "retry": "Retry",
+    "saving": "Saving…",
+    "lv": "Lv {{n}}"
+  },
+  "ads": {
+    "sponsored": "Sponsored"
   },
   "onboarding": {
     "slide1Title": "Count Your Calories",
@@ -100,7 +107,23 @@
     "markedDone": "Marked as done",
     "reelsTitle": "Reels to get you moving",
     "noYoga": "No yoga programs yet.",
-    "quickSessions": "Quick sessions"
+    "quickSessions": "Quick sessions",
+    "yogaTagline": "Free your mind & focus on the good.",
+    "train": "Train",
+    "coaches": "Coaches",
+    "workoutSub": "Strength · Sessions",
+    "yogaSub": "Flow · Mobility",
+    "group": "Group"
+  },
+  "exercises": {
+    "title": "Exercises",
+    "cardio": "Cardio",
+    "view": "View exercises",
+    "front": "Front",
+    "back": "Back"
+  },
+  "achievements": {
+    "title": "Achievements"
   },
   "wellness": {
     "welcome": "Welcome To The",
@@ -110,7 +133,8 @@
     "articles": "Wellness Articles",
     "about": "About The Food",
     "ingredients": "Ingredients",
-    "method": "Method"
+    "method": "Method",
+    "minRead": "{{n}} min read"
   },
   "profile": {
     "title": "Profile",
@@ -126,7 +150,12 @@
     "photoFailed": "Couldn't upload that photo",
     "birthYear": "Birth year",
     "heightCm": "Height cm",
-    "weightKg": "Weight kg"
+    "weightKg": "Weight kg",
+    "updated": "Profile updated",
+    "bio": "Bio",
+    "gender": "Gender",
+    "saveChanges": "Save changes",
+    "badges": "Badges"
   },
   "info": {
     "title": "Info",
@@ -156,7 +185,8 @@
     "progress": "Progress",
     "noFood": "No food logged today.",
     "describePh": "e.g. \"2 eggs, toast and orange juice\"",
-    "describeHint": "Describe what you ate and we estimate the calories and macros."
+    "describeHint": "Describe what you ate and we estimate the calories and macros.",
+    "kcalToday": "kcal today"
   },
   "reels": {
     "forYou": "For You",
@@ -171,7 +201,8 @@
     "posted": "Reel posted 🎬",
     "expired": "This clip expired — refresh",
     "refresh": "Refresh",
-    "related": "Related videos"
+    "related": "Related videos",
+    "pickVideo": "Pick a video"
   },
   "duels": {
     "title": "Duels",
@@ -492,7 +523,9 @@
     "topStreaks": "Top streaks",
     "level": "Level {{n}}",
     "nextRank": "{{xp}} XP to {{rank}}",
-    "maxRank": "Top rank reached"
+    "maxRank": "Top rank reached",
+    "levelUpTitle": "Level {{n}}!",
+    "levelUpSub": "You leveled up — keep the streak alive"
   },
   "events": {
     "title": "Events",
@@ -752,7 +785,33 @@
     "emptyHint": "Check back soon for live group training.",
     "host": "Host a live session",
     "linkWorkout": "Link a workout (optional)",
-    "empty": "No sessions scheduled"
+    "empty": "No sessions scheduled",
+    "trainingTitle": "Group Training",
+    "sessionsTitle": "Group Trainings",
+    "liveRoom": "Live room",
+    "hereNow": "{{n}} here now",
+    "moreCount": "+{{n}} more",
+    "timerHostHint": "Start a shared timer for everyone",
+    "timerWaitHint": "Waiting for the coach to start a timer",
+    "stop": "Stop",
+    "react": "React",
+    "timeUp": "Time! 💪",
+    "participants": "Participants",
+    "startTogether": "Start workout together",
+    "exercisesCount": "{{n}} exercises",
+    "leave": "Leave session",
+    "join": "Join session",
+    "delete": "Delete session",
+    "scheduled": "Session scheduled",
+    "joinedToast": "Joined session",
+    "leftToast": "Left session",
+    "titlePh": "Session title (e.g. Sunday HIIT)",
+    "focusPh": "Focus (e.g. Full Body)",
+    "schedule": "Schedule session",
+    "live": "Live",
+    "upcoming": "Upcoming",
+    "joinedShort": "Joined ✓",
+    "joinShort": "Join"
   },
   "coach": {
     "programMissingHint": "It may have been removed.",
@@ -768,7 +827,42 @@
     "yourCoach": "Your coach",
     "about": "About you",
     "programMissing": "Program not found",
-    "noDays": "No days yet"
+    "noDays": "No days yet",
+    "title": "Coach",
+    "dashboard": "Coach Dashboard",
+    "program": "Program",
+    "dayProgram": "{{n}}-day program",
+    "workoutUnavailable": "Workout unavailable",
+    "viewCoach": "View coach",
+    "workoutPublished": "Workout published",
+    "clientAccepted": "Client accepted 🎉",
+    "requestDeclined": "Request declined",
+    "programPublished": "Program published",
+    "notYetHint": "Create a coach profile to publish workouts and coach the community.",
+    "requests": "Coaching requests",
+    "myClients": "My clients",
+    "focusPh": "Focus (e.g. Chest & Triceps)",
+    "exercisePh": "Exercise",
+    "setsPh": "sets",
+    "repsPh": "reps",
+    "publishWorkout": "Publish workout",
+    "noWorkouts": "No workouts yet — create your first above.",
+    "buildProgram": "Build a program",
+    "programTitlePh": "Program title (e.g. 4-Week Strength)",
+    "dayPh": "Day",
+    "addDay": "Add day",
+    "publishProgram": "Publish program",
+    "workoutsFirst": "Create workouts first, then assemble them into a program.",
+    "daysCount": "{{n}} days",
+    "profileTitle": "Coach Profile",
+    "profileUpdated": "Coach profile updated",
+    "nowCoach": "You're now a coach! 🎉",
+    "editIntro": "Share your expertise, publish content, and coach the community.",
+    "headline": "Headline",
+    "headlinePh": "e.g. Strength & mobility coach",
+    "specialties": "Specialties (comma separated)",
+    "specialtiesPh": "Strength, HIIT, Yoga, Nutrition",
+    "updateProfile": "Update coach profile"
   },
   "workout": {
     "startSession": "Start a session",
@@ -804,7 +898,13 @@
   },
   "chat": {
     "connectFirst": "You can chat once you are connected.",
-    "empty": "No conversations yet."
+    "empty": "No conversations yet.",
+    "title": "Chats",
+    "roomTitle": "Chat",
+    "findBuddies": "Find buddies →",
+    "findPeople": "Find people →",
+    "sayHi": "Say hi 👋",
+    "messagePh": "Message…"
   },
   "meals": {
     "title": "Meal plan",

@@ -58,7 +58,7 @@ export default function UserProfile() {
       <div className="-mt-6 flex flex-col items-center">
         <MediaImage path={user.avatarUrl} label={user.firstName} className="h-24 w-24 rounded-full ring-4 ring-white" seed={user.id.length} />
         <p className="mt-2 flex items-center gap-1.5 text-lg font-bold">{user.firstName} {user.lastName} {user.isCoach && <CoachBadge verified={user.coachVerified} />}</p>
-        <span className="rounded-full bg-brand-pink/10 px-3 py-0.5 text-xs font-bold text-brand-pink">Lv {user.level}</span>
+        <span className="rounded-full bg-brand-pink/10 px-3 py-0.5 text-xs font-bold text-brand-pink">{t('common.lv', { n: user.level })}</span>
         {user.isCoach && user.coachHeadline && <p className="mt-1 text-sm font-semibold text-brand-blue">{user.coachHeadline}</p>}
         {user.bio && <p className="mt-2 px-8 text-center text-sm text-gray-500">{user.bio}</p>}
         {user.isCoach && (user.coachBio || user.coachSpecialties) && (

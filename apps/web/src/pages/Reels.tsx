@@ -293,7 +293,7 @@ function UploadSheet({
               }`}
             >
               <Upload size={18} />
-              <span className="truncate">{file ? file.name : 'Pick a video'}</span>
+              <span className="truncate">{file ? file.name : t('reels.pickVideo')}</span>
             </button>
             <input
               ref={fileRef}

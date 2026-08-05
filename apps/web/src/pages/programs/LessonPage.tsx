@@ -30,8 +30,15 @@ export default function LessonPage() {
     },
   });
 
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorMsg error={error} />;
+  // Loading/error keep the section shell + a back affordance — no bare screen, never stranded.
+  if (isLoading || error) {
+    return (
+      <div className="min-h-screen pb-10">
+        <TopBar color="fitness-hero" textColor="text-white" curved />
+        {isLoading ? <Loader /> : <ErrorMsg error={error} />}
+      </div>
+    );
+  }
 
   const reelKeyword =
     lesson.reelKeyword ||

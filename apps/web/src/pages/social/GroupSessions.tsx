@@ -41,26 +41,26 @@ export default function GroupSessions() {
     onSuccess: () => {
       setTitle(''); setFocus(''); setScheduledAt(''); setWorkoutId('');
       qc.invalidateQueries({ queryKey: ['group-upcoming'] });
-      toast('Session scheduled', 'success');
+      toast(t('group.scheduled'), 'success');
     },
   });
 
   const join = useMutation({
     mutationFn: ({ id, on }: { id: string; on: boolean }) => (on ? api.post(`/api/group/${id}/join`) : api.post(`/api/group/${id}/leave`)),
-    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ['group-upcoming'] }); toast(v.on ? 'Joined session' : 'Left session', 'success'); },
+    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ['group-upcoming'] }); toast(v.on ? t('group.joinedToast') : t('group.leftToast'), 'success'); },
   });
 
   return (
     <div className="relative min-h-screen overflow-x-hidden pb-10">
       <AmbientBg tone="warm" />
-      <TopBar title="Group Trainings" color="fitness-hero" textColor="text-white" />
+      <TopBar title={t('group.sessionsTitle')} color="fitness-hero" textColor="text-white" />
 
       {me?.isCoach && (
         <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="px-4 pt-4">
           <h2 className="mb-2 font-bold">{t('group.host')}</h2>
           <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
-            <input className="input-field" placeholder="Session title (e.g. Sunday HIIT)" value={title} onChange={(e) => setTitle(e.target.value)} />
-            <input className="input-field" placeholder="Focus (e.g. Full Body)" value={focus} onChange={(e) => setFocus(e.target.value)} />
+            <input className="input-field" placeholder={t('group.titlePh')} value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input className="input-field" placeholder={t('group.focusPh')} value={focus} onChange={(e) => setFocus(e.target.value)} />
             <input className="input-field" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
             <select className="input-field" value={workoutId} onChange={(e) => setWorkoutId(e.target.value)}>
               <option value="">{t('group.linkWorkout')}</option>
@@ -73,7 +73,7 @@ export default function GroupSessions() {
               disabled={create.isPending}
               className="btn-pill btn-primary w-full"
             >
-              <Plus size={16} /> Schedule session
+              <Plus size={16} /> {t('group.schedule')}
             </button>
           </div>
         </motion.section>
@@ -81,9 +81,9 @@ export default function GroupSessions() {
 
       <section className="mt-5 px-4">
         <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-gray-400">
-          <span className="live-dot relative inline-block h-2 w-2 rounded-full bg-brand-green text-brand-green" /> Live
+          <span className="live-dot relative inline-block h-2 w-2 rounded-full bg-brand-green text-brand-green" /> {t('group.live')}
         </p>
-        <h2 className="mb-2 font-bold">Upcoming</h2>
+        <h2 className="mb-2 font-bold">{t('group.upcoming')}</h2>
         {isLoading ? (
           <Loader />
         ) : isError ? (
@@ -119,7 +119,7 @@ export default function GroupSessions() {
                   disabled={join.isPending}
                   className={`btn-pill mt-3 w-full ${s.isJoined ? 'btn-ghost text-gray-600' : 'btn-primary'}`}
                 >
-                  {s.isJoined ? 'Joined ✓' : 'Join'}
+                  {s.isJoined ? t('group.joinedShort') : t('group.joinShort')}
                 </button>
               </motion.div>
             ))}

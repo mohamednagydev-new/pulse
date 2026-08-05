@@ -66,7 +66,7 @@ export default function CoachesDirectory() {
                 <p className="flex flex-wrap items-center gap-1.5 font-semibold">{c.firstName} {c.lastName} <CoachBadge verified={c.coachVerified} />{c.coachFeatured && <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-600">★ Featured</span>}</p>
                 {c.coachHeadline && <p className="truncate text-xs text-gray-500">{c.coachHeadline}</p>}
                 <p className="mt-0.5 flex items-center gap-2 text-xs text-gray-400">
-                  <span className="rounded-full bg-brand-blue/10 px-2 font-bold text-brand-blue">Lv {c.level}</span>
+                  <span className="rounded-full bg-brand-blue/10 px-2 font-bold text-brand-blue">{t('common.lv', { n: c.level })}</span>
                   <span className="flex items-center gap-0.5"><Flame size={11} /> {c.currentStreak}</span>
                 </p>
               </Link>

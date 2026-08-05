@@ -1,4 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
@@ -9,14 +10,15 @@ import TopBar from '../../components/TopBar';
 const MotionLink = motion.create(Link);
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
-const KIND_MAP: Record<string, { kind: string; title: string }> = {
-  initiatives: { kind: 'initiative', title: 'Wellness Initiatives' },
-  kitchen: { kind: 'recipe', title: 'Wellness Kitchen' },
-  articles: { kind: 'article', title: 'Wellness Articles' },
+const KIND_MAP: Record<string, { kind: string; titleKey: string }> = {
+  initiatives: { kind: 'initiative', titleKey: 'wellness.initiatives' },
+  kitchen: { kind: 'recipe', titleKey: 'wellness.kitchen' },
+  articles: { kind: 'article', titleKey: 'wellness.articles' },
 };
 
 export default function WellnessSection() {
   const { kind } = useParams();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const conf = KIND_MAP[kind ?? ''] ?? KIND_MAP.initiatives;
 
@@ -27,7 +29,7 @@ export default function WellnessSection() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gray-900 pb-10 text-white">
-      <TopBar title={conf.title} color="bg-transparent" textColor="text-white" />
+      <TopBar title={t(conf.titleKey)} color="bg-transparent" textColor="text-white" />
       <div className="px-4">
         <motion.button
           initial={{ opacity: 0, y: 10 }}
@@ -37,7 +39,7 @@ export default function WellnessSection() {
           onClick={() => navigate('/search')}
           className="flex min-h-[44px] w-full items-center justify-between rounded-full bg-white px-5 py-3 text-gray-400"
         >
-          Search <Search size={18} />
+          {t('common.search')} <Search size={18} />
         </motion.button>
       </div>
 

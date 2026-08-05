@@ -25,7 +25,14 @@
     "cancel": "إلغاء",
     "edit": "عدّل",
     "next": "التالي",
-    "copyFailed": "مقدرناش ننسخ"
+    "copyFailed": "مقدرناش ننسخ",
+    "somethingWrong": "في حاجة غلطت",
+    "retry": "جرّب تاني",
+    "saving": "بيحفظ…",
+    "lv": "مستوى {{n}}"
+  },
+  "ads": {
+    "sponsored": "برعاية"
   },
   "onboarding": {
     "slide1Title": "احسب سعراتك",
@@ -100,7 +107,23 @@
     "markedDone": "تم الإنجاز",
     "reelsTitle": "ريلز تخليك تتحرك",
     "noYoga": "مفيش برامج يوجا لسه.",
-    "quickSessions": "حصص سريعة"
+    "quickSessions": "حصص سريعة",
+    "yogaTagline": "صفّي دماغك وركّز في اللي حلو.",
+    "train": "اتمرن",
+    "coaches": "المدربين",
+    "workoutSub": "قوة · حصص",
+    "yogaSub": "استرخاء · مرونة",
+    "group": "جروب"
+  },
+  "exercises": {
+    "title": "التمارين",
+    "cardio": "كارديو",
+    "view": "شوف التمارين",
+    "front": "قدام",
+    "back": "ورا"
+  },
+  "achievements": {
+    "title": "الإنجازات"
   },
   "wellness": {
     "welcome": "مرحباً بك في",
@@ -110,7 +133,8 @@
     "articles": "مقالات العافية",
     "about": "عن الطبق",
     "ingredients": "المكونات",
-    "method": "طريقة التحضير"
+    "method": "طريقة التحضير",
+    "minRead": "قراية {{n}} دقايق"
   },
   "profile": {
     "title": "الملف الشخصي",
@@ -126,7 +150,12 @@
     "photoFailed": "مقدرناش نرفع الصورة دي",
     "birthYear": "سنة الميلاد",
     "heightCm": "الطول بالسم",
-    "weightKg": "الوزن بالكيلو"
+    "weightKg": "الوزن بالكيلو",
+    "updated": "بياناتك اتحدثت",
+    "bio": "نبذة عنك",
+    "gender": "النوع",
+    "saveChanges": "احفظ التغييرات",
+    "badges": "الأوسمة"
   },
   "info": {
     "title": "معلومات",
@@ -156,7 +185,8 @@
     "progress": "التقدم",
     "noFood": "مفيش أكل متسجل النهارده.",
     "describePh": "مثلاً: بيضتين وتوست وعصير برتقال",
-    "describeHint": "اوصف اللي أكلته وإحنا نحسب السعرات والماكروز."
+    "describeHint": "اوصف اللي أكلته وإحنا نحسب السعرات والماكروز.",
+    "kcalToday": "سعرة النهارده"
   },
   "reels": {
     "forYou": "ليك انت",
@@ -171,7 +201,8 @@
     "posted": "الريل اتنشر 🎬",
     "expired": "الكليب ده انتهى — اعمل تحديث",
     "refresh": "تحديث",
-    "related": "فيديوهات ليها علاقة"
+    "related": "فيديوهات ليها علاقة",
+    "pickVideo": "اختار فيديو"
   },
   "duels": {
     "title": "التحديات الثنائية",
@@ -500,7 +531,9 @@
     "topStreaks": "أطول سلسلة",
     "level": "لِفِل {{n}}",
     "nextRank": "{{xp}} نقطة وتبقى {{rank}}",
-    "maxRank": "وصلت لأعلى رتبة"
+    "maxRank": "وصلت لأعلى رتبة",
+    "levelUpTitle": "لِفِل {{n}}!",
+    "levelUpSub": "علّيت لِفِل — حافظ على سلسلتك"
   },
   "events": {
     "title": "الفعاليات",
@@ -760,7 +793,33 @@
     "emptyHint": "تعالى بص تاني قريب لحصص جماعية لايف.",
     "host": "اعمل حصة لايف",
     "linkWorkout": "اربط تمرينة (اختياري)",
-    "empty": "مفيش حصص متجدولة"
+    "empty": "مفيش حصص متجدولة",
+    "trainingTitle": "تمرين جماعي",
+    "sessionsTitle": "التمارين الجماعية",
+    "liveRoom": "الأوضة اللايف",
+    "hereNow": "{{n}} موجودين دلوقتي",
+    "moreCount": "+{{n}} كمان",
+    "timerHostHint": "شغّل تايمر مشترك للكل",
+    "timerWaitHint": "مستنيين المدرب يشغّل التايمر",
+    "stop": "وقّف",
+    "react": "تفاعل بـ",
+    "timeUp": "الوقت خلص! 💪",
+    "participants": "المشاركين",
+    "startTogether": "ابدأوا التمرين مع بعض",
+    "exercisesCount": "{{n}} تمرين",
+    "leave": "اخرج من الحصة",
+    "join": "ادخل الحصة",
+    "delete": "امسح الحصة",
+    "scheduled": "الحصة اتجدولت",
+    "joinedToast": "دخلت الحصة",
+    "leftToast": "خرجت من الحصة",
+    "titlePh": "اسم الحصة (مثلاً: هيت يوم الحد)",
+    "focusPh": "التركيز (مثلاً: الجسم كله)",
+    "schedule": "جدول الحصة",
+    "live": "لايف",
+    "upcoming": "الجاي",
+    "joinedShort": "داخل ✓",
+    "joinShort": "ادخل"
   },
   "coach": {
     "programMissingHint": "يمكن يكون اتشال.",
@@ -776,7 +835,42 @@
     "yourCoach": "مدربك",
     "about": "عنك",
     "programMissing": "البرنامج مش موجود",
-    "noDays": "مفيش أيام لسه"
+    "noDays": "مفيش أيام لسه",
+    "title": "المدرب",
+    "dashboard": "لوحة المدرب",
+    "program": "البرنامج",
+    "dayProgram": "برنامج {{n}} أيام",
+    "workoutUnavailable": "التمرينة مش متاحة",
+    "viewCoach": "شوف المدرب",
+    "workoutPublished": "التمرينة اتنشرت",
+    "clientAccepted": "قبلت العميل 🎉",
+    "requestDeclined": "الطلب اترفض",
+    "programPublished": "البرنامج اتنشر",
+    "notYetHint": "اعمل بروفايل مدرب عشان تنشر تمارين وتدرّب الناس.",
+    "requests": "طلبات التدريب",
+    "myClients": "عملائي",
+    "focusPh": "التركيز (مثلاً: صدر وتراي)",
+    "exercisePh": "التمرين",
+    "setsPh": "مجموعات",
+    "repsPh": "عدات",
+    "publishWorkout": "انشر التمرينة",
+    "noWorkouts": "مفيش تمرينات لسه — اعمل أول واحدة من فوق.",
+    "buildProgram": "اعمل برنامج",
+    "programTitlePh": "اسم البرنامج (مثلاً: قوة ٤ أسابيع)",
+    "dayPh": "اليوم",
+    "addDay": "ضيف يوم",
+    "publishProgram": "انشر البرنامج",
+    "workoutsFirst": "اعمل تمرينات الأول وبعدين ركّبها في برنامج.",
+    "daysCount": "{{n}} أيام",
+    "profileTitle": "بروفايل المدرب",
+    "profileUpdated": "بروفايل المدرب اتحدث",
+    "nowCoach": "بقيت مدرب! 🎉",
+    "editIntro": "شارك خبرتك وانشر محتوى ودرّب الناس.",
+    "headline": "العنوان",
+    "headlinePh": "مثلاً: مدرب قوة ومرونة",
+    "specialties": "التخصصات (افصل بينها بفاصلة)",
+    "specialtiesPh": "قوة، هيت، يوجا، تغذية",
+    "updateProfile": "حدّث بروفايل المدرب"
   },
   "workout": {
     "startSession": "ابدأ تمرينة",
@@ -812,7 +906,13 @@
   },
   "chat": {
     "connectFirst": "تقدر تتكلم بعد ما تتواصلوا.",
-    "empty": "مفيش محادثات لسه."
+    "empty": "مفيش محادثات لسه.",
+    "title": "الشات",
+    "roomTitle": "شات",
+    "findBuddies": "دوّر على أصحاب ←",
+    "findPeople": "دوّر على ناس ←",
+    "sayHi": "سلّم عليه 👋",
+    "messagePh": "اكتب رسالة…"
   },
   "meals": {
     "title": "خطة الأكل",

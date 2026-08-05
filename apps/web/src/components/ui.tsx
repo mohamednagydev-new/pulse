@@ -1,4 +1,5 @@
 import { useRef, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import CoverArt from './CoverArt';
 
 export function Skeleton({ className = '' }: { className?: string }) {
@@ -7,8 +8,9 @@ export function Skeleton({ className = '' }: { className?: string }) {
 
 /** Content-shaped loading placeholder — feels faster than a spinner. */
 export function Loader({ label }: { label?: string }) {
+  const { t } = useTranslation();
   return (
-    <div className="space-y-3 p-4" aria-busy="true" aria-label={label ?? 'Loading'}>
+    <div className="space-y-3 p-4" aria-busy="true" aria-label={label ?? t('common.loading')}>
       {[0, 1, 2, 3].map((i) => (
         <div key={i} className="flex gap-3 rounded-2xl bg-white p-3 shadow-sm">
           <Skeleton className="h-16 w-16 shrink-0 rounded-xl" />
@@ -23,7 +25,8 @@ export function Loader({ label }: { label?: string }) {
 }
 
 export function ErrorMsg({ error, onRetry }: { error?: unknown; onRetry?: () => void }) {
-  const msg = error instanceof Error ? error.message : 'Something went wrong';
+  const { t } = useTranslation();
+  const msg = error instanceof Error ? error.message : t('common.somethingWrong');
   return (
     <div className="m-4 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
       {msg}
@@ -32,7 +35,7 @@ export function ErrorMsg({ error, onRetry }: { error?: unknown; onRetry?: () => 
           onClick={onRetry}
           className="mt-3 block min-h-11 rounded-full bg-gray-100 px-6 font-semibold text-gray-700"
         >
-          Retry
+          {t('common.retry')}
         </button>
       )}
     </div>
@@ -81,7 +84,7 @@ export function EmptyState({
         </div>
       )}
       <p className="font-semibold text-gray-600">{title}</p>
-      {hint && <p className="text-sm text-gray-400">{hint}</p>}
+      {hint && <p className="text-sm text-gray-500">{hint}</p>}
       {action && <div className="mt-3">{action}</div>}
     </div>
   );

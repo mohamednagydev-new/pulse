@@ -94,7 +94,7 @@ export default function Register() {
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
             className="inline-flex"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={20} className="rtl:rotate-180" />
           </motion.span>
         </motion.button>
         <p className="pb-8 text-center text-sm text-gray-500">

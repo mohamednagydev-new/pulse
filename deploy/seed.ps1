@@ -68,6 +68,8 @@ $scripts = @(
   'prisma\seed-egyptian-recipes.ts',     # 20 Egyptian dishes + the breakfast category the library never had
   'prisma\seed-foods.ts',                # 154-item Egyptian food table for calorie logging
   'prisma\seed-reels.ts',                # 29 vetted YouTube reels (verifies each is still embeddable)
+  'prisma\polish-content.ts',            # audited content fixes: Home card titles/links, challenge staging,
+                                         #   recipe unit cleanup, numeral consistency, food aliases, free plans
   'prisma\translate-manual.ts',          # Arabic passes — fills any empty *Ar columns
   'prisma\ar\base.ts',
   'prisma\ar\articles-1.ts',

@@ -159,7 +159,7 @@ export default function Community() {
               rel="noreferrer sponsored"
               className="card-hover block rounded-2xl bg-gradient-to-r from-brand-blue to-cyan-500 p-4 text-white"
             >
-              <div className="text-[10px] font-bold uppercase tracking-wide opacity-70">Sponsored</div>
+              <div className="text-[10px] font-bold uppercase tracking-wide opacity-70">{t('ads.sponsored')}</div>
               <div className="truncate font-bold">{ad.title}</div>
               {ad.subtitle && <div className="line-clamp-2 text-sm opacity-90">{ad.subtitle}</div>}
             </motion.a>

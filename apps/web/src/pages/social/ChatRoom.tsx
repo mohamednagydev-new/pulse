@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Send } from 'lucide-react';
@@ -10,6 +11,7 @@ import TopBar from '../../components/TopBar';
 interface Message { id: string; senderId: string; text: string; createdAt: string }
 
 export default function ChatRoom() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [other, setOther] = useState<any>(null);
@@ -43,15 +45,15 @@ export default function ChatRoom() {
   useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages]);
 
   const send = async () => {
-    const t = text.trim();
-    if (!t) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
     setText('');
     try {
-      const msg = await api.post(`/api/chat/threads/${id}/messages`, { text: t });
+      const msg = await api.post(`/api/chat/threads/${id}/messages`, { text: trimmed });
       setMessages((prev) => (prev.some((x) => x.id === msg.id) ? prev : [...prev, msg]));
     } catch (e: any) {
       if (/connect/i.test(e?.message ?? '')) setGated(true);
-      setText(t);
+      setText(trimmed);
     }
   };
 
@@ -59,7 +61,7 @@ export default function ChatRoom() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <TopBar title={other ? `${other.firstName} ${other.lastName}` : 'Chat'} color="fitness-hero" textColor="text-white" />
+      <TopBar title={other ? `${other.firstName} ${other.lastName}` : t('chat.roomTitle')} color="fitness-hero" textColor="text-white" />
       <div className="flex-1 space-y-2 overflow-y-auto p-4 pb-24">
         {messages.map((m) => {
           const mine = m.senderId === meId;
@@ -76,12 +78,12 @@ export default function ChatRoom() {
 
       <div className="sticky bottom-0 border-t glass-nav p-3">
         {gated ? (
-          <p className="py-2 text-center text-sm text-gray-500">You can chat once you're connected.</p>
+          <p className="py-2 text-center text-sm text-gray-500">{t('chat.connectFirst')}</p>
         ) : (
           <div className="flex items-center gap-2">
             <input
               className="flex-1 rounded-full bg-gray-100 px-4 py-3 outline-none"
-              placeholder="Message…"
+              placeholder={t('chat.messagePh')}
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && send()}

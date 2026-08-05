@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCw, Timer, Flame, ChevronRight } from 'lucide-react';
+import { RotateCw, Flame, ChevronRight } from 'lucide-react';
 import { sameMuscle } from '../../lib/muscleNames';
 import { api } from '../../lib/api';
 import { Loader, ErrorMsg } from '../../components/ui';
@@ -12,6 +13,7 @@ import BodySvg from '../../components/BodySvg';
 type Group = { id: string; name: string; bodySide: 'front' | 'back'; posX?: number | null; posY?: number | null };
 
 export default function ExercisesPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [side, setSide] = useState<'front' | 'back'>('front');
   const [active, setActive] = useState<Group | null>(null);
@@ -20,8 +22,15 @@ export default function ExercisesPage() {
     queryFn: () => api.get('/api/muscle-groups'),
   });
 
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorMsg error={error} />;
+  // Loading/error keep the dark shell + a back affordance — no white flash, never stranded.
+  if (isLoading || error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-700 to-gray-900 pb-10 text-white">
+        <TopBar title={t('exercises.title')} color="bg-transparent" textColor="text-white" />
+        {isLoading ? <Loader /> : <ErrorMsg error={error} />}
+      </div>
+    );
+  }
 
   const all: Group[] = groups ?? [];
   const visible = all.filter((g) => g.bodySide === side);
@@ -39,7 +48,7 @@ export default function ExercisesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-700 to-gray-900 pb-10 text-white">
-      <TopBar title="Exercises" color="bg-transparent" textColor="text-white" />
+      <TopBar title={t('exercises.title')} color="bg-transparent" textColor="text-white" />
 
       {cardio && (
         <button
@@ -47,12 +56,12 @@ export default function ExercisesPage() {
             if (cardio.bodySide !== side) setSide(cardio.bodySide);
             pick(cardio);
           }}
-          className="absolute right-4 top-16 z-10 flex flex-col items-center gap-1"
+          className="absolute end-4 top-16 z-10 flex flex-col items-center gap-1"
         >
           <span className={`rounded-full border p-2 backdrop-blur transition-colors ${active?.id === cardio.id ? 'border-orange-400/60 bg-orange-500 text-white' : 'border-white/15 bg-white/10 text-orange-400'}`}>
             <Flame size={22} />
           </span>
-          <span className="text-[11px] text-white/70">Cardio</span>
+          <span className="text-[11px] text-white/70">{t('exercises.cardio')}</span>
         </button>
       )}
 
@@ -88,7 +97,7 @@ export default function ExercisesPage() {
                     }`}
                   />
                   <span
-                    className={`absolute left-4 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold backdrop-blur transition-colors ${
+                    className={`absolute start-4 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold backdrop-blur transition-colors ${
                       isActive ? 'border-orange-400/60 bg-orange-500/25 text-orange-100' : 'border-white/15 bg-white/10 text-white/85'
                     }`}
                   >
@@ -109,32 +118,26 @@ export default function ExercisesPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.18 }}
-              className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-white/10 py-1.5 pl-4 pr-1.5 shadow-lg backdrop-blur-md"
+              className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-white/10 py-1.5 ps-4 pe-1.5 shadow-lg backdrop-blur-md"
             >
               <span className="whitespace-nowrap text-sm font-semibold">{active.name}</span>
               <button
                 onClick={() => navigate(`/exercises/${active.id}`)}
                 className="flex items-center gap-0.5 whitespace-nowrap rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white active:scale-95"
               >
-                View exercises <ChevronRight size={13} />
+                {t('exercises.view')} <ChevronRight size={13} className="rtl:rotate-180" />
               </button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <div className="mt-3 flex items-center justify-between px-8">
-        <button className="flex flex-col items-center gap-1">
-          <span className="rounded-full border border-white/15 bg-white/10 p-2 text-white/80 backdrop-blur">
-            <Timer size={22} />
-          </span>
-          <span className="text-[11px] text-white/70">Timer</span>
-        </button>
+      <div className="mt-3 flex items-center justify-center px-8">
         <button onClick={flip} className="flex flex-col items-center gap-1 active:scale-95">
           <span className="rounded-full bg-orange-500 p-2 text-white shadow-lg shadow-orange-500/30">
             <RotateCw size={22} />
           </span>
-          <span className="text-[11px] capitalize text-white/70">{side === 'front' ? 'Back' : 'Front'}</span>
+          <span className="text-[11px] capitalize text-white/70">{side === 'front' ? t('exercises.back') : t('exercises.front')}</span>
         </button>
       </div>
     </div>

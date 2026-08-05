@@ -47,11 +47,18 @@ export default function ProgramPage() {
       qc.invalidateQueries({ queryKey: ['path-current'] });
       if (res?.next) navigate(`/lesson/${res.next.id}`);
     },
-    onError: (e: any) => toast(e?.message ?? 'Could not start', 'error'),
+    onError: (e: any) => toast(e?.message ?? t('common.somethingWrong'), 'error'),
   });
 
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorMsg error={error} />;
+  // Loading/error keep the section shell + a back affordance — no bare screen, never stranded.
+  if (isLoading || error) {
+    return (
+      <div className="min-h-screen pb-10">
+        <TopBar color="bg-gradient-to-b from-brand-blue to-blue-500" textColor="text-white" curved />
+        {isLoading ? <Loader /> : <ErrorMsg error={error} />}
+      </div>
+    );
+  }
 
   const isYoga = program.coach?.type === 'YOGA';
   const lessons: any[] = program.lessons ?? [];

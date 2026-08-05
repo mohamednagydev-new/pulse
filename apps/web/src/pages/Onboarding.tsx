@@ -49,7 +49,7 @@ export default function Onboarding() {
         <div className="flex items-center gap-3">
           <LanguageToggle variant="compact" />
           <button onClick={finish} className="flex items-center gap-1 text-sm font-medium">
-            {t('common.skip')} <ChevronRight size={16} />
+            {t('common.skip')} <ChevronRight size={16} className="rtl:rotate-180" />
           </button>
         </div>
       </div>

@@ -20,15 +20,17 @@ export default function ChatList() {
   });
 
   const gated = error && /connect/i.test((error as any)?.message ?? '');
+  // The thread map below shadows `t` with the thread object — grab this string first.
+  const sayHi = t('chat.sayHi');
 
   return (
     <div className="relative min-h-screen">
       <AmbientBg tone="cool" />
-      <TopBar title="Messages" color="fitness-hero" textColor="text-white" />
+      <TopBar title={t('chat.title')} color="fitness-hero" textColor="text-white" />
       {gated ? (
         <div className="py-16 text-center text-gray-400">
           <p>{t('chat.connectFirst')}</p>
-          <Link to="/buddies" className="mt-2 inline-block font-semibold text-brand-pink">Find buddies →</Link>
+          <Link to="/buddies" className="mt-2 inline-block font-semibold text-brand-pink">{t('chat.findBuddies')}</Link>
         </div>
       ) : error ? (
         // Non-gated failures (network, server) used to fall through to the
@@ -39,7 +41,7 @@ export default function ChatList() {
       ) : !threads?.length ? (
         <div className="py-16 text-center text-gray-400">
           <p>{t('chat.empty')}</p>
-          <Link to="/people" className="mt-2 inline-block font-semibold text-brand-pink">Find people →</Link>
+          <Link to="/people" className="mt-2 inline-block font-semibold text-brand-pink">{t('chat.findPeople')}</Link>
         </div>
       ) : (
         <div className="divide-y">
@@ -59,7 +61,7 @@ export default function ChatList() {
                     <p className="min-w-0 truncate font-semibold">{t.other?.firstName} {t.other?.lastName}</p>
                     <span className="shrink-0 text-[11px] text-gray-400">{t.lastMessageAt ? timeAgo(t.lastMessageAt) : ''}</span>
                   </div>
-                  <p className="truncate text-sm text-gray-400">{t.lastMessage ?? 'Say hi 👋'}</p>
+                  <p className="truncate text-sm text-gray-400">{t.lastMessage ?? sayHi}</p>
                 </div>
                 {t.unread > 0 && <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-pink px-1.5 text-xs font-bold text-white">{t.unread}</span>}
               </Link>

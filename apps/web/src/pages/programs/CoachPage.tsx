@@ -14,8 +14,15 @@ export default function CoachPage() {
     queryFn: () => api.get(`/api/coaches/${id}`),
   });
 
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorMsg error={error} />;
+  // Loading/error keep the section shell + a back affordance — no bare screen, never stranded.
+  if (isLoading || error) {
+    return (
+      <div className="min-h-screen pb-8">
+        <TopBar color="bg-gradient-to-b from-brand-blue to-blue-500" textColor="text-white" curved />
+        {isLoading ? <Loader /> : <ErrorMsg error={error} />}
+      </div>
+    );
+  }
 
   const isYoga = coach.type === 'YOGA';
   const accent = isYoga ? 'from-brand-pink to-pink-500' : 'from-brand-blue to-blue-500';
@@ -57,7 +64,7 @@ function ProgramList({ programs }: { programs: any[] }) {
       {programs.map((p) => (
         <Link key={p.id} to={`/programs/${p.id}`} className="flex items-center justify-between gap-2 rounded-full bg-gray-100 px-6 py-4 font-bold text-ink">
           <span className="min-w-0 flex-1 truncate">{p.title}</span>
-          <ChevronRight className="shrink-0 text-brand-pink" />
+          <ChevronRight className="shrink-0 text-brand-pink rtl:rotate-180" />
         </Link>
       ))}
     </div>

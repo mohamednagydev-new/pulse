@@ -89,7 +89,7 @@ export default function StreakCalendar({
           {monthLabels.map((label, i) => (
             <div key={i} className="relative shrink-0" style={{ width: CELL }}>
               {label && (
-                <span className="absolute left-0 top-0 whitespace-nowrap text-[9px] font-medium leading-3 text-gray-400">
+                <span className="absolute start-0 top-0 whitespace-nowrap text-[9px] font-medium leading-3 text-gray-400">
                   {label}
                 </span>
               )}

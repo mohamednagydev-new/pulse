@@ -142,7 +142,7 @@ export default function GroupSessionDetail() {
 
   return (
     <div className="min-h-screen pb-10">
-      <TopBar title="Group Training" color="fitness-hero" textColor="text-white" />
+      <TopBar title={t('group.trainingTitle')} color="fitness-hero" textColor="text-white" />
 
       <div className="px-4 pt-4">
         <h1 className="text-2xl font-extrabold">{data.title}</h1>
@@ -171,15 +171,15 @@ export default function GroupSessionDetail() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
               </span>
-              <span className="font-bold">Live room</span>
-              <span className="ml-auto text-xs font-semibold text-gray-500">
-                {liveMembers.length} here now
+              <span className="font-bold">{t('group.liveRoom')}</span>
+              <span className="ms-auto text-xs font-semibold text-gray-500">
+                {t('group.hereNow', { n: liveMembers.length })}
               </span>
             </div>
 
             {liveMembers.length > 0 && (
               <div className="mt-3 flex items-center">
-                <div className="flex -space-x-2">
+                <div className="flex -space-x-2 rtl:space-x-reverse">
                   {liveHere.slice(0, 8).map((p) => (
                     <MediaImage
                       key={p.id}
@@ -191,7 +191,7 @@ export default function GroupSessionDetail() {
                   ))}
                 </div>
                 {unknownCount > 0 && (
-                  <span className="ml-2 text-xs font-semibold text-gray-400">+{unknownCount} more</span>
+                  <span className="ms-2 text-xs font-semibold text-gray-400">{t('group.moreCount', { n: unknownCount })}</span>
                 )}
               </div>
             )}
@@ -215,7 +215,7 @@ export default function GroupSessionDetail() {
                 </div>
               ) : (
                 <p className="flex items-center gap-1.5 py-2 text-sm text-gray-400">
-                  <Timer size={15} /> {isHost ? 'Start a shared timer for everyone' : 'Waiting for the coach to start a timer'}
+                  <Timer size={15} /> {isHost ? t('group.timerHostHint') : t('group.timerWaitHint')}
                 </p>
               )}
 
@@ -223,7 +223,7 @@ export default function GroupSessionDetail() {
                 <div className="mt-3 flex items-center gap-2">
                   {timer ? (
                     <button onClick={stopTimer} className="btn-pill btn-ghost px-5 text-red-500">
-                      <Square size={14} /> Stop
+                      <Square size={14} /> {t('group.stop')}
                     </button>
                   ) : (
                     <>
@@ -237,7 +237,7 @@ export default function GroupSessionDetail() {
                         </button>
                       ))}
                       <button onClick={() => startTimer(preset)} className="btn-pill btn-primary px-5">
-                        <Play size={14} /> Start
+                        <Play size={14} /> {t('today.start')}
                       </button>
                     </>
                   )}
@@ -252,7 +252,7 @@ export default function GroupSessionDetail() {
                   key={emoji}
                   onClick={() => sendReaction(emoji)}
                   className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-xl transition-transform active:scale-90"
-                  aria-label={`React ${emoji}`}
+                  aria-label={`${t('group.react')} ${emoji}`}
                 >
                   {emoji}
                 </button>
@@ -292,7 +292,7 @@ export default function GroupSessionDetail() {
                     transition={{ duration: 0.5, repeat: 2 }}
                     className="text-3xl font-extrabold"
                   >
-                    Time! 💪
+                    {t('group.timeUp')}
                   </motion.span>
                 </motion.div>
               )}
@@ -302,7 +302,7 @@ export default function GroupSessionDetail() {
       )}
 
       <section className="mt-5 px-4">
-        <h2 className="mb-2 flex items-center gap-1 font-bold"><Users size={16} /> Participants</h2>
+        <h2 className="mb-2 flex items-center gap-1 font-bold"><Users size={16} /> {t('group.participants')}</h2>
         {data.participants?.length ? (
           <div className="flex gap-3 overflow-x-auto no-scrollbar">
             {data.participants.map((p: any) => (
@@ -323,12 +323,12 @@ export default function GroupSessionDetail() {
             onClick={() => navigate(`/session/w/${data.coachWorkoutId}`)}
             className="btn-pill btn-primary w-full"
           >
-            <Play size={18} /> Start workout together
+            <Play size={18} /> {t('group.startTogether')}
           </button>
         )}
         {data.coachWorkout && (
           <p className="flex items-center justify-center gap-1 text-xs text-gray-400">
-            <Dumbbell size={13} /> {data.coachWorkout.title} · {data.coachWorkout.exercises?.length ?? 0} exercises
+            <Dumbbell size={13} /> {data.coachWorkout.title} · {t('group.exercisesCount', { n: data.coachWorkout.exercises?.length ?? 0 })}
           </p>
         )}
 
@@ -337,12 +337,12 @@ export default function GroupSessionDetail() {
           disabled={join.isPending}
           className={`btn-pill w-full ${data.isJoined ? 'btn-ghost text-gray-600' : 'btn-primary'}`}
         >
-          {data.isJoined ? 'Leave session' : 'Join session'}
+          {data.isJoined ? t('group.leave') : t('group.join')}
         </button>
 
         {isOwner && (
           <button onClick={() => del.mutate()} disabled={del.isPending} className="btn-pill btn-ghost w-full text-red-500">
-            <Trash2 size={16} /> Delete session
+            <Trash2 size={16} /> {t('group.delete')}
           </button>
         )}
       </div>

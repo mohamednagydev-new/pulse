@@ -428,7 +428,10 @@ textarea:focus-visible {
 }
 .dark .bg-white,
 .dark .bg-white\/95,
-.dark .bg-white\/90 {
+.dark .bg-white\/90,
+.dark .bg-white\/80,
+.dark .bg-white\/70,
+.dark .bg-white\/60 {
   background-color: #1b1a21 !important;
   color: #ececf0;
 }
@@ -480,7 +483,7 @@ textarea:focus-visible {
 .dark .bg-yellow-50, .dark .bg-yellow-100 { background-color: rgba(234, 179, 8, 0.14) !important; }
 .dark .bg-red-50, .dark .bg-red-100 { background-color: rgba(225, 29, 72, 0.16) !important; }
 .dark .bg-rose-50, .dark .bg-rose-100 { background-color: rgba(244, 63, 94, 0.16) !important; }
-.dark .bg-pink-100 { background-color: rgba(249, 115, 22, 0.16) !important; }
+.dark .bg-pink-50, .dark .bg-pink-100 { background-color: rgba(249, 115, 22, 0.16) !important; }
 .dark .bg-fuchsia-50, .dark .bg-fuchsia-100 { background-color: rgba(217, 70, 239, 0.16) !important; }
 .dark .bg-violet-50, .dark .bg-violet-100, .dark .bg-purple-50, .dark .bg-purple-100 { background-color: rgba(139, 92, 246, 0.16) !important; }
 .dark .bg-blue-50, .dark .bg-blue-100 { background-color: rgba(37, 99, 235, 0.18) !important; }
@@ -494,6 +497,12 @@ textarea:focus-visible {
 .dark .bg-gray-300 { background-color: #2b2a33 !important; }
 .dark .text-gray-700, .dark .text-gray-800 { color: #d4d4da !important; }
 .dark .border-gray-300 { border-color: #34333d !important; }
+
+/* Dark-on-pastel text (text-*-800/900) — unreadable on the translucent dark washes
+   above; lift each to its readable 300-tone. */
+.dark .text-amber-800, .dark .text-amber-900 { color: #fcd34d !important; }
+.dark .text-emerald-800, .dark .text-emerald-900 { color: #6ee7b7 !important; }
+.dark .text-blue-800, .dark .text-blue-900 { color: #93c5fd !important; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -134,14 +134,11 @@ export default function Login() {
           className="btn-pill btn-primary w-full gap-2 text-lg disabled:opacity-60"
         >
           {busy ? t('auth.signingIn') : t('auth.signIn')}
-          <motion.span
-            aria-hidden
-            animate={{ x: [0, 4, 0] }}
-            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-            className="inline-flex"
-          >
-            <ChevronRight size={20} />
-          </motion.span>
+          {/* The nudge animation always slid toward +x, which points backwards in RTL —
+              a static, mirrored chevron is right in both directions. */}
+          <span aria-hidden className="inline-flex">
+            <ChevronRight size={20} className="rtl:rotate-180" />
+          </span>
         </motion.button>
 
         <p className="pb-8 text-center text-sm text-gray-500">

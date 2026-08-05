@@ -24,7 +24,7 @@ export default function ForgotPassword() {
   return (
     <div className="min-h-screen fitness-hero text-white">
       <div className="px-6 pt-14" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3.5rem)' }}>
-        <Link to="/login" className="inline-flex items-center gap-1 text-sm opacity-90"><ArrowLeft size={18} /> {t('auth.backToSignIn')}</Link>
+        <Link to="/login" className="inline-flex items-center gap-1 text-sm opacity-90"><ArrowLeft size={18} className="rtl:rotate-180" /> {t('auth.backToSignIn')}</Link>
         <h1 className="mt-8 text-3xl font-extrabold">{t('auth.resetTitle')}</h1>
         <p className="mt-2 text-white/80">Enter your email and we'll send you a link to get back in.</p>
       </div>

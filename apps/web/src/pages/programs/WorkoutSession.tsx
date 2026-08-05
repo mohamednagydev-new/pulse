@@ -656,7 +656,7 @@ export default function WorkoutSession() {
       {phase === 'exercise' && (
         <div className="sticky bottom-0 z-20 border-t border-white/10 bg-ink/90 p-4 backdrop-blur">
           <button onClick={finishExercise} className="btn-pill btn-green w-full">
-            {isLast ? <><Trophy size={18} /> {t('session.finish')}</> : <><Check size={18} /> {t('session.doneNext')} <ChevronRight size={16} /></>}
+            {isLast ? <><Trophy size={18} /> {t('session.finish')}</> : <><Check size={18} /> {t('session.doneNext')} <ChevronRight size={16} className="rtl:rotate-180" /></>}
           </button>
         </div>
       )}

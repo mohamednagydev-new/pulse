@@ -22,7 +22,7 @@ export default function YogaHub() {
   return (
     <div className="min-h-screen overflow-x-hidden pb-10">
       <div className="fitness-hero relative flex flex-col items-center rounded-b-[28px] px-5 pb-8 pt-14 text-center text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3.5rem)' }}>
-        <TopBar title="Yoga" color="bg-transparent" textColor="text-white" />
+        <TopBar title={t('programs.yoga')} color="bg-transparent" textColor="text-white" />
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -37,13 +37,13 @@ export default function YogaHub() {
           transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           className="mt-2 text-white/70"
         >
-          Free your mind &amp; focus on the good.
+          {t('programs.yogaTagline')}
         </motion.p>
       </div>
 
       <div className="mt-5 px-4">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">Explore</p>
-        <h2 className="mb-3 text-lg font-bold">Programs</h2>
+        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('today.explore')}</p>
+        <h2 className="mb-3 text-lg font-bold">{t('nav.programs')}</h2>
       </div>
       <div className="space-y-3 px-4">
         {(coach?.programs ?? []).map((p: any, idx: number) => (
@@ -55,14 +55,14 @@ export default function YogaHub() {
             viewport={{ once: true, margin: '0px 0px -40px 0px' }}
             transition={{ ...spring, delay: Math.min(idx, 4) * 0.05 }}
             whileTap={{ scale: 0.96 }}
-            className="card-hover flex items-center gap-4 rounded-2xl bg-gradient-to-r from-pink-50/80 to-white p-3 shadow-sm ring-1 ring-brand-pink/10"
+            className="card-hover flex items-center gap-4 rounded-2xl bg-gradient-to-r from-orange-50/80 to-white p-3 shadow-sm ring-1 ring-brand-pink/10"
           >
             <MediaImage path={p.coverImage} seed={idx} label={p.title} className="h-16 w-16 shrink-0 rounded-xl" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-bold text-brand-pink">{p.title}</p>
               {p.description && <p className="line-clamp-1 text-xs text-gray-500">{p.description}</p>}
             </div>
-            <ChevronRight className="shrink-0 text-gray-300" />
+            <ChevronRight className="shrink-0 text-gray-300 rtl:rotate-180" />
           </MotionLink>
         ))}
         {!coach?.programs?.length && <p className="py-10 text-center text-gray-400">{t('programs.noYoga')}</p>}

@@ -338,7 +338,7 @@ export default function ReelVideo({
                   <p className="truncate text-sm font-bold">
                     {reel.user.firstName} {reel.user.lastName ?? ''}
                   </p>
-                  {reel.user.level != null && <p className="text-[11px] text-white/60">Lv {reel.user.level}</p>}
+                  {reel.user.level != null && <p className="text-[11px] text-white/60">{t('common.lv', { n: reel.user.level })}</p>}
                 </div>
               </div>
             ) : null}

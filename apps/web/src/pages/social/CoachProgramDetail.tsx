@@ -17,7 +17,7 @@ export default function CoachProgramDetail() {
   if (!prog) {
     return (
       <div className="min-h-screen">
-        <TopBar title="Program" color="fitness-hero" textColor="text-white" />
+        <TopBar title={t('coach.program')} color="fitness-hero" textColor="text-white" />
         <EmptyState icon={<Dumbbell size={40} />} title={t('coach.programMissing')} hint={t('coach.programMissingHint')} />
       </div>
     );
@@ -32,7 +32,7 @@ export default function CoachProgramDetail() {
       {prog.description && <p className="px-4 text-sm text-gray-500">{prog.description}</p>}
 
       <div className="mt-3 flex items-center gap-2 px-4 text-xs font-semibold text-gray-400">
-        <CalendarDays size={14} /> {days.length}-day program
+        <CalendarDays size={14} /> {t('coach.dayProgram', { n: days.length })}
       </div>
 
       <div className="mt-3 space-y-2 px-4">
@@ -44,7 +44,7 @@ export default function CoachProgramDetail() {
             transition={{ delay: i * 0.05, type: 'spring', stiffness: 260, damping: 24 }}
             className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm"
           >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-fitness-hero/10 text-sm font-bold text-brand-blue">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-blue/10 text-sm font-bold text-brand-blue">
               {i + 1}
             </div>
             <div className="min-w-0 flex-1">
@@ -55,14 +55,14 @@ export default function CoachProgramDetail() {
                   {d.workout.muscleFocus && <p className="truncate text-xs text-gray-400">{d.workout.muscleFocus}</p>}
                 </>
               ) : (
-                <p className="text-sm text-gray-300">Workout unavailable</p>
+                <p className="text-sm text-gray-300">{t('coach.workoutUnavailable')}</p>
               )}
             </div>
             {d.workout && (
               <button
                 onClick={() => navigate(`/session/w/${d.workout!.id}`)}
                 className="flex h-10 w-10 items-center justify-center rounded-full btn-primary"
-                aria-label={`Start ${d.workout.title}`}
+                aria-label={`${t('today.start')} ${d.workout.title}`}
               >
                 <Play size={16} />
               </button>
@@ -73,7 +73,7 @@ export default function CoachProgramDetail() {
       </div>
 
       <div className="mt-6 px-4">
-        <Link to={`/u/${prog.coachUserId}`} className="btn-pill btn-ghost w-full justify-center">View coach</Link>
+        <Link to={`/u/${prog.coachUserId}`} className="btn-pill btn-ghost w-full justify-center">{t('coach.viewCoach')}</Link>
       </div>
     </div>
   );

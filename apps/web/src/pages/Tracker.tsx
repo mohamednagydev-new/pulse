@@ -82,11 +82,11 @@ export default function Tracker() {
         transition={spring}
         className="mx-4 rounded-2xl bg-gradient-to-b from-white to-emerald-50/50 p-5 shadow-sm"
       >
-        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">Today</p>
+        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('tracker.today')}</p>
         <div className="mt-1 flex items-end justify-between gap-3">
           <div className="min-w-0">
             <CountUp value={totals.calories} className="text-3xl font-extrabold" />
-            <p className="text-xs text-gray-400">{goals.calories ? `/ ${goals.calories} kcal` : 'kcal today'}</p>
+            <p className="text-xs text-gray-400">{goals.calories ? `/ ${goals.calories} kcal` : t('tracker.kcalToday')}</p>
           </div>
           <div className="shrink-0 text-end text-xs text-gray-500">
             <p>P {Math.round(totals.protein)}g</p>
@@ -149,7 +149,7 @@ export default function Tracker() {
           onClick={() => setPhoto(true)}
           className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-white p-4 text-start shadow-sm"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-brand-pink">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-brand-pink">
             <Camera size={19} />
           </span>
           <span className="min-w-0 flex-1">

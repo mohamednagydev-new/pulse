@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft } from 'lucide-react';
 
 export default function TopBar({
@@ -16,6 +17,7 @@ export default function TopBar({
   fallback?: string;
 }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   /**
    * Back must never leave the site.
@@ -43,7 +45,7 @@ export default function TopBar({
     >
       {/* min 44px target; rtl:rotate-180 so the arrow points "back" in Arabic too —
           this header is on 40+ screens, so a wrong-way arrow here is app-wide. */}
-      <button onClick={goBack} aria-label="Back" className="-ms-2 flex min-h-11 min-w-11 items-center justify-center">
+      <button onClick={goBack} aria-label={t('common.back')} className="-ms-2 flex min-h-11 min-w-11 items-center justify-center">
         <ChevronLeft size={26} className="rtl:rotate-180" />
       </button>
       {title && <h1 className="mx-auto pe-8 text-lg font-bold uppercase tracking-wide">{title}</h1>}

@@ -43,10 +43,10 @@ export default function CoachProfileEdit() {
         coachSpecialties: specialties.split(',').map((s) => s.trim()).filter(Boolean),
       });
       await refreshUser();
-      toast(isCoach ? 'Coach profile updated' : "You're now a coach! 🎉", 'success');
+      toast(isCoach ? t('coach.profileUpdated') : t('coach.nowCoach'), 'success');
       navigate(`/u/${me.id}`);
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'Failed');
+      setMsg(err instanceof Error ? err.message : t('common.somethingWrong'));
     } finally {
       setBusy(false);
     }
@@ -59,42 +59,42 @@ export default function CoachProfileEdit() {
   if (isLoading)
     return (
       <div className="min-h-screen pb-10">
-        <TopBar title="Coach Profile" color="fitness-hero" textColor="text-white" />
+        <TopBar title={t('coach.profileTitle')} color="fitness-hero" textColor="text-white" />
         <Loader />
       </div>
     );
   if (isError)
     return (
       <div className="min-h-screen pb-10">
-        <TopBar title="Coach Profile" color="fitness-hero" textColor="text-white" />
+        <TopBar title={t('coach.profileTitle')} color="fitness-hero" textColor="text-white" />
         <ErrorMsg error={error} onRetry={() => refetch()} />
       </div>
     );
 
   return (
     <div className="min-h-screen pb-10">
-      <TopBar title={isCoach ? 'Coach Profile' : 'Become a Coach'} color="fitness-hero" textColor="text-white" />
+      <TopBar title={isCoach ? t('coach.profileTitle') : t('coach.become')} color="fitness-hero" textColor="text-white" />
       <div className="px-5">
         <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
           <Dumbbell className="text-brand-blue" />
-          <p className="text-sm text-gray-500">Share your expertise, publish content, and coach the community.</p>
+          <p className="text-sm text-gray-500">{t('coach.editIntro')}</p>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <label className="block">
-            <span className="text-xs text-gray-500">Headline</span>
-            <input className="input-field mt-1" placeholder="e.g. Strength & mobility coach" value={headline} onChange={(e) => setHeadline(e.target.value)} required />
+            <span className="text-xs text-gray-500">{t('coach.headline')}</span>
+            <input className="input-field mt-1" placeholder={t('coach.headlinePh')} value={headline} onChange={(e) => setHeadline(e.target.value)} required />
           </label>
           <label className="block">
             <span className="text-xs text-gray-500">{t('coach.about')}</span>
             <textarea className="input-field mt-1 rounded-2xl" rows={4} placeholder={t('coach.bioPh')} value={bio} onChange={(e) => setBio(e.target.value)} />
           </label>
           <label className="block">
-            <span className="text-xs text-gray-500">Specialties (comma separated)</span>
-            <input className="input-field mt-1" placeholder="Strength, HIIT, Yoga, Nutrition" value={specialties} onChange={(e) => setSpecialties(e.target.value)} />
+            <span className="text-xs text-gray-500">{t('coach.specialties')}</span>
+            <input className="input-field mt-1" placeholder={t('coach.specialtiesPh')} value={specialties} onChange={(e) => setSpecialties(e.target.value)} />
           </label>
           {msg && <p className="text-center text-sm text-red-500">{msg}</p>}
           <button type="submit" disabled={busy} className="btn-pill btn-primary w-full">
-            {busy ? 'Saving…' : isCoach ? 'Update coach profile' : 'Become a coach'}
+            {busy ? t('common.saving') : isCoach ? t('coach.updateProfile') : t('coach.become')}
           </button>
         </form>
       </div>

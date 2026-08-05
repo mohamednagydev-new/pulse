@@ -188,7 +188,7 @@ export default function Achievements() {
   return (
     <div className="relative min-h-screen overflow-x-hidden pb-10">
       <AmbientBg tone="cool" />
-      <TopBar title="Achievements" color="fitness-hero" textColor="text-white" />
+      <TopBar title={t('achievements.title')} color="fitness-hero" textColor="text-white" />
 
       {!!weekly?.length && (
         <motion.section
@@ -446,7 +446,7 @@ export default function Achievements() {
                       className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-brand-blue"
                     >
                       <Share2 size={13} /> {t('challenges.invite')}: <span className="tracking-widest">{c.inviteCode}</span>
-                      <ChevronRight size={13} />
+                      <ChevronRight size={13} className="rtl:rotate-180" />
                     </button>
                   )}
                 </div>

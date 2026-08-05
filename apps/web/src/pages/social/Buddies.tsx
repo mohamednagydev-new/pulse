@@ -367,7 +367,7 @@ export function Buddies() {
                     <Link to={`/u/${r.user.id}`} className="flex-1">
                       <p className="font-semibold">{r.user.firstName} {r.user.lastName}</p>
                       <p className="flex items-center gap-2 text-xs text-gray-400">
-                        <span className="rounded-full bg-brand-pink/10 px-2 font-bold text-brand-pink">Lv {r.user.level}</span>
+                        <span className="rounded-full bg-brand-pink/10 px-2 font-bold text-brand-pink">{t('common.lv', { n: r.user.level })}</span>
                         <span className="flex items-center gap-0.5"><Flame size={11} /> {r.user.currentStreak}</span>
                       </p>
                     </Link>
@@ -399,7 +399,7 @@ export function Buddies() {
                   <Link to={`/u/${b.id}`} className="flex-1">
                     <p className="font-semibold">{b.firstName} {b.lastName}</p>
                     <p className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
-                      <span className="rounded-full bg-brand-pink/10 px-2 font-bold text-brand-pink">Lv {b.level}</span>
+                      <span className="rounded-full bg-brand-pink/10 px-2 font-bold text-brand-pink">{t('common.lv', { n: b.level })}</span>
                       <span className="flex items-center gap-0.5"><Flame size={11} className="text-orange-500" /> {b.currentStreak}</span>
                       <span className="flex items-center gap-0.5"><Zap size={11} className="text-amber-500" /> {b.weeklyXp} XP</span>
                       <span className="flex items-center gap-0.5"><Dumbbell size={11} /> {b.completions}</span>

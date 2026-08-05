@@ -13,8 +13,15 @@ export default function CategoryPage() {
     queryFn: () => api.get(`/api/categories/${id}`),
   });
 
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorMsg error={error} />;
+  // Loading/error keep the dark shell + a back affordance — no white flash, never stranded.
+  if (isLoading || error) {
+    return (
+      <div className="min-h-screen bg-gray-900 pb-10 text-white">
+        <TopBar color="bg-transparent" textColor="text-white" />
+        {isLoading ? <Loader /> : <ErrorMsg error={error} />}
+      </div>
+    );
+  }
 
   const recipes: any[] = category.recipes ?? [];
   const articles: any[] = category.articles ?? [];
@@ -22,7 +29,7 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen bg-gray-900 pb-10 text-white">
       <TopBar title={category.title} color="bg-transparent" textColor="text-white" />
-      <div className="mb-4 inline-block max-w-[80%] break-words rounded-r-full bg-gradient-to-r from-teal-600 to-teal-500 py-2 pl-6 pr-10 text-lg font-bold">
+      <div className="mb-4 inline-block max-w-[80%] break-words rounded-e-full bg-gradient-to-r from-teal-600 to-teal-500 py-2 ps-6 pe-10 text-lg font-bold">
         {category.title}
       </div>
 

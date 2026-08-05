@@ -14,6 +14,7 @@ import RelatedReels from '../../components/RelatedReels';
 
 export default function ArticlePage() {
   const { id } = useParams();
+  const { t } = useTranslation();
   const { scrollYProgress } = useScroll();
   const { data: article, isLoading, error } = useQuery({
     queryKey: ['article', id],
@@ -35,14 +36,21 @@ export default function ArticlePage() {
       : undefined,
   });
 
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorMsg error={error} />;
+  // Loading/error keep the dark shell + a back affordance — no white flash, never stranded.
+  if (isLoading || error) {
+    return (
+      <div className="min-h-screen bg-gray-900 pb-12 text-white">
+        <TopBar title={t('wellness.articles')} color="bg-transparent" textColor="text-white" />
+        {isLoading ? <Loader /> : <ErrorMsg error={error} />}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 pb-12 text-white">
       {/* Reading progress */}
       <motion.div style={{ scaleX: scrollYProgress }} className="fixed inset-x-0 top-0 z-40 h-1 origin-left bg-brand-pink" aria-hidden />
-      <TopBar title={article.category?.kind === 'initiative' ? 'Wellness Initiatives' : 'Wellness Articles'} color="bg-transparent" textColor="text-white" />
+      <TopBar title={article.category?.kind === 'initiative' ? t('wellness.initiatives') : t('wellness.articles')} color="bg-transparent" textColor="text-white" />
       <div className="px-4">
         <div className="relative">
           <MediaImage path={article.coverImage} label={article.title} className="h-48 w-full rounded-2xl" seed={3} />
@@ -52,7 +60,7 @@ export default function ArticlePage() {
         <h1 className="mt-4 break-words text-xl font-bold leading-tight sm:text-2xl">{article.title}</h1>
         <div className="mt-1 flex items-center gap-3 text-xs text-gray-400">
           <span>{article.category?.title}</span>
-          {article.readTimeMin ? <span className="flex items-center gap-1"><Clock size={12} />{article.readTimeMin} min read</span> : null}
+          {article.readTimeMin ? <span className="flex items-center gap-1"><Clock size={12} />{t('wellness.minRead', { n: article.readTimeMin })}</span> : null}
         </div>
 
         <ContentVideo videoId={article.videoId} videoUrl={article.videoUrl} poster={article.coverImage} label={article.title} className="mt-4" />

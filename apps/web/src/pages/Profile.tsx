@@ -133,7 +133,7 @@ function EditProfileSheet({ open, onClose, me }: { open: boolean; onClose: () =>
       if (res) {
         qc.invalidateQueries({ queryKey: ME_KEY });
         await refreshUser();
-        toast('Profile updated', 'success');
+        toast(t('profile.updated'), 'success');
       }
       onClose();
     },
@@ -141,7 +141,7 @@ function EditProfileSheet({ open, onClose, me }: { open: boolean; onClose: () =>
   });
 
   return (
-    <Sheet open={open} onClose={onClose} label="Edit profile">
+    <Sheet open={open} onClose={onClose} label={t('profile.edit')}>
       <div className="px-5 pb-8 pt-3">
             <h2 className="text-lg font-extrabold uppercase">{t('profile.edit')}</h2>
 
@@ -158,7 +158,7 @@ function EditProfileSheet({ open, onClose, me }: { open: boolean; onClose: () =>
               </div>
 
               <div>
-                <label className={LABEL}>Bio</label>
+                <label className={LABEL}>{t('profile.bio')}</label>
                 <textarea
                   className={`${FIELD} resize-none`}
                   rows={3}
@@ -171,9 +171,9 @@ function EditProfileSheet({ open, onClose, me }: { open: boolean; onClose: () =>
               </div>
 
               <div>
-                <label className={LABEL}>Gender</label>
+                <label className={LABEL}>{t('profile.gender')}</label>
                 <div className="flex gap-2">
-                  {([['male', '♂ Male'], ['female', '♀ Female']] as const).map(([val, label]) => (
+                  {([['male', `♂ ${t('assess.sex.male')}`], ['female', `♀ ${t('assess.sex.female')}`]] as const).map(([val, label]) => (
                     <button
                       key={val}
                       type="button"
@@ -203,7 +203,7 @@ function EditProfileSheet({ open, onClose, me }: { open: boolean; onClose: () =>
             </div>
 
             <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-pill btn-primary mt-6 w-full disabled:opacity-60">
-              {save.isPending ? 'Saving…' : 'Save changes'}
+              {save.isPending ? t('common.saving') : t('profile.saveChanges')}
             </button>
       </div>
     </Sheet>
@@ -327,15 +327,15 @@ export default function Profile() {
           onClick={() => setEditOpen(true)}
           className="mt-3 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-gray-600 shadow-sm"
         >
-          <Pencil size={12} className="text-brand-pink" /> Edit profile
+          <Pencil size={12} className="text-brand-pink" /> {t('profile.edit')}
         </motion.button>
       </div>
 
-      <p className="mt-6 px-5 text-[11px] font-bold uppercase tracking-wide text-gray-400">Explore</p>
+      <p className="mt-6 px-5 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('today.explore')}</p>
       <div className="mt-2 grid grid-cols-4 gap-2 px-5">
-        <QuickLink to="/progress" icon={<TrendingUp className="text-brand-teal" />} label="Progress" delay={0.1} />
-        <QuickLink to="/tracker" icon={<Flame className="text-brand-green" />} label="Calories" delay={0.15} />
-        <QuickLink to="/achievements" icon={<Medal className="text-amber-500" />} label="Badges" delay={0.2} />
+        <QuickLink to="/progress" icon={<TrendingUp className="text-brand-teal" />} label={t('tracker.progress')} delay={0.1} />
+        <QuickLink to="/tracker" icon={<Flame className="text-brand-green" />} label={t('tracker.calories')} delay={0.15} />
+        <QuickLink to="/achievements" icon={<Medal className="text-amber-500" />} label={t('profile.badges')} delay={0.2} />
         <QuickLink to="/meals" icon={<Dumbbell className="text-brand-blue" />} label={t('meals.title')} delay={0.25} />
       </div>
 
@@ -373,7 +373,7 @@ export default function Profile() {
         >
           <div className="flex items-center gap-2 px-5 py-4 font-bold uppercase"><Bookmark size={18} className="shrink-0" /> <span className="min-w-0 truncate">{t('profile.bookmarks')}</span></div>
           <div className="flex items-center justify-center gap-1 border-t border-white/20 py-3 text-sm">
-            {t('common.viewAll')} <ChevronRight size={16} />
+            {t('common.seeAll')} <ChevronRight size={16} className="rtl:rotate-180" />
           </div>
         </MotionLink>
 
@@ -388,7 +388,7 @@ export default function Profile() {
         >
           <div className="flex items-center gap-2 px-5 py-4 font-bold uppercase"><Dumbbell size={18} className="shrink-0" /> <span className="min-w-0 truncate">{t('profile.programsDone')}</span></div>
           <div className="flex items-center justify-center gap-1 border-t border-white/20 py-3 text-sm">
-            {t('common.viewAll')} <ChevronRight size={16} />
+            {t('common.seeAll')} <ChevronRight size={16} className="rtl:rotate-180" />
           </div>
         </MotionLink>
       </div>

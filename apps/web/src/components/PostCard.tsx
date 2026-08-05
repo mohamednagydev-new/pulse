@@ -59,7 +59,7 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
         <div className="flex-1">
           <Link to={`/u/${post.user.id}`} className="font-semibold">{name}</Link>
           {post.user.isCoach && <span className="ms-1"><CoachBadge verified={post.user.coachVerified} /></span>}
-          <span className="ms-2 rounded-full bg-brand-pink/10 px-2 py-0.5 text-[10px] font-bold text-brand-pink">Lv {post.user.level}</span>
+          <span className="ms-2 rounded-full bg-brand-pink/10 px-2 py-0.5 text-[10px] font-bold text-brand-pink">{t('common.lv', { n: post.user.level })}</span>
           <p className="text-[11px] text-gray-400">{timeAgo(post.createdAt)}</p>
         </div>
       </div>

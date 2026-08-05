@@ -52,7 +52,7 @@ export default function WorkoutHub() {
       </div>
 
       <div className="mt-6 px-4">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">Train</p>
+        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('programs.train')}</p>
         <h2 className="mb-3 text-lg font-bold">{t('workout.startSession')}</h2>
       </div>
       <div className="grid grid-cols-3 gap-3 px-4">
@@ -78,8 +78,8 @@ export default function WorkoutHub() {
       {!!coaches?.length && (
         <>
           <div className="mt-6 px-4">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">Explore</p>
-            <h2 className="mb-3 text-lg font-bold">Coaches</h2>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('today.explore')}</p>
+            <h2 className="mb-3 text-lg font-bold">{t('programs.coaches')}</h2>
           </div>
           <div className="space-y-3 px-4">
             {coaches.map((c: any, idx: number) => (
@@ -98,7 +98,7 @@ export default function WorkoutHub() {
                   <p className="truncate font-bold text-brand-blue">{c.name}</p>
                   {c.headline && <p className="truncate text-xs text-gray-500">{c.headline}</p>}
                 </div>
-                <ChevronRight className="shrink-0 text-gray-300" />
+                <ChevronRight className="shrink-0 text-gray-300 rtl:rotate-180" />
               </MotionLink>
             ))}
           </div>

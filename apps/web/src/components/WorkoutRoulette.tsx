@@ -39,7 +39,7 @@ export default function WorkoutRoulette() {
       <motion.button
         whileTap={{ scale: 0.95 }}
         onClick={draw}
-        className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-brand-green to-emerald-600 px-4 py-3.5 text-left text-white shadow-sm"
+        className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-brand-green to-emerald-600 px-4 py-3.5 text-start text-white shadow-sm"
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
           <Dices size={20} />

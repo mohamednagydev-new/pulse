@@ -87,20 +87,20 @@ export default function ProgramsHome() {
         <motion.div {...rise} transition={spring} className="glass mx-4 -mt-4 flex items-center gap-3 rounded-2xl p-4">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold">
-              {isRest ? 'Rest day — recover well 😌' : `Today · ${today.focus}`}
+              {isRest ? t('today.restDay') : t('today.todayFocus', { focus: today.focus })}
             </p>
             <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-orange-500">
-              <Flame size={13} /> {streak} day streak
+              <Flame size={13} /> {t('today.streakDays', { n: streak })}
             </p>
           </div>
           <button onClick={startToday} className="btn-pill btn-primary shrink-0 px-6 py-2.5 text-sm">
-            {isRest ? 'Explore' : 'Start'}
+            {isRest ? t('today.explore') : t('today.start')}
           </button>
         </motion.div>
       )}
 
       {/* Hero tiles — full-bleed backgrounds with floating training figures */}
-      <p className="mt-5 px-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">Train</p>
+      <p className="mt-5 px-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('programs.train')}</p>
       <div className="mt-2 grid grid-cols-2 gap-3 px-4">
         <motion.button
           {...rise}
@@ -114,7 +114,7 @@ export default function ProgramsHome() {
           <div className="relative flex h-full flex-col items-center justify-center gap-2">
             <CurlAnim className="animate-float h-20 w-20 drop-shadow-lg" />
             <span className="text-xl font-extrabold drop-shadow">{t('programs.workout')}</span>
-            <span className="text-[11px] font-semibold text-white/70">Strength · Sessions</span>
+            <span className="text-[11px] font-semibold text-white/70">{t('programs.workoutSub')}</span>
           </div>
         </motion.button>
         <motion.button
@@ -129,7 +129,7 @@ export default function ProgramsHome() {
           <div className="relative flex h-full flex-col items-center justify-center gap-2">
             <BreatheAnim className="animate-float h-20 w-20 drop-shadow-lg" />
             <span className="text-xl font-extrabold drop-shadow">{t('programs.yoga')}</span>
-            <span className="text-[11px] font-semibold text-white/70">Flow · Mobility</span>
+            <span className="text-[11px] font-semibold text-white/70">{t('programs.yogaSub')}</span>
           </div>
         </motion.button>
       </div>
@@ -224,7 +224,7 @@ export default function ProgramsHome() {
           <div className="mb-3 flex items-center justify-between px-4">
             <h2 className="text-lg font-bold">{t('programs.quickSessions')}</h2>
             <button onClick={() => navigate('/workout')} className="flex items-center text-sm font-semibold text-gray-400">
-              {t('common.seeAll')} <ChevronRight size={18} />
+              {t('common.seeAll')} <ChevronRight size={18} className="rtl:rotate-180" />
             </button>
           </div>
           <div className="grid grid-cols-4 gap-3 px-4">
@@ -254,7 +254,7 @@ export default function ProgramsHome() {
           <div className="mb-3 flex items-center justify-between px-4">
             <h2 className="text-lg font-bold">{t('programs.reelsTitle')}</h2>
             <button onClick={() => navigate('/reels')} className="flex items-center text-sm font-semibold text-gray-400">
-              See all <ChevronRight size={18} />
+              {t('common.seeAll')} <ChevronRight size={18} className="rtl:rotate-180" />
             </button>
           </div>
           <HScroll>
@@ -267,7 +267,7 @@ export default function ProgramsHome() {
                 onClick={() => navigate('/reels')}
                 className="relative w-28 shrink-0 overflow-hidden rounded-2xl text-start"
               >
-                <img src={r.coverUrl} alt={r.title ?? 'Workout reel'} loading="lazy" className="h-44 w-full object-cover" />
+                <img src={r.coverUrl} alt={r.title ?? t('reels.workout')} loading="lazy" className="h-44 w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <span className="absolute end-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/25 backdrop-blur">
                   <Play size={13} fill="white" className="text-white" />
@@ -286,9 +286,9 @@ export default function ProgramsHome() {
       {/* Quick links */}
       <div className="mt-6 grid grid-cols-3 gap-3 px-4">
         {[
-          { icon: CalendarDays, label: 'Schedule', color: 'text-brand-blue', to: '/schedule' },
-          { icon: ScanLine, label: 'Muscle Map', color: 'text-brand-pink', to: '/exercises' },
-          { icon: Users, label: 'Group', color: 'text-brand-green', to: '/group' },
+          { icon: CalendarDays, label: t('schedule.title'), color: 'text-brand-blue', to: '/schedule' },
+          { icon: ScanLine, label: t('workout.muscleMap'), color: 'text-brand-pink', to: '/exercises' },
+          { icon: Users, label: t('programs.group'), color: 'text-brand-green', to: '/group' },
         ].map((l, i) => (
           <motion.button
             key={l.to}

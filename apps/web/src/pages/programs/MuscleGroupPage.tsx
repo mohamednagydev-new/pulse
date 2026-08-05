@@ -20,13 +20,20 @@ export default function MuscleGroupPage() {
     queryFn: () => api.get(`/api/muscle-groups/${groupId}`),
   });
 
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorMsg error={error} />;
+  // Loading/error keep the dark shell + a back affordance — no white flash, never stranded.
+  if (isLoading || error) {
+    return (
+      <div className="min-h-screen bg-gray-900 pb-10 text-white">
+        <TopBar title={t('exercises.title')} color="bg-transparent" textColor="text-white" />
+        {isLoading ? <Loader /> : <ErrorMsg error={error} />}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 pb-10 text-white">
-      <TopBar title="Exercises" color="bg-transparent" textColor="text-white" />
-      <div className="mb-4 inline-block max-w-[80%] break-words rounded-r-full bg-gradient-to-r from-teal-600 to-teal-500 py-2 pl-6 pr-10 text-lg font-bold">
+      <TopBar title={t('exercises.title')} color="bg-transparent" textColor="text-white" />
+      <div className="mb-4 inline-block max-w-[80%] break-words rounded-e-full bg-gradient-to-r from-teal-600 to-teal-500 py-2 ps-6 pe-10 text-lg font-bold">
         {group.name}
       </div>
 
@@ -43,7 +50,7 @@ export default function MuscleGroupPage() {
               transition={{ duration: 0.35, delay: Math.min(idx * 0.03, 0.2) }}
               className="overflow-hidden rounded-2xl bg-white/5"
             >
-              <button onClick={() => setOpen(isOpen ? null : ex.id)} className="flex w-full items-center gap-3 p-3 text-left">
+              <button onClick={() => setOpen(isOpen ? null : ex.id)} className="flex w-full items-center gap-3 p-3 text-start">
                 <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-teal-500/10 text-teal-300">
                   <ExerciseVisual name={ex.name || group.name} videoUrl={ex.videoUrl} className="h-14 w-14" animClassName="h-10 w-10" />
                 </div>

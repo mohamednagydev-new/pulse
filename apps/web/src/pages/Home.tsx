@@ -97,7 +97,7 @@ export default function Home() {
           <span className="block truncate text-sm font-extrabold">{t('home2.startTraining')}</span>
           <span className="block truncate text-xs text-white/70">{t('home2.pickMuscle')}</span>
         </span>
-        <ChevronRight size={18} className="shrink-0 opacity-70" />
+        <ChevronRight size={18} className="shrink-0 opacity-70 rtl:rotate-180" />
       </motion.button>
 
       {/* Today's habits — the things that reset every morning */}
@@ -161,7 +161,7 @@ export default function Home() {
         >
           {banners[0].image && <MediaImage path={banners[0].image} className="h-14 w-14 rounded-xl" />}
           <div className="flex-1">
-            <div className="text-[10px] font-bold uppercase tracking-wide opacity-70">Sponsored · {banners[0].subtitle ?? ''}</div>
+            <div className="text-[10px] font-bold uppercase tracking-wide opacity-70">{t('ads.sponsored')} · {banners[0].subtitle ?? ''}</div>
             <div className="text-lg font-bold">{banners[0].title}</div>
           </div>
         </a>
@@ -195,7 +195,7 @@ export default function Home() {
           <span className="block text-lg font-extrabold">PULSE Reels</span>
           <span className="block truncate text-sm text-white/80">{t('home2.reelsSub')}</span>
         </span>
-        <ChevronRight className="shrink-0 opacity-80" />
+        <ChevronRight className="shrink-0 opacity-80 rtl:rotate-180" />
       </motion.button>
 
       <Section title={t('home.coaches')} onSeeAll={() => navigate('/programs')}>
@@ -269,7 +269,7 @@ function Greeting() {
       </p>
       {me && (
         <div className="flex shrink-0 items-center gap-2">
-          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">Lv {me.level ?? 1}</span>
+          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">{t('common.lv', { n: me.level ?? 1 })}</span>
           {streak > 0 && (
             <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">{streak}🔥</span>
           )}
@@ -412,7 +412,7 @@ function Section({ title, children, onSeeAll }: { title: string; children: React
       <div className="mb-3 flex items-center justify-between px-4">
         <h2 className="text-lg font-bold">{title}</h2>
         {onSeeAll && (
-          <button onClick={onSeeAll} className="text-gray-400"><ChevronRight size={22} /></button>
+          <button onClick={onSeeAll} className="text-gray-400"><ChevronRight size={22} className="rtl:rotate-180" /></button>
         )}
       </div>
       {children}

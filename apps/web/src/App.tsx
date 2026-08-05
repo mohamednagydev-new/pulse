@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuth } from './store/auth';
 import TabBar from './components/TabBar';
@@ -317,6 +318,7 @@ export default function App() {
 
 /** App-wide level-up celebration (confetti + toast) driven by the socket. */
 function CelebrationListener() {
+  const { t } = useTranslation();
   const [levelUp, setLevelUp] = useState<number | null>(null);
   useEffect(() => {
     const socket = getSocket();
@@ -336,8 +338,8 @@ function CelebrationListener() {
       <div className="fixed inset-x-0 top-24 z-[70] mx-auto flex max-w-[480px] justify-center px-4">
         <div className="animate-pop rounded-2xl bg-white px-8 py-5 text-center shadow-xl">
           <p className="text-4xl">🎉</p>
-          <p className="mt-1 text-lg font-extrabold text-brand-pink">Level {levelUp}!</p>
-          <p className="text-xs text-gray-400">You leveled up — keep the streak alive</p>
+          <p className="mt-1 text-lg font-extrabold text-brand-pink">{t('fun.levelUpTitle', { n: levelUp })}</p>
+          <p className="text-xs text-gray-400">{t('fun.levelUpSub')}</p>
         </div>
       </div>
     </>

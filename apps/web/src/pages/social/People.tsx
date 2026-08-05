@@ -84,7 +84,7 @@ export default function People() {
               <Link to={`/u/${u.id}`} className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5 font-semibold"><span className="min-w-0 truncate">{u.firstName} {u.lastName}</span> {u.isCoach && <CoachBadge verified={u.coachVerified} />}</p>
                 <p className="flex items-center gap-2 text-xs text-gray-400">
-                  <span className="rounded-full bg-brand-pink/10 px-2 font-bold text-brand-pink">Lv {u.level}</span>
+                  <span className="rounded-full bg-brand-pink/10 px-2 font-bold text-brand-pink">{t('common.lv', { n: u.level })}</span>
                   <span className="flex items-center gap-0.5"><Flame size={11} /> {u.currentStreak}</span>
                 </p>
               </Link>

@@ -39,7 +39,7 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen fitness-hero text-white">
       <div className="px-6 pt-14" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3.5rem)' }}>
-        <Link to="/login" className="inline-flex items-center gap-1 text-sm opacity-90"><ArrowLeft size={18} /> {t('auth.backToSignIn')}</Link>
+        <Link to="/login" className="inline-flex items-center gap-1 text-sm opacity-90"><ArrowLeft size={18} className="rtl:rotate-180" /> {t('auth.backToSignIn')}</Link>
         <h1 className="mt-8 text-3xl font-extrabold">{t('auth.setNewTitle')}</h1>
         <p className="mt-2 text-white/80">{t('auth.setNewSub')}</p>
       </div>
