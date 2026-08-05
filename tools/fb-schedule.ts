@@ -39,7 +39,7 @@ function extractArabic(md: string, heading: RegExp): string | null {
   const headIdx = md.search(heading);
   if (headIdx < 0) return null;
   const after = md.slice(headIdx);
-  const m = after.match(/```\n([\s\S]*?)```/);
+  const m = after.match(/```\r?\n([\s\S]*?)```/);
   return m ? m[1].trim() : null;
 }
 
