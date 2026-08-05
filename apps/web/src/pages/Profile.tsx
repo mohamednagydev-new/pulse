@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Bookmark, Camera, Download, Dumbbell, ChevronRight, Flame, Loader2, Pencil, Ruler, TrendingUp, Medal, Settings, Weight } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { api, getAccessToken } from '../lib/api';
-import { isStandalone, openInstall } from '../lib/install';
+import { installAvailable, openInstall } from '../lib/install';
 import { toast } from '../lib/toast';
 import { MediaImage } from '../components/ui';
 import MenuDrawer from '../components/MenuDrawer';
@@ -337,8 +337,8 @@ export default function Profile() {
         <QuickLink to="/meals" icon={<Dumbbell className="text-brand-blue" />} label={t('meals.title')} delay={0.25} />
       </div>
 
-      {/* Install card — shown until the app actually lives on the home screen. */}
-      {!isStandalone() && (
+      {/* Install card — shown until we know the app lives on the home screen. */}
+      {installAvailable() && (
         <motion.button
           initial={{ opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}

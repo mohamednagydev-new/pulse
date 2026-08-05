@@ -302,6 +302,12 @@
     "ios1": "Tap the Share button in Safari",
     "ios2": "Choose Add to Home Screen",
     "ios3": "Open PULSE from your home screen",
+    "menuTitle": "Install PULSE",
+    "menu1": "Open the browser menu (⋮)",
+    "menu2": "Tap Add to Home screen (or Install app)",
+    "escapeTitle": "Open in your browser first",
+    "escape1": "Tap the ⋯ menu in the corner",
+    "escape2": "Choose Open in Safari or Chrome",
     "gotIt": "Got it"
   },
   "share": {

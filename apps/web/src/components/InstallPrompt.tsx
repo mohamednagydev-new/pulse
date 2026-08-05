@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, Share, PlusSquare } from 'lucide-react';
+import { Download, X, Share, PlusSquare, MoreVertical, Compass } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Sheet from './Sheet';
-import { getDeferredPrompt, clearDeferredPrompt, isIOS, isStandalone } from '../lib/install';
+import { getDeferredPrompt, clearDeferredPrompt, isIOS, isInAppBrowser, isStandalone, markInstalled } from '../lib/install';
 
 const SNOOZE_KEY = 'pulse_install_snooze';
 const SNOOZE_DAYS = 3;
@@ -25,7 +25,9 @@ export default function InstallPrompt() {
     const onManual = () => {
       if (isStandalone()) return;
       setVisible(true);
-      if (!getDeferredPrompt() && isIOS()) setIosHelp(true);
+      // No native prompt available → straight to the platform guide (iOS share
+      // steps, browser-menu steps, or escape-the-webview steps).
+      if (!getDeferredPrompt()) setIosHelp(true);
     };
     window.addEventListener('pulse:install-open', onManual);
 
@@ -33,9 +35,7 @@ export default function InstallPrompt() {
 
     const show = () => setVisible(true);
     let timer: ReturnType<typeof setTimeout> | undefined;
-    if (getDeferredPrompt() || isIOS()) {
-      timer = setTimeout(show, 8000); // let them look around first
-    }
+    timer = setTimeout(show, 8000); // let them look around first
     window.addEventListener('pulse:installable', show);
     return () => {
       window.removeEventListener('pulse:install-open', onManual);
@@ -58,7 +58,9 @@ export default function InstallPrompt() {
       clearDeferredPrompt();
       if (choice.outcome === 'accepted') setVisible(false);
       else dismiss();
-    } else if (isIOS()) {
+    } else {
+      // No install API here (iOS, Firefox, in-app webviews) — show the guide
+      // for this platform instead of a button that silently does nothing.
       setIosHelp(true);
     }
   };
@@ -91,25 +93,59 @@ export default function InstallPrompt() {
       </AnimatePresence>
 
       <Sheet open={visible && iosHelp} onClose={dismiss} label={t('install.iosTitle')}>
-        <div className="px-6 pb-8 pt-3 text-ink">
-            <h2 className="text-lg font-bold">{t('install.iosTitle')}</h2>
-            <ol className="mt-4 space-y-3 text-sm text-gray-600">
-              <li className="flex items-center gap-3 text-start">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-blue/10 text-brand-blue"><Share size={16} /></span>
-                {t('install.ios1')}
-              </li>
-              <li className="flex items-center gap-3 text-start">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-green/10 text-brand-green"><PlusSquare size={16} /></span>
-                {t('install.ios2')}
-              </li>
-              <li className="flex items-center gap-3 text-start">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-500 text-base">✓</span>
-                {t('install.ios3')}
-              </li>
-            </ol>
-            <button onClick={dismiss} className="btn-pill btn-primary mt-6 w-full">{t('install.gotIt')}</button>
-        </div>
+        <InstallGuide
+          onDone={() => {
+            // Walking the guide is the best signal we will ever get on iOS
+            // (no appinstalled event exists there) — stop nagging with the
+            // floating button; the Profile/Settings entries remain.
+            markInstalled();
+            dismiss();
+          }}
+        />
       </Sheet>
     </>
+  );
+}
+
+/** Platform-appropriate manual install steps. Three cases:
+ *  in-app webview (can't install at all — escape to a real browser first),
+ *  iOS (share-menu steps — Apple exposes no install API, by design),
+ *  everything else (browser-menu steps, e.g. Firefox Android). */
+function InstallGuide({ onDone }: { onDone: () => void }) {
+  const { t } = useTranslation();
+  const kind = isInAppBrowser() ? 'webview' : isIOS() ? 'ios' : 'menu';
+  const steps: { icon: ReactNode; text: string }[] =
+    kind === 'webview'
+      ? [
+          { icon: <MoreVertical size={16} />, text: t('install.escape1') },
+          { icon: <Compass size={16} />, text: t('install.escape2') },
+          { icon: <Share size={16} />, text: t('install.ios1') },
+        ]
+      : kind === 'ios'
+        ? [
+            { icon: <Share size={16} />, text: t('install.ios1') },
+            { icon: <PlusSquare size={16} />, text: t('install.ios2') },
+            { icon: <span className="text-base">✓</span>, text: t('install.ios3') },
+          ]
+        : [
+            { icon: <MoreVertical size={16} />, text: t('install.menu1') },
+            { icon: <PlusSquare size={16} />, text: t('install.menu2') },
+            { icon: <span className="text-base">✓</span>, text: t('install.ios3') },
+          ];
+  const title = kind === 'webview' ? t('install.escapeTitle') : kind === 'ios' ? t('install.iosTitle') : t('install.menuTitle');
+  const tones = ['bg-brand-blue/10 text-brand-blue', 'bg-brand-green/10 text-brand-green', 'bg-orange-100 text-orange-500'];
+  return (
+    <div className="px-6 pb-8 pt-3 text-ink">
+      <h2 className="text-lg font-bold">{title}</h2>
+      <ol className="mt-4 space-y-3 text-sm text-gray-600">
+        {steps.map((s, i) => (
+          <li key={i} className="flex items-center gap-3 text-start">
+            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${tones[i] ?? tones[0]}`}>{s.icon}</span>
+            {s.text}
+          </li>
+        ))}
+      </ol>
+      <button onClick={onDone} className="btn-pill btn-primary mt-6 w-full">{t('install.gotIt')}</button>
+    </div>
   );
 }

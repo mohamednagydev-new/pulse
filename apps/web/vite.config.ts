@@ -20,6 +20,9 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
+        // Lets Chrome answer getInstalledRelatedApps() so the browser tab can
+        // tell the PWA is already installed and stop offering the install.
+        related_applications: [{ platform: 'webapp', url: 'https://pulse.geddo.online/manifest.webmanifest' }],
         shortcuts: [
           { name: 'Start a workout', short_name: 'Workout', url: '/workout', icons: [{ src: 'pwa-192.png', sizes: '192x192' }] },
           { name: 'Log a meal', short_name: 'Tracker', url: '/tracker', icons: [{ src: 'pwa-192.png', sizes: '192x192' }] },
