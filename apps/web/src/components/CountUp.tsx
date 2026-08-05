@@ -24,7 +24,8 @@ export default function CountUp({ value, className }: { value: number; className
   }, [value, reduce]);
 
   return (
-    <span ref={ref} className={className}>
+    // font-display = Fraunces: every counted stat gets the serif numeral voice.
+    <span ref={ref} className={`font-display ${className ?? ''}`}>
       {value}
     </span>
   );

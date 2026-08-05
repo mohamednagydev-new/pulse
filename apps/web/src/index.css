@@ -46,7 +46,7 @@ body {
 
 body {
   @apply text-ink antialiased;
-  font-family: 'Sora', 'Tajawal', system-ui, -apple-system, sans-serif;
+  font-family: 'Nunito', 'Tajawal', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   /* Motivational, energetic backdrop behind the app (visible on desktop) */
@@ -54,7 +54,7 @@ body {
 }
 
 :root[dir='rtl'] body {
-  font-family: 'Tajawal', 'Sora', system-ui, sans-serif;
+  font-family: 'Tajawal', 'Nunito', system-ui, sans-serif;
 }
 
 /* Headings: confident, tightly tracked */

@@ -33,9 +33,12 @@ export default {
         ink: '#161513',
       },
       fontFamily: {
-        sans: ['Sora', 'Tajawal', 'system-ui', '-apple-system', 'sans-serif'],
-        arabic: ['Tajawal', 'Sora', 'sans-serif'],
-        display: ['Sora', 'Tajawal', 'sans-serif'],
+        sans: ['Nunito', 'Tajawal', 'system-ui', '-apple-system', 'sans-serif'],
+        arabic: ['Tajawal', 'Nunito', 'sans-serif'],
+        // Fraunces carries the big numerals (stats, counters, timers) — a serif
+        // display voice that makes numbers feel like achievements, not data.
+        // Tajawal fallback keeps Arabic-adjacent glyphs consistent.
+        display: ['Fraunces', 'Tajawal', 'serif'],
       },
     },
   },
