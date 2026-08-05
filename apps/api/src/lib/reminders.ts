@@ -162,6 +162,13 @@ async function runCheck() {
     if (await claimJob(`backup:${day}`)) await backupDatabase(day);
   }
 
+  // Saturday 12:00 — auto-post last week's league promotions to the Facebook
+  // Page (the fixed weekly appointment from LAUNCH-CAMPAIGNS.md, on autopilot).
+  // Requires FB_PAGE_ID/FB_PAGE_TOKEN in .env; silently skipped otherwise.
+  if (localDow(now) === 6 && hour === 12 && (await claimJob(`fbleague:${day}`))) {
+    await postLeaguePromotions().catch((e) => console.warn('[fb-league]', e?.message));
+  }
+
   // Lapsed re-engagement — no activity for 3+ days (once, at 18:00).
   if (hour === 18 && (await claimJob(`lapsed:${day}`))) {
     const threeAgo = daysAgoStr(3);
@@ -206,6 +213,44 @@ async function backupDatabase(day: string) {
   } catch (e) {
     console.error('[backup] FAILED — the database has no fresh copy tonight:', (e as Error)?.message);
   }
+}
+
+/**
+ * Compose and publish the weekly league-promotions post to the Facebook Page.
+ * First names only (never full identity), top 6, plus totals — recognition
+ * content that users screenshot and reshare themselves.
+ */
+async function postLeaguePromotions() {
+  const pageId = process.env.FB_PAGE_ID;
+  const token = process.env.FB_PAGE_TOKEN;
+  if (!pageId || !token) return;
+
+  const { weekKey } = await import('./time');
+  const lastWeek = weekKey(new Date(Date.now() - 7 * 86_400_000));
+  const promoted = await prisma.leagueMember.findMany({
+    where: { weekKey: lastWeek, result: 'promoted' },
+    include: { user: { select: { firstName: true } } },
+    take: 200,
+  });
+  if (promoted.length === 0) return; // quiet week — no post beats an empty post
+
+  const names = promoted.slice(0, 6).map((p) => p.user.firstName).filter(Boolean);
+  const more = promoted.length - names.length;
+  const message =
+    `🏆 نتايج الدوري الأسبوعي!\n\n` +
+    `${promoted.length} متدرب طلعوا لدوري أعلى الأسبوع ده 🔼\n` +
+    `مبروك لـ ${names.join('، ')}${more > 0 ? ` و${more} كمان` : ''} 🥇\n\n` +
+    `الأسبوع الجديد بدأ من دلوقتي — كل نقطة بتتحسب.\n` +
+    `ادخل دوريك 👇\nhttps://pulse.geddo.online/leagues`;
+
+  const res = await fetch(`https://graph.facebook.com/v21.0/${pageId}/feed`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ message, link: 'https://pulse.geddo.online/leagues', access_token: token }),
+  });
+  const json: any = await res.json().catch(() => ({}));
+  if (json.id) console.log(`[fb-league] posted ${json.id} (${promoted.length} promotions)`);
+  else console.warn('[fb-league] post failed:', JSON.stringify(json.error ?? json));
 }
 
 /** "Your week: 4 workouts, 2 PRs, streak 12 🔥" — sent to everyone active in the last 14 days. */
