@@ -228,6 +228,31 @@ contentRouter.get('/plans', async (_req, res) => {
   res.json(plans.map((p) => ({ ...p, features: parseArray(p.features) })));
 });
 
+// ---- Sitemap (robots.txt points here; Google accepts any URL it's told about) ----
+// 120 Arabic health articles + 90 recipes are real indexable pages in a niche
+// with weak search competition — this is the free-traffic asset.
+contentRouter.get('/sitemap.xml', async (_req, res) => {
+  const base = 'https://pulse.geddo.online';
+  const [articles, recipes, programs, categories] = await Promise.all([
+    prisma.article.findMany({ select: { id: true } }),
+    prisma.recipe.findMany({ select: { id: true } }),
+    prisma.program.findMany({ select: { id: true } }),
+    prisma.category.findMany({ select: { id: true } }),
+  ]);
+  const urls = [
+    '', '/programs', '/wellness', '/workout', '/yoga', '/exercises', '/help', '/gyms',
+    ...articles.map((a) => `/article/${a.id}`),
+    ...recipes.map((r) => `/recipe/${r.id}`),
+    ...programs.map((p) => `/programs/${p.id}`),
+    ...categories.map((c) => `/category/${c.id}`),
+  ];
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
+    .map((u) => `  <url><loc>${base}${u}</loc></url>`)
+    .join('\n')}\n</urlset>`;
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.send(xml);
+});
+
 // ---- Search (LIKE-based; FTS5 upgrade later) ----
 contentRouter.get('/search', async (req, res) => {
   const q = (typeof req.query.q === 'string' ? req.query.q : '').trim();

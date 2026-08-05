@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Clock, Flame, Users, ChefHat, ShoppingBag, Check } from 'lucide-react';
 import { api } from '../../lib/api';
+import { usePageMeta } from '../../lib/seo';
 import { Loader, ErrorMsg, MediaImage } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import BookmarkButton from '../../components/BookmarkButton';
@@ -17,6 +18,24 @@ export default function RecipePage() {
   const { id } = useParams();
   const { t } = useTranslation();
   const { data: recipe, isLoading, error } = useQuery({ queryKey: ['recipe', id], queryFn: () => api.get(`/api/recipes/${id}`) });
+
+  usePageMeta({
+    title: recipe?.title,
+    description: recipe?.about?.slice(0, 200),
+    jsonLd: recipe
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Recipe',
+          name: recipe.title,
+          description: recipe.about ?? undefined,
+          recipeCuisine: recipe.cuisine ?? undefined,
+          nutrition: recipe.calories
+            ? { '@type': 'NutritionInformation', calories: `${recipe.calories} calories`, proteinContent: recipe.protein ? `${recipe.protein} g` : undefined }
+            : undefined,
+          publisher: { '@type': 'Organization', name: 'PULSE', url: 'https://pulse.geddo.online' },
+        }
+      : undefined,
+  });
 
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [done, setDone] = useState<Set<number>>(new Set());

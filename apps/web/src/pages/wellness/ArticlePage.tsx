@@ -4,6 +4,7 @@ import { motion, useScroll } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BadgeCheck, Clock, ExternalLink } from 'lucide-react';
 import { api } from '../../lib/api';
+import { usePageMeta } from '../../lib/seo';
 import { Loader, ErrorMsg, MediaImage } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import BookmarkButton from '../../components/BookmarkButton';
@@ -17,6 +18,21 @@ export default function ArticlePage() {
   const { data: article, isLoading, error } = useQuery({
     queryKey: ['article', id],
     queryFn: () => api.get(`/api/articles/${id}`),
+  });
+
+  usePageMeta({
+    title: article?.title,
+    description: article?.excerpt ?? article?.body?.slice(0, 200),
+    jsonLd: article
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: article.title,
+          description: article.excerpt ?? undefined,
+          inLanguage: ['en', 'ar'],
+          publisher: { '@type': 'Organization', name: 'PULSE', url: 'https://pulse.geddo.online' },
+        }
+      : undefined,
   });
 
   if (isLoading) return <Loader />;
