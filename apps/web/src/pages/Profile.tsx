@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Bookmark, Camera, Dumbbell, ChevronRight, Flame, Loader2, Pencil, Ruler, TrendingUp, Medal, Settings, Weight } from 'lucide-react';
+import { Bookmark, Camera, Download, Dumbbell, ChevronRight, Flame, Loader2, Pencil, Ruler, TrendingUp, Medal, Settings, Weight } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { api, getAccessToken } from '../lib/api';
+import { isStandalone, openInstall } from '../lib/install';
 import { toast } from '../lib/toast';
 import { MediaImage } from '../components/ui';
 import MenuDrawer from '../components/MenuDrawer';
@@ -328,6 +329,28 @@ export default function Profile() {
         <QuickLink to="/achievements" icon={<Medal className="text-amber-500" />} label="Badges" delay={0.2} />
         <QuickLink to="/meals" icon={<Dumbbell className="text-brand-blue" />} label={t('meals.title')} delay={0.25} />
       </div>
+
+      {/* Install card — shown until the app actually lives on the home screen. */}
+      {!isStandalone() && (
+        <motion.button
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={spring}
+          whileTap={{ scale: 0.97 }}
+          onClick={openInstall}
+          className="mx-5 mt-5 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl bg-white p-4 text-start shadow-sm"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundImage: 'linear-gradient(135deg,#fb923c,#ea580c)' }}>
+            <Download size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold">{t('install.title')}</span>
+            <span className="block text-xs text-gray-500">{t('install.desc')}</span>
+          </span>
+          <ChevronRight size={18} className="shrink-0 text-gray-300 rtl:rotate-180" />
+        </motion.button>
+      )}
 
       <div className="mt-5 space-y-5 px-5">
         <MotionLink

@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Clapperboard,
   ClipboardList,
+  Download,
   Dumbbell,
   Flame,
   Gift,
@@ -39,6 +40,7 @@ import {
 } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
+import { openInstall } from '../lib/install';
 
 /* ------------------------------------------------------------------ *
  * Partner contact details — CHANGE THESE IN ONE PLACE.
@@ -59,7 +61,14 @@ const USER_BENEFITS: Benefit[] = [
   { icon: Dumbbell, en: '85 exercises with animated form guides', ar: '٨٥ تمرين بالحركة والشرح خطوة بخطوة' },
   { icon: ScanLine, en: 'Interactive muscle map — tap a muscle, get its exercises', ar: 'خريطة عضلات تفاعلية — دوس على العضلة تجيبلك تمارينها' },
   { icon: CalendarDays, en: 'Your weekly schedule + one-tap start', ar: 'جدولك الأسبوعي + زرار واحد يبدأ تمرين النهارده' },
+  { icon: Salad, en: 'A daily meal plan that explains itself — every plate says why, and you can swap any meal', ar: 'خطة أكل يومية بتشرح نفسها — كل طبق معاه السبب، وتقدر تبدّل أي وجبة' },
+  { icon: Salad, en: 'Egyptian food database — log فول وطعمية by name, in Arabic', ar: 'قاعدة أكل مصري — سجّل فول وطعمية بالاسم وبالعربي' },
+  { icon: Sparkles, en: 'Snap your plate and the app estimates the calories', ar: 'صوّر طبقك والتطبيق يقدّر السعرات' },
   { icon: Flame, en: 'Calorie & weight tracking with your own goals', ar: 'متابعة السعرات والوزن بأهدافك الشخصية' },
+  { icon: Flame, en: 'Water tracking with a daily goal', ar: 'متابعة المية بهدف يومي' },
+  { icon: TrendingUp, en: 'Body measurements + private progress photos only you can see', ar: 'قياسات جسمك + صور تقدم خاصة محدش يشوفها غيرك' },
+  { icon: Trophy, en: 'Weekly leagues — top five promote every Saturday', ar: 'دوري أسبوعي — أول ٥ بيصعدوا كل سبت' },
+  { icon: Mail, en: 'A weekly recap of your workouts, PRs and streak', ar: 'ملخص أسبوعي بتمارينك وأرقامك وسلسلتك' },
   { icon: Trophy, en: 'Personal records — watch your numbers climb', ar: 'أرقامك القياسية — شوفها بتكبر' },
   { icon: Zap, en: "Streaks with a freeze — one missed day won't reset you", ar: 'سلسلة أيام مع فريز — يوم فايت مش هيصفّرك' },
   { icon: Target, en: 'Personal challenges — set your own goal and chase it', ar: 'تحديات شخصية — حدد هدفك واجري وراه' },
@@ -159,7 +168,7 @@ const GYM_BENEFITS: Benefit[] = [
 
 /** The daily loop, in the order a real user lives it. Steps are deliberately
  *  small — the point is to show the app takes minutes, not hours. */
-type Step = { icon: LucideIcon; en: string; ar: string; enBody: string; arBody: string; to?: string };
+type Step = { icon: LucideIcon; en: string; ar: string; enBody: string; arBody: string; to?: string; action?: 'install' };
 
 const HOW_TO: Step[] = [
   {
@@ -189,6 +198,13 @@ const HOW_TO: Step[] = [
     ar: 'اتمرن مع التايمر والصوت',
     enBody: 'Rest counts down for you, your music keeps playing, and the coach voice calls out what is next.',
     arBody: 'الراحة بتتعد لوحدها، ومزيكتك شغالة، والمدرب الصوتي بينادي على اللي جاي.',
+  },
+  {
+    icon: Salad, to: '/meals',
+    en: 'Eat from your plate, not a spreadsheet',
+    ar: 'كل من طبقك مش من جدول',
+    enBody: "The meal plan fills your day with real food that fits your numbers — every meal says why it's there. Swap what you don't like, log with one tap, or snap a photo and let the app count it.",
+    arBody: 'خطة الأكل بتملى يومك بأكل حقيقي على قد أرقامك — كل وجبة معاها سببها. بدّل اللي مش عاجبك، سجّل بدوسة، أو صوّر طبقك وسيب التطبيق يحسب.',
   },
   {
     icon: Target, to: '/',
@@ -224,6 +240,13 @@ const HOW_TO: Step[] = [
     ar: 'بص على التقدم مرة في الأسبوع',
     enBody: 'Your streak calendar, weight, measurements and personal records — all in one place. This is the part that keeps you honest.',
     arBody: 'تقويم السلسلة والوزن والقياسات وأرقامك القياسية في مكان واحد. الجزء ده هو اللي بيخليك صادق مع نفسك.',
+  },
+  {
+    icon: Download, action: 'install',
+    en: 'Put it on your home screen',
+    ar: 'حطه على شاشتك الرئيسية',
+    enBody: 'One tap makes PULSE a real app — full screen, faster, with reminders. Smaller than a single photo, no app store needed.',
+    arBody: 'دوسة واحدة تخلي PULSE تطبيق حقيقي — شاشة كاملة وأسرع وبتنبيهات. أصغر من صورة واحدة ومن غير ستور.',
   },
 ];
 
@@ -320,7 +343,7 @@ export default function Help() {
                   transition={{ type: 'spring', stiffness: 260, damping: 24, delay: Math.min(i, 6) * 0.04 }}
                 >
                   <button
-                    onClick={() => step.to && navigate(step.to)}
+                    onClick={() => (step.action === 'install' ? openInstall() : step.to && navigate(step.to))}
                     className="flex w-full items-start gap-3 rounded-2xl bg-white p-4 text-start shadow-sm transition active:scale-[0.98]"
                   >
                     <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-100 text-brand-pink">

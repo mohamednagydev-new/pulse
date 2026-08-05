@@ -209,6 +209,12 @@ PULSE بيسألك **بيوجعك إيه**. 🔥
 | **Water tracking** | "٨ كوبايات في اليوم… التطبيق بيفكّرك 💧" |
 | **Events board** | "فيه حصة أو جري قريب منك الأسبوع ده 📅" |
 | **Deals** | "كوبونات من جيمات ومتاجر — من جوه التطبيق 🎟️" |
+| **Meal plan that explains itself** | "خطة أكل بتقولك ليه الطبق ده بالذات — وبدّل اللي مش عاجبك 🍽️" |
+| **Egyptian food logging** | "سجّل فول وطعمية بالاسم — قاعدة أكل مصري مش مترجمة 🇪🇬" |
+| **Meal photo estimate** | "صوّر طبقك… والتطبيق يحسب السعرات 📸" |
+| **Dietary preferences** | "نباتي؟ عندك حساسية؟ الخطة بتسمعك — من الإعدادات 🥗" |
+| **Private progress photos** | "صور التقدم بتاعتك ليك انت بس — محدش يشوفها غيرك 🔒" |
+| **Coach marketplace** | "مدرب حقيقي من غير عمولة — كلمه من جوه التطبيق 🤝" |
 
 ---
 
@@ -321,6 +327,8 @@ Rotate these 6 templates:
 | **Daily quests** | Post the three quests each morning as a story poll: "خلّصت كام واحدة؟" |
 | **Events board** | Every listed event is a co-marketing post with the venue — they share it to their audience too |
 | **Challenge completions** | Each finished challenge posts to the feed automatically. Repost the good ones as social proof |
+| **Coach marketplace** | Every coach you onboard brings their own clients into the app — recruit coaches like distribution partners, not users. One "become a coach" post per month, and DM every trainer who engages |
+| **Install prompts** | The app now offers install everywhere (floating button + Profile + Settings + the Help guide). In content, always say "installs in one tap — smaller than a photo"; the friction objection is gone, use it |
 
 > **The compounding move:** every share card carries the PULSE brand + your URL. Push users to share, and your users become your ad budget.
 

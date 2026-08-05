@@ -644,6 +644,12 @@ Rule: 30–35ml per kg of bodyweight.
 | Streak calendar | سنة كاملة من تمارينك في صورة واحدة 📅 | A full year of training in one picture 📅 |
 | Events | فيه حصة أو جري قريب منك الأسبوع ده 📅 | There's a class or a run near you this week 📅 |
 | Deals | كوبونات من جيمات ومتاجر — من جوه التطبيق 🎟️ | Gym and store coupons — right inside the app 🎟️ |
+| Meal plan | خطة أكل بتقولك ليه الطبق ده بالذات 🍽️ | A meal plan that tells you why each plate 🍽️ |
+| Egyptian food | سجّل فول وطعمية بالاسم… بالعربي 🇪🇬 | Log فول وطعمية by name — a real Egyptian food database 🇪🇬 |
+| Meal photo | صوّر طبقك والتطبيق يحسب السعرات 📸 | Snap your plate — the app counts the calories 📸 |
+| Meal prefs | نباتي؟ حساسية؟ الخطة بتسمعك 🥗 | Vegetarian? Allergies? The plan listens 🥗 |
+| Progress photos | صور تقدمك ليك انت بس 🔒 | Your progress photos are for your eyes only 🔒 |
+| Coaches | مدرب حقيقي من غير عمولة 🤝 | A real coach, zero commission 🤝 |
 
 **Caption formula · صيغة الكابشن:**
 ```
@@ -745,6 +751,102 @@ Link in bio 👆
 
 **Media:** film the wheel spinning and landing. Cut on the confetti.
 **الميديا:** صوّر العجلة وهي بتلف وبتقف. اقطع على الكونفيتي.
+
+---
+
+### FEATURE POST — The meal plan that explains itself · خطة الأكل اللي بتشرح نفسها
+
+**🇪🇬**
+```
+كل تطبيقات الدايت بتقولك "كُل ده" 🍽️
+PULSE بيقولك كُل ده… عشان كذا.
+
+كل وجبة في يومك معاها سببها:
+"بروتين عالي عشان يومك يوم تمرين"
+"عشا خفيف عشان قربت من هدفك"
+
+مش عاجبك طبق؟ بدّله بدوسة — والبديل بنفس الأرقام.
+نباتي؟ عندك حساسية من حاجة؟ قوله مرة واحدة وهيفتكر.
+
+وأكلنا أكلنا: فول وطعمية وكشري بالاسم، مش "chickpea bowl" 🇪🇬
+ولو مش عارف الطبق فيه كام… صوّره والتطبيق يقدّرلك 📸
+
+خطة تقدر تفهمها هي خطة تقدر تمشي عليها.
+
+PULSE — مجاني بالكامل
+اللينك في البايو 👆
+#اكل_صحي #دايت #سعرات #مصر #فتنس
+```
+
+**🇬🇧**
+```
+Every diet app says "eat this" 🍽️
+PULSE says eat this — because.
+
+Every meal on your day carries its reason:
+"High protein — today is a training day"
+"Light dinner — you're close to your target"
+
+Don't like a plate? Swap it in one tap — the swap fits the same numbers.
+Vegetarian? Allergic to something? Say it once, it remembers.
+
+And it speaks our food: فول, طعمية and كشري by name — not "chickpea bowl" 🇪🇬
+Not sure what's in your plate? Snap a photo and let it estimate 📸
+
+A plan you can understand is a plan you can follow.
+
+PULSE — completely free
+Link in bio 👆
+#nutrition #mealplan #fitnessegypt #healthyfood
+```
+
+**Media:** screen-record the meal plan — scroll slowly so the "reason" line under each meal is readable, tap Swap, show the alternatives. End on the photo-estimate.
+**الميديا:** صوّر شاشة خطة الأكل — انزل ببطء عشان سطر "السبب" يبان تحت كل وجبة، دوس بدّل، ورّي البدائل. اقفل على تصوير الطبق.
+
+---
+
+### FEATURE POST — Real coaches, zero commission · مدربين حقيقيين من غير عمولة
+
+**🇪🇬**
+```
+عايز مدرب حقيقي يتابعك؟ 🤝
+
+في PULSE فيه دليل مدربين — بتخصصاتهم وتقييماتهم من عملاء حقيقيين.
+تبعتله طلب، يقبلك، وتتكلموا مباشرة من جوه التطبيق.
+
+والجزء اللي مش هتلاقيه في أي حتة تانية:
+إحنا مش بناخد عمولة. ولا جنيه. 
+فلوس المدرب كلها للمدرب — وعلاقتك بيه ملكك انتوا الاتنين.
+
+وانت كمان لو مدرب: اعمل بروفايلك ببلاش،
+انشر برامجك، واستقبل عملاء من غير ما حد ياخد منك حاجة.
+
+PULSE — مجاني للطرفين
+اللينك في البايو 👆
+#كوتش #مدرب #فتنس #مصر #جيم
+```
+
+**🇬🇧**
+```
+Want a real coach in your corner? 🤝
+
+PULSE has a coach directory — specialties, and ratings from real clients.
+Send a request, get accepted, talk directly inside the app.
+
+And here's the part you won't find anywhere else:
+We take zero commission. Not a pound.
+The coach keeps every penny — and the relationship is yours, both of you.
+
+Coaches: your profile is free. Publish your programs,
+take on clients, and nobody stands between you and them.
+
+PULSE — free for both sides
+Link in bio 👆
+#coach #fitnessegypt #personaltrainer #gym
+```
+
+**Media:** screen-record the coach directory → a coach profile with ratings → the request button. For the coach-side version, show the coach dashboard with a workout being created.
+**الميديا:** صوّر دليل المدربين ← بروفايل مدرب بالتقييمات ← زرار الطلب. ولنسخة المدربين، ورّي الداشبورد وانت بتعمل تمرين.
 
 ---
 

@@ -3,26 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X, Share, PlusSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Sheet from './Sheet';
+import { getDeferredPrompt, clearDeferredPrompt, isIOS, isStandalone } from '../lib/install';
 
 const SNOOZE_KEY = 'pulse_install_snooze';
 const SNOOZE_DAYS = 3;
 
-let deferredPrompt: (Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }) | null = null;
-// Capture as early as module load — the event often fires before React mounts.
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e as typeof deferredPrompt;
-    window.dispatchEvent(new CustomEvent('pulse:installable'));
-  });
-}
-
-function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
-}
-function isStandalone() {
-  return window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
-}
 function snoozed() {
   const t = Number(localStorage.getItem(SNOOZE_KEY) || 0);
   return Date.now() - t < SNOOZE_DAYS * 86400000;
@@ -40,7 +25,7 @@ export default function InstallPrompt() {
     const onManual = () => {
       if (isStandalone()) return;
       setVisible(true);
-      if (!deferredPrompt && isIOS()) setIosHelp(true);
+      if (!getDeferredPrompt() && isIOS()) setIosHelp(true);
     };
     window.addEventListener('pulse:install-open', onManual);
 
@@ -48,7 +33,7 @@ export default function InstallPrompt() {
 
     const show = () => setVisible(true);
     let timer: ReturnType<typeof setTimeout> | undefined;
-    if (deferredPrompt || isIOS()) {
+    if (getDeferredPrompt() || isIOS()) {
       timer = setTimeout(show, 8000); // let them look around first
     }
     window.addEventListener('pulse:installable', show);
@@ -66,10 +51,11 @@ export default function InstallPrompt() {
   };
 
   const install = async () => {
-    if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice.catch(() => ({ outcome: 'dismissed' }));
-      deferredPrompt = null;
+    const prompt = getDeferredPrompt();
+    if (prompt) {
+      await prompt.prompt();
+      const choice = await prompt.userChoice.catch(() => ({ outcome: 'dismissed' }));
+      clearDeferredPrompt();
       if (choice.outcome === 'accepted') setVisible(false);
       else dismiss();
     } else if (isIOS()) {

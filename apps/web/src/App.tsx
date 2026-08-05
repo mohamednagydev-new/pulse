@@ -7,6 +7,7 @@ import Confetti from './components/Confetti';
 import Toaster from './components/Toaster';
 import DesktopGate from './components/DesktopGate';
 import InstallPrompt from './components/InstallPrompt';
+import InstallFab from './components/InstallFab';
 import ErrorBoundary from './components/ErrorBoundary';
 import OfflineBanner from './components/OfflineBanner';
 import { getSocket } from './lib/socket';
@@ -295,7 +296,13 @@ export default function App() {
       </Suspense>
       </ErrorBoundary>
       </motion.div>
-      {TAB_ROUTES.includes(location.pathname) && <TabBar />}
+      {TAB_ROUTES.includes(location.pathname) && (
+        <>
+          <TabBar />
+          {/* Persistent until installed — the banner snoozes, this doesn't. */}
+          <InstallFab />
+        </>
+      )}
       <InstallPrompt />
       <DesktopGate />
       <CelebrationListener />
