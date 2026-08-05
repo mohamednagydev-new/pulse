@@ -37,6 +37,7 @@ import { mealsRouter } from './routes/meals';
 import { venuesRouter } from './routes/venues';
 import { supportRouter } from './routes/support';
 import { assessmentRouter } from './routes/assessment';
+import { wearablesRouter } from './routes/wearables';
 import { localizeResponse } from './lib/localize';
 import { optionalAuth } from './middleware/auth';
 
@@ -140,6 +141,7 @@ app.use('/api/meals', mealsRouter);
 app.use('/api/venues', optionalAuth, venuesRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/assessment', assessmentRouter);
+app.use('/api/wearables', wearablesRouter);
 app.use('/api/admin/reels', adminReelsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/media', mediaRouter);

@@ -82,6 +82,8 @@ model User {
   userBadges     UserBadge[]
   participations ChallengeParticipant[]
   pushSubs       PushSubscription[]
+  deviceConnections  DeviceConnection[]
+  importedActivities ImportedActivity[]
   conversations  Conversation[]
   following      Follow[]      @relation("following")
   followers      Follow[]      @relation("followers")
@@ -1294,6 +1296,49 @@ model ContentEmbedding {
 
 // (GeneratedPlan removed — the AI plan generator was retired for the rule-based
 //  coach; the model had no remaining readers or writers.)
+
+// ---------------- Wearables ----------------
+/** One linked provider account per user (Strava first; provider column keeps
+ *  the door open for Fitbit/Huawei later). Tokens live server-side only. */
+model DeviceConnection {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     String // strava
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  /** The provider's athlete/user id — webhooks address us by this. */
+  externalId   String?
+  lastSyncAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@unique([userId, provider])
+  @@index([provider, externalId])
+}
+
+/** A watch-recorded activity imported from a provider. Only aggregates are
+ *  stored (never GPS tracks). `credited` marks whether it paid XP/streak —
+ *  capped per day so imports cannot be farmed. */
+model ImportedActivity {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    String
+  externalId  String
+  type        String // Run | Ride | WeightTraining | ...
+  name        String?
+  startedAt   DateTime
+  durationSec Int
+  distanceM   Float?
+  calories    Float?
+  avgHr       Float?
+  credited    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@unique([provider, externalId])
+  @@index([userId, startedAt])
+}
 
 /** One row per completed one-shot scheduled job (nudges, recaps, re-engagement).
  *  The unique key makes "run once per slot" atomic across restarts — the hourly

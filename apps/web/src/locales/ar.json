@@ -314,6 +314,18 @@
     "escape2": "اختار افتح في Safari أو Chrome",
     "gotIt": "تمام"
   },
+  "wearables": {
+    "title": "الأجهزة المتصلة",
+    "desc": "اربط Strava وتمارين ساعتك هتتحسب هنا لوحدها — جارمن وأمازفيت وسامسونج وهواوي ومي باند (عن طريق Zepp) كلهم بيتزامنوا من خلاله.",
+    "connectStrava": "اربط Strava ⌚",
+    "stravaOn": "Strava متوصل · {{n}} نشاط متسجل",
+    "sync": "زامن دلوقتي",
+    "synced": "اتزامن — {{n}} نشاط جديد",
+    "disconnect": "افصل",
+    "connected": "Strava اتوصل ⌚",
+    "disconnected": "Strava اتفصل",
+    "error": "موصلناش لـ Strava — جرّب تاني"
+  },
   "share": {
     "pr": "رقم قياسي جديد",
     "workoutDone": "التمرين اكتمل",

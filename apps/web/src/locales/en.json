@@ -310,6 +310,18 @@
     "escape2": "Choose Open in Safari or Chrome",
     "gotIt": "Got it"
   },
+  "wearables": {
+    "title": "Connected devices",
+    "desc": "Link Strava and your watch workouts count here automatically — Garmin, Amazfit, Samsung, Huawei and Mi Band (via Zepp) can all sync through it.",
+    "connectStrava": "Connect Strava ⌚",
+    "stravaOn": "Strava connected · {{n}} activities imported",
+    "sync": "Sync now",
+    "synced": "Synced — {{n}} new activities",
+    "disconnect": "Disconnect",
+    "connected": "Strava connected ⌚",
+    "disconnected": "Strava disconnected",
+    "error": "Couldn't reach Strava — try again"
+  },
   "share": {
     "pr": "New Personal Record",
     "workoutDone": "Workout Complete",

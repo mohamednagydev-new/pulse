@@ -7,6 +7,7 @@ import { Check, SkipForward, Music, Play, Pause, X, Timer, ChevronRight, Trophy,
 import { api } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { shareMilestone } from '../../lib/shareCard';
+import HrMonitor from '../../components/HrMonitor';
 import { useAuth } from '../../store/auth';
 import { Loader } from '../../components/ui';
 import ExerciseVisual from '../../components/ExerciseVisual';
@@ -431,6 +432,8 @@ export default function WorkoutSession() {
             ⚡ {isAr ? 'رجعة سريعة · ١٠ دقايق وترجع' : 'Quick comeback · 10 min'}
           </span>
         )}
+        {/* Live heart rate over Web Bluetooth — renders nothing on iOS. */}
+        <HrMonitor className="ms-auto" />
       </div>
 
       {phase === 'rest' ? (

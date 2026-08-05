@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Bell, Check, ChevronDown, ChevronLeft, Copy, Download, Gift, HelpCircle, Instagram, LayoutDashboard, LogOut, MessageSquare, Share2 } from 'lucide-react';
+import { Bell, Check, ChevronDown, ChevronLeft, Copy, Download, Gift, HelpCircle, Instagram, LayoutDashboard, LogOut, MessageSquare, RefreshCw, Share2, Unplug, Watch } from 'lucide-react';
 import { api } from '../lib/api';
+import { toast } from '../lib/toast';
 import { ErrorMsg } from '../components/ui';
 import { useAuth } from '../store/auth';
 import LanguageToggle from '../components/LanguageToggle';
@@ -74,6 +75,8 @@ export default function Info() {
         {/* Wait for /api/me so the pickers open on the saved values instead of
             rendering defaults and snapping once the response lands. */}
         {!meLoading && <CountryPicker me={me} />}
+
+        <WearablesSection />
 
         <motion.button
           whileTap={{ scale: 0.98 }}
@@ -372,6 +375,107 @@ function SettingsForms() {
         </motion.button>
       </form>
       {msg && <p className="text-center text-sm text-brand-green">{msg}</p>}
+    </div>
+  );
+}
+
+/* ---------- Connected devices (wearables — see WEARABLES.md) ---------- */
+
+function WearablesSection() {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const { data: status } = useQuery({ queryKey: ['wearables'], queryFn: () => api.get('/api/wearables/status') });
+
+  // Toast the OAuth landing (?wearable=connected|error) exactly once.
+  useEffect(() => {
+    const flag = new URLSearchParams(window.location.search).get('wearable');
+    if (!flag) return;
+    toast(flag === 'connected' ? t('wearables.connected') : t('wearables.error'), flag === 'connected' ? 'success' : 'error');
+    window.history.replaceState({}, '', window.location.pathname);
+    qc.invalidateQueries({ queryKey: ['wearables'] });
+  }, [qc, t]);
+
+  // Server has no Strava keys → the whole section stays invisible.
+  if (!status?.strava?.enabled) return null;
+  const connected = Boolean(status.strava.connected);
+
+  const connect = async () => {
+    setBusy(true);
+    try {
+      const { url } = await api.get('/api/wearables/strava/connect');
+      window.location.href = url;
+    } catch {
+      toast(t('wearables.error'), 'error');
+      setBusy(false);
+    }
+  };
+
+  const sync = async () => {
+    setBusy(true);
+    try {
+      const r = await api.post('/api/wearables/strava/sync');
+      toast(t('wearables.synced', { n: r.added ?? 0 }), 'success');
+      qc.invalidateQueries({ queryKey: ['wearables'] });
+    } catch (e) {
+      toast(e instanceof Error ? e.message : t('wearables.error'), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const disconnect = async () => {
+    setBusy(true);
+    try {
+      await api.del('/api/wearables/strava');
+      toast(t('wearables.disconnected'), 'info');
+      qc.invalidateQueries({ queryKey: ['wearables'] });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
+          <Watch size={20} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold">{t('wearables.title')}</p>
+          <p className="text-xs text-gray-500">
+            {connected ? t('wearables.stravaOn', { n: status.imported ?? 0 }) : t('wearables.desc')}
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 flex gap-2">
+        {connected ? (
+          <>
+            <button
+              onClick={sync}
+              disabled={busy}
+              className="btn-pill btn-primary flex min-h-10 flex-1 items-center justify-center gap-1.5 text-sm disabled:opacity-60"
+            >
+              <RefreshCw size={14} className={busy ? 'animate-spin' : ''} /> {t('wearables.sync')}
+            </button>
+            <button
+              onClick={disconnect}
+              disabled={busy}
+              className="btn-pill flex min-h-10 items-center justify-center gap-1.5 border border-gray-200 px-4 text-sm font-semibold text-gray-500 disabled:opacity-60"
+            >
+              <Unplug size={14} /> {t('wearables.disconnect')}
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={connect}
+            disabled={busy}
+            className="btn-pill btn-primary min-h-10 w-full text-sm disabled:opacity-60"
+          >
+            {t('wearables.connectStrava')}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
