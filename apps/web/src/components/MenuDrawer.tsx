@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
+import { rankRing } from '../lib/levels';
 import LanguageToggle from './LanguageToggle';
 import { currentTheme, toggleTheme } from '../lib/theme';
 
@@ -145,7 +146,15 @@ export default function MenuDrawer({ className = '' }: { className?: string }) {
               </div>
 
               <Link to="/profile" onClick={close} className="mx-3 flex shrink-0 items-center gap-3 rounded-2xl bg-white/5 p-3">
-                <MediaImage path={user?.avatarUrl} label={user?.firstName} className="h-11 w-11 rounded-full ring-2 ring-white/30" seed={3} />
+                {/* Rank ring cosmetic when the auth user carries a level; the User
+                    type doesn't declare it, so read defensively and fall back to
+                    the plain white ring when it's absent. */}
+                <MediaImage
+                  path={user?.avatarUrl}
+                  label={user?.firstName}
+                  className={`h-11 w-11 rounded-full ${typeof (user as any)?.level === 'number' ? rankRing((user as any).level as number) : 'ring-2 ring-white/30'}`}
+                  seed={3}
+                />
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{user?.firstName} {user?.lastName}</p>
                   <p className="truncate text-xs text-white/60">{L('View profile', 'شوف بروفايلك')}</p>

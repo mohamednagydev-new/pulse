@@ -21,6 +21,8 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error) {
     console.error('[ErrorBoundary]', error);
+    // Lazy import keeps this file dependency-free unless a crash actually happens.
+    import('../lib/track').then(({ track }) => track('client-error', `boundary: ${error.message}`.slice(0, 200))).catch(() => {});
   }
 
   render() {

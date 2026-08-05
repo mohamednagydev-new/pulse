@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Info, RefreshCw, SlidersHorizontal, UtensilsCrossed, X } from 'lucide-react';
+import { Check, Copy, Info, MessageCircle, RefreshCw, SlidersHorizontal, UtensilsCrossed, X } from 'lucide-react';
 import { api } from '../lib/api';
-import { Loader } from '../components/ui';
+import { toast } from '../lib/toast';
+import { ErrorMsg, Loader } from '../components/ui';
 import Sheet from '../components/Sheet';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
@@ -49,6 +50,7 @@ export default function MealPlan() {
   const pick = (b?: Bi) => (b ? (isAr ? b.ar : b.en) : '');
   const [swapping, setSwapping] = useState<Meal['slot'] | null>(null);
   const [prefsOpen, setPrefsOpen] = useState(false);
+  const [groceryOpen, setGroceryOpen] = useState(false);
 
   const { data, isLoading } = useQuery({ queryKey: ['meal-plan'], queryFn: () => api.get('/api/meals/plan') });
 
@@ -81,14 +83,23 @@ export default function MealPlan() {
       >
         <div className="flex items-center justify-between">
           <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('meals.todayTarget')}</p>
-          {/* Diet preferences were PATCH-able for months with no UI — the planner
-              could never be told about vegetarians or food dislikes. */}
-          <button
-            onClick={() => setPrefsOpen(true)}
-            className="flex min-h-9 items-center gap-1.5 rounded-full bg-gray-100 px-3 text-xs font-bold text-gray-600 transition active:scale-95"
-          >
-            <SlidersHorizontal size={13} /> {t('meals.prefs')}
-          </button>
+          <div className="flex items-center gap-1.5">
+            {/* Turn the plan into a market list — the plan already knows the ingredients. */}
+            <button
+              onClick={() => setGroceryOpen(true)}
+              className="flex min-h-9 items-center gap-1.5 rounded-full bg-gray-100 px-3 text-xs font-bold text-gray-600 transition active:scale-95"
+            >
+              🛒 {isAr ? 'قايمة المشتريات' : 'Shopping list'}
+            </button>
+            {/* Diet preferences were PATCH-able for months with no UI — the planner
+                could never be told about vegetarians or food dislikes. */}
+            <button
+              onClick={() => setPrefsOpen(true)}
+              className="flex min-h-9 items-center gap-1.5 rounded-full bg-gray-100 px-3 text-xs font-bold text-gray-600 transition active:scale-95"
+            >
+              <SlidersHorizontal size={13} /> {t('meals.prefs')}
+            </button>
+          </div>
         </div>
         <div className="mt-1 flex items-end justify-between gap-3">
           <div className="min-w-0">
@@ -226,7 +237,133 @@ export default function MealPlan() {
       )}
 
       <PrefsSheet open={prefsOpen} onClose={() => setPrefsOpen(false)} />
+      <GrocerySheet open={groceryOpen} onClose={() => setGroceryOpen(false)} />
     </div>
+  );
+}
+
+/* ---------- Grocery list ---------- */
+
+type GroceryItem = { text: string; count: number };
+type GroceryRecipe = { id: string; title: string; servings: number };
+
+/** The plan turned into a market list: pick a horizon, tick things off in the
+ *  aisle, or ship the whole list to whoever is doing the shopping. */
+function GrocerySheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const [days, setDays] = useState(3);
+  // Ticks are scratch state for one trip — deliberately not persisted, reset on close.
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!open) setChecked({});
+  }, [open]);
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['grocery', days],
+    queryFn: () => api.get(`/api/meals/grocery?days=${days}`),
+    enabled: open,
+  });
+
+  const items: GroceryItem[] = data?.items ?? [];
+  const recipes: GroceryRecipe[] = data?.recipes ?? [];
+
+  const dayLabel = (n: number) => (isAr ? (n === 1 ? 'يوم' : `${n} أيام`) : n === 1 ? '1 day' : `${n} days`);
+
+  /** "PULSE — Shopping list (3 days)" then one "• item ×n" per line. */
+  const plainText = () => {
+    const title = isAr ? `PULSE — قايمة المشتريات (${dayLabel(days)})` : `PULSE — Shopping list (${dayLabel(days)})`;
+    return [title, ...items.map((it) => `• ${it.text}${it.count > 1 ? ` ×${it.count}` : ''}`)].join('\n');
+  };
+
+  const copyList = async () => {
+    try {
+      await navigator.clipboard.writeText(plainText());
+      toast(isAr ? 'اتنسخت القايمة' : 'List copied', 'success');
+    } catch {
+      toast(isAr ? 'النسخ ما نفعش' : 'Copy failed', 'error');
+    }
+  };
+
+  const shareWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(plainText())}`, '_blank', 'noopener');
+
+  return (
+    <Sheet open={open} onClose={onClose} label={isAr ? 'قايمة المشتريات' : 'Shopping list'}>
+      <div className="flex max-h-[80dvh] min-h-0 flex-col">
+        <div className="shrink-0 px-5 pb-2 pt-3">
+          <h2 className="text-lg font-extrabold">🛒 {isAr ? 'قايمة المشتريات' : 'Shopping list'}</h2>
+
+          <div className="mt-3 flex gap-2">
+            {[1, 3, 7].map((n) => (
+              <button
+                key={n}
+                onClick={() => setDays(n)}
+                className={`min-h-9 flex-1 rounded-full text-xs font-bold transition active:scale-95 ${
+                  days === n ? 'bg-brand-orange text-white' : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {dayLabel(n)}
+              </button>
+            ))}
+          </div>
+
+          {recipes.length > 0 && (
+            <p className="mt-2.5 text-xs leading-relaxed text-gray-400">
+              {isAr ? 'من: ' : 'From: '}
+              {recipes.map((r) => (r.servings > 1 ? `${r.title} ×${r.servings}` : r.title)).join(isAr ? '، ' : ', ')}
+            </p>
+          )}
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-2">
+          {isLoading && <Loader />}
+          {isError && <ErrorMsg onRetry={() => refetch()} />}
+          {!isLoading && !isError && items.length === 0 && (
+            <p className="py-8 text-center text-sm text-gray-400">{isAr ? 'مفيش حاجة في القايمة' : 'Nothing on the list yet'}</p>
+          )}
+          {items.map((it) => {
+            const done = !!checked[it.text];
+            return (
+              <button
+                key={it.text}
+                onClick={() => setChecked((c) => ({ ...c, [it.text]: !c[it.text] }))}
+                className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 py-1.5 text-start transition active:bg-gray-50"
+              >
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition ${
+                    done ? 'border-brand-orange bg-brand-orange text-white' : 'border-gray-300'
+                  }`}
+                >
+                  {done && <Check size={13} />}
+                </span>
+                <span className={`min-w-0 flex-1 text-sm ${done ? 'text-gray-300 line-through' : 'text-gray-700'}`}>
+                  {it.text}
+                  {it.count > 1 && <span className="text-gray-400"> ×{it.count}</span>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {items.length > 0 && (
+          <div className="flex shrink-0 gap-2 border-t border-gray-100 p-4">
+            <button
+              onClick={copyList}
+              className="btn-pill flex min-h-11 flex-1 items-center justify-center gap-1.5 border border-gray-200 text-sm font-bold transition active:scale-95"
+            >
+              <Copy size={15} /> {isAr ? 'انسخ' : 'Copy'}
+            </button>
+            <button
+              onClick={shareWhatsApp}
+              className="btn-pill flex min-h-11 flex-1 items-center justify-center gap-1.5 bg-[#25D366] text-sm font-bold text-white transition active:scale-95"
+            >
+              <MessageCircle size={15} /> {isAr ? 'واتساب' : 'WhatsApp'}
+            </button>
+          </div>
+        )}
+      </div>
+    </Sheet>
   );
 }
 

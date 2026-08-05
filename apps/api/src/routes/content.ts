@@ -133,6 +133,14 @@ contentRouter.get('/muscle-groups/:id', async (req: AuthedRequest, res) => {
   const gender = await preferredGender(req.userId);
   const limits = await userLimitations(req.userId);
 
+  // Resolve the progression ladder to names in one query, so the session can
+  // show "easier: incline push-up / harder: archer push-up" chips directly.
+  const ladderIds = [...new Set(group.exercises.flatMap((e) => [e.easierId, e.harderId]).filter(Boolean))] as string[];
+  const ladder = ladderIds.length
+    ? await prisma.exercise.findMany({ where: { id: { in: ladderIds } }, select: { id: true, name: true, nameAr: true, muscleGroupId: true } })
+    : [];
+  const ladderMap = new Map(ladder.map((l) => [l.id, l]));
+
   res.json({
     ...group,
     exercises: pickVideos(group.exercises, gender).map((e) => {
@@ -147,6 +155,8 @@ contentRouter.get('/muscle-groups/:id', async (req: AuthedRequest, res) => {
         contraindications: areas,
         flaggedFor: hits,
         caution: hits.length > 0,
+        easier: e.easierId ? ladderMap.get(e.easierId) ?? null : null,
+        harder: e.harderId ? ladderMap.get(e.harderId) ?? null : null,
       };
     }),
   });

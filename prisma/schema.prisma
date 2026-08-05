@@ -814,6 +814,11 @@ model Exercise {
   contraindications String?
   /** Name of a gentler movement to offer instead when it is flagged. */
   saferAlternative  String?
+  /** Progression ladder: exercise ids (loose refs, like the coach models).
+   *  easierId = the regression when this is too hard; harderId = the next step
+   *  when it gets easy. Editable in admin; shown as chips in the session. */
+  easierId       String?
+  harderId       String?
   order          Int         @default(0)
 }
 

@@ -17,6 +17,9 @@ uploads/*
 # secrets — never commit OAuth client files
 client_secret_*.json
 
+# nightly database backups
+backups/
+
 # misc
 .DS_Store
 .vite/

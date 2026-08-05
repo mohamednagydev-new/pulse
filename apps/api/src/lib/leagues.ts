@@ -94,6 +94,34 @@ export async function ensureLeagueMembership(userId: string) {
   }
 }
 
+/**
+ * Users sitting just below this week's promotion line, and how far they are
+ * from rank #PROMOTE. Feeds the Friday-evening "one session does it" push —
+ * the most actionable notification the app can send, because the gap is real.
+ */
+export async function promotionCliffhangers(maxGap = 150): Promise<{ userId: string; gap: number }[]> {
+  const week = weekKey();
+  const rooms = await prisma.leagueMember.groupBy({ by: ['tier', 'room'], where: { weekKey: week } });
+  const out: { userId: string; gap: number }[] = [];
+  for (const r of rooms) {
+    const members = await prisma.leagueMember.findMany({
+      where: { weekKey: week, tier: r.tier, room: r.room },
+      select: { userId: true },
+    });
+    if (members.length <= PROMOTE) continue; // everyone promotes anyway
+    const xpMap = await weekXpMany(members.map((m) => m.userId), week);
+    const ranked = members
+      .map((m) => ({ userId: m.userId, xp: xpMap.get(m.userId) ?? 0 }))
+      .sort((a, b) => b.xp - a.xp);
+    const line = ranked[PROMOTE - 1].xp; // XP of the last promoting seat
+    for (let i = PROMOTE; i < Math.min(ranked.length, PROMOTE + 3); i++) {
+      const gap = line - ranked[i].xp + 1; // +1: beating the seat, not tying it
+      if (gap > 0 && gap <= maxGap && ranked[i].xp > 0) out.push({ userId: ranked[i].userId, gap });
+    }
+  }
+  return out;
+}
+
 function nextTier(prev: { tier: number; result: string | null }): number {
   if (prev.result === 'promoted') return Math.min(MAX_TIER, prev.tier + 1);
   if (prev.result === 'demoted') return Math.max(0, prev.tier - 1);

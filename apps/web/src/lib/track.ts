@@ -24,4 +24,16 @@ if (typeof window !== 'undefined') {
     if (document.hidden) flush();
   });
   window.addEventListener('pagehide', flush);
+
+  // Crash telemetry: errors the user never reports still reach the admin
+  // analytics (they show up under top events as "client-error"). Rate-limited
+  // so an error loop cannot flood the events endpoint.
+  let reported = 0;
+  const report = (msg: string) => {
+    if (reported >= 5) return;
+    reported += 1;
+    track('client-error', msg);
+  };
+  window.addEventListener('error', (e) => report(`${e.message} @ ${e.filename?.split('/').pop()}:${e.lineno}`));
+  window.addEventListener('unhandledrejection', (e) => report(`unhandled: ${String(e.reason).slice(0, 150)}`));
 }

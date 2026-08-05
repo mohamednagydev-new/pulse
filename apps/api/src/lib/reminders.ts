@@ -1,7 +1,7 @@
 import { prisma } from './prisma';
 import { notifyUser, pushEnabled } from '../routes/push';
 import { ensureCurrentSeason } from './seasons';
-import { settleStaleRooms } from './leagues';
+import { settleStaleRooms, promotionCliffhangers } from './leagues';
 import { nextCheckDate } from './coach';
 import { dayString, daysAgoStr, localHour, localDow } from './time';
 
@@ -133,6 +133,23 @@ async function runCheck() {
     await sendWeeklyRecaps();
   }
 
+  // League cliffhanger — Friday 17:00, hours before Saturday settlement: people
+  // within one good session of the promotion line get told exactly how far.
+  if (localDow(now) === 5 && hour === 17 && (await claimJob(`cliffhanger:${day}`))) {
+    const near = await promotionCliffhangers().catch(() => [] as { userId: string; gap: number }[]);
+    for (const n of near) {
+      notifyUser(n.userId, {
+        title: 'One session from promotion 🏆',
+        titleAr: 'حصة واحدة وتصعد 🏆',
+        body: `You're ${n.gap} XP from the promotion line — the league settles tonight. One workout does it.`,
+        bodyAr: `فاضلك ${n.gap} نقطة على خط الصعود — الدوري بيتقفل الليلة. تمرينة واحدة تكفي.`,
+        url: '/leagues',
+        type: 'reminder',
+      });
+    }
+    if (near.length) console.log(`[league] nudged ${near.length} cliffhanger(s)`);
+  }
+
   // Nightly data retention (04:00) — keep the hot tables bounded.
   if (hour === 4) {
     const cut = (days: number) => new Date(Date.now() - days * 86400000);
@@ -142,6 +159,7 @@ async function runCheck() {
       prisma.reelWatch.deleteMany({ where: { createdAt: { lt: cut(45) } } }),
       prisma.jobRun.deleteMany({ where: { ranAt: { lt: cut(14) } } }),
     ]).catch((e) => console.warn('[retention]', e?.message));
+    if (await claimJob(`backup:${day}`)) await backupDatabase(day);
   }
 
   // Lapsed re-engagement — no activity for 3+ days (once, at 18:00).
@@ -160,6 +178,33 @@ async function runCheck() {
         type: 'reminder',
       });
     }
+  }
+}
+
+/**
+ * Nightly SQLite backup via VACUUM INTO — a consistent point-in-time copy that
+ * works while the app is live (plain file copy of a WAL database is not safe).
+ * Lands in BACKUP_DIR (default <repo>/backups); keeps the newest 14. Point
+ * BACKUP_DIR at a mounted/synced drive to make it off-site.
+ */
+async function backupDatabase(day: string) {
+  const fs = await import('fs');
+  const path = await import('path');
+  try {
+    const dir = process.env.BACKUP_DIR
+      ? path.resolve(process.env.BACKUP_DIR)
+      : path.resolve(__dirname, '../../../../backups');
+    fs.mkdirSync(dir, { recursive: true });
+    const target = path.join(dir, `pulse-${day}.db`);
+    if (fs.existsSync(target)) fs.unlinkSync(target); // VACUUM INTO refuses to overwrite
+    // Forward slashes: SQLite treats backslashes in the quoted path literally.
+    await prisma.$queryRawUnsafe(`VACUUM INTO '${target.replace(/\\/g, '/').replace(/'/g, "''")}'`);
+    const keep = 14;
+    const old = fs.readdirSync(dir).filter((f) => /^pulse-\d{4}-\d{2}-\d{2}\.db$/.test(f)).sort().slice(0, -keep);
+    for (const f of old) fs.unlinkSync(path.join(dir, f));
+    console.log(`[backup] wrote ${target}`);
+  } catch (e) {
+    console.error('[backup] FAILED — the database has no fresh copy tonight:', (e as Error)?.message);
   }
 }
 

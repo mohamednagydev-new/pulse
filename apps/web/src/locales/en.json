@@ -867,5 +867,28 @@
     "title": "Your country",
     "all": "Show everything",
     "hint": "Sets which gyms, deals, store items and events you see. Workouts, articles and recipes are the same everywhere."
+  },
+  "comeback": {
+    "title": "Come back easy 🌤️",
+    "body": "{{n}} idle days deserve a 10-minute restart, not a punishment.",
+    "cta": "Start 10-min comeback"
+  },
+  "reset": {
+    "title": "Today's 2-minute reset",
+    "min": "2 min",
+    "done": "Done",
+    "wellness": "More recovery in Wellness"
+  },
+  "weekzero": {
+    "title": "Week Zero",
+    "cardTitle": "New here? Start with Week Zero",
+    "cardSub": "7 easy days to warm you into training",
+    "intro": "Seven tiny days. No pressure, no soreness contest — just showing up.",
+    "day": "Day {{n}}",
+    "progress": "{{n}}/7 days done",
+    "locked": "Finish the day before to unlock",
+    "dayDone": "Day {{n}} done — nice and easy 🎉",
+    "setSchedule": "Set your schedule",
+    "takeIntake": "Build my plan"
   }
 }

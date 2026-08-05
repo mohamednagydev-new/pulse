@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +15,10 @@ import Confetti from '../../components/Confetti';
 import { signedMediaUrl } from '../../lib/media';
 import { successFeedback, celebrateFeedback, tapFeedback } from '../../lib/haptics';
 import { coach, cancel as cancelVoice, voiceEnabled, setVoiceEnabled } from '../../lib/voice';
+import { getRestTip } from '../../lib/restTips';
+
+/** Easier/harder progression link — present only on muscle-group exercises. */
+type ProgressionLink = { id: string; name: string; nameAr?: string | null } | null | undefined;
 
 const REST_SECONDS = 45;
 const RING_R = 54;
@@ -97,6 +101,10 @@ function AmbientGlow({ active }: { active: boolean }) {
 export default function WorkoutSession() {
   const { groupId, workoutId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // Comeback mode — Home's comeback card links here with ?short=1 for a
+  // 4-exercise session that gets a lapsed user a win without the full grind.
+  const shortMode = searchParams.get('short') === '1';
   const { t, i18n } = useTranslation();
   const isAr = i18n.language.startsWith('ar');
   const { data: source, isLoading } = useQuery({
@@ -126,6 +134,8 @@ export default function WorkoutSession() {
   const [sessionSecs, setSessionSecs] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const timer = useRef<ReturnType<typeof setInterval>>();
+  // One auto-opened share sheet per session, max — a dismissed sheet stays dismissed.
+  const autoShared = useRef(false);
 
   // A lighter week must actually be lighter, and a flagged movement must be
   // flagged where the user is about to do it — not only on the plan screen.
@@ -143,8 +153,11 @@ export default function WorkoutSession() {
     return String(raw).replace(/\d+/, (n) => String(Math.max(1, Math.ceil(Number(n) / 2))));
   };
 
-  const exercises: any[] = group?.exercises ?? [];
+  const allExercises: any[] = group?.exercises ?? [];
+  const exercises: any[] = shortMode ? allExercises.slice(0, 4) : allExercises;
   const current = exercises[i];
+  const easier: ProgressionLink = current?.easier;
+  const harder: ProgressionLink = current?.harder;
   const next = exercises[i + 1];
   const isLast = i >= exercises.length - 1;
   const trackList: any[] = Array.isArray(tracks) ? tracks : [];
@@ -207,6 +220,11 @@ export default function WorkoutSession() {
         coach('pr', i18n.language);
         setPrWeight(weightKg);
         queryClient.invalidateQueries({ queryKey: ['prs'] });
+        // Auto-open the share sheet at the emotional peak — once per session.
+        if (!autoShared.current) {
+          autoShared.current = true;
+          void shareMilestone({ kind: 'pr', title: t('share.pr'), value: `${weightKg} ${t('session.kg').toUpperCase()}`, subtitle: current.name, userName: firstName, emoji: '🏆', savedMsg: t('share.saved') });
+        }
       } else {
         toast(t('session.logged'), 'success');
       }
@@ -241,6 +259,26 @@ export default function WorkoutSession() {
     try {
       await api.post('/api/me/workout-done', { name: group?.name, exercises: exercises.length });
     } catch { /* ignore */ }
+    // Milestone auto-share: first-ever workout or a landmark streak (7/30/100).
+    // Fetched fresh so the just-finished session counts; at most one per session.
+    if (!autoShared.current) {
+      try {
+        const progress = await queryClient.fetchQuery({
+          queryKey: ['progress'],
+          queryFn: () => api.get('/api/tracker/progress'),
+          staleTime: 0,
+        });
+        const total = Number(progress?.totalCompletions ?? 0);
+        const streak = Number(progress?.currentStreak ?? 0);
+        if (total === 1) {
+          autoShared.current = true;
+          void shareMilestone({ kind: 'workout', title: isAr ? 'أول تمرين ليا 🎉' : 'My first workout!', value: isAr ? 'البداية' : 'DAY ONE', subtitle: group?.name, userName: firstName, emoji: '🎉', savedMsg: t('share.saved') });
+        } else if (streak === 7 || streak === 30 || streak === 100) {
+          autoShared.current = true;
+          void shareMilestone({ kind: 'streak', title: isAr ? 'سلسلة مولعة 🔥' : 'Streak unlocked!', value: `${streak} ${isAr ? 'يوم' : 'DAYS'}`, subtitle: group?.name, userName: firstName, emoji: '🔥', savedMsg: t('share.saved') });
+        }
+      } catch { /* best effort — never block the celebration */ }
+    }
   };
 
   /* ---------------- Music mini-player ---------------- */
@@ -386,7 +424,14 @@ export default function WorkoutSession() {
         {miniPlayer}
         <audio ref={audioRef} loop />
       </div>
-      <p className="relative z-10 px-4 pt-2 text-xs text-white/50">{group?.name} · {t('session.exerciseOf', { n: i + 1, total: exercises.length })}</p>
+      <div className="relative z-10 flex flex-wrap items-center gap-2 px-4 pt-2">
+        <p className="text-xs text-white/50">{group?.name} · {t('session.exerciseOf', { n: i + 1, total: exercises.length })}</p>
+        {shortMode && (
+          <span className="rounded-full bg-brand-yellow/20 px-2.5 py-0.5 text-[10px] font-bold text-brand-yellow">
+            ⚡ {isAr ? 'رجعة سريعة · ١٠ دقايق وترجع' : 'Quick comeback · 10 min'}
+          </span>
+        )}
+      </div>
 
       {phase === 'rest' ? (
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-5 px-6">
@@ -416,6 +461,16 @@ export default function WorkoutSession() {
               <p className="text-[11px] uppercase tracking-widest text-white/40">{isAr ? 'ثانية' : 'sec'}</p>
             </div>
           </div>
+
+          {/* One micro-lesson per rest — rotates with the exercise index */}
+          {(() => {
+            const tip = getRestTip(group?.name, i);
+            return (
+              <p className="max-w-xs text-center text-xs leading-relaxed text-white/60">
+                📚 {isAr ? tip.ar : tip.en}
+              </p>
+            );
+          })()}
 
           {/* Next up — with the next exercise's figure */}
           {next && (
@@ -492,6 +547,22 @@ export default function WorkoutSession() {
             {current?.reps && <span className="rounded-full bg-white/10 px-3 py-1">{current.reps}</span>}
             {current?.level && <span className="rounded-full bg-white/10 px-3 py-1">{current.level}</span>}
           </div>
+
+          {/* Progression ladder — muscle-group sessions only (coach workouts don't carry these) */}
+          {(easier || harder) && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {easier && (
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/60">
+                  {isAr ? 'صعبة عليك؟' : 'Too hard?'} → <span className="font-semibold text-white/90">{isAr ? (easier.nameAr || easier.name) : easier.name}</span>
+                </span>
+              )}
+              {harder && (
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/60">
+                  {isAr ? 'سهلة أوي؟' : 'Too easy?'} → <span className="font-semibold text-white/90">{isAr ? (harder.nameAr || harder.name) : harder.name}</span>
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Their own injury, on the movement that loads it, with the swap we'd make */}
           {current?.caution && (

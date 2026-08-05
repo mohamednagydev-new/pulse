@@ -40,11 +40,28 @@ async function probeDuration(file: string): Promise<number | null> {
 }
 
 /**
+ * One transcode at a time. ffmpeg happily eats every core it can see, so two
+ * parallel 300 MB uploads used to starve the API (and SQLite) of CPU. Requests
+ * still wait for their own result — they just queue behind each other.
+ */
+let transcodeChain: Promise<unknown> = Promise.resolve();
+function enqueue<T>(job: () => Promise<T>): Promise<T> {
+  const next = transcodeChain.then(job, job);
+  transcodeChain = next.catch(() => {}); // one failed job must not poison the chain
+  return next;
+}
+
+/**
  * Transcode an uploaded file to a web-friendly, seekable MP4 (H.264/AAC,
  * +faststart) and extract a poster thumbnail + duration. If ffmpeg is not
  * installed, we keep the original file so the flow still works in dev.
+ * Serialized through a queue — see enqueue above.
  */
-export async function processVideo(inputPath: string): Promise<{
+export function processVideo(inputPath: string): ReturnType<typeof processVideoNow> {
+  return enqueue(() => processVideoNow(inputPath));
+}
+
+async function processVideoNow(inputPath: string): Promise<{
   filePath: string;
   thumbnailPath: string | null;
   durationSec: number | null;

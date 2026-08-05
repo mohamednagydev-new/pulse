@@ -86,6 +86,7 @@ const CoachDashboard = lazy(() => import('./pages/social/CoachDashboard'));
 const CoachProgramDetail = lazy(() => import('./pages/social/CoachProgramDetail'));
 const GroupSessions = lazy(() => import('./pages/social/GroupSessions'));
 const GroupSessionDetail = lazy(() => import('./pages/social/GroupSessionDetail'));
+const WeekZero = lazy(() => import('./pages/WeekZero'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const status = useAuth((s) => s.status);
@@ -268,6 +269,7 @@ export default function App() {
           <Route path="/coach-program/:id" element={<CoachProgramDetail />} />
           <Route path="/group" element={<GroupSessions />} />
           <Route path="/group/:id" element={<GroupSessionDetail />} />
+          <Route path="/week-zero" element={<WeekZero />} />
           {/* /setup retired — the coaching intake at /my-plan asks everything it did
               and more, and computes real calorie targets instead of flat per-goal
               numbers. Old links land on Home via the catch-all. */}

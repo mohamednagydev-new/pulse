@@ -12,7 +12,7 @@ import { MediaImage } from '../components/ui';
 import MenuDrawer from '../components/MenuDrawer';
 import Sheet from '../components/Sheet';
 import ShareCardButton from '../components/ShareCardButton';
-import { levelLabel, levelTitle, nextRank } from '../lib/levels';
+import { levelLabel, levelTitle, nextRank, rankRing } from '../lib/levels';
 
 const MotionLink = motion.create(Link);
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
@@ -33,6 +33,7 @@ function LevelStrip() {
         <span
           className="flex items-center gap-1 rounded-full px-2 py-0.5"
           style={{ background: `${rank.color}1A`, color: rank.color }}
+          title={i18n.language.startsWith('ar') ? 'إطار صورتك بيتغير مع رتبتك' : 'Your avatar ring changes with your rank'}
         >
           <span aria-hidden>{rank.icon}</span> {levelLabel(level, i18n.language)} · {t('fun.level', { n: level })}
         </span>
@@ -266,7 +267,13 @@ export default function Profile() {
 
       <div className="-mt-12 flex flex-col items-center">
         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={spring} className="relative">
-          <MediaImage path={user?.avatarUrl} label={user?.firstName} className="h-28 w-28 rounded-full ring-4 ring-white" seed={1} />
+          {/* The ring is a rank cosmetic — it escalates with your tier. Plain white until we know the level. */}
+          <MediaImage
+            path={user?.avatarUrl}
+            label={user?.firstName}
+            className={`h-28 w-28 rounded-full ${typeof me?.level === 'number' ? rankRing(me.level) : 'ring-4 ring-white'}`}
+            seed={1}
+          />
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploading}

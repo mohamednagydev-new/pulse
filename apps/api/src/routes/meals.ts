@@ -351,6 +351,56 @@ mealsRouter.get('/recap', async (req: AuthedRequest, res) => {
   });
 });
 
+/**
+ * Shopping list for the next N days of the plan (default 3, max 7). The plan is
+ * a pure function of (user, date), so tomorrow's plates are known today — which
+ * is exactly what a Saturday grocery run needs. Identical ingredient lines are
+ * merged with a count; language follows x-lang like everything else.
+ */
+mealsRouter.get('/grocery', async (req: AuthedRequest, res) => {
+  const days = Math.min(Math.max(Number(req.query.days) || 3, 1), 7);
+  const [{ targets, pref }, recipes] = await Promise.all([targetsFor(req.userId!), library()]);
+  if (recipes.length === 0) return res.json({ days, items: [], recipes: [] });
+
+  // recipeId -> total servings across the window
+  const servings = new Map<string, number>();
+  for (let i = 0; i < days; i++) {
+    const date = dayString(new Date(Date.now() + i * 86400000));
+    const plan = buildMealPlan(date, req.userId!, targets, recipes, pref);
+    for (const m of plan.meals) {
+      servings.set(m.recipe.id, (servings.get(m.recipe.id) ?? 0) + m.servings);
+    }
+  }
+
+  const rows = await prisma.recipe.findMany({
+    where: { id: { in: [...servings.keys()] } },
+    select: { id: true, title: true, titleAr: true, ingredients: true, ingredientsAr: true },
+  });
+
+  const lang = String(req.headers['x-lang'] || 'en');
+  const counts = new Map<string, number>();
+  const usedIn: { id: string; title: string; servings: number }[] = [];
+  for (const r of rows) {
+    usedIn.push({ id: r.id, title: (lang === 'ar' && r.titleAr) || r.title, servings: servings.get(r.id) ?? 1 });
+    const raw = lang === 'ar' && r.ingredientsAr ? r.ingredientsAr : r.ingredients;
+    let lines: string[] = [];
+    try {
+      const parsed = JSON.parse(raw);
+      lines = Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch { /* unparseable recipe — skip its lines */ }
+    for (const line of lines) {
+      const key = line.trim();
+      if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+  }
+
+  res.json({
+    days,
+    items: [...counts.entries()].map(([text, n]) => ({ text, count: n })),
+    recipes: usedIn.sort((a, b) => b.servings - a.servings),
+  });
+});
+
 // Diet preferences — the one thing the plan needs that the intake does not ask.
 const prefSchema = z.object({
   dietPref: z.enum(['none', 'vegetarian', 'vegan']).optional(),

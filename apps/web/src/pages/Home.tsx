@@ -8,6 +8,8 @@ import { Search, ChevronRight, Play, Clapperboard, X, Bell, Flame, HeartHandshak
 import { api } from '../lib/api';
 import { Loader, ErrorMsg, MediaImage, HScroll, formatDuration } from '../components/ui';
 import TodayStrip from '../components/TodayStrip';
+import ComebackCard from '../components/ComebackCard';
+import DailyReset from '../components/DailyReset';
 import DailyQuests from '../components/DailyQuests';
 import WaterCard from '../components/WaterCard';
 import SpinWheel from '../components/SpinWheel';
@@ -62,7 +64,13 @@ export default function Home() {
         <Greeting />
       </header>
 
+      {/* Warm re-entry after 3+ idle days — sits above the strip so a returning
+          user sees the easy way back before anything asks for effort. */}
+      <ComebackCard />
+
       <TodayStrip />
+
+      <WeekZeroEntryCard />
 
       <CheckInCard />
 
@@ -93,6 +101,9 @@ export default function Home() {
 
       {/* Today's habits — the things that reset every morning */}
       <DailyQuests />
+
+      {/* A 2-minute micro-routine for the non-training moments of the day */}
+      <DailyReset />
 
       <SpinWheel />
 
@@ -295,6 +306,33 @@ function QuickActions() {
         </motion.button>
       ))}
     </div>
+  );
+}
+
+/** First-timer on-ramp — shown only while the user has zero completed workouts. */
+function WeekZeroEntryCard() {
+  const { t } = useTranslation();
+  const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
+  if (progress?.totalCompletions !== 0) return null;
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={spring}
+      className="mx-4 mt-4 rounded-2xl bg-white shadow-sm"
+    >
+      <Link to="/week-zero" className="card-hover flex items-center gap-3 rounded-2xl p-4">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-2xl" aria-hidden>
+          🌱
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-extrabold">{t('weekzero.cardTitle')}</span>
+          <span className="block truncate text-xs text-gray-400">{t('weekzero.cardSub')}</span>
+        </span>
+        <ChevronRight size={18} className="shrink-0 text-gray-300 rtl:rotate-180" />
+      </Link>
+    </motion.section>
   );
 }
 
