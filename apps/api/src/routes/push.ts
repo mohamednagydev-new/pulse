@@ -26,12 +26,26 @@ pushRouter.get('/key', (_req, res) => res.json({ key: vapidReady ? pub : null })
 
 pushRouter.post('/subscribe', requireAuth, async (req: AuthedRequest, res) => {
   const { endpoint, keys } = req.body ?? {};
-  if (!endpoint || !keys?.p256dh || !keys?.auth) return res.status(400).json({ error: 'Invalid subscription' });
+  if (typeof endpoint !== 'string' || !endpoint.startsWith('https://') ||
+      typeof keys?.p256dh !== 'string' || typeof keys?.auth !== 'string') {
+    return res.status(400).json({ error: 'Invalid subscription' });
+  }
+  // Re-registering an endpoint replaces the crypto keys along with the owner.
+  // Reassigning the owner alone would let anyone who learned an endpoint URL
+  // re-point it at themselves while the original keys kept working.
   await prisma.pushSubscription.upsert({
     where: { endpoint },
     create: { userId: req.userId!, endpoint, p256dh: keys.p256dh, auth: keys.auth },
-    update: { userId: req.userId! },
+    update: { userId: req.userId!, p256dh: keys.p256dh, auth: keys.auth },
   });
+  res.json({ ok: true });
+});
+
+/** Remove this browser's subscription — the unsubscribe half of the toggle. */
+pushRouter.post('/unsubscribe', requireAuth, async (req: AuthedRequest, res) => {
+  const endpoint = req.body?.endpoint;
+  if (typeof endpoint !== 'string' || !endpoint) return res.status(400).json({ error: 'Invalid subscription' });
+  await prisma.pushSubscription.deleteMany({ where: { endpoint, userId: req.userId! } });
   res.json({ ok: true });
 });
 

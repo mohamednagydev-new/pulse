@@ -41,6 +41,8 @@ groupRouter.post('/', async (req: AuthedRequest, res) => {
   });
   const p = schema.safeParse(req.body);
   if (!p.success) return res.status(400).json({ error: 'Add a title and a scheduled time' });
+  const scheduledAt = new Date(p.data.scheduledAt);
+  if (Number.isNaN(scheduledAt.getTime())) return res.status(400).json({ error: 'Invalid scheduled time' });
   const session = await prisma.groupSession.create({
     data: {
       coachUserId: req.userId!,
@@ -48,7 +50,7 @@ groupRouter.post('/', async (req: AuthedRequest, res) => {
       description: p.data.description,
       muscleFocus: p.data.muscleFocus,
       coachWorkoutId: p.data.coachWorkoutId,
-      scheduledAt: new Date(p.data.scheduledAt),
+      scheduledAt,
     },
   });
   res.status(201).json(session);

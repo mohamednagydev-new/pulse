@@ -83,7 +83,6 @@ model User {
   participations ChallengeParticipant[]
   pushSubs       PushSubscription[]
   conversations  Conversation[]
-  plans          GeneratedPlan[]
   following      Follow[]      @relation("following")
   followers      Follow[]      @relation("followers")
   feedPosts      FeedPost[]
@@ -605,6 +604,10 @@ model XpEvent {
   amount    Int
   reason    String?
   createdAt DateTime @default(now())
+
+  // The ledger is aggregated by (user, time window) from leagues, duels, recaps,
+  // quests and the activity heatmap — this is the hottest query in the app.
+  @@index([userId, createdAt])
 }
 
 model ChallengeMessage {
@@ -616,6 +619,8 @@ model ChallengeMessage {
   isCoach     Boolean   @default(false)
   text        String
   createdAt   DateTime  @default(now())
+
+  @@index([challengeId, createdAt])
 }
 
 // ---------------- Social graph ----------------
@@ -648,6 +653,8 @@ model FeedPost {
   createdAt DateTime       @default(now())
   reactions PostReaction[]
   comments  PostComment[]
+
+  @@index([userId, createdAt])
 
   @@index([pinned, pinnedUntil])
 }
@@ -691,6 +698,8 @@ model DMMessage {
   text      String
   createdAt DateTime @default(now())
   readAt    DateTime?
+
+  @@index([threadId, createdAt])
 }
 
 model RefreshToken {
@@ -973,6 +982,7 @@ model LessonCompletion {
   completedAt DateTime @default(now())
 
   @@unique([userId, lessonId])
+  @@index([userId, completedAt])
 }
 
 // ---------------- Nutrition tracker ----------------
@@ -988,6 +998,8 @@ model CalorieEntry {
   carbs     Float?
   fat       Float?
   createdAt DateTime @default(now())
+
+  @@index([userId, date])
 }
 
 model WeightLog {
@@ -997,6 +1009,8 @@ model WeightLog {
   date      String   // YYYY-MM-DD
   weightKg  Float
   createdAt DateTime @default(now())
+
+  @@index([userId, date])
 }
 
 // ---------------- Gamification ----------------
@@ -1273,14 +1287,16 @@ model ContentEmbedding {
   @@unique([contentType, contentId, lang])
 }
 
-model GeneratedPlan {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String   // workout | meal
-  title     String
-  data      String   // JSON
-  createdAt DateTime @default(now())
+// (GeneratedPlan removed — the AI plan generator was retired for the rule-based
+//  coach; the model had no remaining readers or writers.)
+
+/** One row per completed one-shot scheduled job (nudges, recaps, re-engagement).
+ *  The unique key makes "run once per slot" atomic across restarts — the hourly
+ *  scheduler also fires at boot, which used to double-send inside the same hour. */
+model JobRun {
+  id    String   @id @default(cuid())
+  key   String   @unique // e.g. "nudge:2026-08-05:19"
+  ranAt DateTime @default(now())
 }
 
 // ---------------- Membership ----------------

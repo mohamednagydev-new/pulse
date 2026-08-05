@@ -145,7 +145,9 @@ socialRouter.post('/upload', upload.single('file'), async (req, res) => {
   }
   const imagesDir = path.join(env.UPLOAD_DIR, 'images');
   fs.mkdirSync(imagesDir, { recursive: true });
-  const ext = path.extname(req.file.originalname) || '.jpg';
+  // Extension comes from the validated mime, never the client's filename —
+  // "photo.html" with an image/png mime must not be stored (and later served) as HTML.
+  const ext = { 'image/jpeg': '.jpg', 'image/jpg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' }[mime] ?? '.jpg';
   const name = `${req.file.filename}${ext}`;
   fs.renameSync(req.file.path, path.join(imagesDir, name));
   res.json({ mediaType: 'image', mediaUrl: `images/${name}` });
@@ -163,6 +165,20 @@ socialRouter.post('/posts', async (req: AuthedRequest, res) => {
   if (!parsed.success || (!parsed.data.text?.trim() && !parsed.data.mediaUrl)) {
     return res.status(400).json({ error: 'Add a message or media' });
   }
+  // mediaUrl must point at a real upload — a free string would let a post embed
+  // an arbitrary path (or someone else's private file) into everyone's feed.
+  if (parsed.data.mediaUrl) {
+    if (parsed.data.mediaType === 'video') {
+      const vid = await prisma.video.findUnique({ where: { id: parsed.data.mediaUrl }, select: { id: true } });
+      if (!vid) return res.status(400).json({ error: 'Invalid media' });
+    } else if (parsed.data.mediaType === 'image') {
+      if (!/^images\/[A-Za-z0-9_-]+\.(jpe?g|png|webp|gif)$/i.test(parsed.data.mediaUrl)) {
+        return res.status(400).json({ error: 'Invalid media' });
+      }
+    } else {
+      return res.status(400).json({ error: 'Invalid media' });
+    }
+  }
   const post = await createFeedPost(req.userId!, 'text', parsed.data.text, undefined, undefined, {
     mediaType: parsed.data.mediaType,
     mediaUrl: parsed.data.mediaUrl,
@@ -172,7 +188,9 @@ socialRouter.post('/posts', async (req: AuthedRequest, res) => {
 
 // ---- Reactions (toggle) ----
 socialRouter.post('/posts/:id/react', async (req: AuthedRequest, res) => {
-  const emoji = (req.body?.emoji as string) || '💪';
+  // Same 8-char cap as the socket relay — an unbounded string here would be
+  // stored and re-rendered to every feed reader.
+  const emoji = (typeof req.body?.emoji === 'string' ? req.body.emoji : '💪').slice(0, 8) || '💪';
   const existing = await prisma.postReaction.findUnique({
     where: { postId_userId: { postId: req.params.id, userId: req.userId! } },
   });

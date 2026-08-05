@@ -67,12 +67,22 @@ mediaRouter.get('/audio/:id', async (req, res) => {
 });
 
 // Static image passthrough for uploaded thumbnails/covers.
+// Public content images (banners, thumbnails, avatars) stay unsigned so plain
+// <img> tags work. Anything under private/ (body progress photos) requires a
+// valid HMAC signature — those are personal photos, not content.
 mediaRouter.get('/image/*', (req, res) => {
   const rel = (req.params as any)[0] as string;
-  const abs = path.join(env.UPLOAD_DIR, 'images', rel);
-  if (!abs.startsWith(path.join(env.UPLOAD_DIR, 'images'))) {
+  const isPrivate = rel.startsWith('private/');
+  if (isPrivate && !verifyMedia('image', rel, Number(req.query.exp), String(req.query.sig || ''))) {
+    return res.status(403).json({ error: 'Invalid or expired media link' });
+  }
+  const baseDir = isPrivate ? path.resolve(env.UPLOAD_DIR) : path.resolve(env.UPLOAD_DIR, 'images');
+  const abs = path.resolve(baseDir, rel);
+  // path.sep suffix: "uploads/images-evil" must not pass a bare prefix check.
+  if (abs !== baseDir && !abs.startsWith(baseDir + path.sep)) {
     return res.status(400).json({ error: 'Bad path' });
   }
   if (!fs.existsSync(abs)) return res.status(404).json({ error: 'Not found' });
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   res.sendFile(abs);
 });

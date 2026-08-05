@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { env } from '../env';
 import { requireAuth, requireAdmin } from '../middleware/auth';
@@ -29,6 +30,80 @@ function autoTranslate(model: any, name: string, record: any) {
  *  Throwing here is how a resource rejects bad input with a clear message. */
 type Normalise = (data: Record<string, any>) => Record<string, any>;
 
+/**
+ * Writable scalar columns per model, read from Prisma's own datamodel — the
+ * server-side allow-list the CRUD factory filters every payload through.
+ * Without it req.body went straight into create/update: unknown columns threw
+ * raw Prisma 500s and any caller could mass-assign fields the form never shows.
+ */
+const MODEL_FIELDS = new Map<string, Map<string, { type: string }>>(
+  Prisma.dmmf.datamodel.models.map((m) => [
+    m.name,
+    new Map(
+      m.fields
+        .filter((f) => (f.kind === 'scalar' || f.kind === 'enum') && !f.isId && !['createdAt', 'updatedAt'].includes(f.name))
+        .map((f) => [f.name, { type: f.type }]),
+    ),
+  ]),
+);
+
+/** Drop unknown keys and coerce the rest to the column's type. Throws a clear,
+ *  field-named message that the CRUD handlers surface as a 400 (not a 500). */
+function sanitise(modelName: string, body: unknown): Record<string, any> {
+  const fields = MODEL_FIELDS.get(modelName);
+  if (!fields) throw new Error(`Unknown model ${modelName}`);
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) throw new Error('Invalid payload');
+  const out: Record<string, any> = {};
+  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+    const f = fields.get(key);
+    if (!f) continue; // ids, relations, unknown columns: silently dropped
+    if (value === undefined) continue;
+    if (value === null || value === '') { out[key] = null; continue; }
+    switch (f.type) {
+      case 'Int': {
+        const n = Number(value);
+        if (!Number.isInteger(n)) throw new Error(`"${key}" must be a whole number`);
+        out[key] = n; break;
+      }
+      case 'Float': {
+        const n = Number(value);
+        if (!Number.isFinite(n)) throw new Error(`"${key}" must be a number`);
+        out[key] = n; break;
+      }
+      case 'Boolean':
+        out[key] = value === true || value === 'true' || value === 1 || value === '1'; break;
+      case 'DateTime': {
+        const d = new Date(String(value));
+        if (Number.isNaN(d.getTime())) throw new Error(`"${key}" must be a valid date`);
+        out[key] = d; break;
+      }
+      default:
+        out[key] = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    }
+  }
+  return out;
+}
+
+/** Prisma throws on constraint/validation problems — those are the admin's fault,
+ *  not the server's, so answer 400 with something readable instead of a 500. */
+function asBadRequest(res: any, err: unknown): boolean {
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    const messages: Record<string, string> = {
+      P2002: 'A record with this unique value already exists',
+      P2003: 'Referenced record does not exist',
+      P2011: 'A required field is missing',
+      P2025: 'Record not found',
+    };
+    res.status(err.code === 'P2025' ? 404 : 400).json({ error: messages[err.code] ?? 'Invalid data' });
+    return true;
+  }
+  if (err instanceof Prisma.PrismaClientValidationError) {
+    res.status(400).json({ error: 'Missing or invalid fields for this record' });
+    return true;
+  }
+  return false;
+}
+
 // Generic CRUD factory over a Prisma model delegate.
 function crud(model: any, name: string, ordered = true, normalise?: Normalise) {
   const r = Router();
@@ -42,23 +117,35 @@ function crud(model: any, name: string, ordered = true, normalise?: Normalise) {
   });
   r.post('/', async (req, res) => {
     let data: Record<string, any>;
-    try { data = normalise ? normalise(req.body) : req.body; }
+    try { data = sanitise(name, normalise ? normalise(req.body) : req.body); }
     catch (e) { return res.status(400).json({ error: (e as Error).message }); }
-    const item = await model.create({ data });
-    res.status(201).json(item);
-    autoTranslate(model, name, item);
+    try {
+      const item = await model.create({ data });
+      res.status(201).json(item);
+      autoTranslate(model, name, item);
+    } catch (e) {
+      if (!asBadRequest(res, e)) throw e;
+    }
   });
   r.patch('/:id', async (req, res) => {
     let data: Record<string, any>;
-    try { data = normalise ? normalise(req.body) : req.body; }
+    try { data = sanitise(name, normalise ? normalise(req.body) : req.body); }
     catch (e) { return res.status(400).json({ error: (e as Error).message }); }
-    const item = await model.update({ where: { id: req.params.id }, data });
-    res.json(item);
-    autoTranslate(model, name, item);
+    try {
+      const item = await model.update({ where: { id: req.params.id }, data });
+      res.json(item);
+      autoTranslate(model, name, item);
+    } catch (e) {
+      if (!asBadRequest(res, e)) throw e;
+    }
   });
   r.delete('/:id', async (req, res) => {
-    await model.delete({ where: { id: req.params.id } });
-    res.json({ ok: true });
+    try {
+      await model.delete({ where: { id: req.params.id } });
+      res.json({ ok: true });
+    } catch (e) {
+      if (!asBadRequest(res, e)) throw e;
+    }
   });
   return r;
 }
@@ -257,15 +344,34 @@ adminRouter.post('/video-import/apply', async (req, res) => {
   const cfg = IMPORT_MODELS[target];
   if (!cfg) return res.status(400).json({ error: 'Unknown target' });
 
-  const results = await matchRows(target, req.body?.text);
-  const toApply = results.filter((r) => r.status === 'matched') as { id: string; url: string }[];
+  // Apply exactly what was previewed. Re-resolving from the raw text here could
+  // write a different set than the admin reviewed (rows added/renamed between
+  // preview and apply). The client sends the previewed matches; the text path
+  // remains as a fallback for older clients.
+  let toApply: { id: string; url: string }[];
+  let skipped = 0;
+  const rows = req.body?.rows;
+  if (Array.isArray(rows)) {
+    toApply = rows
+      .filter((r: any) => r && typeof r.id === 'string' && typeof r.url === 'string' && looksLikeVideoUrl(r.url))
+      .map((r: any) => ({ id: r.id, url: r.url }));
+    skipped = rows.length - toApply.length;
+  } else {
+    const results = await matchRows(target, req.body?.text);
+    toApply = results.filter((r) => r.status === 'matched') as { id: string; url: string }[];
+    skipped = results.length - toApply.length;
+  }
 
   let applied = 0;
   for (const r of toApply) {
-    await cfg.model.update({ where: { id: r.id }, data: { videoUrl: r.url } });
-    applied++;
+    try {
+      await cfg.model.update({ where: { id: r.id }, data: { videoUrl: r.url } });
+      applied++;
+    } catch {
+      skipped++; // row deleted between preview and apply
+    }
   }
-  res.json({ applied, skipped: results.length - applied });
+  res.json({ applied, skipped });
 });
 
 /** Everything still missing a video, pre-formatted for the paste box: one
@@ -471,10 +577,17 @@ adminRouter.get('/analytics', async (_req, res) => {
   });
 });
 
-adminRouter.get('/users', async (_req, res) => {
+adminRouter.get('/users', async (req, res) => {
+  // Capped: an unbounded findMany over every user eventually returns megabytes.
+  const take = Math.min(Math.max(Number(req.query.take) || 500, 1), 2000);
+  const q = String(req.query.q || '').trim();
   const users = await prisma.user.findMany({
+    where: q
+      ? { OR: [{ email: { contains: q } }, { firstName: { contains: q } }, { lastName: { contains: q } }] }
+      : {},
     select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true, isCoach: true, coachVerified: true, coachFeatured: true },
     orderBy: { createdAt: 'desc' },
+    take,
   });
   res.json(users);
 });
@@ -486,6 +599,11 @@ const upload = multer({ dest: tmpDir, limits: { fileSize: 2 * 1024 * 1024 * 1024
 
 adminRouter.post('/upload/video', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file' });
+  // 2 GB of anything used to be accepted here; ffmpeg would then choke on it.
+  if (!/^video\//.test(req.file.mimetype || '')) {
+    fs.unlink(req.file.path, () => {});
+    return res.status(400).json({ error: 'Video files only' });
+  }
   const processed = await processVideo(req.file.path);
   const video = await prisma.video.create({ data: processed });
   res.status(201).json(video);
@@ -499,7 +617,8 @@ adminRouter.post('/upload/image', upload.single('file'), async (req, res) => {
   }
   const imagesDir = path.join(env.UPLOAD_DIR, 'images');
   fs.mkdirSync(imagesDir, { recursive: true });
-  const ext = path.extname(req.file.originalname) || '.jpg';
+  // Extension from the validated mime, not the client filename (see social upload).
+  const ext = { 'image/jpeg': '.jpg', 'image/jpg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' }[req.file.mimetype] ?? '.jpg';
   const name = `${req.file.filename}${ext}`;
   fs.renameSync(req.file.path, path.join(imagesDir, name));
   res.status(201).json({ path: `images/${name}`, url: `/media/image/${name}` });

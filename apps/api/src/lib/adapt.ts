@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { dayString, daysAgoStr } from './time';
+import { dayString, daysAgoStr, startOfDayTz } from './time';
 import type { Bilingual } from './coach';
 
 /**
@@ -48,7 +48,7 @@ export type Proposal = {
  * training day, not three.
  */
 export async function adherenceFor(userId: string, daysPerWeek: number, weeks = 2): Promise<Adherence> {
-  const since = new Date(`${daysAgoStr(weeks * 7 - 1)}T00:00:00`);
+  const since = startOfDayTz(daysAgoStr(weeks * 7 - 1));
 
   const [lessons, sessions, lastLesson, lastSession] = await Promise.all([
     prisma.lessonCompletion.findMany({

@@ -12,10 +12,19 @@ export const meRouter = Router();
 meRouter.use(requireAuth);
 
 // Issue a short-lived signed URL for protected video/audio.
-meRouter.get('/media-sign', (req: AuthedRequest, res) => {
+// Video content is free for every signed-in user today (paid gating hooks in
+// here in Phase 4), but audio is personal: a music track must be the caller's
+// own upload or an admin default — not another user's library.
+meRouter.get('/media-sign', async (req: AuthedRequest, res) => {
   const type = req.query.type === 'audio' ? 'audio' : 'video';
   const id = String(req.query.id || '');
   if (!id) return res.status(400).json({ error: 'Missing id' });
+  if (type === 'audio') {
+    const track = await prisma.musicTrack.findUnique({ where: { id }, select: { userId: true, isDefault: true } });
+    if (!track || (!track.isDefault && track.userId !== req.userId)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+  }
   const { exp, sig } = signMedia(type, id);
   res.json({ url: `/media/${type}/${id}?exp=${exp}&sig=${sig}` });
 });
@@ -36,7 +45,9 @@ meRouter.patch('/', async (req: AuthedRequest, res) => {
     lastName: z.string().min(1).optional(),
     mobile: z.string().optional(),
     zip: z.string().optional(),
-    avatarUrl: z.string().optional(),
+    // Only same-origin media paths or https images — never javascript:/data: URIs,
+    // which would be rendered into <img src> for every viewer of the profile.
+    avatarUrl: z.string().max(500).regex(/^(\/media\/|images\/|https:\/\/)/, 'Invalid avatar URL').optional(),
     bio: z.string().max(300).optional(),
     gender: z.enum(['male', 'female']).optional(),
     birthYear: z.number().int().min(1930).max(new Date().getFullYear() - 5).optional(),
@@ -144,6 +155,7 @@ meRouter.get('/bookmarks', async (req: AuthedRequest, res) => {
   const bookmarks = await prisma.bookmark.findMany({
     where: { userId: req.userId! },
     orderBy: { createdAt: 'desc' },
+    take: 500,
   });
   res.json(bookmarks);
 });
@@ -185,6 +197,7 @@ meRouter.get('/completions', async (req: AuthedRequest, res) => {
     where: { userId: req.userId! },
     include: { lesson: { include: { program: { include: { coach: true } } } } },
     orderBy: { completedAt: 'desc' },
+    take: 500,
   });
   res.json(completions);
 });

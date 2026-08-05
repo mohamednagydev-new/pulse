@@ -3,7 +3,7 @@ import { env } from '../env';
 
 // HMAC-signed, time-limited media URLs — lets <video>/<audio> load protected
 // content without an auth header (the signature travels in the query string).
-const SECRET = env.JWT_ACCESS_SECRET;
+const SECRET = env.MEDIA_SIGN_SECRET;
 
 export function signMedia(type: string, id: string, ttlSec = 6 * 3600) {
   const exp = Math.floor(Date.now() / 1000) + ttlSec;

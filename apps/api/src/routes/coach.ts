@@ -116,6 +116,10 @@ coachRouter.delete('/programs/:id', async (req: AuthedRequest, res) => {
 // ---- Coaching requests / clients ----
 coachRouter.post('/:userId/request', async (req: AuthedRequest, res) => {
   if (req.params.userId === req.userId) return res.status(400).json({ error: "Can't request yourself" });
+  // coachUserId is a plain string column with no FK — without this check the row
+  // can point at a deleted user or someone who never became a coach.
+  const target = await prisma.user.findUnique({ where: { id: req.params.userId }, select: { isCoach: true } });
+  if (!target?.isCoach) return res.status(404).json({ error: 'Coach not found' });
   const row = await prisma.coachRequest.upsert({
     where: { clientId_coachUserId: { clientId: req.userId!, coachUserId: req.params.userId } },
     create: { clientId: req.userId!, coachUserId: req.params.userId, message: req.body?.message },
@@ -171,6 +175,14 @@ coachRouter.post('/:userId/rate', async (req: AuthedRequest, res) => {
   const schema = z.object({ stars: z.number().min(1).max(5), comment: z.string().max(300).optional() });
   const p = schema.safeParse(req.body);
   if (!p.success) return res.status(400).json({ error: 'Invalid rating' });
+  // Ratings drive the coach directory ordering, so only actual clients may rate:
+  // an accepted coaching request is the relationship proof.
+  const relationship = await prisma.coachRequest.findUnique({
+    where: { clientId_coachUserId: { clientId: req.userId!, coachUserId: req.params.userId } },
+  });
+  if (relationship?.status !== 'accepted') {
+    return res.status(403).json({ error: 'Only clients this coach accepted can rate them' });
+  }
   const row = await prisma.coachRating.upsert({
     where: { clientId_coachUserId: { clientId: req.userId!, coachUserId: req.params.userId } },
     create: { clientId: req.userId!, coachUserId: req.params.userId, stars: p.data.stars, comment: p.data.comment },

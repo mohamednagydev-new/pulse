@@ -6,11 +6,31 @@ import { localizeResponse } from '../lib/localize';
 import { emitToChallenge } from '../lib/realtime';
 import { aiEnabled, chatComplete } from '../lib/openai';
 import { currentStandings, leagueHistory } from '../lib/leagues';
+import { dayString } from '../lib/time';
 
 export const gamificationRouter = Router();
 gamificationRouter.use(requireAuth, localizeResponse);
 
 const chatUserSelect = { id: true, firstName: true, lastName: true, avatarUrl: true, level: true } as const;
+
+/**
+ * Personal and group challenges are private rooms: only the owner and joined
+ * participants may read the detail/leaderboard/chat. Global challenges are
+ * readable by any signed-in user. Returns the challenge when allowed, null when
+ * missing, and false when forbidden.
+ */
+async function challengeForViewer(challengeId: string, userId: string) {
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    include: { _count: { select: { participants: true } } },
+  });
+  if (!challenge) return null;
+  if (challenge.kind === 'global' || challenge.ownerId === userId) return challenge;
+  const member = await prisma.challengeParticipant.findUnique({
+    where: { challengeId_userId: { challengeId, userId } },
+  });
+  return member ? challenge : false;
+}
 
 gamificationRouter.get('/badges', async (req: AuthedRequest, res) => {
   const [all, mine] = await Promise.all([
@@ -37,6 +57,8 @@ gamificationRouter.get('/challenges', async (req: AuthedRequest, res) => {
       ],
     },
     include: { _count: { select: { participants: true } } },
+    orderBy: { startsOn: 'desc' },
+    take: 200,
   });
   const joined = new Map(mine.map((m) => [m.challengeId, m]));
   res.json(
@@ -65,11 +87,11 @@ gamificationRouter.post('/challenges', async (req: AuthedRequest, res) => {
   if (!parsed.success) return res.status(400).json({ error: 'Add a title, goal and duration' });
   const { kind, title, goalType, goalValue, durationDays } = parsed.data;
 
-  const active = await prisma.challenge.count({ where: { ownerId: req.userId!, endsOn: { gte: new Date().toISOString().slice(0, 10) } } });
+  const active = await prisma.challenge.count({ where: { ownerId: req.userId!, endsOn: { gte: dayString() } } });
   if (active >= 5) return res.status(429).json({ error: 'You already have 5 active challenges' });
 
-  const startsOn = new Date().toISOString().slice(0, 10);
-  const endsOn = new Date(Date.now() + durationDays * 86400000).toISOString().slice(0, 10);
+  const startsOn = dayString();
+  const endsOn = dayString(new Date(Date.now() + durationDays * 86400000));
   const inviteCode = kind === 'group' ? Math.random().toString(36).slice(2, 8).toUpperCase() : null;
 
   const challenge = await prisma.challenge.create({
@@ -86,7 +108,7 @@ gamificationRouter.post('/challenges/join-code', async (req: AuthedRequest, res)
   if (!parsed.success) return res.status(400).json({ error: 'Enter a valid code' });
   const challenge = await prisma.challenge.findUnique({ where: { inviteCode: parsed.data.code.toUpperCase() } });
   if (!challenge) return res.status(404).json({ error: 'No challenge with that code' });
-  if (challenge.endsOn < new Date().toISOString().slice(0, 10)) return res.status(410).json({ error: 'This challenge has ended' });
+  if (challenge.endsOn < dayString()) return res.status(410).json({ error: 'This challenge has ended' });
   await prisma.challengeParticipant.upsert({
     where: { challengeId_userId: { challengeId: challenge.id, userId: req.userId! } },
     create: { challengeId: challenge.id, userId: req.userId! },
@@ -112,6 +134,8 @@ gamificationRouter.post('/challenges/:id/join', async (req: AuthedRequest, res) 
   if (challenge.kind === 'personal' && challenge.ownerId !== req.userId) {
     return res.status(403).json({ error: 'This challenge is private' });
   }
+  // Same window rule as join-by-code: an ended challenge is history, not joinable.
+  if (challenge.endsOn < dayString()) return res.status(410).json({ error: 'This challenge has ended' });
   const p = await prisma.challengeParticipant.upsert({
     where: { challengeId_userId: { challengeId: req.params.id, userId: req.userId! } },
     create: { challengeId: req.params.id, userId: req.userId! },
@@ -120,7 +144,10 @@ gamificationRouter.post('/challenges/:id/join', async (req: AuthedRequest, res) 
   res.json(p);
 });
 
-gamificationRouter.get('/challenges/:id/leaderboard', async (req, res) => {
+gamificationRouter.get('/challenges/:id/leaderboard', async (req: AuthedRequest, res) => {
+  const challenge = await challengeForViewer(req.params.id, req.userId!);
+  if (challenge === null) return res.status(404).json({ error: 'Not found' });
+  if (challenge === false) return res.status(403).json({ error: 'This challenge is private' });
   const rows = await prisma.challengeParticipant.findMany({
     where: { challengeId: req.params.id },
     include: { user: { select: { firstName: true, lastName: true, avatarUrl: true } } },
@@ -138,16 +165,17 @@ gamificationRouter.get('/challenges/:id/leaderboard', async (req, res) => {
 });
 
 // ---- Challenge chat room ----
-gamificationRouter.get('/challenges/:id/detail', async (req, res) => {
-  const challenge = await prisma.challenge.findUnique({
-    where: { id: req.params.id },
-    include: { _count: { select: { participants: true } } },
-  });
-  if (!challenge) return res.status(404).json({ error: 'Not found' });
+gamificationRouter.get('/challenges/:id/detail', async (req: AuthedRequest, res) => {
+  const challenge = await challengeForViewer(req.params.id, req.userId!);
+  if (challenge === null) return res.status(404).json({ error: 'Not found' });
+  if (challenge === false) return res.status(403).json({ error: 'This challenge is private' });
   res.json(challenge);
 });
 
-gamificationRouter.get('/challenges/:id/messages', async (req, res) => {
+gamificationRouter.get('/challenges/:id/messages', async (req: AuthedRequest, res) => {
+  const challenge = await challengeForViewer(req.params.id, req.userId!);
+  if (challenge === null) return res.status(404).json({ error: 'Not found' });
+  if (challenge === false) return res.status(403).json({ error: 'This challenge is private' });
   const messages = await prisma.challengeMessage.findMany({
     where: { challengeId: req.params.id },
     include: { user: { select: chatUserSelect } },
@@ -160,6 +188,12 @@ gamificationRouter.get('/challenges/:id/messages', async (req, res) => {
 gamificationRouter.post('/challenges/:id/messages', async (req: AuthedRequest, res) => {
   const parsed = z.object({ text: z.string().min(1).max(1000) }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+
+  // Posting requires actually being in the challenge — join first, then chat.
+  const member = await prisma.challengeParticipant.findUnique({
+    where: { challengeId_userId: { challengeId: req.params.id, userId: req.userId! } },
+  });
+  if (!member) return res.status(403).json({ error: 'Join the challenge to chat' });
 
   const message = await prisma.challengeMessage.create({
     data: { challengeId: req.params.id, userId: req.userId!, text: parsed.data.text },

@@ -30,7 +30,12 @@ musicRouter.post('/', upload.single('file'), async (req: AuthedRequest, res) => 
     fs.unlink(req.file.path, () => {});
     return res.status(400).json({ error: 'Audio files only' });
   }
-  const ext = path.extname(req.file.originalname) || '.mp3';
+  // Extension from the validated mime, never the client's filename — the file is
+  // later served by extension-inferred Content-Type.
+  const ext = {
+    'audio/mpeg': '.mp3', 'audio/mp3': '.mp3', 'audio/mp4': '.m4a', 'audio/x-m4a': '.m4a',
+    'audio/aac': '.aac', 'audio/wav': '.wav', 'audio/x-wav': '.wav', 'audio/ogg': '.ogg', 'audio/webm': '.weba',
+  }[req.file.mimetype] ?? '.mp3';
   const name = `${req.file.filename}${ext}`;
   fs.renameSync(req.file.path, path.join(musicDir, name));
 

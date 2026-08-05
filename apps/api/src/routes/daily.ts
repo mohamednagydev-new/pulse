@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { prisma } from '../lib/prisma';
+import { env } from '../env';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { awardXp } from '../lib/social';
-import { dayString, daysAgoStr } from '../lib/time';
+import { signMedia } from '../lib/mediaSign';
+import { dayString, daysAgoStr, startOfDayTz, endOfDayTz } from '../lib/time';
 
 export const dailyRouter = Router();
 dailyRouter.use(requireAuth);
@@ -79,8 +84,8 @@ type Quest = {
   progress: (userId: string, day: string) => Promise<number>;
 };
 
-const startOfDay = (day: string) => new Date(`${day}T00:00:00`);
-const endOfDay = (day: string) => new Date(`${day}T23:59:59.999`);
+const startOfDay = (day: string) => startOfDayTz(day);
+const endOfDay = (day: string) => endOfDayTz(day);
 
 const QUESTS: Quest[] = [
   {
@@ -200,9 +205,39 @@ dailyRouter.post('/quests/claim', async (req: AuthedRequest, res) => {
 
 /* ------------------------------- Body log ------------------------------- */
 
+// Progress photos are private to the user, so they must never land in the public
+// images dir the social feed uses. They go to uploads/private/<userId>/ and are
+// served only through signed URLs (see /media/image/* in routes/media.ts).
+const privateTmp = path.join(env.UPLOAD_DIR, 'tmp');
+fs.mkdirSync(privateTmp, { recursive: true });
+const photoUpload = multer({ dest: privateTmp, limits: { fileSize: 15 * 1024 * 1024 } });
+
+/** Sign a stored photo path into a time-limited URL the <img> tag can load. */
+function signedPhotoUrl(photo: string | null): string | null {
+  if (!photo) return null;
+  if (!photo.startsWith('private/')) return photo; // legacy public-dir photos
+  const { exp, sig } = signMedia('image', photo);
+  return `/media/image/${photo}?exp=${exp}&sig=${sig}`;
+}
+
+dailyRouter.post('/body-photo', photoUpload.single('file'), async (req: AuthedRequest, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file' });
+  if (!/^image\/(jpe?g|png|webp|gif)$/.test(req.file.mimetype || '')) {
+    fs.unlink(req.file.path, () => {});
+    return res.status(400).json({ error: 'Only JPG, PNG, WEBP or GIF images' });
+  }
+  const ext = { 'image/jpeg': '.jpg', 'image/jpg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' }[req.file.mimetype] ?? '.jpg';
+  const dir = path.join(env.UPLOAD_DIR, 'private', req.userId!);
+  fs.mkdirSync(dir, { recursive: true });
+  const name = `${req.file.filename}${ext}`;
+  fs.renameSync(req.file.path, path.join(dir, name));
+  const photo = `private/${req.userId!}/${name}`;
+  res.status(201).json({ photo, url: signedPhotoUrl(photo) });
+});
+
 dailyRouter.get('/body', async (req: AuthedRequest, res) => {
   const logs = await prisma.bodyLog.findMany({ where: { userId: req.userId! }, orderBy: { date: 'desc' }, take: 60 });
-  res.json(logs);
+  res.json(logs.map((l) => ({ ...l, photo: signedPhotoUrl(l.photo) })));
 });
 
 dailyRouter.post('/body', async (req: AuthedRequest, res) => {
@@ -218,8 +253,12 @@ dailyRouter.post('/body', async (req: AuthedRequest, res) => {
     })
     .safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid measurements' });
+  // A private photo path must be the caller's own — never another user's folder.
+  if (parsed.data.photo?.startsWith('private/') && !parsed.data.photo.startsWith(`private/${req.userId!}/`)) {
+    return res.status(403).json({ error: 'Invalid photo' });
+  }
   const log = await prisma.bodyLog.create({ data: { userId: req.userId!, date: dayString(), ...parsed.data } });
-  res.status(201).json(log);
+  res.status(201).json({ ...log, photo: signedPhotoUrl(log.photo) });
 });
 
 dailyRouter.delete('/body/:id', async (req: AuthedRequest, res) => {

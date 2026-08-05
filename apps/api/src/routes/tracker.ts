@@ -4,12 +4,15 @@ import { prisma } from '../lib/prisma';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { touchStreak } from '../lib/gamify';
 import { bumpChallenges } from '../lib/social';
+import { dayString } from '../lib/time';
 
 export const trackerRouter = Router();
 trackerRouter.use(requireAuth);
 
+// App-timezone day (Cairo), not UTC — a meal logged at 23:00 must count for today,
+// or quests/challenges querying today's date never see it.
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return dayString();
 }
 
 trackerRouter.get('/day', async (req: AuthedRequest, res) => {
@@ -101,13 +104,13 @@ trackerRouter.get('/progress', async (req: AuthedRequest, res) => {
     prisma.weightLog.findMany({ where: { userId: req.userId! }, orderBy: { date: 'asc' }, take: 60 }),
   ]);
 
-  // Last 7 days activity counts.
+  // Last 7 days activity counts (app-timezone day boundaries).
   const week: { day: string; count: number }[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    week.push({ day: key, count: recent.filter((r) => r.completedAt.toISOString().slice(0, 10) === key).length });
+    const key = dayString(d);
+    week.push({ day: key, count: recent.filter((r) => dayString(r.completedAt) === key).length });
   }
 
   res.json({

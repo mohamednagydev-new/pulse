@@ -11,6 +11,10 @@ export const env = {
   NODE_ENV: process.env.NODE_ENV ?? 'development',
   WEB_ORIGIN: process.env.WEB_ORIGIN ?? 'http://localhost:5173',
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? 'dev-access-secret',
+  /** Separate trust domain from JWT signing: rotating the JWT secret must not
+   *  invalidate every outstanding media URL. Falls back to the JWT secret so
+   *  existing deployments keep working until the var is set. */
+  MEDIA_SIGN_SECRET: process.env.MEDIA_SIGN_SECRET || process.env.JWT_ACCESS_SECRET || 'dev-access-secret',
   ACCESS_TOKEN_TTL: process.env.ACCESS_TOKEN_TTL ?? '15m',
   REFRESH_TOKEN_TTL_DAYS: Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? 30),
   UPLOAD_DIR: process.env.UPLOAD_DIR

@@ -38,14 +38,39 @@ export function initRealtime(server: http.Server, origin: string) {
     online.set(userId, (online.get(userId) ?? 0) + 1);
     io?.emit('presence', { online: online.size });
 
-    socket.on('dm:open', (threadId: string) => socket.join(`dm:${threadId}`));
+    // Room joins are authorized: without these checks any authenticated socket
+    // could join any DM/challenge room by id and eavesdrop on its live messages.
+    socket.on('dm:open', async (threadId: string) => {
+      if (typeof threadId !== 'string' || !threadId) return;
+      const thread = await prisma.dMThread
+        .findFirst({ where: { id: threadId, OR: [{ userAId: userId }, { userBId: userId }] }, select: { id: true } })
+        .catch(() => null);
+      if (thread) socket.join(`dm:${threadId}`);
+    });
     socket.on('dm:close', (threadId: string) => socket.leave(`dm:${threadId}`));
-    socket.on('challenge:open', (id: string) => socket.join(`challenge:${id}`));
+    socket.on('challenge:open', async (id: string) => {
+      if (typeof id !== 'string' || !id) return;
+      // Same visibility rule as the HTTP routes: global rooms are open to any
+      // signed-in user; personal/group rooms only to owner and participants.
+      const challenge = await prisma.challenge
+        .findUnique({ where: { id }, select: { kind: true, ownerId: true } })
+        .catch(() => null);
+      if (!challenge) return;
+      if (challenge.kind !== 'global' && challenge.ownerId !== userId) {
+        const member = await prisma.challengeParticipant
+          .findUnique({ where: { challengeId_userId: { challengeId: id, userId } }, select: { id: true } })
+          .catch(() => null);
+        if (!member) return;
+      }
+      socket.join(`challenge:${id}`);
+    });
     socket.on('challenge:close', (id: string) => socket.leave(`challenge:${id}`));
 
     // ---- Live group-training rooms: presence + shared timer + reactions ----
-    socket.on('group:open', (id: string) => {
+    socket.on('group:open', async (id: string) => {
       if (typeof id !== 'string' || !id) return;
+      const session = await prisma.groupSession.findUnique({ where: { id }, select: { id: true } }).catch(() => null);
+      if (!session) return;
       socket.join(`group:${id}`);
       addGroupMember(id, userId);
       io?.to(`group:${id}`).emit('group:members', { id, members: [...(groupMembers.get(id) ?? [])] });

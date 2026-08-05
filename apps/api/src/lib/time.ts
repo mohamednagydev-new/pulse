@@ -7,6 +7,26 @@ export function dayString(d: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
 }
 
+/** Milliseconds the app timezone is ahead of UTC at the given instant. */
+function tzOffsetMs(at: Date): number {
+  const utc = new Date(at.toLocaleString('en-US', { timeZone: 'UTC' }));
+  const local = new Date(at.toLocaleString('en-US', { timeZone: TZ }));
+  return local.getTime() - utc.getTime();
+}
+
+/** The UTC instant when the given app-timezone day (YYYY-MM-DD) begins.
+ *  `new Date('...T00:00:00')` is server-local and silently wrong on a UTC host —
+ *  every createdAt window built from a day string must go through here instead. */
+export function startOfDayTz(day: string): Date {
+  const guess = new Date(`${day}T00:00:00Z`);
+  return new Date(guess.getTime() - tzOffsetMs(guess));
+}
+
+/** The last millisecond of the given app-timezone day. */
+export function endOfDayTz(day: string): Date {
+  return new Date(startOfDayTz(day).getTime() + 86400000 - 1);
+}
+
 export function daysAgoStr(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() - n);

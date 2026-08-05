@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { weekKey } from './time';
+import { weekKey, startOfDayTz } from './time';
 import { awardXp } from './social';
 
 /** Weekly leagues.
@@ -28,7 +28,7 @@ export const MAX_TIER = TIERS.length - 1;
 
 /** XP earned inside a week, straight from the ledger — no separate counter to drift. */
 async function weekXp(userId: string, week: string): Promise<number> {
-  const start = new Date(`${week}T00:00:00`);
+  const start = startOfDayTz(week);
   const end = new Date(start.getTime() + 7 * 86400000);
   const agg = await prisma.xpEvent.aggregate({
     where: { userId, createdAt: { gte: start, lt: end } },
@@ -40,7 +40,7 @@ async function weekXp(userId: string, week: string): Promise<number> {
 /** Same as weekXp but for a whole room at once — one query instead of twenty. */
 async function weekXpMany(userIds: string[], week: string): Promise<Map<string, number>> {
   if (userIds.length === 0) return new Map();
-  const start = new Date(`${week}T00:00:00`);
+  const start = startOfDayTz(week);
   const end = new Date(start.getTime() + 7 * 86400000);
   const rows = await prisma.xpEvent.groupBy({
     by: ['userId'],
@@ -185,7 +185,7 @@ export async function currentStandings(userId: string) {
     .map((m, i) => ({ ...m, rank: i + 1 }));
 
   // Milliseconds to the next Saturday 00:00 — drives the countdown in the UI.
-  const endsAt = new Date(`${me.weekKey}T00:00:00`).getTime() + 7 * 86400000;
+  const endsAt = startOfDayTz(me.weekKey).getTime() + 7 * 86400000;
 
   return {
     weekKey: me.weekKey,

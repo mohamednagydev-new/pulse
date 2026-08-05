@@ -12,6 +12,21 @@ export function startReminderScheduler() {
   runCheck();
 }
 
+/**
+ * Claim a one-shot job key (e.g. "nudge:2026-08-05:19"). runCheck fires on every
+ * boot as well as hourly, so a restart inside the trigger hour would otherwise
+ * send the same notifications twice. The unique constraint makes the claim
+ * atomic across restarts (and across instances, should there ever be two).
+ */
+async function claimJob(key: string): Promise<boolean> {
+  try {
+    await prisma.jobRun.create({ data: { key } });
+    return true;
+  } catch {
+    return false; // unique violation — this slot already ran
+  }
+}
+
 // Rotating motivational copy — personalized, gender-neutral, warm.
 // {name} and {streak} are substituted; language follows the user's preferredLang.
 const DAILY_EN = [
@@ -60,10 +75,13 @@ async function runCheck() {
 
   // Daily nudge — people who haven't trained today, at their preferred hour (default 19:00).
   // (When push isn't configured these still land in the in-app notifications center.)
-  const candidates = await prisma.user.findMany({
-    where: { NOT: { lastActiveOn: day }, ...(pushEnabled() ? { pushSubs: { some: {} } } : {}) },
-    select: { id: true, firstName: true, currentStreak: true, reminderHour: true, preferredLang: true },
-  });
+  const nudgeSlot = await claimJob(`nudge:${day}:${hour}`);
+  const candidates = nudgeSlot
+    ? await prisma.user.findMany({
+        where: { NOT: { lastActiveOn: day }, ...(pushEnabled() ? { pushSubs: { some: {} } } : {}) },
+        select: { id: true, firstName: true, currentStreak: true, reminderHour: true, preferredLang: true },
+      })
+    : [];
   for (const u of candidates) {
     if (hour !== (u.reminderHour ?? 19)) continue;
     const ar = u.preferredLang === 'ar';
@@ -111,7 +129,7 @@ async function runCheck() {
   }
 
   // Weekly recap — Friday 10:00 (start of the Egyptian weekend): your week in numbers.
-  if (localDow(now) === 5 && hour === 10) {
+  if (localDow(now) === 5 && hour === 10 && (await claimJob(`recap:${day}`))) {
     await sendWeeklyRecaps();
   }
 
@@ -122,12 +140,13 @@ async function runCheck() {
       prisma.event.deleteMany({ where: { createdAt: { lt: cut(90) } } }),
       prisma.notification.deleteMany({ where: { createdAt: { lt: cut(60) } } }),
       prisma.reelWatch.deleteMany({ where: { createdAt: { lt: cut(45) } } }),
+      prisma.jobRun.deleteMany({ where: { ranAt: { lt: cut(14) } } }),
     ]).catch((e) => console.warn('[retention]', e?.message));
   }
 
   // Lapsed re-engagement — no activity for 3+ days (once, at 18:00).
-  if (hour === 18) {
-    const threeAgo = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
+  if (hour === 18 && (await claimJob(`lapsed:${day}`))) {
+    const threeAgo = daysAgoStr(3);
     const lapsed = await prisma.user.findMany({
       where: { ...(pushEnabled() ? { pushSubs: { some: {} } } : {}), lastActiveOn: { lt: threeAgo } },
       select: { id: true, firstName: true, preferredLang: true },
@@ -147,7 +166,7 @@ async function runCheck() {
 /** "Your week: 4 workouts, 2 PRs, streak 12 🔥" — sent to everyone active in the last 14 days. */
 async function sendWeeklyRecaps() {
   const since = new Date(Date.now() - 7 * 86400000);
-  const activeSince = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
+  const activeSince = daysAgoStr(14);
   const users = await prisma.user.findMany({
     where: { lastActiveOn: { gte: activeSince } },
     select: { id: true, firstName: true, currentStreak: true, preferredLang: true },

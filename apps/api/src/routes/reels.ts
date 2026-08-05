@@ -265,6 +265,9 @@ reelsRouter.post('/', async (req: AuthedRequest, res) => {
     .object({ topic: z.enum(['workout', 'yoga']), mediaUrl: z.string().min(1), text: z.string().max(300).optional() })
     .safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Upload a video and pick a topic' });
+  // Must reference a real uploaded video row, not an arbitrary string.
+  const vid = await prisma.video.findUnique({ where: { id: parsed.data.mediaUrl }, select: { id: true } });
+  if (!vid) return res.status(400).json({ error: 'Upload the video first' });
   const post = await createFeedPost(req.userId!, 'reel', parsed.data.text, 'reel', parsed.data.topic, {
     mediaType: 'video',
     mediaUrl: parsed.data.mediaUrl,

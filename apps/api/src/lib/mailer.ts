@@ -27,8 +27,9 @@ function getTransporter(): Transporter | null {
 
 /**
  * Send an email. This NEVER throws. When SMTP is not configured or sending
- * fails, the email (including any links) is logged to the console so reset
- * links stay visible during local setup.
+ * fails, the email is logged to the console — with the full body (reset links
+ * included) only in development. Production logs never contain reset links:
+ * anyone who can read the logs could otherwise take over accounts.
  */
 export async function sendMail({ to, subject, html, text }: MailOptions): Promise<void> {
   const tx = getTransporter();
@@ -45,12 +46,16 @@ export async function sendMail({ to, subject, html, text }: MailOptions): Promis
       text: text ?? stripHtml(html),
     });
   } catch (err) {
-    console.error('[mailer] send failed, logging email instead:', err);
+    console.error('[mailer] send failed:', err);
     logFallback(to, subject, text ?? html);
   }
 }
 
 function logFallback(to: string, subject: string, body: string) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error(`[mailer] email NOT sent (SMTP down or unconfigured): to=${to} subject="${subject}" — body withheld from logs`);
+    return;
+  }
   console.log(
     `[mailer] SMTP not configured, email not sent:\n  to: ${to}\n  subject: ${subject}\n  body:\n${body}\n`,
   );

@@ -21,7 +21,7 @@ async function blocked(req: AuthedRequest, res: any, kind: AiKind): Promise<bool
     res.status(503).json({ error: 'AI not configured' });
     return true;
   }
-  const budget = await consumeAi(req.userId!, kind, (req as any).userRole);
+  const budget = await consumeAi(req.userId!, kind, req.role);
   if (!budget.ok) {
     const lang = pickLang(req);
     res.status(429).json({ error: lang === 'ar' ? OVER_BUDGET.ar : OVER_BUDGET.en, limit: budget.limit });
@@ -246,7 +246,7 @@ const macroSchema = z.object({
 });
 
 aiRouter.post('/recipe-macros', async (req: AuthedRequest, res) => {
-  if ((req as any).userRole !== 'ADMIN') {
+  if (req.role !== 'ADMIN') {
     const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { role: true } });
     if (me?.role !== 'ADMIN') return res.status(403).json({ error: 'Admins only' });
   }

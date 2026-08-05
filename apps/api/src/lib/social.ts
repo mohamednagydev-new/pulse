@@ -76,8 +76,8 @@ export async function bumpChallenges(userId: string, trigger: 'workout' | 'calor
     prisma.challengeParticipant.findMany({ where: { userId }, include: { challenge: true } }),
     prisma.user.findUnique({ where: { id: userId } }),
   ]);
-  const { dayString } = await import('./time');
-  const since = (day: string) => new Date(`${day}T00:00:00`);
+  const { dayString, startOfDayTz } = await import('./time');
+  const since = (day: string) => startOfDayTz(day);
 
   for (const p of parts) {
     let progress = p.progress;

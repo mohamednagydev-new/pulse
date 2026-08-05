@@ -65,7 +65,7 @@ oauthRouter.get('/:provider/callback', async (req, res) => {
   if (!code || !state || state !== req.cookies?.oauth_state) return fail();
 
   try {
-    let profile: { id: string; email?: string; firstName?: string; lastName?: string; avatar?: string };
+    let profile: { id: string; email?: string; emailVerified?: boolean; firstName?: string; lastName?: string; avatar?: string };
 
     if (name === 'google') {
       const tokenRes = await fetch(p.token, {
@@ -84,7 +84,7 @@ oauthRouter.get('/:provider/callback', async (req, res) => {
         headers: { Authorization: `Bearer ${tok.access_token}` },
       });
       const u: any = await uRes.json();
-      profile = { id: u.id, email: u.email, firstName: u.given_name, lastName: u.family_name, avatar: u.picture };
+      profile = { id: u.id, email: u.email, emailVerified: u.verified_email === true, firstName: u.given_name, lastName: u.family_name, avatar: u.picture };
     } else {
       const tokenRes = await fetch(
         `${p.token}?client_id=${p.id}&client_secret=${p.secret}&redirect_uri=${encodeURIComponent(redirectUri(name))}&code=${code}`,
@@ -94,26 +94,41 @@ oauthRouter.get('/:provider/callback', async (req, res) => {
         `https://graph.facebook.com/me?fields=id,first_name,last_name,email,picture&access_token=${tok.access_token}`,
       );
       const u: any = await uRes.json();
-      profile = { id: u.id, email: u.email, firstName: u.first_name, lastName: u.last_name, avatar: u.picture?.data?.url };
+      // Facebook only returns an email once the account has confirmed it, so
+      // presence is the verification signal.
+      profile = { id: u.id, email: u.email, emailVerified: Boolean(u.email), firstName: u.first_name, lastName: u.last_name, avatar: u.picture?.data?.url };
     }
 
     if (!profile.id) return fail();
     const email = profile.email || `${name}_${profile.id}@fitit.local`;
 
-    let user = await prisma.user.findFirst({
-      where: { OR: [{ provider: name, providerId: profile.id }, { email }] },
-    });
+    // Match the provider identity first — that link is always trusted.
+    let user = await prisma.user.findFirst({ where: { provider: name, providerId: profile.id } });
+
     if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email,
-          firstName: profile.firstName || 'Member',
-          lastName: profile.lastName || '',
-          provider: name,
-          providerId: profile.id,
-          avatarUrl: profile.avatar,
-        },
-      });
+      const byEmail = await prisma.user.findUnique({ where: { email } });
+      if (byEmail) {
+        // Linking a provider into an existing password account by email alone is
+        // an account-takeover path unless the provider vouches for the address.
+        if (!profile.emailVerified) {
+          return res.redirect(`${env.WEB_ORIGIN}/login?oauth=email_conflict`);
+        }
+        // Persist the link so future logins match on provider/providerId directly.
+        user = byEmail.provider
+          ? byEmail
+          : await prisma.user.update({ where: { id: byEmail.id }, data: { provider: name, providerId: profile.id } });
+      } else {
+        user = await prisma.user.create({
+          data: {
+            email,
+            firstName: profile.firstName || 'Member',
+            lastName: profile.lastName || '',
+            provider: name,
+            providerId: profile.id,
+            avatarUrl: profile.avatar,
+          },
+        });
+      }
     }
 
     await issueTokens(res, user);

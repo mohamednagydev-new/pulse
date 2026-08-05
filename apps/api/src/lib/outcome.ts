@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { daysAgoStr } from './time';
+import { daysAgoStr, startOfDayTz } from './time';
 import type { Bilingual } from './coach';
 
 /**
@@ -83,7 +83,7 @@ export async function measureOutcome(
   const planAge = Math.floor((Date.now() - planStarted.getTime()) / 86400000);
   const windowDays = Math.max(28, Math.min(90, planAge));
   const sinceDate = daysAgoStr(windowDays);
-  const since = new Date(`${sinceDate}T00:00:00`);
+  const since = startOfDayTz(sinceDate);
 
   if (goal === 'lose_weight') {
     const change = await weightChange(userId, sinceDate);
