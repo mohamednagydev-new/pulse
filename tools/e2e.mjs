@@ -19,7 +19,8 @@ const SHOTS = path.join(__dirname, 'e2e-shots');
 fs.rmSync(SHOTS, { recursive: true, force: true });
 fs.mkdirSync(SHOTS, { recursive: true });
 
-const BASE = 'http://localhost:5173';
+// Point at any deployment: E2E_BASE=https://pulse.geddo.online node tools/e2e.mjs
+const BASE = process.env.E2E_BASE || 'http://localhost:5173';
 const findings = [];
 const consoleErrors = [];
 const netFailures = [];
