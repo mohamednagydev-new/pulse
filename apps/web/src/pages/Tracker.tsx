@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Plus, Search, Trash2, Sparkles, UtensilsCrossed } from 'lucide-react';
+import { Camera, Mic, Plus, Search, Trash2, Sparkles, UtensilsCrossed } from 'lucide-react';
+import { listenOnce, voiceSupported } from '../lib/voiceInput';
+import { toast } from '../lib/toast';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Loader, ErrorMsg } from '../components/ui';
@@ -15,12 +17,13 @@ import MealPhoto from '../components/MealPhoto';
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
 export default function Tracker() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [picking, setPicking] = useState(false);
   const [photo, setPhoto] = useState(false);
+  const [listening, setListening] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: ['tracker-day'], queryFn: () => api.get('/api/tracker/day') });
 
@@ -169,6 +172,32 @@ export default function Tracker() {
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addByText()}
             />
+            {voiceSupported() && (
+              <button
+                onClick={async () => {
+                  if (listening) return;
+                  setListening(true);
+                  try {
+                    const session = listenOnce(i18n.language.startsWith('ar') ? 'ar-EG' : 'en-US', (s) => setText(s));
+                    const said = await session.promise;
+                    if (said) setText(said);
+                  } catch (e) {
+                    if (e instanceof Error && (e.message === 'not-allowed' || e.message === 'service-not-allowed')) {
+                      toast(t('food.micDenied'), 'error');
+                    }
+                  } finally {
+                    setListening(false);
+                  }
+                }}
+                aria-label={t('food.speak')}
+                aria-pressed={listening}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition active:scale-90 ${
+                  listening ? 'bg-red-500 text-white' : 'bg-emerald-50 text-brand-green'
+                }`}
+              >
+                <Mic size={16} className={listening ? 'animate-pulse' : ''} />
+              </button>
+            )}
             <motion.button whileTap={{ scale: 0.9 }} onClick={addByText} disabled={busy} aria-label={t('food.add')} className="shrink-0 rounded-full btn-primary p-2 disabled:opacity-60">
               <Plus size={18} />
             </motion.button>
