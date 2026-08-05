@@ -1,0 +1,544 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { Flame, Zap, Dumbbell, Crown, Swords, Megaphone, MessageSquare } from 'lucide-react';
+import { api } from '../../lib/api';
+import { useAuth } from '../../store/auth';
+import { MediaImage, Loader } from '../../components/ui';
+import TopBar from '../../components/TopBar';
+import AmbientBg from '../../components/AmbientBg';
+import { toast } from '../../lib/toast';
+import { tapFeedback } from '../../lib/haptics';
+
+type DuelMetric = 'workouts' | 'xp';
+type Duel = {
+  id: string;
+  metric: DuelMetric;
+  durationDays: number;
+  wagerXp: number;
+  status: string;
+  startsAt: string;
+  endsAt: string;
+  iChallenged: boolean;
+  other: { id: string; firstName: string; lastName: string; avatarUrl: string | null; level: number };
+  myScore: number;
+  theirScore: number;
+  iWon?: boolean | null;
+};
+
+const tapSpring = { type: 'spring', stiffness: 500, damping: 30 } as const;
+
+export function Buddies() {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const authUser = useAuth((s) => s.user);
+
+  const metricLabel = (m: DuelMetric) => (m === 'xp' ? t('duels.metricXp') : t('duels.metricWorkouts'));
+
+  const duelTimeLeft = (endsAt: string) => {
+    const ms = new Date(endsAt).getTime() - Date.now();
+    if (ms <= 0) return '…';
+    const days = Math.floor(ms / 86_400_000);
+    if (days >= 1) return `${days}d ${t('duels.left')}`;
+    return `${Math.max(1, Math.ceil(ms / 3_600_000))}h ${t('duels.left')}`;
+  };
+
+  const { data: conns, isLoading: loadingConns } = useQuery({
+    queryKey: ['connections'],
+    queryFn: () => api.get('/api/social/connections'),
+  });
+  const { data: buddies, isLoading: loadingBuddies } = useQuery({
+    queryKey: ['buddies'],
+    queryFn: () => api.get('/api/social/buddies'),
+  });
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
+  const { data: duels } = useQuery({
+    queryKey: ['duels'],
+    queryFn: () => api.get('/api/duels'),
+  });
+
+  // Challenge sheet state
+  const [duelTarget, setDuelTarget] = useState<any>(null);
+  const [duelMetric, setDuelMetric] = useState<DuelMetric>('workouts');
+  const [duelDays, setDuelDays] = useState<number>(7);
+  const [duelWager, setDuelWager] = useState<number>(0);
+
+  const openDuelSheet = (b: any) => {
+    setDuelMetric('workouts');
+    setDuelDays(7);
+    setDuelWager(0);
+    setDuelTarget(b);
+  };
+
+  const accept = useMutation({
+    mutationFn: (id: string) => api.post(`/api/social/connections/${id}/accept`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['connections'] });
+      qc.invalidateQueries({ queryKey: ['buddies'] });
+      toast(`${t('buddies.connect')} ✓`, 'success');
+    },
+  });
+  const cheer = useMutation({
+    mutationFn: (id: string) => api.post(`/api/social/buddies/${id}/cheer`),
+    onSuccess: () => {
+      tapFeedback();
+      toast(t('buddies.cheered'), 'success');
+    },
+    onError: (e: any) => toast(e?.message || 'Could not cheer', 'error'),
+  });
+  const message = useMutation({
+    mutationFn: (id: string) => api.post('/api/chat/threads', { userId: id }),
+    onSuccess: (thread: any) => navigate(`/chat/${thread.id}`),
+    onError: (e: any) => toast(e?.message || 'Could not open chat', 'error'),
+  });
+
+  const acceptDuel = useMutation({
+    mutationFn: (id: string) => api.post(`/api/duels/${id}/accept`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['duels'] });
+      toast(`${t('duels.accept')} ⚔️`, 'success');
+    },
+    onError: (e: any) => toast(e?.message || 'Could not accept duel', 'error'),
+  });
+  const declineDuel = useMutation({
+    mutationFn: (id: string) => api.post(`/api/duels/${id}/decline`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['duels'] }),
+    onError: (e: any) => toast(e?.message || 'Could not decline duel', 'error'),
+  });
+  const createDuel = useMutation({
+    mutationFn: () =>
+      api.post('/api/duels', {
+        opponentId: duelTarget.id,
+        metric: duelMetric,
+        durationDays: duelDays,
+        wagerXp: duelWager,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['duels'] });
+      setDuelTarget(null);
+      toast(t('duels.sent'), 'success');
+    },
+    onError: (e: any) => toast(e?.message || 'Could not send challenge', 'error'),
+  });
+
+  const incoming = conns?.incoming ?? [];
+  const isLoading = loadingConns || loadingBuddies;
+
+  const duelIncoming: Duel[] = duels?.incoming ?? [];
+  const duelOutgoing: Duel[] = duels?.outgoing ?? [];
+  const duelActive: Duel[] = duels?.active ?? [];
+  const duelFinished: Duel[] = duels?.finished ?? [];
+  const hasDuels = duelIncoming.length + duelOutgoing.length + duelActive.length + duelFinished.length > 0;
+
+  // Streak Battle — me + buddies, ranked by streak (weekly XP breaks ties).
+  const meSrc = me ?? authUser;
+  const leaderboard = meSrc
+    ? [
+        {
+          id: meSrc.id,
+          firstName: meSrc.firstName,
+          lastName: meSrc.lastName,
+          avatarUrl: meSrc.avatarUrl,
+          currentStreak: (meSrc as any).currentStreak ?? 0,
+          weeklyXp: (meSrc as any).weeklyXp ?? 0,
+          isMe: true,
+        },
+        ...(buddies ?? []).map((b: any) => ({ ...b, isMe: false })),
+      ].sort((a, b) => (b.currentStreak - a.currentStreak) || (b.weeklyXp - a.weeklyXp))
+    : [];
+
+  return (
+    <div className="relative min-h-screen pb-8">
+      <AmbientBg tone="warm" />
+      <TopBar title={t('buddies.title')} color="fitness-hero" textColor="text-white" />
+
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <div className="space-y-3 px-4 pt-2">
+          {(buddies?.length ?? 0) > 0 && leaderboard.length > 0 && (
+            <div>
+              <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('battle.compete')}</p>
+              <h2 className="px-1 pb-2 font-bold">{t('battle.title')}</h2>
+              <div className="space-y-2">
+                {leaderboard.map((row: any, idx: number) => (
+                  <motion.div
+                    key={row.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 340, damping: 28, delay: Math.min(idx, 5) * 0.06 }}
+                    className={`flex items-center gap-3 rounded-2xl p-3 shadow-sm ${
+                      idx === 0 ? 'bg-gradient-to-r from-amber-100/80 via-amber-50 to-white' : 'bg-white'
+                    } ${row.isMe ? 'ring-2 ring-brand-pink' : ''}`}
+                  >
+                    <span className="w-6 shrink-0 text-center">
+                      {idx === 0 ? (
+                        <Crown size={18} className="mx-auto text-amber-500" />
+                      ) : (
+                        <span className="text-sm font-extrabold text-gray-400">{idx + 1}</span>
+                      )}
+                    </span>
+                    <MediaImage
+                      path={row.avatarUrl}
+                      label={row.firstName}
+                      className="h-10 w-10 shrink-0 rounded-full"
+                      seed={row.id?.length}
+                    />
+                    <p className="min-w-0 flex-1 truncate font-semibold">
+                      {row.isMe ? t('battle.you') : `${row.firstName} ${row.lastName}`}
+                      {idx === 0 ? ' 👑' : ''}
+                    </p>
+                    <span className="flex shrink-0 items-center gap-1 font-extrabold text-orange-500">
+                      <Flame size={15} /> {row.currentStreak}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-0.5 text-xs text-gray-400">
+                      <Zap size={11} className="text-amber-500" /> {row.weeklyXp}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(hasDuels || (buddies?.length ?? 0) > 0) && (
+            <div>
+              <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('duels.duel')}</p>
+              <h2 className="px-1 pb-2 font-bold">{t('duels.title')} ⚔️</h2>
+              <div className="space-y-2">
+                {duelIncoming.map((d) => (
+                  <motion.div
+                    key={d.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+                    className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-brand-pink/20"
+                  >
+                    <div className="flex items-center gap-3">
+                      <MediaImage
+                        path={d.other.avatarUrl}
+                        label={d.other.firstName}
+                        className="h-10 w-10 shrink-0 rounded-full"
+                        seed={d.other.id.length}
+                      />
+                      <p className="min-w-0 flex-1 text-sm text-gray-600">
+                        <span className="font-semibold text-ink">{d.other.firstName} {d.other.lastName}</span>{' '}
+                        {t('duels.challengesYou')} — {metricLabel(d.metric).toLowerCase()} · {d.durationDays} {t('duels.days')}
+                        {d.wagerXp > 0 ? ` · ⚡${d.wagerXp} XP` : ''}
+                      </p>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        transition={tapSpring}
+                        onClick={() => { tapFeedback(); acceptDuel.mutate(d.id); }}
+                        disabled={acceptDuel.isPending}
+                        className="btn-pill btn-primary flex min-h-[40px] flex-1 items-center justify-center gap-1.5 py-1.5 text-sm disabled:opacity-60"
+                      >
+                        <Swords size={15} /> {t('duels.accept')}
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        transition={tapSpring}
+                        onClick={() => declineDuel.mutate(d.id)}
+                        disabled={declineDuel.isPending}
+                        className="btn-pill btn-ghost flex min-h-[40px] flex-1 items-center justify-center py-1.5 text-sm disabled:opacity-60"
+                      >
+                        {t('duels.decline')}
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {duelActive.map((d) => {
+                  const total = d.myScore + d.theirScore;
+                  const myPct = total === 0 ? 50 : (d.myScore / total) * 100;
+                  const myLead = d.myScore >= d.theirScore;
+                  const theirLead = d.theirScore >= d.myScore;
+                  return (
+                    <motion.div
+                      key={d.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+                      className="rounded-2xl bg-white p-3 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                        <span>{metricLabel(d.metric)}</span>
+                        <span className="flex items-center gap-2 normal-case tracking-normal">
+                          {d.wagerXp > 0 && (
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 font-bold text-amber-600">⚡{d.wagerXp} XP</span>
+                          )}
+                          <span className="font-semibold">{duelTimeLeft(d.endsAt)}</span>
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-center gap-3">
+                        <div className="flex shrink-0 flex-col items-center">
+                          <MediaImage
+                            path={meSrc?.avatarUrl}
+                            label={meSrc?.firstName}
+                            className="h-10 w-10 rounded-full"
+                            seed={meSrc?.id?.length}
+                          />
+                          <span className="mt-0.5 text-[10px] font-semibold text-gray-400">{t('battle.you')}</span>
+                        </div>
+                        <span className={`shrink-0 text-lg font-extrabold ${myLead ? 'text-brand-pink' : 'text-gray-400'}`}>
+                          {d.myScore}
+                        </span>
+                        <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-200">
+                          <motion.div
+                            className="h-full rounded-full bg-gradient-to-r from-brand-pink to-pink-400"
+                            initial={false}
+                            animate={{ width: `${myPct}%` }}
+                            transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                          />
+                        </div>
+                        <span className={`shrink-0 text-lg font-extrabold ${theirLead ? 'text-brand-pink' : 'text-gray-400'}`}>
+                          {d.theirScore}
+                        </span>
+                        <div className="flex shrink-0 flex-col items-center">
+                          <MediaImage
+                            path={d.other.avatarUrl}
+                            label={d.other.firstName}
+                            className="h-10 w-10 rounded-full"
+                            seed={d.other.id.length}
+                          />
+                          <span className="mt-0.5 max-w-[52px] truncate text-[10px] font-semibold text-gray-400">
+                            {d.other.firstName}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+
+                {duelOutgoing.map((d) => (
+                  <div key={d.id} className="flex items-center gap-3 rounded-2xl bg-white/60 p-3 text-sm text-gray-400 shadow-sm">
+                    <MediaImage
+                      path={d.other.avatarUrl}
+                      label={d.other.firstName}
+                      className="h-8 w-8 shrink-0 rounded-full opacity-70"
+                      seed={d.other.id.length}
+                    />
+                    <span className="min-w-0 flex-1 truncate">
+                      {t('duels.waiting', { name: d.other.firstName })} · {metricLabel(d.metric).toLowerCase()}, {d.durationDays} {t('duels.days')}
+                    </span>
+                  </div>
+                ))}
+
+                {duelFinished.slice(0, 5).map((d) => (
+                  <div key={d.id} className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2 text-sm shadow-sm">
+                    <span>{d.iWon === true ? '🏆' : d.iWon === false ? '😤' : '🤝'}</span>
+                    <span className="min-w-0 flex-1 truncate text-gray-600">
+                      {d.iWon === true ? t('duels.won') : d.iWon === false ? t('duels.lost') : t('duels.draw')} — {d.other.firstName} ·{' '}
+                      {metricLabel(d.metric).toLowerCase()}
+                    </span>
+                    <span className={`shrink-0 font-extrabold ${d.iWon === true ? 'text-brand-pink' : 'text-gray-400'}`}>
+                      {d.myScore}–{d.theirScore}
+                    </span>
+                  </div>
+                ))}
+
+                {!hasDuels && (
+                  <p className="flex items-center gap-1.5 rounded-2xl bg-white/60 p-3 text-sm text-gray-400">
+                    <Swords size={14} className="shrink-0" /> {t('duels.challengeTitle', { name: t('buddies.title') })} ⚔️
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {incoming.length > 0 && (
+            <div>
+              <p className="px-1 pb-2 text-sm font-bold uppercase text-gray-400">{t('buddies.requests')}</p>
+              <div className="space-y-2">
+                {incoming.map((r: any) => (
+                  <div key={r.connectionId} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm">
+                    <Link to={`/u/${r.user.id}`}>
+                      <MediaImage path={r.user.avatarUrl} label={r.user.firstName} className="h-12 w-12 rounded-full" seed={r.user.id.length} />
+                    </Link>
+                    <Link to={`/u/${r.user.id}`} className="flex-1">
+                      <p className="font-semibold">{r.user.firstName} {r.user.lastName}</p>
+                      <p className="flex items-center gap-2 text-xs text-gray-400">
+                        <span className="rounded-full bg-brand-pink/10 px-2 font-bold text-brand-pink">Lv {r.user.level}</span>
+                        <span className="flex items-center gap-0.5"><Flame size={11} /> {r.user.currentStreak}</span>
+                      </p>
+                    </Link>
+                    <motion.button
+                      whileTap={{ scale: 0.92 }}
+                      transition={tapSpring}
+                      onClick={() => accept.mutate(r.user.id)}
+                      className="btn-pill btn-primary flex min-h-[40px] items-center gap-1.5 px-5 py-1.5 text-sm"
+                    >
+                      <Zap size={14} /> {t('buddies.accept')}
+                    </motion.button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {incoming.length > 0 && (buddies?.length ?? 0) > 0 && (
+            <p className="px-1 pt-2 text-sm font-bold uppercase text-gray-400">{t('buddies.title')}</p>
+          )}
+
+          <div className="space-y-2">
+            {(buddies ?? []).map((b: any) => (
+              <div key={b.id} className="rounded-2xl bg-white p-3 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <Link to={`/u/${b.id}`}>
+                    <MediaImage path={b.avatarUrl} label={b.firstName} className="h-12 w-12 rounded-full" seed={b.id.length} />
+                  </Link>
+                  <Link to={`/u/${b.id}`} className="flex-1">
+                    <p className="font-semibold">{b.firstName} {b.lastName}</p>
+                    <p className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                      <span className="rounded-full bg-brand-pink/10 px-2 font-bold text-brand-pink">Lv {b.level}</span>
+                      <span className="flex items-center gap-0.5"><Flame size={11} className="text-orange-500" /> {b.currentStreak}</span>
+                      <span className="flex items-center gap-0.5"><Zap size={11} className="text-amber-500" /> {b.weeklyXp} XP</span>
+                      <span className="flex items-center gap-0.5"><Dumbbell size={11} /> {b.completions}</span>
+                    </p>
+                  </Link>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <motion.button
+                    whileTap={{ scale: 0.92, rotate: -6 }}
+                    transition={tapSpring}
+                    onClick={() => cheer.mutate(b.id)}
+                    className="btn-pill btn-ghost flex min-h-[40px] flex-1 items-center justify-center gap-1.5 py-1.5 text-sm"
+                  >
+                    <Megaphone size={15} /> {t('buddies.cheer')}
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    transition={tapSpring}
+                    onClick={() => message.mutate(b.id)}
+                    className="btn-pill btn-primary flex min-h-[40px] flex-1 items-center justify-center gap-1.5 py-1.5 text-sm"
+                  >
+                    <MessageSquare size={15} /> {t('buddies.message')}
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    transition={tapSpring}
+                    onClick={() => openDuelSheet(b)}
+                    aria-label={t('duels.challengeTitle', { name: b.firstName })}
+                    className="btn-pill btn-ghost flex min-h-[40px] items-center justify-center gap-1.5 px-3.5 py-1.5 text-sm text-brand-pink"
+                  >
+                    <Swords size={16} /> {t('duels.duel')}
+                  </motion.button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!incoming.length && !(buddies?.length ?? 0) && (
+            <div className="py-16 text-center text-gray-400">
+              <p>{t('buddies.empty')}</p>
+              <Link to="/people" className="mt-2 inline-block font-semibold text-brand-pink">{t('buddies.emptyHint')} →</Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      <AnimatePresence>
+        {duelTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
+            onClick={() => setDuelTarget(null)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+              className="w-full max-w-[480px] rounded-t-3xl bg-white p-5 pb-8 text-ink"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200" />
+              <div className="flex items-center gap-3">
+                <MediaImage
+                  path={duelTarget.avatarUrl}
+                  label={duelTarget.firstName}
+                  className="h-12 w-12 shrink-0 rounded-full"
+                  seed={duelTarget.id?.length}
+                />
+                <div>
+                  <h2 className="text-lg font-bold">{t('duels.challengeTitle', { name: duelTarget.firstName })}</h2>
+                  <p className="text-xs text-gray-400">{t('duels.title')} ⚔️</p>
+                </div>
+              </div>
+
+              <p className="mt-5 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('duels.duel')}</p>
+              <div className="mt-2 flex gap-2">
+                {([
+                  { value: 'workouts' as DuelMetric, label: `💪 ${t('duels.metricWorkouts')}` },
+                  { value: 'xp' as DuelMetric, label: `⚡ ${t('duels.metricXp')}` },
+                ]).map((m) => (
+                  <button
+                    key={m.value}
+                    onClick={() => setDuelMetric(m.value)}
+                    className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${
+                      duelMetric === m.value ? 'bg-brand-pink text-white' : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              <p className="mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('duels.days')}</p>
+              <div className="mt-2 flex gap-2">
+                {[3, 7, 14].map((days) => (
+                  <button
+                    key={days}
+                    onClick={() => setDuelDays(days)}
+                    className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${
+                      duelDays === days ? 'bg-brand-pink text-white' : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {days} {t('duels.days')}
+                  </button>
+                ))}
+              </div>
+
+              <p className="mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('duels.stake')}</p>
+              <div className="mt-2 flex gap-2">
+                {([
+                  { value: 0, label: t('duels.noStake') },
+                  { value: 50, label: '⚡50 XP' },
+                  { value: 100, label: '⚡100 XP' },
+                ]).map((w) => (
+                  <button
+                    key={w.value}
+                    onClick={() => setDuelWager(w.value)}
+                    className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${
+                      duelWager === w.value ? 'bg-brand-pink text-white' : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {w.label}
+                  </button>
+                ))}
+              </div>
+
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                transition={tapSpring}
+                onClick={() => { tapFeedback(); createDuel.mutate(); }}
+                disabled={createDuel.isPending}
+                className="btn-pill btn-primary mt-6 flex w-full items-center justify-center gap-2 py-3 font-bold disabled:opacity-60"
+              >
+                {createDuel.isPending ? t('common.loading') : t('duels.send')}
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default Buddies;

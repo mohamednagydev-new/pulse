@@ -1,0 +1,330 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { prisma } from '../lib/prisma';
+import { requireAuth, AuthedRequest } from '../middleware/auth';
+import { awardXp } from '../lib/social';
+import { dayString, daysAgoStr } from '../lib/time';
+
+export const dailyRouter = Router();
+dailyRouter.use(requireAuth);
+
+const WATER_GOAL = 8;
+const QUEST_XP = 10;
+const BONUS_XP = 30;
+
+/* ------------------------------- Water ------------------------------- */
+
+dailyRouter.get('/water', async (req: AuthedRequest, res) => {
+  const date = dayString();
+  const row = await prisma.waterLog.findUnique({ where: { userId_date: { userId: req.userId!, date } } });
+  // last 7 days for the mini history strip
+  const since = daysAgoStr(6);
+  const week = await prisma.waterLog.findMany({
+    where: { userId: req.userId!, date: { gte: since } },
+    orderBy: { date: 'asc' },
+    select: { date: true, glasses: true },
+  });
+  res.json({ date, glasses: row?.glasses ?? 0, goal: WATER_GOAL, week });
+});
+
+dailyRouter.post('/water', async (req: AuthedRequest, res) => {
+  const parsed = z.object({ delta: z.number().int().min(-20).max(20).optional(), set: z.number().int().min(0).max(30).optional() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const date = dayString();
+  const existing = await prisma.waterLog.findUnique({ where: { userId_date: { userId: req.userId!, date } } });
+  const current = existing?.glasses ?? 0;
+  const next = Math.max(0, Math.min(30, parsed.data.set ?? current + (parsed.data.delta ?? 1)));
+  const row = await prisma.waterLog.upsert({
+    where: { userId_date: { userId: req.userId!, date } },
+    create: { userId: req.userId!, date, glasses: next },
+    update: { glasses: next },
+  });
+  res.json({ glasses: row.glasses, goal: WATER_GOAL });
+});
+
+/* ------------------------------- Activity heatmap ------------------------------- */
+
+/** Daily activity counts for the last N days (drives the streak calendar). */
+dailyRouter.get('/activity', async (req: AuthedRequest, res) => {
+  const days = Math.min(Math.max(Number(req.query.days) || 120, 30), 400);
+  const since = new Date(Date.now() - days * 86400000);
+  const rows = await prisma.$queryRawUnsafe<{ day: string; n: number }[]>(
+    `SELECT date(createdAt / 1000, 'unixepoch') as day, COUNT(*) as n
+     FROM XpEvent WHERE userId = ? AND createdAt >= ? GROUP BY day ORDER BY day ASC`,
+    req.userId!,
+    since.getTime(),
+  );
+  const user = await prisma.user.findUnique({
+    where: { id: req.userId! },
+    select: { currentStreak: true, longestStreak: true, streakFreezes: true },
+  });
+  res.json({
+    days,
+    activity: rows.map((r) => ({ date: r.day, count: Number(r.n) })),
+    currentStreak: user?.currentStreak ?? 0,
+    longestStreak: user?.longestStreak ?? 0,
+    streakFreezes: user?.streakFreezes ?? 0,
+  });
+});
+
+/* ------------------------------- Daily quests ------------------------------- */
+
+type Quest = {
+  key: string;
+  en: string;
+  ar: string;
+  icon: string;
+  target: number;
+  /** How many units the user has done today. */
+  progress: (userId: string, day: string) => Promise<number>;
+};
+
+const startOfDay = (day: string) => new Date(`${day}T00:00:00`);
+const endOfDay = (day: string) => new Date(`${day}T23:59:59.999`);
+
+const QUESTS: Quest[] = [
+  {
+    key: 'workout', en: 'Complete a workout', ar: 'خلّص تمرينة', icon: '💪', target: 1,
+    progress: (userId, day) =>
+      prisma.xpEvent.count({ where: { userId, reason: 'workout-session', createdAt: { gte: startOfDay(day), lte: endOfDay(day) } } }),
+  },
+  {
+    key: 'water', en: 'Drink 8 glasses of water', ar: 'اشرب ٨ أكواب مياه', icon: '💧', target: WATER_GOAL,
+    progress: async (userId, day) => (await prisma.waterLog.findUnique({ where: { userId_date: { userId, date: day } } }))?.glasses ?? 0,
+  },
+  {
+    key: 'food', en: 'Log a meal', ar: 'سجّل وجبة', icon: '🥗', target: 1,
+    progress: (userId, day) => prisma.calorieEntry.count({ where: { userId, date: day } }),
+  },
+  {
+    key: 'lift', en: 'Log a set', ar: 'سجّل مجموعة', icon: '🏋️', target: 1,
+    progress: (userId, day) => prisma.liftLog.count({ where: { userId, createdAt: { gte: startOfDay(day), lte: endOfDay(day) } } }),
+  },
+  {
+    key: 'reels', en: 'Watch 3 reels', ar: 'اتفرج على ٣ ريلز', icon: '🎬', target: 3,
+    progress: (userId, day) => prisma.reelWatch.count({ where: { userId, createdAt: { gte: startOfDay(day), lte: endOfDay(day) } } }),
+  },
+  {
+    key: 'social', en: 'Cheer or post to the feed', ar: 'شجّع صاحبك أو انشر بوست', icon: '📣', target: 1,
+    progress: (userId, day) => prisma.feedPost.count({ where: { userId, createdAt: { gte: startOfDay(day), lte: endOfDay(day) } } }),
+  },
+  {
+    key: 'weight', en: 'Log your weight', ar: 'سجّل وزنك', icon: '⚖️', target: 1,
+    progress: (userId, day) => prisma.weightLog.count({ where: { userId, date: day } }),
+  },
+];
+
+/** Deterministic 3-quest set per user per day (rotates, but stable within the day). */
+function pickQuests(userId: string, day: string): Quest[] {
+  let h = 0;
+  const seed = `${userId}:${day}`;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  const pool = [...QUESTS];
+  const out: Quest[] = [];
+  for (let i = 0; i < 3 && pool.length; i++) {
+    h = (h * 1103515245 + 12345) >>> 0;
+    out.push(...pool.splice(h % pool.length, 1));
+  }
+  return out;
+}
+
+dailyRouter.get('/quests', async (req: AuthedRequest, res) => {
+  const day = dayString();
+  const picked = pickQuests(req.userId!, day);
+  const claims = await prisma.questClaim.findMany({ where: { userId: req.userId!, day } });
+  const claimed = new Set(claims.map((c) => c.questKey));
+
+  const quests = await Promise.all(
+    picked.map(async (q) => {
+      const progress = await q.progress(req.userId!, day);
+      return {
+        key: q.key,
+        en: q.en,
+        ar: q.ar,
+        icon: q.icon,
+        target: q.target,
+        progress: Math.min(progress, q.target),
+        done: progress >= q.target,
+        claimed: claimed.has(q.key),
+        xp: QUEST_XP,
+      };
+    }),
+  );
+
+  const allDone = quests.every((q) => q.done);
+  res.json({
+    day,
+    quests,
+    allDone,
+    bonusXp: BONUS_XP,
+    bonusClaimed: claimed.has('daily_bonus'),
+    claimable: quests.some((q) => q.done && !q.claimed) || (allDone && !claimed.has('daily_bonus')),
+  });
+});
+
+/** Claim every completed-but-unclaimed quest (plus the all-three bonus). */
+dailyRouter.post('/quests/claim', async (req: AuthedRequest, res) => {
+  const day = dayString();
+  const picked = pickQuests(req.userId!, day);
+  const claims = await prisma.questClaim.findMany({ where: { userId: req.userId!, day } });
+  const claimed = new Set(claims.map((c) => c.questKey));
+
+  let awarded = 0;
+  const newlyClaimed: string[] = [];
+  let allDone = true;
+
+  for (const q of picked) {
+    const progress = await q.progress(req.userId!, day);
+    const done = progress >= q.target;
+    if (!done) { allDone = false; continue; }
+    if (claimed.has(q.key)) continue;
+    try {
+      await prisma.questClaim.create({ data: { userId: req.userId!, day, questKey: q.key, xp: QUEST_XP } });
+      awarded += QUEST_XP;
+      newlyClaimed.push(q.key);
+    } catch { /* already claimed in a parallel request */ }
+  }
+
+  let bonus = 0;
+  if (allDone && !claimed.has('daily_bonus')) {
+    try {
+      await prisma.questClaim.create({ data: { userId: req.userId!, day, questKey: 'daily_bonus', xp: BONUS_XP } });
+      bonus = BONUS_XP;
+      awarded += BONUS_XP;
+    } catch { /* raced */ }
+  }
+
+  if (awarded > 0) await awardXp(req.userId!, awarded, 'daily_quest');
+  res.json({ awarded, bonus, claimed: newlyClaimed, allDone });
+});
+
+/* ------------------------------- Body log ------------------------------- */
+
+dailyRouter.get('/body', async (req: AuthedRequest, res) => {
+  const logs = await prisma.bodyLog.findMany({ where: { userId: req.userId! }, orderBy: { date: 'desc' }, take: 60 });
+  res.json(logs);
+});
+
+dailyRouter.post('/body', async (req: AuthedRequest, res) => {
+  const parsed = z
+    .object({
+      waistCm: z.number().min(20).max(300).optional(),
+      chestCm: z.number().min(20).max(300).optional(),
+      armCm: z.number().min(10).max(150).optional(),
+      hipCm: z.number().min(20).max(300).optional(),
+      thighCm: z.number().min(10).max(200).optional(),
+      photo: z.string().max(300).optional(),
+      note: z.string().max(300).optional(),
+    })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid measurements' });
+  const log = await prisma.bodyLog.create({ data: { userId: req.userId!, date: dayString(), ...parsed.data } });
+  res.status(201).json(log);
+});
+
+dailyRouter.delete('/body/:id', async (req: AuthedRequest, res) => {
+  const gone = await prisma.bodyLog.deleteMany({ where: { id: req.params.id, userId: req.userId! } });
+  if (!gone.count) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+});
+
+/* ------------------------------- Daily spin (fun layer) ------------------------------- */
+
+const MAX_FREEZES = 3;
+
+/** Weighted prize wheel. Weights are tuned so it feels generous but not exploitable. */
+const PRIZES = [
+  { key: 'xp_10', weight: 34, xp: 10, en: '+10 XP', ar: '+١٠ نقطة', icon: '⭐' },
+  { key: 'xp_25', weight: 26, xp: 25, en: '+25 XP', ar: '+٢٥ نقطة', icon: '✨' },
+  { key: 'xp_50', weight: 14, xp: 50, en: '+50 XP', ar: '+٥٠ نقطة', icon: '💫' },
+  { key: 'freeze', weight: 8, xp: 0, en: 'Streak freeze', ar: 'فريز للسلسلة', icon: '🧊' },
+  { key: 'xp_100', weight: 4, xp: 100, en: '+100 XP', ar: '+١٠٠ نقطة', icon: '🏆' },
+  { key: 'nothing', weight: 14, xp: 0, en: 'Better luck tomorrow', ar: 'حظ أوفر بكرة', icon: '🎲' },
+];
+
+/** Wheel layout + whether today's spin is still available. */
+dailyRouter.get('/spin', async (req: AuthedRequest, res) => {
+  const day = dayString();
+  const claim = await prisma.spinClaim.findUnique({ where: { userId_day: { userId: req.userId!, day } } });
+  res.json({
+    day,
+    spun: !!claim,
+    prize: claim?.prize ?? null,
+    slices: PRIZES.map(({ key, en, ar, icon }) => ({ key, en, ar, icon })),
+  });
+});
+
+dailyRouter.post('/spin', async (req: AuthedRequest, res) => {
+  const day = dayString();
+  const existing = await prisma.spinClaim.findUnique({ where: { userId_day: { userId: req.userId!, day } } });
+  if (existing) return res.status(409).json({ error: 'Already spun today', prize: existing.prize });
+
+  const total = PRIZES.reduce((s, p) => s + p.weight, 0);
+  let roll = Math.random() * total;
+  let won = PRIZES[PRIZES.length - 1];
+  for (const p of PRIZES) {
+    roll -= p.weight;
+    if (roll <= 0) { won = p; break; }
+  }
+
+  try {
+    await prisma.spinClaim.create({ data: { userId: req.userId!, day, prize: won.key, xp: won.xp } });
+  } catch {
+    const again = await prisma.spinClaim.findUnique({ where: { userId_day: { userId: req.userId!, day } } });
+    return res.status(409).json({ error: 'Already spun today', prize: again?.prize });
+  }
+
+  if (won.xp > 0) await awardXp(req.userId!, won.xp, 'daily_spin');
+  if (won.key === 'freeze') {
+    const u = await prisma.user.findUnique({ where: { id: req.userId! }, select: { streakFreezes: true } });
+    await prisma.user.update({
+      where: { id: req.userId! },
+      data: { streakFreezes: Math.min(MAX_FREEZES, (u?.streakFreezes ?? 0) + 1) },
+    });
+  }
+
+  // index lets the client stop the wheel on the winning slice
+  res.json({ prize: won.key, xp: won.xp, index: PRIZES.findIndex((p) => p.key === won.key), icon: won.icon });
+});
+
+/* ------------------------------- Workout roulette ------------------------------- */
+
+/** "Surprise me" — a random muscle group plus a random pick of its exercises. */
+dailyRouter.get('/roulette', async (_req, res) => {
+  const groups = await prisma.muscleGroup.findMany({ include: { _count: { select: { exercises: true } } } });
+  const usable = groups.filter((g) => g._count.exercises > 0);
+  if (!usable.length) return res.json({ group: null, exercises: [] });
+  const group = usable[Math.floor(Math.random() * usable.length)];
+  const all = await prisma.exercise.findMany({ where: { muscleGroupId: group.id } });
+  const shuffled = all.sort(() => Math.random() - 0.5).slice(0, 5);
+  res.json({
+    group: { id: group.id, name: group.name, nameAr: group.nameAr, bodySide: group.bodySide },
+    exercises: shuffled.map((e) => ({ id: e.id, name: e.name, nameAr: e.nameAr, sets: e.sets, reps: e.reps })),
+  });
+});
+
+/* ------------------------------- Weekly hall of fame ------------------------------- */
+
+/** Top performers of the last 7 days — the community's Sunday moment. */
+dailyRouter.get('/hall-of-fame', async (_req, res) => {
+  const since = new Date(Date.now() - 7 * 86400000);
+  const [xpRows, streakUsers] = await Promise.all([
+    prisma.xpEvent.groupBy({ by: ['userId'], where: { createdAt: { gte: since } }, _sum: { amount: true } }),
+    prisma.user.findMany({
+      where: { currentStreak: { gt: 0 } },
+      orderBy: { currentStreak: 'desc' },
+      take: 5,
+      select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true, currentStreak: true },
+    }),
+  ]);
+  const top = xpRows.sort((a, b) => (b._sum.amount ?? 0) - (a._sum.amount ?? 0)).slice(0, 5);
+  const users = await prisma.user.findMany({
+    where: { id: { in: top.map((t) => t.userId) } },
+    select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true },
+  });
+  const umap = new Map(users.map((u) => [u.id, u]));
+  res.json({
+    topXp: top.map((t) => ({ ...umap.get(t.userId), xp: t._sum.amount ?? 0 })).filter((u) => u.id),
+    topStreaks: streakUsers,
+  });
+});

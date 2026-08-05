@@ -1,0 +1,193 @@
+{
+  "coaches": [
+    {
+      "name": "Cole Chance",
+      "type": "YOGA",
+      "headline": "Certified yoga instructor",
+      "bio": "Cole Chance is a certified yoga instructor with over a decade of experience guiding students from first-timers to seasoned practitioners. Her teaching blends grounded alignment with an emphasis on breath, mobility, and calm. She believes yoga should feel accessible, restorative, and genuinely joyful.",
+      "programs": [
+        {
+          "title": "7-Day Rejuvenating Yoga Series",
+          "description": "A gentle week-long journey designed to rebuild energy, mobility, and mental clarity one day at a time. Each session layers on the last, moving from grounding foundations to a fully rejuvenated body and mind.",
+          "level": null,
+          "lessons": [
+            { "title": "Day 1: Grounding Flow", "durationSec": 1515, "description": "Settle into your body with slow, deliberate movement and deep breathing to anchor your practice." },
+            { "title": "Day 2: Gentle Spine Mobility", "durationSec": 1440, "description": "Free up tension along the spine with cat-cow, twists, and supported backbends." },
+            { "title": "Day 3: Hip Opening Flow", "durationSec": 1620, "description": "Release stored tightness in the hips with lunges, pigeon variations, and mindful holds." },
+            { "title": "Day 4: Heart Opening & Breath", "durationSec": 1500, "description": "Expand the chest and shoulders while syncing movement to a steady, calming breath." },
+            { "title": "Day 5: Balance & Focus", "durationSec": 1680, "description": "Build steadiness and concentration through standing balance poses and a quiet mind." },
+            { "title": "Day 6: Full Body Vinyasa", "durationSec": 1740, "description": "Flow through a complete sequence that links strength, flexibility, and flowing breath." },
+            { "title": "Day 7: Deep Restoration", "durationSec": 1560, "description": "Wind down the series with long-held restorative poses and a guided final relaxation." }
+          ]
+        },
+        {
+          "title": "Pregnancy Yoga",
+          "description": "A supportive prenatal series crafted to keep you strong, comfortable, and connected throughout pregnancy. Modifications are offered in every session so you can practice safely across each trimester.",
+          "level": null,
+          "lessons": [
+            { "title": "Prenatal Foundations & Breath", "durationSec": 1380, "description": "Learn safe breathing techniques and gentle warm-ups to begin your prenatal practice." },
+            { "title": "Easing Lower Back Tension", "durationSec": 1500, "description": "Soothe the lower back and pelvis with supported stretches designed for a changing body." },
+            { "title": "Hip & Pelvic Floor Opening", "durationSec": 1620, "description": "Create space and mobility in the hips while gently engaging the pelvic floor." },
+            { "title": "Gentle Strength for Mom", "durationSec": 1560, "description": "Maintain functional strength in the legs and arms with low-impact, pregnancy-safe movements." },
+            { "title": "Calm & Connection", "durationSec": 1440, "description": "Slow down and bond with your baby through mindful movement and quiet breathing." },
+            { "title": "Restful Relaxation", "durationSec": 1320, "description": "Ease into deep rest with side-lying poses and a nurturing guided relaxation." }
+          ]
+        },
+        {
+          "title": "Yin Yoga & Poetry",
+          "description": "A contemplative practice that pairs long, meditative yin holds with spoken poetry to quiet the mind. Each session invites stillness, reflection, and a deeper release through the connective tissue.",
+          "level": null,
+          "lessons": [
+            { "title": "Stillness & First Words", "durationSec": 1500, "description": "Ease into long-held floor poses accompanied by a gentle opening verse." },
+            { "title": "Melting the Hips", "durationSec": 1680, "description": "Sink into deep hip openers while reflective poetry guides your breath and release." },
+            { "title": "Softening the Spine", "durationSec": 1560, "description": "Explore supported forward folds and twists paired with soothing spoken word." },
+            { "title": "The Quiet Heart", "durationSec": 1620, "description": "Open the chest and shoulders in stillness as poetry settles the mind." },
+            { "title": "Grounding the Legs", "durationSec": 1440, "description": "Hold nourishing seated stretches while verse anchors you to the present moment." },
+            { "title": "Closing Reflection", "durationSec": 1740, "description": "Rest in complete stillness with a final poem and a long, restorative meditation." }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Abou El Naga",
+      "type": "WORKOUT",
+      "headline": "Star Coach — personal trainer to famous actors",
+      "bio": "Abou El Naga is a celebrity personal trainer known for transforming actors ahead of demanding film roles. With a background in strength and conditioning, he builds programs that balance intensity with sustainable progress. His no-excuses coaching style has made him one of the most sought-after trainers in the industry.",
+      "programs": [
+        {
+          "title": "First Program",
+          "description": "An approachable introduction to resistance training that builds a solid movement foundation. Perfect for anyone starting their fitness journey and learning the basics of each exercise.",
+          "level": "BEGINNER",
+          "lessons": [
+            { "title": "Full Body Foundations", "durationSec": 900, "description": "Master fundamental movement patterns with light resistance and clean form." },
+            { "title": "Chest & Triceps", "durationSec": 1080, "description": "Build pushing strength with beginner-friendly presses and triceps work." },
+            { "title": "Back & Biceps", "durationSec": 1020, "description": "Develop a strong upper back and arms using rows and controlled curls." },
+            { "title": "Leg Day", "durationSec": 1200, "description": "Learn squats and lunges to build a stable, powerful lower body." },
+            { "title": "Core Blast", "durationSec": 720, "description": "Strengthen your midsection with simple, effective core exercises." }
+          ]
+        },
+        {
+          "title": "Second Program",
+          "description": "A step up in volume that reinforces good habits while adding new movements. Designed to keep beginners progressing steadily without overwhelming them.",
+          "level": "BEGINNER",
+          "lessons": [
+            { "title": "Upper Body Push", "durationSec": 1140, "description": "Combine pressing movements to build balanced upper-body strength." },
+            { "title": "Upper Body Pull", "durationSec": 1080, "description": "Focus on rows and pulldowns to sculpt a stronger back and arms." },
+            { "title": "Lower Body Strength", "durationSec": 1260, "description": "Progress your squats and hinges for greater leg power and stability." },
+            { "title": "Core Blast", "durationSec": 780, "description": "Challenge your abs and obliques with a short, focused core circuit." },
+            { "title": "Active Recovery Mobility", "durationSec": 660, "description": "Loosen tight muscles and improve range of motion with gentle mobility drills." }
+          ]
+        },
+        {
+          "title": "Third Program",
+          "description": "The final beginner block that ties everything together and preps you for intermediate training. Expect full-body sessions that build confidence and conditioning.",
+          "level": "BEGINNER",
+          "lessons": [
+            { "title": "Push Day", "durationSec": 1200, "description": "Bring together chest, shoulders, and triceps in one cohesive session." },
+            { "title": "Pull Day", "durationSec": 1140, "description": "Train back and biceps with progressively heavier controlled reps." },
+            { "title": "Leg Day", "durationSec": 1320, "description": "Push your lower body with compound lifts and higher rep ranges." },
+            { "title": "Full Body Conditioning", "durationSec": 1080, "description": "Combine strength and cardio for a well-rounded finishing workout." },
+            { "title": "Core Blast", "durationSec": 840, "description": "Round out the program with a demanding core-focused finisher." }
+          ]
+        },
+        {
+          "title": "First Program",
+          "description": "An intermediate block that increases intensity and introduces training splits. Built for lifters who have mastered the basics and are ready to push harder.",
+          "level": "INTERMEDIATE",
+          "lessons": [
+            { "title": "Chest & Triceps", "durationSec": 1500, "description": "Increase pressing volume with supersets targeting chest and triceps." },
+            { "title": "Back & Biceps", "durationSec": 1440, "description": "Grow your back and arms with heavier rows and focused curl work." },
+            { "title": "Shoulders & Traps", "durationSec": 1320, "description": "Build boulder shoulders with presses, raises, and trap-focused movements." },
+            { "title": "Leg Day", "durationSec": 1680, "description": "Tackle demanding squats, hinges, and accessory work for full leg development." },
+            { "title": "Core Blast", "durationSec": 900, "description": "Hit every angle of the core with a challenging weighted circuit." },
+            { "title": "Conditioning Finisher", "durationSec": 780, "description": "Spike your heart rate with a fast-paced metabolic conditioning session." }
+          ]
+        },
+        {
+          "title": "Second Program",
+          "description": "A higher-volume intermediate phase that emphasizes muscle growth and work capacity. Sessions get longer and more targeted to drive real results.",
+          "level": "INTERMEDIATE",
+          "lessons": [
+            { "title": "Push Power", "durationSec": 1560, "description": "Develop explosive pushing strength across chest, shoulders, and triceps." },
+            { "title": "Pull Power", "durationSec": 1500, "description": "Build a thicker, stronger back with heavy pulls and rowing variations." },
+            { "title": "Leg Day", "durationSec": 1800, "description": "Grind through a high-volume leg session for size and strength." },
+            { "title": "Arms & Shoulders", "durationSec": 1380, "description": "Isolate the arms and delts for a well-rounded, capped physique." },
+            { "title": "Core Blast", "durationSec": 960, "description": "Deepen core strength and stability with a progressive ab circuit." }
+          ]
+        },
+        {
+          "title": "Third Program",
+          "description": "The peak intermediate block that fuses strength, hypertrophy, and conditioning. This is where you consolidate gains before stepping into advanced training.",
+          "level": "INTERMEDIATE",
+          "lessons": [
+            { "title": "Chest & Triceps", "durationSec": 1620, "description": "Max out pressing performance with intensity techniques and drop sets." },
+            { "title": "Back & Biceps", "durationSec": 1560, "description": "Add serious size to your back and arms with heavy, high-effort work." },
+            { "title": "Leg Day", "durationSec": 1740, "description": "Challenge your lower body with brutal compound and accessory pairings." },
+            { "title": "Full Body Strength", "durationSec": 1440, "description": "Test total-body power in a session built around the big compound lifts." },
+            { "title": "Core Blast", "durationSec": 1020, "description": "Finish strong with a relentless core and stability workout." },
+            { "title": "Metabolic Finisher", "durationSec": 840, "description": "Torch calories with an all-out conditioning circuit to close the block." }
+          ]
+        },
+        {
+          "title": "First Program",
+          "description": "An advanced block engineered for experienced lifters chasing elite performance. Expect high intensity, heavy loads, and demanding session structures.",
+          "level": "ADVANCED",
+          "lessons": [
+            { "title": "Heavy Push", "durationSec": 1980, "description": "Move serious weight through chest, shoulder, and triceps compounds." },
+            { "title": "Heavy Pull", "durationSec": 1920, "description": "Attack the back and biceps with maximal-effort pulling movements." },
+            { "title": "Leg Day", "durationSec": 2280, "description": "Survive a punishing leg session built for size, strength, and grit." },
+            { "title": "Shoulders & Arms", "durationSec": 1680, "description": "Sculpt detailed delts and arms with high-volume intensity work." },
+            { "title": "Core Blast", "durationSec": 1080, "description": "Fortify your midline with advanced weighted anti-rotation drills." },
+            { "title": "Conditioning Gauntlet", "durationSec": 900, "description": "Push your limits with a brutal high-intensity conditioning finisher." }
+          ]
+        },
+        {
+          "title": "Second Program",
+          "description": "A grueling advanced phase focused on peak strength and dense muscle. Volume and intensity climb to prepare you for maximum output.",
+          "level": "ADVANCED",
+          "lessons": [
+            { "title": "Chest & Triceps", "durationSec": 2100, "description": "Overload the pressing muscles with heavy sets and advanced techniques." },
+            { "title": "Back & Biceps", "durationSec": 2040, "description": "Build a powerful, detailed back with maximal rows and pull-ups." },
+            { "title": "Leg Day", "durationSec": 2400, "description": "Endure the toughest leg session in the program for total lower-body power." },
+            { "title": "Shoulders & Traps", "durationSec": 1740, "description": "Develop imposing shoulders and traps with heavy pressing and shrugs." },
+            { "title": "Core Blast", "durationSec": 1140, "description": "Test your core under load with demanding stability and strength work." }
+          ]
+        },
+        {
+          "title": "Third Program",
+          "description": "The ultimate advanced block that pushes performance to its ceiling. This peak phase combines maximal strength, hypertrophy, and elite conditioning.",
+          "level": "ADVANCED",
+          "lessons": [
+            { "title": "Max Effort Push", "durationSec": 2160, "description": "Chase new pressing personal records with heavy top sets and back-offs." },
+            { "title": "Max Effort Pull", "durationSec": 2100, "description": "Build elite pulling strength with the heaviest rows and deadlift variations." },
+            { "title": "Leg Day", "durationSec": 2400, "description": "Conquer the program's hardest leg workout for peak power and size." },
+            { "title": "Arms & Shoulders", "durationSec": 1800, "description": "Finish your upper body with a savage arm and shoulder pump session." },
+            { "title": "Core Blast", "durationSec": 1200, "description": "Cement rock-solid core strength with an advanced weighted circuit." },
+            { "title": "Peak Conditioning", "durationSec": 960, "description": "End the program with an all-out conditioning gauntlet to prove your progress." }
+          ]
+        }
+      ]
+    }
+  ],
+  "banners": [
+    { "section": "home_sponsor", "title": "Exclusive Fit It Offers", "order": 0 }
+  ],
+  "fitForLife": [
+    { "title": "Full Body Home Workout", "durationSec": 1800, "description": "A no-equipment full-body session you can crush anywhere in your living room." },
+    { "title": "15-Minute Morning Energizer", "durationSec": 900, "description": "Wake up your body and mind with a quick, invigorating movement routine." },
+    { "title": "Low-Impact Cardio Burn", "durationSec": 1500, "description": "Raise your heart rate and burn calories without any jumping or joint strain." },
+    { "title": "Desk Break Stretch Routine", "durationSec": 600, "description": "Undo the tension of sitting all day with simple stretches you can do at your desk." },
+    { "title": "Bedtime Wind-Down Mobility", "durationSec": 1200, "description": "Release the day's tightness with gentle mobility work to help you sleep better." }
+  ],
+  "mealPrep": [
+    { "title": "Flavourmag: The Benefits of Meal Prep", "durationSec": 600, "description": "Discover how planning meals ahead saves time, money, and keeps your nutrition on track." },
+    { "title": "High-Protein Meal Prep for the Week", "durationSec": 780, "description": "Batch-cook five protein-packed meals to fuel your training all week long." },
+    { "title": "Budget-Friendly Healthy Eating", "durationSec": 720, "description": "Eat clean without breaking the bank using smart shopping and prep strategies." },
+    { "title": "Quick Overnight Oats Three Ways", "durationSec": 480, "description": "Prep three delicious grab-and-go breakfasts in just a few minutes the night before." },
+    { "title": "Balanced Lunch Bowls Made Easy", "durationSec": 660, "description": "Assemble colorful, nutrient-dense lunch bowls that keep you full and focused." }
+  ],
+  "challenges": [
+    { "level": "Beginners", "title": "14-Day Kickstart Challenge", "description": "Build a consistent fitness habit with two weeks of short, approachable daily workouts designed to get you moving." },
+    { "level": "Intermediate", "title": "30-Day Strength Challenge", "description": "Push past plateaus with a month of progressive strength sessions that steadily raise the intensity week by week." }
+  ]
+}

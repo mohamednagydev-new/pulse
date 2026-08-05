@@ -1,0 +1,1500 @@
+{
+  "muscleGroups": [
+    {
+      "name": "Shoulders",
+      "bodySide": "front",
+      "posX": 0.34,
+      "posY": 0.27,
+      "exercises": [
+        {
+          "name": "Dumbbell Overhead Press",
+          "description": "A foundational pressing movement that builds strength and size across the front and side deltoids while engaging the triceps.",
+          "instructions": [
+            "Stand or sit with your feet shoulder-width apart and a dumbbell in each hand at shoulder height, palms facing forward.",
+            "Brace your core and keep your ribcage down to protect your lower back.",
+            "Press both dumbbells straight overhead until your arms are nearly locked out, without shrugging your shoulders up.",
+            "Pause briefly at the top with the weights stacked over your shoulders.",
+            "Lower the dumbbells under control back to shoulder height.",
+            "Repeat for the prescribed reps, keeping the motion smooth and avoiding leaning back."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Lateral Raise",
+          "description": "An isolation exercise that targets the side deltoids to build shoulder width and definition.",
+          "instructions": [
+            "Stand tall holding a light dumbbell in each hand at your sides, palms facing in.",
+            "Keep a slight bend in your elbows and brace your core.",
+            "Raise both arms out to the sides until they reach roughly shoulder height.",
+            "Lead with your elbows rather than your hands and avoid shrugging.",
+            "Pause briefly at the top, then lower slowly under control.",
+            "Repeat, using a weight light enough to maintain strict form."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Front Raise",
+          "description": "Isolates the front deltoids to improve pressing strength and shoulder aesthetics.",
+          "instructions": [
+            "Stand with feet hip-width apart, holding a dumbbell in each hand in front of your thighs, palms facing your body.",
+            "Keep your elbows slightly bent and your core braced.",
+            "Raise one or both arms straight in front of you to about shoulder height.",
+            "Avoid swinging or using momentum from your hips.",
+            "Pause at the top, then lower the weight slowly.",
+            "Repeat for the prescribed reps, keeping your torso still."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Bent-Over Reverse Fly",
+          "description": "Targets the rear deltoids and upper back to balance shoulder development and improve posture.",
+          "instructions": [
+            "Hold a dumbbell in each hand and hinge forward at the hips until your torso is nearly parallel to the floor.",
+            "Let the dumbbells hang beneath your shoulders with a slight bend in your elbows.",
+            "Keep your back flat and your neck neutral.",
+            "Raise both arms out to the sides, squeezing your shoulder blades together.",
+            "Stop when your arms reach shoulder level, avoiding a shrug.",
+            "Lower the weights slowly and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Pike Push-Up",
+          "description": "A bodyweight movement that shifts load onto the shoulders to build pressing strength without equipment.",
+          "instructions": [
+            "Start in a push-up position, then walk your feet toward your hands to form an inverted V shape.",
+            "Position your hands slightly wider than shoulder-width with hips high.",
+            "Bend your elbows to lower the crown of your head toward the floor.",
+            "Keep your core tight and your back straight throughout.",
+            "Press back up until your arms are straight.",
+            "Repeat, keeping the movement controlled to protect your neck."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Intermediate"
+        }
+      ]
+    },
+    {
+      "name": "Chest",
+      "bodySide": "front",
+      "posX": 0.5,
+      "posY": 0.32,
+      "exercises": [
+        {
+          "name": "Barbell Bench Press",
+          "description": "The classic compound press for building overall chest strength and mass, also engaging the shoulders and triceps.",
+          "instructions": [
+            "Lie flat on a bench with your feet planted firmly on the floor and eyes under the bar.",
+            "Grip the bar slightly wider than shoulder-width and unrack it over your chest.",
+            "Lower the bar under control to your mid-chest, keeping your elbows at roughly 45 degrees.",
+            "Keep your shoulder blades retracted and a slight arch in your lower back.",
+            "Press the bar back up until your arms are extended without locking harshly.",
+            "Use a spotter for heavier sets and keep the bar path smooth."
+          ],
+          "sets": "4 sets",
+          "reps": "6-10 reps",
+          "equipment": ["Barbell", "Bench"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Push-Up",
+          "description": "A versatile bodyweight exercise that builds chest, shoulder, and triceps strength anywhere.",
+          "instructions": [
+            "Start in a plank with hands slightly wider than shoulder-width and body in a straight line.",
+            "Brace your core and squeeze your glutes to keep your hips level.",
+            "Bend your elbows to lower your chest toward the floor.",
+            "Keep your elbows tucked at about 45 degrees from your torso.",
+            "Press back up until your arms are fully extended.",
+            "Repeat, avoiding sagging hips or flaring elbows."
+          ],
+          "sets": "3 sets",
+          "reps": "10-20 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Incline Dumbbell Press",
+          "description": "Emphasizes the upper chest for balanced development while allowing a natural range of motion.",
+          "instructions": [
+            "Set an adjustable bench to a 30 to 45 degree incline and sit back with a dumbbell in each hand.",
+            "Start with the dumbbells at the sides of your upper chest, palms facing forward.",
+            "Keep your shoulder blades pulled back and your feet flat on the floor.",
+            "Press the dumbbells up and slightly together until your arms are extended.",
+            "Lower them slowly to the starting position with control.",
+            "Repeat, maintaining tension in your chest throughout."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps",
+          "equipment": ["Dumbbells", "Bench"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Dumbbell Chest Fly",
+          "description": "An isolation movement that stretches and contracts the chest for improved size and definition.",
+          "instructions": [
+            "Lie on a flat bench holding a dumbbell in each hand above your chest, palms facing each other.",
+            "Keep a soft bend in your elbows that stays fixed throughout the movement.",
+            "Open your arms out to the sides in a wide arc until you feel a stretch across your chest.",
+            "Stop before your elbows drop below the bench to protect your shoulders.",
+            "Squeeze your chest to bring the dumbbells back together over your chest.",
+            "Repeat with slow, controlled motion and a light-to-moderate weight."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Dumbbells", "Bench"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Incline Push-Up",
+          "description": "A beginner-friendly push-up variation that reduces load and helps build pressing strength progressively.",
+          "instructions": [
+            "Place your hands on a sturdy elevated surface such as a bench or box, slightly wider than shoulders.",
+            "Step your feet back so your body forms a straight line from head to heels.",
+            "Brace your core and keep your neck neutral.",
+            "Bend your elbows to lower your chest toward the surface.",
+            "Press back up until your arms are extended.",
+            "Repeat, lowering the surface height over time to increase difficulty."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Bodyweight", "Bench"],
+          "level": "Beginner"
+        }
+      ]
+    },
+    {
+      "name": "Biceps",
+      "bodySide": "front",
+      "posX": 0.72,
+      "posY": 0.34,
+      "exercises": [
+        {
+          "name": "Dumbbell Biceps Curl",
+          "description": "A staple isolation exercise for building biceps size and arm strength.",
+          "instructions": [
+            "Stand tall with a dumbbell in each hand at your sides, palms facing forward.",
+            "Keep your elbows tucked close to your torso and your core braced.",
+            "Curl the dumbbells up toward your shoulders by bending at the elbows.",
+            "Avoid swinging your body or letting your elbows drift forward.",
+            "Squeeze your biceps at the top, then lower slowly under control.",
+            "Repeat for the prescribed reps with a smooth tempo."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Hammer Curl",
+          "description": "Targets the biceps and brachialis with a neutral grip to build arm thickness and grip strength.",
+          "instructions": [
+            "Stand holding a dumbbell in each hand with palms facing your body (neutral grip).",
+            "Keep your elbows pinned at your sides and your shoulders relaxed.",
+            "Curl the dumbbells up while keeping your palms facing inward the whole time.",
+            "Raise until the weights approach your shoulders without swinging.",
+            "Pause and squeeze, then lower slowly to the start.",
+            "Repeat, maintaining a controlled tempo throughout."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Barbell Curl",
+          "description": "A heavy compound curl that allows progressive overload for maximum biceps growth.",
+          "instructions": [
+            "Stand with feet shoulder-width apart holding a barbell with an underhand, shoulder-width grip.",
+            "Keep your elbows close to your sides and your core braced.",
+            "Curl the bar up toward your chest by flexing your biceps.",
+            "Avoid using momentum or leaning back to lift the weight.",
+            "Squeeze at the top, then lower the bar slowly to full extension.",
+            "Repeat for the prescribed reps with strict form."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps",
+          "equipment": ["Barbell"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Concentration Curl",
+          "description": "An isolation curl that maximizes biceps peak contraction by removing momentum.",
+          "instructions": [
+            "Sit on a bench with your legs spread and lean slightly forward.",
+            "Hold a dumbbell in one hand and brace that elbow against the inside of your thigh.",
+            "Let the arm hang extended with your palm facing away.",
+            "Curl the dumbbell up toward your shoulder, keeping your upper arm still.",
+            "Squeeze hard at the top of the movement.",
+            "Lower slowly and repeat, then switch arms."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Dumbbells", "Bench"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Chin-Up",
+          "description": "A bodyweight pull that heavily recruits the biceps while also building back strength.",
+          "instructions": [
+            "Grab a pull-up bar with an underhand grip about shoulder-width apart.",
+            "Hang with your arms extended and your core engaged.",
+            "Pull yourself up by driving your elbows down until your chin clears the bar.",
+            "Keep your shoulders down and avoid swinging.",
+            "Pause briefly at the top, then lower yourself with control.",
+            "Repeat, using an assistance band if needed to complete the reps."
+          ],
+          "sets": "3 sets",
+          "reps": "5-10 reps",
+          "equipment": ["Pull-Up Bar"],
+          "level": "Advanced"
+        }
+      ]
+    },
+    {
+      "name": "Forearm",
+      "bodySide": "front",
+      "posX": 0.26,
+      "posY": 0.40,
+      "exercises": [
+        {
+          "name": "Wrist Curl",
+          "description": "Isolates the forearm flexors to build grip and wrist strength.",
+          "instructions": [
+            "Sit on a bench and rest your forearms on your thighs with your wrists just past your knees, palms up.",
+            "Hold a light dumbbell or barbell with your hands hanging off the edge.",
+            "Let the weight roll toward your fingertips as you lower it.",
+            "Curl your wrists upward by flexing your forearms.",
+            "Squeeze at the top, then lower slowly.",
+            "Repeat for higher reps to build endurance and strength."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Reverse Wrist Curl",
+          "description": "Strengthens the forearm extensors to balance grip development and support wrist health.",
+          "instructions": [
+            "Sit and rest your forearms on your thighs with your wrists past your knees, palms facing down.",
+            "Hold a light dumbbell in each hand with your knuckles pointing toward the floor.",
+            "Lower the weight by letting your wrists drop under control.",
+            "Raise your knuckles upward by extending your wrists.",
+            "Pause at the top, then lower slowly.",
+            "Use a light weight to maintain strict form and avoid strain."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Farmer's Carry",
+          "description": "A loaded carry that builds tremendous grip strength, forearm endurance, and full-body stability.",
+          "instructions": [
+            "Stand between two heavy dumbbells or kettlebells and grip one in each hand.",
+            "Stand tall with your shoulders back and your core braced.",
+            "Walk forward with controlled steps, keeping your posture upright.",
+            "Grip the weights firmly and avoid letting your shoulders slump.",
+            "Continue for the prescribed distance or time.",
+            "Set the weights down under control and rest between rounds."
+          ],
+          "sets": "3 sets",
+          "reps": "30-40 meters",
+          "equipment": ["Dumbbells"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Reverse Curl",
+          "description": "Works the forearm extensors and brachialis using an overhand grip for thicker, stronger arms.",
+          "instructions": [
+            "Stand holding a barbell or dumbbells with an overhand grip at thigh level.",
+            "Keep your elbows tucked at your sides and your core engaged.",
+            "Curl the weight up toward your chest while keeping your palms facing down.",
+            "Avoid swinging or using momentum.",
+            "Squeeze at the top, then lower slowly under control.",
+            "Repeat with a lighter weight than a standard curl."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Barbell"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Dead Hang",
+          "description": "A simple hang that builds grip endurance, forearm strength, and shoulder stability.",
+          "instructions": [
+            "Grab a pull-up bar with an overhand grip about shoulder-width apart.",
+            "Let your body hang fully with your arms extended.",
+            "Engage your shoulders slightly rather than hanging completely loose.",
+            "Keep your core lightly braced and your body still.",
+            "Hold the position for as long as you can maintain a solid grip.",
+            "Drop down safely and rest before repeating."
+          ],
+          "sets": "3 sets",
+          "reps": "30-60 sec",
+          "equipment": ["Pull-Up Bar"],
+          "level": "Beginner"
+        }
+      ]
+    },
+    {
+      "name": "Abs",
+      "bodySide": "front",
+      "posX": 0.5,
+      "posY": 0.40,
+      "exercises": [
+        {
+          "name": "Plank",
+          "description": "An isometric hold that builds deep core stability and endurance throughout the abdominals.",
+          "instructions": [
+            "Start face down and prop yourself onto your forearms and toes.",
+            "Position your elbows directly under your shoulders.",
+            "Form a straight line from your head to your heels.",
+            "Brace your core and squeeze your glutes to prevent your hips from sagging.",
+            "Keep your neck neutral by looking at the floor just ahead of you.",
+            "Hold the position for the prescribed time, breathing steadily."
+          ],
+          "sets": "3 sets",
+          "reps": "30-60 sec",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Crunch",
+          "description": "A classic movement that targets the upper abdominals with a short, controlled range of motion.",
+          "instructions": [
+            "Lie on your back with your knees bent and feet flat on the floor.",
+            "Place your hands lightly behind your head or across your chest.",
+            "Brace your core and tuck your chin slightly.",
+            "Curl your shoulders off the floor by contracting your abs.",
+            "Avoid pulling on your neck or using momentum.",
+            "Lower slowly to the start and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Hanging Leg Raise",
+          "description": "An advanced exercise that strongly targets the lower abs and hip flexors.",
+          "instructions": [
+            "Hang from a pull-up bar with an overhand grip and arms extended.",
+            "Engage your shoulders and brace your core.",
+            "Raise your legs together by flexing your abs and hips.",
+            "Lift until your thighs are at least parallel to the floor, or higher.",
+            "Avoid swinging by controlling the movement.",
+            "Lower your legs slowly and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps",
+          "equipment": ["Pull-Up Bar"],
+          "level": "Advanced"
+        },
+        {
+          "name": "Bicycle Crunch",
+          "description": "A dynamic move that works the abs and obliques through rotation and controlled leg motion.",
+          "instructions": [
+            "Lie on your back with your hands lightly behind your head and legs lifted, knees bent.",
+            "Brace your core and lift your shoulders off the floor.",
+            "Bring one knee toward your chest while extending the opposite leg.",
+            "Rotate your torso to bring the opposite elbow toward the bent knee.",
+            "Alternate sides in a smooth pedaling motion.",
+            "Keep your lower back pressed to the floor throughout."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps per side",
+          "equipment": ["Bodyweight"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Dead Bug",
+          "description": "A core stability exercise that trains the abs to resist movement while protecting the lower back.",
+          "instructions": [
+            "Lie on your back with your arms extended toward the ceiling and knees bent at 90 degrees.",
+            "Press your lower back gently into the floor and brace your core.",
+            "Slowly lower one arm overhead while extending the opposite leg toward the floor.",
+            "Stop before your lower back arches off the ground.",
+            "Return to the start under control, then switch sides.",
+            "Move slowly and breathe steadily throughout."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps per side",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        }
+      ]
+    },
+    {
+      "name": "Obliques",
+      "bodySide": "front",
+      "posX": 0.42,
+      "posY": 0.44,
+      "exercises": [
+        {
+          "name": "Russian Twist",
+          "description": "A rotational core exercise that targets the obliques and improves trunk strength.",
+          "instructions": [
+            "Sit on the floor with your knees bent and feet lifted or lightly touching the ground.",
+            "Lean back slightly to form a V shape with your torso and thighs.",
+            "Hold your hands together or grip a weight in front of your chest.",
+            "Brace your core and rotate your torso to one side.",
+            "Rotate to the opposite side in a controlled motion.",
+            "Continue alternating, keeping your chest lifted and back straight."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps per side",
+          "equipment": ["Bodyweight", "Dumbbells"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Side Plank",
+          "description": "An isometric hold that builds lateral core stability and strengthens the obliques.",
+          "instructions": [
+            "Lie on your side and prop yourself up on your forearm with your elbow under your shoulder.",
+            "Stack your feet and lift your hips off the floor.",
+            "Form a straight line from head to heels.",
+            "Brace your core and avoid letting your hips drop.",
+            "Hold the position for the prescribed time.",
+            "Lower down, then repeat on the other side."
+          ],
+          "sets": "3 sets",
+          "reps": "20-45 sec per side",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Bicycle Crunch",
+          "description": "A dynamic movement that engages the obliques through torso rotation and cross-body motion.",
+          "instructions": [
+            "Lie on your back with hands lightly behind your head and legs raised, knees bent.",
+            "Lift your shoulders off the floor and brace your core.",
+            "Bring one knee toward your chest while extending the other leg.",
+            "Twist your torso to bring the opposite elbow toward the bent knee.",
+            "Alternate sides smoothly without pulling on your neck.",
+            "Keep your lower back pressed to the floor throughout."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps per side",
+          "equipment": ["Bodyweight"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Standing Side Bend",
+          "description": "A simple weighted movement that isolates the obliques through lateral flexion.",
+          "instructions": [
+            "Stand tall with your feet hip-width apart, holding a dumbbell in one hand.",
+            "Keep your core braced and your shoulders level.",
+            "Bend sideways at the waist, lowering the dumbbell toward your knee.",
+            "Avoid leaning forward or backward as you bend.",
+            "Contract your obliques to return to an upright position.",
+            "Complete the reps, then switch to the other side."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps per side",
+          "equipment": ["Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Woodchopper",
+          "description": "A cross-body rotational exercise that builds functional oblique strength and power.",
+          "instructions": [
+            "Stand with feet shoulder-width apart holding a dumbbell or medicine ball with both hands.",
+            "Start with the weight raised above one shoulder.",
+            "Brace your core and rotate your torso as you pull the weight diagonally across your body.",
+            "Finish with the weight near your opposite hip, pivoting your back foot.",
+            "Control the movement back to the starting position.",
+            "Complete the reps, then switch directions."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps per side",
+          "equipment": ["Dumbbells"],
+          "level": "Intermediate"
+        }
+      ]
+    },
+    {
+      "name": "Quads",
+      "bodySide": "front",
+      "posX": 0.42,
+      "posY": 0.55,
+      "exercises": [
+        {
+          "name": "Barbell Back Squat",
+          "description": "The king of lower-body exercises, building powerful quads, glutes, and overall leg strength.",
+          "instructions": [
+            "Position a barbell across your upper back and stand with feet shoulder-width apart.",
+            "Brace your core and keep your chest up.",
+            "Push your hips back and bend your knees to lower into a squat.",
+            "Descend until your thighs are at least parallel to the floor, keeping your knees tracking over your toes.",
+            "Drive through your heels to stand back up.",
+            "Keep your back neutral throughout and use a rack for safety."
+          ],
+          "sets": "4 sets",
+          "reps": "6-10 reps",
+          "equipment": ["Barbell", "Squat Rack"],
+          "level": "Advanced"
+        },
+        {
+          "name": "Bodyweight Squat",
+          "description": "A foundational movement that builds leg strength and mobility with no equipment.",
+          "instructions": [
+            "Stand with feet shoulder-width apart and toes slightly turned out.",
+            "Extend your arms in front of you for balance and brace your core.",
+            "Push your hips back and bend your knees to lower down.",
+            "Descend until your thighs are parallel to the floor or as low as comfortable.",
+            "Keep your chest up and knees tracking over your toes.",
+            "Drive through your heels to return to standing."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Walking Lunge",
+          "description": "A dynamic single-leg exercise that builds quad strength, balance, and coordination.",
+          "instructions": [
+            "Stand tall with your feet together and hands on your hips or holding dumbbells.",
+            "Step forward with one leg into a long stride.",
+            "Lower your body until both knees are bent at about 90 degrees.",
+            "Keep your front knee over your ankle and your torso upright.",
+            "Push through your front heel to step forward into the next lunge.",
+            "Continue alternating legs for the prescribed reps."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps per leg",
+          "equipment": ["Bodyweight", "Dumbbells"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Leg Press",
+          "description": "A machine-based exercise that lets you load the quads heavily with reduced spinal stress.",
+          "instructions": [
+            "Sit in the leg press machine with your back flat against the pad.",
+            "Place your feet shoulder-width apart on the platform.",
+            "Release the safety and lower the platform by bending your knees.",
+            "Descend until your knees reach about 90 degrees without your lower back rounding.",
+            "Press the platform back up through your heels without locking your knees harshly.",
+            "Repeat for the prescribed reps with controlled tempo."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Leg Press Machine"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Bulgarian Split Squat",
+          "description": "A challenging single-leg exercise that builds quad strength, stability, and balance.",
+          "instructions": [
+            "Stand a couple of feet in front of a bench and place the top of one foot on it behind you.",
+            "Keep your torso upright and your core braced.",
+            "Lower your body by bending your front knee until your thigh is near parallel.",
+            "Keep your front knee tracking over your foot.",
+            "Drive through your front heel to return to the start.",
+            "Complete all reps on one leg, then switch."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps per leg",
+          "equipment": ["Bodyweight", "Bench", "Dumbbells"],
+          "level": "Advanced"
+        }
+      ]
+    },
+    {
+      "name": "Abductors",
+      "bodySide": "front",
+      "posX": 0.68,
+      "posY": 0.58,
+      "exercises": [
+        {
+          "name": "Side-Lying Leg Raise",
+          "description": "An isolation exercise that strengthens the outer hip abductors and improves hip stability.",
+          "instructions": [
+            "Lie on your side with your legs stacked and straight.",
+            "Support your head with your lower arm and place your top hand on the floor for balance.",
+            "Brace your core to keep your torso stable.",
+            "Raise your top leg upward while keeping it straight.",
+            "Lift until you feel your outer hip engage, then pause.",
+            "Lower slowly and repeat, then switch sides."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps per side",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Banded Lateral Walk",
+          "description": "A resistance-band exercise that activates the hip abductors and glute medius for stability.",
+          "instructions": [
+            "Place a resistance band around your legs just above your knees or ankles.",
+            "Stand with feet hip-width apart and a slight bend in your knees, in a quarter-squat.",
+            "Keep your core braced and your chest up.",
+            "Step sideways with one foot, maintaining tension in the band.",
+            "Follow with the other foot without letting your knees cave in.",
+            "Continue stepping for the prescribed reps, then reverse direction."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 steps per side",
+          "equipment": ["Resistance Band"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Clamshell",
+          "description": "A targeted movement that activates the glute medius and hip abductors to support the hips and knees.",
+          "instructions": [
+            "Lie on your side with your hips and knees bent at about 45 degrees, legs stacked.",
+            "Rest your head on your lower arm and keep your feet together.",
+            "Brace your core and keep your hips stacked without rolling back.",
+            "Open your top knee upward like a clamshell while keeping your feet touching.",
+            "Pause at the top and squeeze your glute.",
+            "Lower slowly and repeat, then switch sides."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps per side",
+          "equipment": ["Bodyweight", "Resistance Band"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Cable Hip Abduction",
+          "description": "A cable exercise that isolates the abductors under constant tension for stronger, more stable hips.",
+          "instructions": [
+            "Attach an ankle strap to a low cable and secure it around your outer ankle.",
+            "Stand side-on to the machine and hold the frame for balance.",
+            "Brace your core and keep your torso upright.",
+            "Lift the working leg out to the side against the cable resistance.",
+            "Pause at the top, then return slowly under control.",
+            "Complete all reps, then switch legs."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps per leg",
+          "equipment": ["Cable Machine"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Standing Banded Abduction",
+          "description": "A standing movement that builds abductor strength and single-leg balance.",
+          "instructions": [
+            "Loop a resistance band around both ankles and stand tall.",
+            "Hold onto a wall or sturdy surface for balance if needed.",
+            "Shift your weight onto one leg and brace your core.",
+            "Lift the other leg out to the side against the band's resistance.",
+            "Keep your leg straight and your torso upright, avoiding leaning.",
+            "Lower slowly and repeat, then switch legs."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps per leg",
+          "equipment": ["Resistance Band"],
+          "level": "Beginner"
+        }
+      ]
+    },
+    {
+      "name": "Adductors",
+      "bodySide": "front",
+      "posX": 0.55,
+      "posY": 0.62,
+      "exercises": [
+        {
+          "name": "Sumo Squat",
+          "description": "A wide-stance squat that emphasizes the inner thighs and adductors along with the glutes.",
+          "instructions": [
+            "Stand with your feet wider than shoulder-width and toes turned out.",
+            "Hold a dumbbell or kettlebell at your chest or between your legs.",
+            "Brace your core and keep your chest up.",
+            "Push your hips back and bend your knees to lower into a squat.",
+            "Descend until your thighs are parallel, keeping your knees tracking over your toes.",
+            "Drive through your heels and inner thighs to stand back up."
+          ],
+          "sets": "3 sets",
+          "reps": "10-15 reps",
+          "equipment": ["Dumbbells", "Kettlebell"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Side-Lying Inner Thigh Raise",
+          "description": "An isolation move that directly targets the adductor muscles of the inner thigh.",
+          "instructions": [
+            "Lie on your side with your bottom leg straight and your top leg bent and crossed in front.",
+            "Support your head with your lower arm and place your top hand on the floor.",
+            "Brace your core to stabilize your torso.",
+            "Lift your bottom, straight leg upward toward the ceiling.",
+            "Raise until you feel your inner thigh contract, then pause.",
+            "Lower slowly and repeat, then switch sides."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps per side",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Cossack Squat",
+          "description": "A lateral squat that stretches and strengthens the adductors while improving hip mobility.",
+          "instructions": [
+            "Stand with your feet in a wide stance, wider than shoulder-width.",
+            "Shift your weight to one side, bending that knee while keeping the other leg straight.",
+            "Lower down as far as your mobility allows, keeping the heel of the bent leg down.",
+            "Keep your chest up and the straightened leg's toes pointing up.",
+            "Push back to center through the bent leg.",
+            "Repeat on the other side, alternating throughout."
+          ],
+          "sets": "3 sets",
+          "reps": "8-10 reps per side",
+          "equipment": ["Bodyweight"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Cable Hip Adduction",
+          "description": "A cable exercise that isolates the inner thigh under constant tension for targeted strength.",
+          "instructions": [
+            "Attach an ankle strap to a low cable and secure it around your inner ankle.",
+            "Stand side-on with the working leg closest to the machine.",
+            "Hold the frame for balance and brace your core.",
+            "Pull the working leg across your body toward your midline against the resistance.",
+            "Pause at the point of full contraction.",
+            "Return slowly and repeat, then switch legs."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps per leg",
+          "equipment": ["Cable Machine"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Adductor Squeeze",
+          "description": "An isometric exercise that activates and strengthens the adductors using a ball or cushion.",
+          "instructions": [
+            "Lie on your back or sit with your knees bent and a small ball or cushion between your knees.",
+            "Brace your core and keep your spine neutral.",
+            "Squeeze your knees together against the ball as hard as is comfortable.",
+            "Hold the squeeze while breathing steadily.",
+            "Maintain tension for the prescribed time.",
+            "Release slowly and repeat for the prescribed rounds."
+          ],
+          "sets": "3 sets",
+          "reps": "20-30 sec",
+          "equipment": ["Bodyweight", "Exercise Ball"],
+          "level": "Beginner"
+        }
+      ]
+    },
+    {
+      "name": "Cardio",
+      "bodySide": "front",
+      "posX": 0.85,
+      "posY": 0.14,
+      "exercises": [
+        {
+          "name": "Steady-State Running",
+          "description": "A sustained-pace run that builds aerobic endurance and cardiovascular health.",
+          "instructions": [
+            "Begin with a 5-minute brisk walk or light jog to warm up.",
+            "Settle into a conversational pace where you can still speak in short sentences.",
+            "Keep your posture tall, shoulders relaxed, and arms swinging naturally.",
+            "Land midfoot and maintain a steady breathing rhythm.",
+            "Hold the pace for the target duration.",
+            "Finish with a 5-minute cooldown walk and light stretching."
+          ],
+          "sets": "1 session",
+          "reps": "20-30 min",
+          "equipment": ["None"],
+          "level": "Beginner"
+        },
+        {
+          "name": "High-Intensity Interval Training",
+          "description": "Alternating bursts of intense effort and recovery to boost conditioning and burn calories efficiently.",
+          "instructions": [
+            "Warm up for 5 minutes with light cardio and dynamic movements.",
+            "Perform 20 to 30 seconds of all-out effort such as sprinting or fast cycling.",
+            "Follow with 40 to 60 seconds of easy-paced active recovery.",
+            "Repeat the work-and-recovery cycle for the target number of rounds.",
+            "Keep your form sharp even as fatigue sets in.",
+            "Cool down for 5 minutes with easy movement to lower your heart rate."
+          ],
+          "sets": "6-10 rounds",
+          "reps": "15-25 min",
+          "equipment": ["None"],
+          "level": "Advanced"
+        },
+        {
+          "name": "Jump Rope",
+          "description": "A rhythmic full-body cardio exercise that improves coordination, footwork, and endurance.",
+          "instructions": [
+            "Hold the rope handles with the rope resting behind your heels.",
+            "Keep your elbows close to your sides and turn the rope with your wrists.",
+            "Jump just high enough to clear the rope, landing softly on the balls of your feet.",
+            "Maintain a steady rhythm and keep your core engaged.",
+            "Start with short intervals and build up your continuous time.",
+            "Rest as needed and cool down when finished."
+          ],
+          "sets": "3-5 rounds",
+          "reps": "10-20 min",
+          "equipment": ["Jump Rope"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Cycling",
+          "description": "A low-impact cardio workout that builds leg endurance and cardiovascular fitness.",
+          "instructions": [
+            "Adjust the seat so your knee has a slight bend at the bottom of the pedal stroke.",
+            "Warm up with 5 minutes of easy pedaling.",
+            "Settle into a moderate, sustainable resistance and cadence.",
+            "Keep your core engaged and your grip relaxed on the handlebars.",
+            "Maintain steady effort for the target duration, or add intervals to increase intensity.",
+            "Cool down with 5 minutes of easy pedaling."
+          ],
+          "sets": "1 session",
+          "reps": "20-40 min",
+          "equipment": ["Bicycle", "Stationary Bike"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Rowing Machine",
+          "description": "A full-body cardio and strength workout that engages the legs, back, and arms.",
+          "instructions": [
+            "Strap your feet in and grip the handle with your arms extended.",
+            "Begin the drive by pushing through your legs first.",
+            "Once your legs are nearly straight, lean back slightly and pull the handle to your lower ribs.",
+            "Reverse the sequence: extend your arms, hinge forward, then bend your knees.",
+            "Keep a smooth, controlled rhythm and avoid rounding your back.",
+            "Continue for the target duration, maintaining consistent strokes."
+          ],
+          "sets": "1 session",
+          "reps": "15-30 min",
+          "equipment": ["Rowing Machine"],
+          "level": "Intermediate"
+        }
+      ]
+    },
+    {
+      "name": "Triceps",
+      "bodySide": "back",
+      "posX": 0.22,
+      "posY": 0.32,
+      "exercises": [
+        {
+          "name": "Triceps Dip",
+          "description": "A bodyweight pressing movement that builds triceps strength and mass.",
+          "instructions": [
+            "Sit on the edge of a sturdy bench and place your hands next to your hips, fingers forward.",
+            "Slide your hips off the bench with your legs extended or knees bent.",
+            "Keep your shoulders down and your chest up.",
+            "Bend your elbows to lower your body until they reach about 90 degrees.",
+            "Keep your elbows pointing straight back, not flaring out.",
+            "Press through your palms to return to the start and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "10-15 reps",
+          "equipment": ["Bodyweight", "Bench"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Overhead Triceps Extension",
+          "description": "An isolation exercise that targets the long head of the triceps through a full stretch.",
+          "instructions": [
+            "Stand or sit holding a single dumbbell with both hands overhead.",
+            "Keep your elbows pointing forward and close to your head.",
+            "Brace your core and keep your ribcage down.",
+            "Lower the dumbbell behind your head by bending your elbows.",
+            "Extend your arms back to the top by contracting your triceps.",
+            "Repeat with a controlled tempo, keeping your upper arms still."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Triceps Rope Pushdown",
+          "description": "A cable exercise that isolates the triceps with constant tension for strength and definition.",
+          "instructions": [
+            "Attach a rope to a high cable and grip an end in each hand.",
+            "Stand tall with your elbows tucked close to your sides.",
+            "Brace your core and keep a slight forward lean.",
+            "Push the rope down by extending your elbows until your arms are straight.",
+            "Spread the rope apart slightly at the bottom for a full contraction.",
+            "Return slowly to the start, keeping your elbows pinned."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Cable Machine"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Close-Grip Push-Up",
+          "description": "A push-up variation that shifts emphasis onto the triceps.",
+          "instructions": [
+            "Start in a plank with your hands close together beneath your chest.",
+            "Keep your body in a straight line and your core braced.",
+            "Lower your chest toward your hands by bending your elbows.",
+            "Keep your elbows tucked close to your body throughout.",
+            "Press back up until your arms are fully extended.",
+            "Repeat, avoiding sagging hips or flaring elbows."
+          ],
+          "sets": "3 sets",
+          "reps": "8-15 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Skull Crusher",
+          "description": "A lying triceps extension that effectively isolates and builds the triceps.",
+          "instructions": [
+            "Lie on a flat bench holding a barbell or dumbbells with arms extended over your chest.",
+            "Keep your upper arms vertical and your elbows pointing toward the ceiling.",
+            "Bend your elbows to lower the weight toward your forehead.",
+            "Stop just above your forehead, keeping your upper arms still.",
+            "Extend your elbows to press the weight back to the start.",
+            "Use a controlled tempo and a manageable weight to protect your elbows."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Barbell", "Dumbbells", "Bench"],
+          "level": "Intermediate"
+        }
+      ]
+    },
+    {
+      "name": "Traps",
+      "bodySide": "back",
+      "posX": 0.42,
+      "posY": 0.28,
+      "exercises": [
+        {
+          "name": "Dumbbell Shrug",
+          "description": "A direct trap exercise that builds upper-back and neck strength and size.",
+          "instructions": [
+            "Stand tall holding a dumbbell in each hand at your sides, palms facing your body.",
+            "Keep your arms straight and your core braced.",
+            "Shrug your shoulders straight up toward your ears.",
+            "Avoid rolling your shoulders forward or backward.",
+            "Pause and squeeze at the top of the movement.",
+            "Lower slowly under control and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Barbell Shrug",
+          "description": "A heavy shrug variation that allows progressive overload for maximum trap development.",
+          "instructions": [
+            "Stand holding a barbell with an overhand grip at thigh level, hands shoulder-width apart.",
+            "Keep your arms straight, chest up, and core engaged.",
+            "Shrug your shoulders straight up as high as possible.",
+            "Avoid using your arms or rolling your shoulders.",
+            "Pause at the top, then lower the bar slowly.",
+            "Repeat for the prescribed reps with controlled motion."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Barbell"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Face Pull",
+          "description": "A cable exercise that strengthens the mid-traps and rear delts to improve posture and shoulder health.",
+          "instructions": [
+            "Attach a rope to a cable set at about face height.",
+            "Grip an end in each hand with your palms facing inward and step back to create tension.",
+            "Brace your core and keep your chest up.",
+            "Pull the rope toward your face, driving your elbows out and back.",
+            "Squeeze your shoulder blades together at the end of the pull.",
+            "Return slowly to the start and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Cable Machine"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Farmer's Carry",
+          "description": "A loaded carry that builds trap endurance, grip strength, and overall stability.",
+          "instructions": [
+            "Grip a heavy dumbbell or kettlebell in each hand at your sides.",
+            "Stand tall with your shoulders pulled back and down.",
+            "Brace your core and keep your traps engaged to support the load.",
+            "Walk forward with controlled, steady steps.",
+            "Maintain upright posture without letting your shoulders slump.",
+            "Continue for the prescribed distance, then set the weights down safely."
+          ],
+          "sets": "3 sets",
+          "reps": "30-40 meters",
+          "equipment": ["Dumbbells", "Kettlebell"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Prone Y Raise",
+          "description": "A bodyweight movement that strengthens the lower traps to improve shoulder positioning and posture.",
+          "instructions": [
+            "Lie face down on the floor or an incline bench with your arms extended overhead in a Y shape.",
+            "Keep your thumbs pointing up toward the ceiling.",
+            "Brace your core and keep your neck neutral.",
+            "Raise your arms off the floor by squeezing your lower traps and shoulder blades.",
+            "Lift until you feel your upper back engage, avoiding shrugging.",
+            "Lower slowly and repeat with control."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        }
+      ]
+    },
+    {
+      "name": "Lats",
+      "bodySide": "back",
+      "posX": 0.6,
+      "posY": 0.36,
+      "exercises": [
+        {
+          "name": "Pull-Up",
+          "description": "A challenging bodyweight pull that builds a wide, strong back and powerful lats.",
+          "instructions": [
+            "Grab a pull-up bar with an overhand grip slightly wider than shoulder-width.",
+            "Hang with your arms extended and your core engaged.",
+            "Pull yourself up by driving your elbows down and back.",
+            "Continue until your chin clears the bar.",
+            "Keep your shoulders down and avoid swinging.",
+            "Lower yourself slowly to full extension and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "5-10 reps",
+          "equipment": ["Pull-Up Bar"],
+          "level": "Advanced"
+        },
+        {
+          "name": "Lat Pulldown",
+          "description": "A cable exercise that mimics the pull-up and effectively targets the lats with adjustable resistance.",
+          "instructions": [
+            "Sit at a lat pulldown machine and secure your thighs under the pads.",
+            "Grip the bar with an overhand grip wider than shoulder-width.",
+            "Lean back slightly and keep your chest up.",
+            "Pull the bar down toward your upper chest by driving your elbows down.",
+            "Squeeze your shoulder blades together at the bottom.",
+            "Return the bar slowly to the top without shrugging, and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Cable Machine"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Bent-Over Barbell Row",
+          "description": "A compound pulling movement that builds thickness across the lats and mid-back.",
+          "instructions": [
+            "Stand holding a barbell with an overhand grip, feet shoulder-width apart.",
+            "Hinge at your hips until your torso is at about 45 degrees, keeping your back flat.",
+            "Let the bar hang with your arms extended.",
+            "Pull the bar toward your lower ribs by driving your elbows back.",
+            "Squeeze your shoulder blades together at the top.",
+            "Lower the bar slowly under control and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps",
+          "equipment": ["Barbell"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Single-Arm Dumbbell Row",
+          "description": "A unilateral row that targets each lat individually to correct imbalances and build back strength.",
+          "instructions": [
+            "Place one knee and hand on a bench with your other foot on the floor.",
+            "Hold a dumbbell in your free hand with your arm extended.",
+            "Keep your back flat and parallel to the floor.",
+            "Pull the dumbbell toward your hip by driving your elbow back.",
+            "Squeeze your lat at the top without rotating your torso.",
+            "Lower slowly and repeat, then switch sides."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps per side",
+          "equipment": ["Dumbbells", "Bench"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Straight-Arm Pulldown",
+          "description": "An isolation exercise that targets the lats without significant arm involvement.",
+          "instructions": [
+            "Stand facing a high cable with a straight bar attached.",
+            "Grip the bar with an overhand grip and step back slightly.",
+            "Keep your arms straight with a soft bend in your elbows.",
+            "Pull the bar down toward your thighs in an arc using your lats.",
+            "Squeeze your lats at the bottom of the movement.",
+            "Return slowly to the start, keeping your core braced."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Cable Machine"],
+          "level": "Intermediate"
+        }
+      ]
+    },
+    {
+      "name": "Lower Back",
+      "bodySide": "back",
+      "posX": 0.47,
+      "posY": 0.44,
+      "exercises": [
+        {
+          "name": "Superman",
+          "description": "A bodyweight exercise that strengthens the lower back and improves spinal stability.",
+          "instructions": [
+            "Lie face down on the floor with your arms extended overhead and legs straight.",
+            "Keep your neck neutral by looking at the floor.",
+            "Brace your core lightly to protect your spine.",
+            "Raise your arms, chest, and legs off the floor simultaneously.",
+            "Squeeze your lower back and glutes at the top.",
+            "Lower slowly under control and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Bird Dog",
+          "description": "A core and lower-back stability exercise that trains balanced, controlled movement.",
+          "instructions": [
+            "Start on all fours with your hands under your shoulders and knees under your hips.",
+            "Brace your core and keep your spine neutral.",
+            "Extend one arm forward while extending the opposite leg back.",
+            "Keep your hips level and avoid arching your lower back.",
+            "Pause when your arm and leg are in line with your torso.",
+            "Return under control, then repeat on the other side."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps per side",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Romanian Deadlift",
+          "description": "A hip-hinge movement that builds the lower back, glutes, and hamstrings while teaching proper hinging.",
+          "instructions": [
+            "Stand holding a barbell or dumbbells in front of your thighs, feet hip-width apart.",
+            "Keep a slight bend in your knees and your chest up.",
+            "Push your hips back to lower the weight along your legs.",
+            "Keep your back flat and the weight close to your body.",
+            "Lower until you feel a stretch in your hamstrings, then drive your hips forward to stand.",
+            "Squeeze your glutes at the top and avoid rounding your back."
+          ],
+          "sets": "3 sets",
+          "reps": "8-10 reps",
+          "equipment": ["Barbell", "Dumbbells"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Back Extension",
+          "description": "An isolation exercise that directly strengthens the erector spinae of the lower back.",
+          "instructions": [
+            "Position yourself on a back extension bench with your hips on the pad and feet secured.",
+            "Cross your arms over your chest or place your hands behind your head.",
+            "Keep your spine neutral and hinge forward at the hips.",
+            "Lower your torso until you feel a stretch, keeping your back flat.",
+            "Raise your torso by contracting your lower back and glutes until your body is straight.",
+            "Avoid over-extending at the top, and repeat with control."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Back Extension Bench"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Glute Bridge",
+          "description": "A foundational movement that strengthens the posterior chain and supports lower-back health.",
+          "instructions": [
+            "Lie on your back with your knees bent and feet flat, hip-width apart.",
+            "Rest your arms at your sides and brace your core.",
+            "Press through your heels to lift your hips toward the ceiling.",
+            "Squeeze your glutes at the top, forming a straight line from knees to shoulders.",
+            "Avoid overarching your lower back at the top.",
+            "Lower slowly under control and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        }
+      ]
+    },
+    {
+      "name": "Glutes",
+      "bodySide": "back",
+      "posX": 0.55,
+      "posY": 0.50,
+      "exercises": [
+        {
+          "name": "Hip Thrust",
+          "description": "A premier glute-building exercise that allows heavy loading for strength and size.",
+          "instructions": [
+            "Sit on the floor with your upper back against a bench and a barbell or weight across your hips.",
+            "Bend your knees and place your feet flat, shoulder-width apart.",
+            "Brace your core and tuck your chin slightly.",
+            "Drive through your heels to lift your hips until your torso is parallel to the floor.",
+            "Squeeze your glutes hard at the top without overarching your back.",
+            "Lower slowly under control and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps",
+          "equipment": ["Barbell", "Bench"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Glute Bridge",
+          "description": "A bodyweight movement that activates and strengthens the glutes with no equipment needed.",
+          "instructions": [
+            "Lie on your back with your knees bent and feet flat, hip-width apart.",
+            "Place your arms at your sides and brace your core.",
+            "Press through your heels to raise your hips toward the ceiling.",
+            "Squeeze your glutes at the top, forming a straight line from knees to shoulders.",
+            "Avoid arching your lower back excessively.",
+            "Lower slowly and repeat for the prescribed reps."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Romanian Deadlift",
+          "description": "A hip-hinge exercise that heavily targets the glutes and hamstrings.",
+          "instructions": [
+            "Stand holding a barbell or dumbbells in front of your thighs, feet hip-width apart.",
+            "Keep a soft bend in your knees and your chest up.",
+            "Hinge at your hips, pushing them back to lower the weight along your legs.",
+            "Keep your back flat and the weight close to your body.",
+            "Lower until you feel a hamstring stretch, then drive your hips forward.",
+            "Squeeze your glutes at the top and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps",
+          "equipment": ["Barbell", "Dumbbells"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Reverse Lunge",
+          "description": "A single-leg exercise that emphasizes the glutes while building balance and stability.",
+          "instructions": [
+            "Stand tall with your feet hip-width apart and hands on your hips or holding dumbbells.",
+            "Step one foot back into a long stride.",
+            "Lower your body until both knees are bent at about 90 degrees.",
+            "Keep your front knee over your ankle and your torso upright.",
+            "Drive through your front heel to return to standing.",
+            "Repeat, alternating legs or completing all reps on one side first."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps per leg",
+          "equipment": ["Bodyweight", "Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Cable Kickback",
+          "description": "An isolation exercise that targets each glute individually under constant tension.",
+          "instructions": [
+            "Attach an ankle strap to a low cable and secure it around one ankle.",
+            "Face the machine and hold the frame for balance.",
+            "Brace your core and keep a slight bend in your standing knee.",
+            "Kick the working leg straight back by squeezing your glute.",
+            "Pause at the top without arching your lower back.",
+            "Return slowly under control and repeat, then switch legs."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps per leg",
+          "equipment": ["Cable Machine"],
+          "level": "Intermediate"
+        }
+      ]
+    },
+    {
+      "name": "Hamstrings",
+      "bodySide": "back",
+      "posX": 0.38,
+      "posY": 0.60,
+      "exercises": [
+        {
+          "name": "Romanian Deadlift",
+          "description": "A hip-hinge movement that provides a deep hamstring stretch and builds posterior-chain strength.",
+          "instructions": [
+            "Stand holding a barbell or dumbbells in front of your thighs, feet hip-width apart.",
+            "Keep a slight bend in your knees throughout the movement.",
+            "Push your hips back to lower the weight down the front of your legs.",
+            "Keep your back flat and the weight close to your body.",
+            "Lower until you feel a strong stretch in your hamstrings.",
+            "Drive your hips forward to return to standing and squeeze your glutes."
+          ],
+          "sets": "3 sets",
+          "reps": "8-12 reps",
+          "equipment": ["Barbell", "Dumbbells"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Lying Leg Curl",
+          "description": "A machine exercise that isolates the hamstrings through knee flexion.",
+          "instructions": [
+            "Lie face down on a leg curl machine with the pad resting just above your heels.",
+            "Grip the handles and keep your hips pressed into the bench.",
+            "Brace your core to prevent your lower back from arching.",
+            "Curl the pad toward your glutes by bending your knees.",
+            "Squeeze your hamstrings at the top of the movement.",
+            "Lower slowly under control and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "10-12 reps",
+          "equipment": ["Leg Curl Machine"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Nordic Hamstring Curl",
+          "description": "An advanced eccentric exercise that dramatically strengthens the hamstrings and aids injury prevention.",
+          "instructions": [
+            "Kneel on a soft pad with your ankles anchored under a secure surface or held by a partner.",
+            "Keep your body straight from your knees to your head.",
+            "Brace your core and engage your hamstrings and glutes.",
+            "Lower your torso toward the floor as slowly as you can control.",
+            "Catch yourself with your hands when you can no longer resist.",
+            "Push back up and use your hamstrings to return to the start."
+          ],
+          "sets": "3 sets",
+          "reps": "5-8 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Advanced"
+        },
+        {
+          "name": "Single-Leg Deadlift",
+          "description": "A unilateral hinge that builds hamstring strength, balance, and hip stability.",
+          "instructions": [
+            "Stand on one leg holding a dumbbell in the opposite hand.",
+            "Keep a slight bend in your standing knee.",
+            "Hinge at your hips, lowering the weight while extending your free leg behind you.",
+            "Keep your back flat and your hips square to the floor.",
+            "Lower until you feel a hamstring stretch, then return to standing.",
+            "Squeeze your glute at the top, then switch legs."
+          ],
+          "sets": "3 sets",
+          "reps": "8-10 reps per leg",
+          "equipment": ["Dumbbells"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Glute-Ham Raise",
+          "description": "A bodyweight exercise that strengthens the hamstrings and glutes through both hip and knee action.",
+          "instructions": [
+            "Position yourself on a glute-ham developer with your feet anchored and thighs on the pad.",
+            "Start with your body straight and horizontal.",
+            "Brace your core and engage your hamstrings.",
+            "Lower your torso forward by extending at the knees under control.",
+            "Curl your body back up by contracting your hamstrings and glutes.",
+            "Keep the movement smooth and avoid using momentum."
+          ],
+          "sets": "3 sets",
+          "reps": "6-10 reps",
+          "equipment": ["Glute-Ham Developer"],
+          "level": "Advanced"
+        }
+      ]
+    },
+    {
+      "name": "Calves",
+      "bodySide": "back",
+      "posX": 0.4,
+      "posY": 0.74,
+      "exercises": [
+        {
+          "name": "Standing Calf Raise",
+          "description": "A fundamental exercise that targets the gastrocnemius to build calf size and strength.",
+          "instructions": [
+            "Stand with the balls of your feet on the edge of a step or raised surface.",
+            "Let your heels drop below the level of the step for a full stretch.",
+            "Hold onto a wall or rail for balance and brace your core.",
+            "Press through the balls of your feet to raise your heels as high as possible.",
+            "Squeeze your calves at the top of the movement.",
+            "Lower slowly under control and repeat."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps",
+          "equipment": ["Bodyweight"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Seated Calf Raise",
+          "description": "A seated variation that emphasizes the soleus muscle deep in the lower leg.",
+          "instructions": [
+            "Sit on a seated calf raise machine or a bench with a weight resting on your thighs.",
+            "Place the balls of your feet on the platform with your heels hanging off.",
+            "Let your heels drop to feel a stretch in your calves.",
+            "Press through the balls of your feet to raise your heels.",
+            "Squeeze at the top, then lower slowly.",
+            "Repeat with a controlled tempo for a full range of motion."
+          ],
+          "sets": "3 sets",
+          "reps": "15-20 reps",
+          "equipment": ["Seated Calf Machine", "Dumbbells"],
+          "level": "Beginner"
+        },
+        {
+          "name": "Single-Leg Calf Raise",
+          "description": "A unilateral raise that builds calf strength and corrects side-to-side imbalances.",
+          "instructions": [
+            "Stand on one foot with the ball of that foot on the edge of a step.",
+            "Hold a wall or rail for balance and let your heel drop for a stretch.",
+            "Brace your core and keep your standing leg slightly bent.",
+            "Press through the ball of your foot to raise your heel as high as possible.",
+            "Pause and squeeze at the top.",
+            "Lower slowly, complete the reps, then switch legs."
+          ],
+          "sets": "3 sets",
+          "reps": "12-15 reps per leg",
+          "equipment": ["Bodyweight"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Jump Rope",
+          "description": "A dynamic exercise that builds calf endurance and power through repeated bounding.",
+          "instructions": [
+            "Hold the rope handles with the rope behind your heels.",
+            "Turn the rope with your wrists while keeping your elbows close.",
+            "Jump lightly on the balls of your feet, clearing the rope each turn.",
+            "Stay springy through your ankles and calves.",
+            "Maintain a steady rhythm for the target time.",
+            "Rest as needed and repeat for the prescribed rounds."
+          ],
+          "sets": "3 sets",
+          "reps": "1-2 min",
+          "equipment": ["Jump Rope"],
+          "level": "Intermediate"
+        },
+        {
+          "name": "Farmer's Walk on Toes",
+          "description": "A loaded carry performed on the balls of the feet to build calf strength and endurance.",
+          "instructions": [
+            "Hold a dumbbell in each hand at your sides.",
+            "Rise onto the balls of your feet, lifting your heels off the ground.",
+            "Brace your core and keep your posture tall.",
+            "Walk forward with small, controlled steps while staying on your toes.",
+            "Keep your heels elevated throughout the walk.",
+            "Continue for the target distance, then lower down and rest."
+          ],
+          "sets": "3 sets",
+          "reps": "20-30 meters",
+          "equipment": ["Dumbbells"],
+          "level": "Intermediate"
+        }
+      ]
+    }
+  ]
+}

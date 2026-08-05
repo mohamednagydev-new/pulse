@@ -1,0 +1,122 @@
+import { useRef, type ReactNode } from 'react';
+import CoverArt from './CoverArt';
+
+export function Skeleton({ className = '' }: { className?: string }) {
+  return <div className={`skeleton ${className}`} />;
+}
+
+/** Content-shaped loading placeholder — feels faster than a spinner. */
+export function Loader({ label }: { label?: string }) {
+  return (
+    <div className="space-y-3 p-4" aria-busy="true" aria-label={label ?? 'Loading'}>
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="flex gap-3 rounded-2xl bg-white p-3 shadow-sm">
+          <Skeleton className="h-16 w-16 shrink-0 rounded-xl" />
+          <div className="flex flex-1 flex-col justify-center gap-2">
+            <Skeleton className="h-3.5 w-2/3" />
+            <Skeleton className="h-3 w-1/3" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function ErrorMsg({ error }: { error: unknown }) {
+  const msg = error instanceof Error ? error.message : 'Something went wrong';
+  return (
+    <div className="m-4 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
+      {msg}
+    </div>
+  );
+}
+
+export function EmptyState({
+  icon,
+  title,
+  hint,
+  action,
+}: {
+  icon?: ReactNode;
+  title: string;
+  hint?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 px-8 py-20 text-center">
+      {icon && <div className="mb-1 text-gray-300">{icon}</div>}
+      <p className="font-semibold text-gray-600">{title}</p>
+      {hint && <p className="text-sm text-gray-400">{hint}</p>}
+      {action && <div className="mt-3">{action}</div>}
+    </div>
+  );
+}
+
+export function Screen({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <div className={`min-h-screen ${className}`}>{children}</div>;
+}
+
+export function formatDuration(sec?: number | null): string {
+  if (!sec || sec <= 0) return '';
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec % 60);
+  return `${m}:${s.toString().padStart(2, '0')} min`;
+}
+
+/** Renders an uploaded image, or auto-generated topic-themed cover art when none exists.
+ *  `seed` is accepted for backward compatibility with existing call sites (unused). */
+export function MediaImage({
+  path,
+  className = '',
+  label,
+}: {
+  path?: string | null;
+  seed?: number;
+  className?: string;
+  label?: string;
+}) {
+  if (path) {
+    const src = path.startsWith('http') || path.startsWith('/media') ? path : `/media/image/${path.replace(/^images\//, '')}`;
+    return <img src={src} alt={label ?? ''} className={`object-cover ${className}`} loading="lazy" />;
+  }
+  // No uploaded image → auto-generated, topic-themed animated cover art (no uploads needed).
+  return <CoverArt label={label} className={className} />;
+}
+
+/** Horizontal carousel that scrolls by touch swipe, mouse drag, AND mouse wheel. */
+export function HScroll({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef({ down: false, startX: 0, scroll: 0 });
+
+  const onDown = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    drag.current = { down: true, startX: e.pageX, scroll: el.scrollLeft };
+  };
+  const onMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el || !drag.current.down) return;
+    el.scrollLeft = drag.current.scroll - (e.pageX - drag.current.startX);
+  };
+  const stop = () => (drag.current.down = false);
+  const onWheel = (e: React.WheelEvent) => {
+    const el = ref.current;
+    if (!el || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+    el.scrollLeft += e.deltaY;
+  };
+
+  return (
+    <div
+      ref={ref}
+      onMouseDown={onDown}
+      onMouseMove={onMove}
+      onMouseUp={stop}
+      onMouseLeave={stop}
+      onWheel={onWheel}
+      className="no-scrollbar flex cursor-grab gap-3 overflow-x-auto px-4 pb-1 active:cursor-grabbing"
+      style={{ scrollSnapType: 'x proximity' }}
+    >
+      {children}
+    </div>
+  );
+}

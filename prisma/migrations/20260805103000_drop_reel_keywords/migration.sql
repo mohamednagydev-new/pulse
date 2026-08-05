@@ -1,0 +1,11 @@
+-- Drop the ReelKeyword table.
+--
+-- It held 41 seeded search terms for the TikTok keyword browser, which is gone.
+-- Nothing ever read this table: it was written only by its own seed script and
+-- exposed only by its own admin CRUD route. Losing the 41 rows is the point.
+--
+-- NOT affected, despite the similar names:
+--   * `reelKeyword` on Article/Recipe/Program/Lesson/MuscleGroup/Category — the
+--     per-item override that still drives the related-reels strip.
+--   * `CuratedReel.keyword` — still used to score related reels.
+DROP TABLE IF EXISTS "ReelKeyword";

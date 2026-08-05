@@ -1,0 +1,1310 @@
+// FIT IT — Prisma schema (SQLite).
+// Bilingual (AR/EN): base columns hold English; nullable *Ar columns hold Arabic.
+// The API localizes responses (falls back to English when Arabic is missing).
+// SQLite has no enums, so status/level/role/type are Strings. Arrays are JSON text.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------- Users & auth ----------------
+model User {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String   @unique
+  passwordHash  String?
+  mobile        String?
+  zip           String?
+  avatarUrl     String?
+  role          String   @default("USER") // USER | ADMIN
+  provider      String?
+  providerId    String?
+  preferredLang String   @default("en") // en | ar
+  createdAt     DateTime @default(now())
+
+  // Fitness profile (for AI personalization)
+  fitnessGoal   String?  // lose_weight | build_muscle | stay_fit | flexibility
+  fitnessLevel  String?  // BEGINNER | INTERMEDIATE | ADVANCED
+  gender        String?  // male | female (content + motivational copy respect it)
+  birthYear     Int?
+  heightCm      Int?
+  weightKg      Float?
+  // Nutrition goals
+  goalCalories  Int?
+  goalProtein   Int?
+  goalCarbs     Int?
+  goalFat       Int?
+  /** ISO-3166 alpha-2, e.g. EG, SA, AE. Scopes the LOCAL half of the app — gyms,
+   *  deals, store, events. Training content, recipes and articles stay global,
+   *  because a squat is a squat everywhere. Null means "show me everything". */
+  country       String?
+  /** none | vegetarian | vegan — filters the meal plan. Kept separate from
+   *  limitations because a diet is a choice, not something to work around. */
+  dietPref      String?
+  /** JSON array of tags to keep off the plate entirely, e.g. ["dairy","nuts"]. */
+  avoidFoods    String?
+  // Streaks
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  lastActiveOn  String?  // YYYY-MM-DD
+  streakFreezes Int      @default(1) // mercy tokens: one missed day consumes a freeze instead of resetting
+  reminderHour  Int?     // preferred daily reminder hour (0-23), local
+  onboarded     Boolean  @default(false)
+  scheduleJson  String?  // JSON: user's editable weekly training split [{day,focus,groups[]}]
+  // Engagement
+  xp            Int      @default(0)
+  level         Int      @default(1)
+  bio           String?
+  // Coach profile (any user can become a coach)
+  // Referrals: my shareable code + who invited me
+  referralCode  String?  @unique
+  referredById  String?
+
+  isCoach          Boolean @default(false)
+  coachHeadline    String?
+  coachBio         String?
+  coachSpecialties String? // JSON array
+  coachVerified    Boolean @default(false)
+  coachFeatured    Boolean @default(false)
+
+  bookmarks      Bookmark[]
+  completions    LessonCompletion[]
+  subscription   Subscription?
+  refreshTokens  RefreshToken[]
+  calorieEntries CalorieEntry[]
+  weightLogs     WeightLog[]
+  userBadges     UserBadge[]
+  participations ChallengeParticipant[]
+  pushSubs       PushSubscription[]
+  conversations  Conversation[]
+  plans          GeneratedPlan[]
+  following      Follow[]      @relation("following")
+  followers      Follow[]      @relation("followers")
+  feedPosts      FeedPost[]
+  postComments   PostComment[]
+  xpEvents       XpEvent[]
+  challengeMsgs  ChallengeMessage[]
+  musicTracks    MusicTrack[]
+  leagueMembers    LeagueMember[]
+  programEnrollments ProgramEnrollment[]
+  supportTickets     SupportTicket[]
+  assessments        Assessment[]
+  planAdjustments    PlanAdjustment[]
+
+}
+
+model MusicTrack {
+  id        String   @id @default(cuid())
+  userId    String?  // null = global default track (added by admin)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  filePath  String
+  favorite  Boolean  @default(false)
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ---------------- Coach community (phase 2) ----------------
+// coachUserId / clientId reference User.id (kept as plain fields to avoid many back-relations).
+model CoachWorkout {
+  id          String   @id @default(cuid())
+  coachUserId String
+  title       String
+  description String?
+  coverImage  String?
+  muscleFocus String?
+  exercises   String   // JSON: [{ name, sets, reps, instructions[] }]
+  createdAt   DateTime @default(now())
+}
+
+model CoachRequest {
+  id          String   @id @default(cuid())
+  clientId    String
+  coachUserId String
+  status      String   @default("pending") // pending | accepted | declined
+  message     String?
+  createdAt   DateTime @default(now())
+
+  @@unique([clientId, coachUserId])
+}
+
+model CoachRating {
+  id          String   @id @default(cuid())
+  clientId    String
+  coachUserId String
+  stars       Int
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@unique([clientId, coachUserId])
+}
+
+model CoachProgram {
+  id          String   @id @default(cuid())
+  coachUserId String
+  title       String
+  description String?
+  coverImage  String?
+  days        String   // JSON: [{ label, workoutId }]
+  createdAt   DateTime @default(now())
+}
+
+// User-to-user connection (buddy) request. Chat is gated on an accepted connection.
+model Connection {
+  id          String   @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      String   @default("pending") // pending | accepted
+  createdAt   DateTime @default(now())
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId])
+}
+
+// In-app notification (persisted twin of every push, so users with push off still see them).
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String    @default("general") // follow | cheer | comment | reaction | coach | reminder | general
+  title     String
+  body      String?
+  url       String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// A user's saved reel. Snapshot of TikTok metadata (playUrl expires; refreshed
+// from the keyword cache when the same video reappears). key = tiktok videoId or FeedPost id.
+model ReelFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String
+  source    String // tiktok | community
+  topic     String?
+  title     String?
+  coverUrl  String?
+  playUrl   String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, key])
+}
+
+// ---------------- Partners & Store (catalog only — all orders happen offline) ----------------
+// A sponsor, gym, store or brand. We are the shop window; users contact them directly.
+model Partner {
+  id            String   @id @default(cuid())
+  type          String   @default("store") // store | gym | brand | clinic | coach_org
+  name          String
+  nameAr        String?
+  tagline       String?
+  taglineAr     String?
+  description   String?
+  descriptionAr String?
+  logo          String? // images/ path
+  cover         String? // images/ path
+  city          String?
+  address       String?
+  phone         String?
+  whatsapp      String? // digits only, e.g. 201001234567
+  website       String?
+  instagram     String?
+  mapUrl        String?
+  /** Coordinates. `city` and a Google Maps link are enough to *show* a venue but not
+   *  to answer "which is nearest", which is the only question people actually ask a
+   *  gym directory. Null lat/lng simply drops the venue out of distance sorting. */
+  lat           Float?
+  lng           Float?
+  /** JSON array of amenity keys: weights, cardio, classes, pool, sauna, parking,
+   *  showers, lockers, pt, crossfit, boxing, kids. Filtered on, so keys not free text. */
+  facilities    String?
+  /** JSON object keyed by weekday (sat..fri) -> "06:00-00:00", or "closed".
+   *  Free-text times on purpose — a gym that opens "after Fajr" should be able to
+   *  say so without us pretending to parse it. */
+  hours         String?
+  /** Women-only venue, or women-only hours. In Egypt this is often the deciding
+   *  filter, and no global fitness app has it. */
+  ladiesOnly    Boolean @default(false)
+  ladiesHours   String?
+  /** Where this business physically is. A gym in Cairo is useless to someone in
+   *  Riyadh, so the directory, deals and store are filtered by it. */
+  country       String  @default("EG")
+  /** ISO-4217 of what this partner actually charges in. We never convert — you pay
+   *  the gym in its own currency, and showing a converted figure would be a number
+   *  nobody will ever be asked for. */
+  currency      String  @default("EGP")
+  /** Headline price as a number, formatted per the viewer's locale at render time.
+   *  The two strings below stay as a manual override for anything a number cannot
+   *  express ("first month free", "من ٦٠٠ ج.م/شهر"). */
+  priceFromAmount Float?
+  priceFrom     String?
+  priceFromAr   String?
+  /** JSON array of image paths — gyms sell on photos, and one cover is not enough. */
+  gallery       String?
+  featured      Boolean  @default(false)
+  active        Boolean  @default(true)
+  order         Int      @default(0)
+  views         Int      @default(0)
+  contacts      Int      @default(0) // taps on call/whatsapp/website
+  createdAt     DateTime @default(now())
+
+  products  PartnerProduct[]
+  deals     PartnerDeal[]
+  leadForms PartnerLeadForm[]
+  events    FitEvent[]
+}
+
+// A product/offer in the catalog. `price` is display text only — no checkout here.
+model PartnerProduct {
+  id            String   @id @default(cuid())
+  partnerId     String
+  partner       Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  category      String   @default("supplements") // supplements | wear | equipment | food | membership | service
+  title         String
+  titleAr       String?
+  description   String?
+  descriptionAr String?
+  image         String?
+  /** Numbers where possible so the viewer's locale formats them; the strings below
+   *  remain the override for anything that is not a plain amount. */
+  priceAmount    Float?
+  oldPriceAmount Float?
+  price         String? // display override, e.g. "٥٠٠ ج.م" / "500 EGP"
+  oldPrice      String?
+  badge         String? // "خصم ٢٠٪" / "New"
+  url           String? // external product link
+  active        Boolean  @default(true)
+  order         Int      @default(0)
+  views         Int      @default(0)
+  contacts      Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([category])
+}
+
+// Partner deal / coupon — users see the code in-app and redeem it offline at the
+// partner. Pure listing revenue: no checkout, no settlement, no liability for us.
+model PartnerDeal {
+  id            String    @id @default(cuid())
+  partnerId     String
+  partner       Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  title         String
+  titleAr       String?
+  description   String?
+  descriptionAr String?
+  code          String? // e.g. PULSE20 — shown to the user, redeemed at the partner
+  discount      String? // display text, e.g. "20% off" / "خصم ٢٠٪"
+  image         String?
+  validUntil    String? // YYYY-MM-DD (display + filtering)
+  active        Boolean   @default(true)
+  order         Int       @default(0)
+  views         Int       @default(0)
+  redeems       Int       @default(0) // taps on "show code" — the partner's lead count
+  createdAt     DateTime  @default(now())
+}
+
+// A partner's "request a call" offer. We never handle money — we hand over a warm
+// lead and bill the partner per lead.
+model PartnerLeadForm {
+  id            String   @id @default(cuid())
+  partnerId     String
+  partner       Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  kind          String   @default("trial") // trial | consult | quote | membership | tour
+  title         String
+  titleAr       String?
+  description   String?
+  descriptionAr String?
+  image         String?
+  /** Extra question shown above the note field, e.g. "Which branch?" */
+  question      String?
+  questionAr    String?
+  cta           String?
+  ctaAr         String?
+  active        Boolean  @default(true)
+  order         Int      @default(0)
+  views         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  leads Lead[]
+
+  @@index([partnerId, active])
+}
+
+model Lead {
+  id        String         @id @default(cuid())
+  formId    String
+  form      PartnerLeadForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  userId    String?
+  name      String
+  phone     String
+  city      String?
+  note      String?
+  status    String         @default("new") // new | sent | contacted | won | lost
+  createdAt DateTime       @default(now())
+
+  @@index([formId, createdAt])
+  @@index([status])
+}
+
+// Paid listings: gyms, brands and venues pay to appear on the events board.
+model FitEvent {
+  id            String   @id @default(cuid())
+  partnerId     String?
+  partner       Partner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  kind          String   @default("class") // class | bootcamp | race | workshop | open_day
+  title         String
+  titleAr       String?
+  description   String?
+  descriptionAr String?
+  image         String?
+  city          String?
+  venue         String?
+  venueAr       String?
+  mapUrl        String?
+  /** YYYY-MM-DD plus a free-text time so we never fight timezones on a display-only field. */
+  date          String
+  time          String?
+  country       String  @default("EG")
+  currency      String  @default("EGP")
+  /** 0 means free and renders as "Free"; null means "see the organiser". */
+  priceAmount   Float?
+  price         String? // display override, e.g. "Free" / "٢٠٠ ج.م"
+  url           String? // external booking/ticket link
+  whatsapp      String?
+  sponsored     Boolean  @default(false)
+  featured      Boolean  @default(false)
+  active        Boolean  @default(true)
+  views         Int      @default(0)
+  contacts      Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  rsvps EventRsvp[]
+
+  @@index([active, date])
+}
+
+model EventRsvp {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     FitEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  status    String   @default("going") // going | interested
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+  @@index([userId])
+}
+
+// One free daily spin per user (reward recorded so it can't be re-rolled).
+model SpinClaim {
+  id        String   @id @default(cuid())
+  userId    String
+  day       String // YYYY-MM-DD
+  prize     String // xp_10 | xp_25 | xp_50 | freeze | badge_luck | nothing
+  xp        Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, day])
+}
+
+// Daily water intake (one row per user per day).
+model WaterLog {
+  id      String @id @default(cuid())
+  userId  String
+  date    String // YYYY-MM-DD in the app timezone
+  glasses Int    @default(0)
+
+  @@unique([userId, date])
+}
+
+// Claimed daily-quest rewards. Quest *completion* is computed live from activity;
+// this table only records that the reward was paid, so it can't be double-claimed.
+model QuestClaim {
+  id        String   @id @default(cuid())
+  userId    String
+  day       String // YYYY-MM-DD
+  questKey  String // individual quest, or "daily_bonus" for the all-three bonus
+  xp        Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, day, questKey])
+}
+
+// Body measurements + progress photos over time.
+model BodyLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      String // YYYY-MM-DD
+  waistCm   Float?
+  chestCm   Float?
+  armCm     Float?
+  hipCm     Float?
+  thighCm   Float?
+  photo     String? // images/ path (private to the user)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+// Lightweight product analytics event (screen views + key actions).
+model Event {
+  id        String   @id @default(cuid())
+  userId    String?
+  name      String // e.g. "screen", "workout_done", "reel_open"
+  meta      String? // plain string (screen path) or small JSON
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([createdAt])
+}
+
+// Head-to-head buddy challenge ("duel"): most workouts/XP within a window, optional XP wager.
+model BuddyChallenge {
+  id           String    @id @default(cuid())
+  challengerId String
+  opponentId   String
+  metric       String // workouts | xp
+  durationDays Int
+  wagerXp      Int       @default(0)
+  status       String    @default("pending") // pending | active | declined | finished
+  startsAt     DateTime?
+  endsAt       DateTime?
+  winnerId     String? // null on finished = draw
+  createdAt    DateTime  @default(now())
+
+  @@index([challengerId])
+  @@index([opponentId])
+}
+
+// Admin-curated reel: approved TikTok imports (video downloaded to our storage —
+// moderated once, never expires) or admin uploads. Users ONLY see these + community posts.
+model CuratedReel {
+  id        String   @id @default(cuid())
+  source    String   @default("youtube") // youtube | upload
+  /** youtube | upload. TikTok was removed: its embeds linked out to an algorithmic
+   *  feed we do not control, and its search skewed toward content we would not put
+   *  in front of a teenager. YouTube refuses to embed age-restricted videos, which
+   *  makes "reject" our default rather than "import something unchecked". */
+  provider  String   @default("youtube")
+  /** The provider's own video id. Replaces tiktokId, which only ever held one
+   *  provider's ids; tiktokId is kept so existing rows and their unique index
+   *  survive untouched. */
+  externalId String?
+  /** Canonical page for the video — what the admin pasted, and what we link out to
+   *  for attribution. */
+  sourceUrl  String?
+  /** Who made it. Shown in the curation list so an approval is a decision about a
+   *  creator, not just a thumbnail. */
+  authorName String?
+  authorUrl  String?
+  /** Set when the provider says the video is age-restricted. Such videos are never
+   *  imported; the field records why one was refused. */
+  ageRestricted Boolean @default(false)
+  keyword   String? // legacy: the search keyword a reel was once found under
+  topic     String   @default("workout") // workout | yoga (feed tab + affinity topic)
+  title     String
+  titleAr   String?
+  videoId   String? // local Video row — only when the admin chose "save to server"
+  poster    String? // local images/ path for the cover (downloaded mode)
+  playUrl   String? // last-known remote URL (URL mode — refreshed at serve time via keyword)
+  coverUrl  String? // remote poster (URL mode)
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([provider, externalId])
+}
+
+/** A creator we never want to see again.
+ *
+ *  One bad video from a channel is a signal about the channel, not about that video.
+ *  Blocking at the source means a single decision protects every future import,
+ *  instead of the same account resurfacing under a new title next month. */
+model BlockedSource {
+  id        String   @id @default(cuid())
+  provider  String // youtube
+  /** Channel id, handle, or author URL — whatever identifies the creator. */
+  handle    String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([provider, handle])
+}
+
+// Per-reel watch telemetry — powers the affinity-weighted "For You" feed.
+model ReelWatch {
+  id         String   @id @default(cuid())
+  userId     String
+  key        String // tiktok videoId or community post id
+  topic      String // the keyword/topic the reel was served under
+  watchedSec Int
+  completed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// Admin-managed keyword pool for pulling TikTok reels related to app content.
+// A logged strength set (best set per exercise entry) — powers history + PRs.
+model LiftLog {
+  id        String   @id @default(cuid())
+  userId    String
+  exercise  String
+  weightKg  Float
+  reps      Int
+  createdAt DateTime @default(now())
+
+  @@index([userId, exercise])
+}
+
+// Password reset tokens (hashed); short-lived, single-use.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// ---------------- Live group-training sessions ----------------
+model GroupSession {
+  id             String             @id @default(cuid())
+  coachUserId    String
+  title          String
+  description    String?
+  coachWorkoutId String?
+  muscleFocus    String?
+  scheduledAt    DateTime
+  createdAt      DateTime           @default(now())
+  participants   GroupParticipant[]
+}
+
+model GroupParticipant {
+  id        String       @id @default(cuid())
+  sessionId String
+  session   GroupSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId    String
+  joinedAt  DateTime     @default(now())
+
+  @@unique([sessionId, userId])
+}
+
+model XpEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model ChallengeMessage {
+  id          String    @id @default(cuid())
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isCoach     Boolean   @default(false)
+  text        String
+  createdAt   DateTime  @default(now())
+}
+
+// ---------------- Social graph ----------------
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("following", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("followers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model FeedPost {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String         // text | completion | badge | levelup | challenge
+  text      String?
+  mediaType String?        // image | video
+  mediaUrl  String?        // image path or video id
+  refType   String?
+  refId     String?
+  /** Admin announcement: shown to everyone at the top of the feed, not just to
+   *  followers, until pinnedUntil passes. Only one is active at a time. */
+  pinned      Boolean      @default(false)
+  pinnedUntil DateTime?
+  pinnedTitle String?
+  createdAt DateTime       @default(now())
+  reactions PostReaction[]
+  comments  PostComment[]
+
+  @@index([pinned, pinnedUntil])
+}
+
+model PostReaction {
+  id     String   @id @default(cuid())
+  postId String
+  post   FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId String
+  emoji  String   @default("💪")
+
+  @@unique([postId, userId])
+}
+
+model PostComment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+}
+
+// ---------------- Direct messages ----------------
+model DMThread {
+  id            String      @id @default(cuid())
+  userAId       String
+  userBId       String
+  lastMessageAt DateTime    @default(now())
+  messages      DMMessage[]
+
+  @@unique([userAId, userBId])
+}
+
+model DMMessage {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    DMThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderId  String
+  text      String
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ---------------- Media ----------------
+model Video {
+  id            String   @id @default(cuid())
+  filePath      String
+  thumbnailPath String?
+  durationSec   Int?
+  status        String   @default("ready")
+  lessons       Lesson[]
+}
+
+// ---------------- Coaches & programs ----------------
+model Coach {
+  id         String    @id @default(cuid())
+  name       String
+  nameAr     String?
+  headline   String?
+  headlineAr String?
+  bio        String?
+  bioAr      String?
+  avatarUrl  String?
+  type       String    // YOGA | WORKOUT
+  order      Int       @default(0)
+  programs   Program[]
+}
+
+model Program {
+  id            String   @id @default(cuid())
+  coachId       String
+  coach         Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  title         String
+  titleAr       String?
+  description   String?
+  descriptionAr String?
+  coverImage    String?
+  level         String?  // BEGINNER | INTERMEDIATE | ADVANCED | null
+  reelKeyword   String?  // admin override for the related-reels strip
+  order         Int      @default(0)
+  lessons       Lesson[]
+  enrollments   ProgramEnrollment[]
+  /** Who this is FOR when it is not everyone: prenatal | postnatal | senior | rehab.
+   *  Specialised content must never be auto-recommended to a general user — a man
+   *  asking for a calm routine was being offered prenatal yoga. Null = everyone. */
+  audience      String?
+
+}
+
+model Lesson {
+  id            String             @id @default(cuid())
+  programId     String
+  program       Program            @relation(fields: [programId], references: [id], onDelete: Cascade)
+  title         String
+  titleAr       String?
+  description   String?
+  descriptionAr String?
+  videoId       String?
+  video         Video?             @relation(fields: [videoId], references: [id])
+  videoUrl      String? // external video link (YouTube / Shorts / direct MP4); videoId wins when both are set
+  /** Alternative class led by a woman, served to users whose gender is female. */
+  videoUrlFemale String?
+  durationSec   Int?
+  thumbnail     String?
+  reelKeyword   String? // admin override for the related-reels strip
+  order         Int                @default(0)
+  completions   LessonCompletion[]
+}
+
+// ---------------- Exercises (muscle map) ----------------
+model MuscleGroup {
+  id        String     @id @default(cuid())
+  name      String
+  nameAr    String?
+  bodySide  String     // front | back
+  posX      Float?
+  posY      Float?
+  reelKeyword String? // admin override for the related-reels strip
+  order     Int        @default(0)
+  exercises Exercise[]
+}
+
+model Exercise {
+  id             String      @id @default(cuid())
+  muscleGroupId  String
+  muscleGroup    MuscleGroup @relation(fields: [muscleGroupId], references: [id], onDelete: Cascade)
+  name           String
+  nameAr         String?
+  description    String?
+  descriptionAr  String?
+  instructions   String?     // JSON array (en)
+  instructionsAr String?     // JSON array (ar)
+  sets           String?
+  reps           String?
+  equipment      String?     // JSON array
+  level          String?
+  svgAsset       String?     // path to SVG illustration
+  videoId        String?
+  videoUrl       String? // external video link (YouTube / Shorts / direct MP4)
+  /** Alternative demo from a woman-led channel, served to users whose gender is female. */
+  videoUrlFemale String?
+  /** JSON array of body areas this movement loads hard: knee | back | shoulder | wrist | neck.
+   *  Used to flag or swap it for users who told us that area hurts. */
+  contraindications String?
+  /** Name of a gentler movement to offer instead when it is flagged. */
+  saferAlternative  String?
+  order          Int         @default(0)
+}
+
+// ---------------- Wellness library ----------------
+model Category {
+  id       String    @id @default(cuid())
+  kind     String    // initiative | recipe | article
+  title    String
+  titleAr  String?
+  image    String?
+  icon     String?
+  reelKeyword String? // admin override for the related-reels strip
+  order    Int       @default(0)
+  articles Article[]
+  recipes  Recipe[]
+}
+
+model Article {
+  id          String   @id @default(cuid())
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  title       String
+  titleAr     String?
+  excerpt     String?
+  excerptAr   String?
+  body        String
+  bodyAr      String?
+  coverImage  String?
+  videoId     String?
+  videoUrl    String? // external video link (YouTube/mp4) as alternative to an upload
+  reelKeyword String? // admin override for the related-reels strip
+  readTimeMin Int?
+  tags        String?
+  /** Who checked this medically, and when. Health content without a named reviewer is
+   *  just an opinion with a nice font — this is the cheapest trust we can buy, and it
+   *  is what separates us from every blog-scraping fitness app. Null renders nothing. */
+  reviewedBy    String?
+  reviewedByAr  String?
+  reviewerTitle String? // e.g. "Registered Dietitian" / "أخصائي تغذية إكلينيكية"
+  reviewerTitleAr String?
+  reviewedOn    String? // YYYY-MM-DD
+  /** JSON array of {label, url} — the evidence behind the claims. */
+  sources       String?
+  order       Int      @default(0)
+}
+
+/** Egyptian food table for calorie logging.
+ *
+ *  The gap this closes: CalorieEntry was free text — someone typed "koshari" and a
+ *  number they guessed. Guessed numbers make the whole tracker worthless, and every
+ *  global food database is missing كشري، فول، طعمية، محشي، عيش بلدي.
+ *
+ *  Portions are described the way people actually eat them ("طبق وسط", "رغيف")
+ *  rather than in grams, because nobody weighs their fuul. */
+model Food {
+  id         String  @id @default(cuid())
+  name       String
+  nameAr     String
+  /** JSON array of extra spellings people search by, incl. Franco-Arabic. */
+  aliases    String?
+  category   String  @default("other") // staple | protein | dairy | veg | fruit | street | drink | sweet | snack
+  /** How this portion is described, e.g. "1 medium plate" / "طبق وسط". */
+  portion    String
+  portionAr  String
+  grams      Int? // approximate weight of that portion, for the curious
+  calories   Int
+  protein    Float   @default(0)
+  carbs      Float   @default(0)
+  fat        Float   @default(0)
+  /** Bubble the everyday foods to the top of an empty search box. */
+  common     Boolean @default(false)
+  order      Int     @default(0)
+
+  @@index([category])
+}
+
+model Recipe {
+  id            String   @id @default(cuid())
+  categoryId    String
+  category      Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  title         String
+  titleAr       String?
+  coverImage    String?
+  about         String
+  aboutAr       String?
+  ingredients   String   // JSON array (en)
+  ingredientsAr String?  // JSON array (ar)
+  steps         String?  // JSON array (en)
+  stepsAr       String?  // JSON array (ar)
+  prepTimeMin   Int?
+  cookTimeMin   Int?
+  servings      Int?
+  calories      Int?
+  /** Per-serving macros in grams. Needed by the meal planner — without them a plan
+   *  can hit a calorie target while missing protein entirely, which is the single
+   *  most common way a "personalised" meal plan is useless. */
+  protein       Float?
+  carbs         Float?
+  fat           Float?
+  /** JSON array of slots this dish fits: breakfast | lunch | dinner | snack.
+   *  A dish can fit several — koshari is lunch or dinner, never breakfast. */
+  mealSlots     String?
+  /** egyptian | levantine | international. Drives the "cook what you actually eat"
+   *  bias in the planner: Egyptian dishes are preferred, others fill the gaps. */
+  cuisine       String?  @default("international")
+  difficulty    String?
+  tags          String?
+  videoId       String?
+  videoUrl      String? // external video link (YouTube/mp4) as alternative to an upload
+  reelKeyword   String? // admin override for the related-reels strip
+  affiliateUrl   String? // "shop ingredients" affiliate link
+  affiliateLabel String?
+  order         Int      @default(0)
+}
+
+// ---------------- Home / promo ----------------
+model Banner {
+  id         String  @id @default(cuid())
+  section    String
+  title      String?
+  titleAr    String?
+  subtitle   String?
+  subtitleAr String?
+  image      String?
+  linkType   String?
+  linkId     String?
+  url        String? // external sponsor / affiliate link
+  impressions Int    @default(0)
+  clicks      Int    @default(0)
+  order      Int     @default(0)
+}
+
+model FeaturedItem {
+  id            String  @id @default(cuid())
+  section       String  // fit_for_life | meal_prep | challenge
+  title         String
+  titleAr       String?
+  description   String?
+  descriptionAr String?
+  image         String?
+  durationSec   Int?
+  level         String?
+  url           String? // where the card navigates (internal path e.g. /programs/<id>, or https://)
+  videoId       String? // uploaded video to play in-app when tapped
+  order         Int     @default(0)
+}
+
+// ---------------- User activity ----------------
+model Bookmark {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentType String
+  contentId   String
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, contentType, contentId])
+}
+
+model LessonCompletion {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completedAt DateTime @default(now())
+
+  @@unique([userId, lessonId])
+}
+
+// ---------------- Nutrition tracker ----------------
+model CalorieEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String   // YYYY-MM-DD
+  name      String
+  mealType  String   @default("meal") // breakfast | lunch | dinner | snack
+  calories  Int
+  protein   Float?
+  carbs     Float?
+  fat       Float?
+  createdAt DateTime @default(now())
+}
+
+model WeightLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String   // YYYY-MM-DD
+  weightKg  Float
+  createdAt DateTime @default(now())
+}
+
+// ---------------- Gamification ----------------
+model Badge {
+  id            String      @id @default(cuid())
+  code          String      @unique
+  title         String
+  titleAr       String?
+  description   String?
+  descriptionAr String?
+  icon          String?
+  userBadges  UserBadge[]
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+}
+
+model Challenge {
+  id           String                 @id @default(cuid())
+  title         String
+  titleAr       String?
+  description   String?
+  descriptionAr String?
+  goalType     String   // lessons | calories | streak
+  goalValue    Int
+  startsOn     String
+  endsOn       String
+  coverImage   String?
+  seasonKey    String? // e.g. "2026-08" — set on auto-created monthly season challenges
+  kind         String   @default("global") // global (admin) | personal (self) | group (friends)
+  ownerId      String? // creator for personal/group challenges
+  inviteCode   String?  @unique // share code for group challenges
+  sponsorName  String?
+  sponsorUrl   String?
+  /** XP paid out once, on completion. 0 means "no reward beyond the badge". */
+  rewardXp     Int      @default(0)
+  /** easy | medium | hard — display only, drives the colour of the difficulty chip. */
+  difficulty   String   @default("medium")
+  participants ChallengeParticipant[]
+  messages     ChallengeMessage[]
+}
+
+model ChallengeParticipant {
+  id          String    @id @default(cuid())
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  progress    Int       @default(0)
+  /** Set once, the first time progress reaches the goal — the reward gate. */
+  completedAt DateTime?
+  joinedAt    DateTime  @default(now())
+
+  @@unique([challengeId, userId])
+}
+
+// ---------------- Coaching intake ----------------
+// What a coach would ask before writing you a plan, and the plan it produced.
+// Kept as a history rather than a single row: re-assessing later should show you
+// how far you've moved, not overwrite where you started.
+model Assessment {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // ---- answers ----
+  goal              String // lose_weight | build_muscle | stay_fit | get_strong | more_energy
+  experience        String // none | some | regular | advanced
+  daysPerWeek       Int
+  minutesPerSession Int
+  equipment         String // none | home_basic | full_gym
+  activityLevel     String // sedentary | light | moderate | active
+  /** JSON array of body areas to work around: knee, back, shoulder, wrist, neck. */
+  limitations       String?
+  preferMornings    Boolean  @default(false)
+
+  // ---- what we decided, and why ----
+  recommendedLevel  String // BEGINNER | INTERMEDIATE | ADVANCED
+  programId         String?
+  /** JSON array of weekday names the plan puts sessions on. */
+  scheduleDays      String?
+  /** JSON array of short reason strings, shown back to the user. */
+  rationale         String?
+  /** JSON array of caution notes derived from their limitations. */
+  cautions          String?
+  /** YYYY-MM-DD - when to invite them to re-check. */
+  nextCheckOn       String?
+
+  createdAt         DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// A change the coach proposed to a plan: fewer days when life got in the way, a
+// lighter week after a hard block, a step up when someone is clearly ready.
+// Recorded rather than applied silently, so the user is asked and can look back at
+// what changed and when.
+model PlanAdjustment {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       String // deload | reduce | increase | restart
+  /** JSON {en,ar} — what we are proposing and why. */
+  reason     String
+  fromDays   Int?
+  toDays     Int?
+  /** Set when the user accepts. Null means proposed and not acted on. */
+  appliedAt  DateTime?
+  /** Declined proposals stay recorded so we don't ask the same thing next week. */
+  dismissedAt DateTime?
+  /** Deload only: YYYY-MM-DD the lighter week runs until. */
+  activeUntil String?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// ---------------- Support inbox ----------------
+// Suggestions, problems and questions from users, in one place an admin can work
+// through. Kept deliberately simple: no threads, one reply, a clear status.
+model SupportTicket {
+  id        String    @id @default(cuid())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  kind      String    @default("suggestion") // suggestion | issue | question
+  subject   String
+  body      String
+  /** Optional: how to reach them if they are not reachable in-app. */
+  contact   String?
+  /** Which screen they were on - saves a round trip when diagnosing. */
+  screen    String?
+  status    String    @default("open") // open | in_progress | resolved | closed
+  /** Written by an admin and shown back to the user. */
+  reply     String?
+  repliedAt DateTime?
+  /** Internal only, never returned to the user. */
+  adminNote String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
+
+// ---------------- Guided path ----------------
+// A program the user has actually committed to. Without this, programs are a
+// library you browse; with it they become a path you are partway through.
+model ProgramEnrollment {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programId   String
+  program     Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
+  status      String    @default("active") // active | completed
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@unique([userId, programId])
+  @@index([userId, status])
+}
+
+// ---------------- Weekly leagues ----------------
+// Every week each user sits in a room of ~20 people in their tier, ranked by the
+// XP they earn that week. Top finishers promote, bottom finishers demote.
+// Rooms settle lazily on first read of a new week — no cron required.
+model LeagueMember {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /** The week's starting Saturday, YYYY-MM-DD (app timezone). */
+  weekKey   String
+  tier      Int      @default(0) // 0 Bronze … 4 Legend
+  room      Int      @default(0) // bucket within the tier
+  /** XP snapshot, written at settlement. Live weeks compute this from XpEvent. */
+  xp        Int      @default(0)
+  rank      Int? // final placing in the room, set at settlement
+  result    String? // promoted | held | demoted
+  settledAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, weekKey])
+  @@index([weekKey, tier, room])
+}
+
+// ---------------- Push notifications ----------------
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+}
+
+// ---------------- AI ----------------
+model Conversation {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime      @default(now())
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String       // user | assistant
+  content        String
+  createdAt      DateTime     @default(now())
+}
+
+// Semantic search: embeddings stored as JSON; cosine computed in-process.
+/** Per-user, per-day AI call counter.
+ *
+ *  The existing rate limit is 20/min per IP, which stops a script but not a cost.
+ *  PULSE is free and has no subscription to fund an unbounded chat bill, so every
+ *  billable call is counted against a daily allowance per user. One row per
+ *  (user, day, kind) — small, and it doubles as the usage report for deciding
+ *  whether the feature is worth what it costs. */
+model AiUsage {
+  id     String @id @default(cuid())
+  userId String
+  date   String // YYYY-MM-DD in the app timezone
+  kind   String // chat | calories | search | vision | summary
+  count  Int    @default(0)
+
+  @@unique([userId, date, kind])
+  @@index([date])
+}
+
+/** The week in review.
+ *
+ *  Stats are computed from real rows and stored alongside the prose, so the card can
+ *  always render even when the key is unset or the call fails — the model only ever
+ *  rewrites numbers we already worked out, it never sources them. One row per user
+ *  per week, generated on first view and reused, because a recap that changes every
+ *  time you open it is not a recap. */
+model WeeklyRecap {
+  id      String @id @default(cuid())
+  userId  String
+  weekKey String // the Saturday that starts the week, YYYY-MM-DD
+  /** JSON snapshot of the numbers behind the text — what was true when written. */
+  stats   String
+  /** Rule-based prose. Always present. */
+  text    String
+  textAr  String
+  /** The model's warmer rewrite, when AI is on. Null is normal, not an error. */
+  aiText   String?
+  aiTextAr String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, weekKey])
+  @@index([userId, createdAt])
+}
+
+model ContentEmbedding {
+  id          String @id @default(cuid())
+  contentType String // program | recipe | article | exercise
+  contentId   String
+  lang        String @default("en")
+  text        String
+  vector      String // JSON array of floats
+  @@unique([contentType, contentId, lang])
+}
+
+model GeneratedPlan {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // workout | meal
+  title     String
+  data      String   // JSON
+  createdAt DateTime @default(now())
+}
+
+// ---------------- Membership ----------------
+model MembershipPlan {
+  id            String         @id @default(cuid())
+  name          String
+  nameAr        String?
+  priceCents    Int
+  interval      String
+  features      String?
+  featuresAr    String?
+  active        Boolean        @default(true)
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id         String          @id @default(cuid())
+  userId     String          @unique
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId     String?
+  plan       MembershipPlan? @relation(fields: [planId], references: [id])
+  status     String          @default("none")
+  provider   String?
+  externalId String?
+  startedAt  DateTime?
+  endsAt     DateTime?
+}

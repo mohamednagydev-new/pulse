@@ -1,0 +1,449 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Layered elevation — soft, modern, never harsh */
+  --shadow-sm: 0 1px 2px rgba(17, 12, 20, 0.04), 0 1px 3px rgba(17, 12, 20, 0.06);
+  --shadow-md: 0 2px 6px rgba(17, 12, 20, 0.05), 0 8px 20px rgba(17, 12, 20, 0.06);
+  --shadow-lg: 0 8px 30px rgba(249, 115, 22, 0.16), 0 4px 12px rgba(17, 12, 20, 0.08);
+}
+
+/* Global density: Tailwind sizes everything in rem, so scaling the root font
+   shrinks text, paddings and cards together (~90% — the size the design fits at
+   on real phones) without touching individual screens. */
+html {
+  font-size: 14.5px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Fit the *visible* mobile viewport (dvh), not the tallest (vh).
+   Without this, 100vh screens are taller than the area under the browser
+   URL bar, so the app overflows and scrolls instead of fitting like an app. */
+@supports (height: 100dvh) {
+  html,
+  body,
+  #root {
+    height: 100dvh;
+  }
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+  .h-screen {
+    height: 100dvh;
+  }
+}
+
+body {
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+body {
+  @apply text-ink antialiased;
+  font-family: 'Sora', 'Tajawal', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Motivational, energetic backdrop behind the app (visible on desktop) */
+  background: radial-gradient(120% 85% at 12% 0%, #3a2415 0%, #1c1712 45%, #0d0b0a 100%);
+}
+
+:root[dir='rtl'] body {
+  font-family: 'Tajawal', 'Sora', system-ui, sans-serif;
+}
+
+/* Headings: confident, tightly tracked */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
+/* Phone-width app, centered over the motivational backdrop on desktop */
+.app-frame {
+  @apply relative z-10 mx-auto min-h-screen w-full max-w-[480px];
+  background:
+    radial-gradient(32% 24% at 96% 2%, rgba(249, 115, 22, 0.16), transparent 60%),
+    radial-gradient(30% 22% at 2% 14%, rgba(37, 99, 235, 0.13), transparent 60%),
+    radial-gradient(34% 26% at 88% 60%, rgba(13, 148, 136, 0.1), transparent 60%),
+    radial-gradient(36% 28% at 10% 96%, rgba(16, 163, 74, 0.12), transparent 60%),
+    linear-gradient(180deg, #f6f1ec 0%, #f1edf6 100%);
+  box-shadow: 0 0 110px rgba(0, 0, 0, 0.55);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.safe-bottom {
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0));
+}
+
+@layer components {
+  /* Signature button: sheen + moving shine + press. Gives every CTA a branded feel. */
+  .btn-pill {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3.5 text-[15px] font-semibold transition-all duration-200;
+    box-shadow: var(--shadow-sm);
+    isolation: isolate;
+  }
+  .btn-pill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 62%);
+    pointer-events: none;
+  }
+  .btn-pill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .btn-pill:hover::after {
+    left: 150%;
+  }
+  .btn-pill:active {
+    transform: translateY(1px) scale(0.98);
+  }
+  .btn-pill:disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
+  .btn-pill:disabled::after {
+    display: none;
+  }
+
+  /* Colored variants — gradient + brand-colored glow */
+  .btn-primary {
+    @apply text-white;
+    background-image: linear-gradient(135deg, #fb923c, #f97316 48%, #ea580c);
+    box-shadow: 0 8px 22px rgba(249, 115, 22, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .btn-blue {
+    @apply text-white;
+    background-image: linear-gradient(135deg, #3b82f6, #2563eb 50%, #1d4ed8);
+    box-shadow: 0 8px 22px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .btn-green {
+    @apply text-white;
+    background-image: linear-gradient(135deg, #22c55e, #16a34a 50%, #15803d);
+    box-shadow: 0 8px 22px rgba(22, 163, 74, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .btn-dark {
+    @apply text-white;
+    background-image: linear-gradient(135deg, #2b2b33, #161513);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+  }
+  .btn-ghost {
+    @apply border border-gray-200 bg-white text-ink;
+  }
+
+  /* Animated icons inside every button — springs on hover, dips on press */
+  .btn-pill svg {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .btn-pill:hover svg {
+    transform: scale(1.18);
+  }
+  .btn-pill:active svg {
+    transform: scale(0.85);
+  }
+
+  .input-field {
+    @apply w-full rounded-2xl border border-gray-200 bg-white px-5 py-3.5 text-[15px] text-ink transition-all duration-150 outline-none placeholder:text-gray-400;
+  }
+  .input-field:focus {
+    @apply border-brand-pink;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  }
+
+  .card {
+    @apply overflow-hidden rounded-2xl bg-white;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .elevate {
+    box-shadow: var(--shadow-md);
+  }
+
+  /* iOS-style frosted glass */
+  .glass {
+    background: rgba(255, 255, 255, 0.6);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: var(--shadow-md);
+  }
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+  }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    @apply relative overflow-hidden rounded-xl bg-gray-200/70;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ---------- Motion system (movement is the brand) ---------- */
+@layer utilities {
+  .animate-fade-up {
+    animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-pop {
+    animation: popIn 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .animate-float {
+    animation: floatY 3.6s ease-in-out infinite;
+  }
+  .animate-rise {
+    animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  /* Route transition — opacity only, so `position: fixed` children still work */
+  .animate-page {
+    animation: pageIn 0.28s ease both;
+  }
+  /* stagger children */
+  .stagger > * {
+    animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .stagger > *:nth-child(2) { animation-delay: 0.05s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.1s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.15s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.2s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.25s; }
+
+  /* pulsing live indicator */
+  .live-dot::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 9999px;
+    background: currentColor;
+    opacity: 0.45;
+    animation: ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* hover lift for interactive cards (desktop) */
+  .card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  @media (min-width: 1024px) {
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes ping {
+  75%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Energetic blurred fitness backdrop (auth headers, drawer, heroes) */
+.fitness-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: #14100c;
+}
+.fitness-hero::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  background:
+    radial-gradient(38% 42% at 22% 26%, rgba(249, 115, 22, 0.7), transparent 62%),
+    radial-gradient(34% 38% at 82% 16%, rgba(37, 99, 235, 0.45), transparent 60%),
+    radial-gradient(42% 46% at 74% 86%, rgba(16, 163, 74, 0.38), transparent 62%),
+    radial-gradient(30% 30% at 46% 62%, rgba(225, 29, 72, 0.32), transparent 60%);
+  filter: blur(46px) saturate(1.15);
+  animation: heroDrift 16s ease-in-out infinite alternate;
+}
+@keyframes heroDrift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(2%, -2%, 0) scale(1.08); }
+}
+
+/* Tinted blurred card backdrops — richer than a flat gradient */
+.hero-blue,
+.hero-pink,
+.hero-green {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero-blue { background-color: #0e1730; }
+.hero-blue::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  background:
+    radial-gradient(42% 46% at 24% 26%, rgba(37, 99, 235, 0.85), transparent 62%),
+    radial-gradient(38% 42% at 82% 20%, rgba(14, 165, 233, 0.55), transparent 60%),
+    radial-gradient(42% 46% at 72% 86%, rgba(99, 102, 241, 0.5), transparent 62%);
+  filter: blur(42px);
+  animation: heroDrift 16s ease-in-out infinite alternate;
+}
+.hero-pink { background-color: #2a0f12; }
+.hero-pink::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  background:
+    radial-gradient(42% 46% at 24% 26%, rgba(249, 115, 22, 0.85), transparent 62%),
+    radial-gradient(38% 42% at 82% 20%, rgba(244, 63, 94, 0.55), transparent 60%),
+    radial-gradient(42% 46% at 72% 86%, rgba(236, 72, 153, 0.45), transparent 62%);
+  filter: blur(42px);
+  animation: heroDrift 18s ease-in-out infinite alternate;
+}
+.hero-green { background-color: #0c1f16; }
+.hero-green::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  background:
+    radial-gradient(42% 46% at 24% 26%, rgba(16, 163, 74, 0.8), transparent 62%),
+    radial-gradient(38% 42% at 82% 20%, rgba(13, 148, 136, 0.55), transparent 60%),
+    radial-gradient(42% 46% at 72% 86%, rgba(34, 197, 94, 0.45), transparent 62%);
+  filter: blur(42px);
+  animation: heroDrift 17s ease-in-out infinite alternate;
+}
+@keyframes drawerIn {
+  from { opacity: 0; transform: translateX(-8%); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Celebration confetti */
+.confetti-piece {
+  animation-name: confettiFall;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+}
+@keyframes confettiFall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(700deg); opacity: 0.9; }
+}
+
+/* Accessible keyboard focus everywhere */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--tw-ring-color, #f97316);
+  outline-offset: 2px;
+}
+
+/* ---------- Dark mode (scoped overrides — no per-component edits) ---------- */
+.dark body {
+  background: radial-gradient(120% 85% at 12% 0%, #241a12 0%, #131118 45%, #08070a 100%);
+}
+.dark .app-frame {
+  background:
+    radial-gradient(26% 20% at 94% 3%, rgba(249, 115, 22, 0.14), transparent 60%),
+    radial-gradient(24% 18% at 3% 20%, rgba(37, 99, 235, 0.12), transparent 60%),
+    radial-gradient(30% 24% at 88% 97%, rgba(16, 163, 74, 0.1), transparent 60%),
+    linear-gradient(180deg, #141218 0%, #0d0c11 100%);
+}
+.dark .bg-white,
+.dark .bg-white\/95,
+.dark .bg-white\/90 {
+  background-color: #1b1a21 !important;
+  color: #ececf0;
+}
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: #17161c !important;
+}
+.dark .bg-gray-900,
+.dark .bg-ink {
+  background-color: #0c0b0f !important;
+}
+.dark .text-ink {
+  color: #ececf0 !important;
+}
+.dark .text-gray-900 { color: #ececf0 !important; }
+.dark .text-gray-600 { color: #b7b7bf !important; }
+.dark .text-gray-500 { color: #9a9aa3 !important; }
+.dark .text-gray-400 { color: #82828b !important; }
+.dark .border-gray-200 { border-color: #2b2a33 !important; }
+.dark .border-gray-100 { border-color: #232229 !important; }
+.dark .input-field {
+  background-color: #1b1a21;
+  border-color: #2b2a33;
+  color: #ececf0;
+}
+.dark .card,
+.dark .shadow-sm,
+.dark .elevate {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+.dark .btn-ghost {
+  background-color: #1b1a21;
+  border-color: #2b2a33;
+  color: #ececf0;
+}
+.dark .glass {
+  background: rgba(22, 21, 27, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.dark .glass-nav {
+  background: rgba(16, 15, 20, 0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,135 @@
+import express from 'express';
+import 'express-async-errors'; // routes async errors to the central error handler instead of hanging requests
+import http from 'http';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+import { env } from './env';
+import { prisma } from './lib/prisma';
+import { initRealtime } from './lib/realtime';
+import { startReminderScheduler } from './lib/reminders';
+import { authRouter } from './routes/auth';
+import { oauthRouter } from './routes/oauth';
+import { meRouter } from './routes/me';
+import { contentRouter } from './routes/content';
+import { adminRouter } from './routes/admin';
+import { mediaRouter } from './routes/media';
+import { aiRouter } from './routes/ai';
+import { trackerRouter } from './routes/tracker';
+import { gamificationRouter } from './routes/gamification';
+import { pushRouter } from './routes/push';
+import { socialRouter } from './routes/social';
+import { chatRouter } from './routes/chat';
+import { musicRouter } from './routes/music';
+import { coachRouter } from './routes/coach';
+import { groupRouter } from './routes/group';
+import { reelsRouter } from './routes/reels';
+import { notificationsRouter } from './routes/notifications';
+import { duelsRouter } from './routes/duels';
+import { eventsRouter } from './routes/events';
+import { adminReelsRouter } from './routes/adminReels';
+import { storeRouter } from './routes/store';
+import { dailyRouter } from './routes/daily';
+import { boardRouter } from './routes/board';
+import { pathRouter } from './routes/path';
+import { mealsRouter } from './routes/meals';
+import { venuesRouter } from './routes/venues';
+import { supportRouter } from './routes/support';
+import { assessmentRouter } from './routes/assessment';
+import { localizeResponse } from './lib/localize';
+
+// Never let a stray async error kill the server.
+process.on('unhandledRejection', (reason) => console.error('unhandledRejection:', reason));
+process.on('uncaughtException', (err) => console.error('uncaughtException:', err));
+
+const app = express();
+// Behind IIS/ARR in production: trust the first proxy hop so req.ip is the real
+// client (correct per-user rate limiting) instead of everyone sharing the proxy IP.
+app.set('trust proxy', 1);
+
+app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));
+app.use(express.json({ limit: '2mb' }));
+app.use(cookieParser());
+
+app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
+
+// Rate limits: throttle credential stuffing and unbounded (billable) AI calls.
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 80, standardHeaders: true, legacyHeaders: false });
+const aiLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
+const eventsLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 150, standardHeaders: true, legacyHeaders: false });
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/ai', aiLimiter);
+app.use('/api/events', eventsLimiter);
+
+/**
+ * Localisation, once, before every router.
+ *
+ * This used to be attached to a few mounts and quietly relied on: `app.use('/api',
+ * localizeResponse, contentRouter)` patches res.json for ANY /api request passing
+ * through, and that patch leaked forward to every router mounted after it. Arabic on
+ * /api/assessment and /api/support worked only by that accident, so reordering these
+ * lines would have broken Arabic silently.
+ *
+ * Mounting it here makes order irrelevant. localize() is idempotent — it strips the
+ * *Ar keys on the first pass, so routers that also declare it are harmless — and
+ * /api/admin is skipped inside the middleware so editors still get raw rows.
+ */
+app.use('/api', localizeResponse);
+
+app.use('/api/auth', authRouter);
+app.use('/api/auth', oauthRouter);
+app.use('/api/me', meRouter);
+app.use('/api', contentRouter);
+app.use('/api/ai', aiRouter);
+app.use('/api/tracker', trackerRouter);
+app.use('/api/gamification', gamificationRouter);
+app.use('/api/push', pushRouter);
+app.use('/api/social', socialRouter);
+app.use('/api/chat', chatRouter);
+app.use('/api/music', musicRouter);
+app.use('/api/coach', coachRouter);
+app.use('/api/group', groupRouter);
+app.use('/api/reels', reelsRouter);
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/duels', duelsRouter);
+app.use('/api/events', eventsRouter);
+app.use('/api/store', storeRouter);
+app.use('/api/daily', dailyRouter);
+app.use('/api/board', boardRouter);
+app.use('/api/path', pathRouter);
+app.use('/api/meals', mealsRouter);
+app.use('/api/venues', venuesRouter);
+app.use('/api/support', supportRouter);
+app.use('/api/assessment', assessmentRouter);
+app.use('/api/admin/reels', adminReelsRouter);
+app.use('/api/admin', adminRouter);
+app.use('/media', mediaRouter);
+
+// Central error handler. 5xx details stay in the logs — clients get a generic
+// message (raw Prisma/internal messages leak schema details).
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err);
+  const status = err.status ?? 500;
+  const message = status < 500 ? (err.message ?? 'Request failed') : 'Something went wrong';
+  res.status(status).json({ error: message });
+});
+
+async function main() {
+  // Improve SQLite concurrency for a read-heavy content app.
+  try {
+    // journal_mode returns a row, so use queryRaw (executeRaw rejects results on SQLite).
+    await prisma.$queryRawUnsafe('PRAGMA journal_mode=WAL;');
+    await prisma.$queryRawUnsafe('PRAGMA busy_timeout=5000;');
+  } catch (e) {
+    console.warn('PRAGMA setup skipped:', e);
+  }
+  const server = http.createServer(app);
+  initRealtime(server, env.WEB_ORIGIN);
+  startReminderScheduler();
+  server.listen(env.PORT, () => {
+    console.log(`PULSE API + realtime running on http://localhost:${env.PORT}`);
+  });
+}
+
+main();

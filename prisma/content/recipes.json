@@ -1,0 +1,2290 @@
+{
+  "kind": "recipe",
+  "categories": [
+    {
+      "title": "Appetizers",
+      "recipes": [
+        {
+          "title": "Smoky Roasted Red Pepper Hummus",
+          "about": "Hummus traces back centuries across the Levant and remains one of the most reliable ways to turn humble chickpeas into a protein- and fiber-rich dip. Roasting the peppers deepens their natural sweetness and lends a gentle smokiness without any added fat. This version leans on tahini and lemon for creaminess while keeping the olive oil modest.",
+          "ingredients": [
+            "1 large red bell pepper",
+            "1 can (400 g / 14 oz) chickpeas, drained and rinsed",
+            "60 g / 1/4 cup tahini",
+            "2 tbsp fresh lemon juice",
+            "1 clove garlic, minced",
+            "1/2 tsp ground cumin",
+            "1/4 tsp smoked paprika",
+            "2 tbsp / 30 ml extra-virgin olive oil",
+            "3-4 tbsp cold water, as needed",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Char the red pepper directly over a gas flame or under a hot broiler, turning until the skin blackens on all sides, about 8-10 minutes.",
+            "Transfer the pepper to a bowl, cover, and let steam for 10 minutes, then peel away the skin and discard the seeds.",
+            "Add the chickpeas, tahini, lemon juice, garlic, cumin, and salt to a food processor.",
+            "Tear in the roasted pepper and blend until a coarse paste forms.",
+            "With the motor running, drizzle in the olive oil, then add cold water one tablespoon at a time until the hummus is smooth and light.",
+            "Taste and adjust salt and lemon to preference.",
+            "Scrape into a bowl, dust with smoked paprika, and add a small pour of olive oil on top.",
+            "Serve with vegetable sticks or warm whole-grain pita."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 10,
+          "servings": 6,
+          "calories": 165,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "plant-based"]
+        },
+        {
+          "title": "Baked Zucchini Fritters with Herbed Yogurt",
+          "about": "These pan-light fritters swap the usual deep-fry for a hot oven, cutting fat while keeping crisp edges. Grated zucchini is a low-calorie base that carries herbs and a little feta beautifully. Served with a cooling yogurt dip, they make a satisfying, high-protein starter.",
+          "ingredients": [
+            "2 medium zucchini (about 400 g / 14 oz), grated",
+            "1/2 tsp fine sea salt",
+            "2 large eggs, beaten",
+            "50 g / 1/2 cup whole-wheat breadcrumbs",
+            "40 g / 1/3 cup crumbled feta",
+            "2 tbsp chopped fresh dill",
+            "2 spring onions, finely sliced",
+            "150 g / 2/3 cup plain Greek yogurt",
+            "1 tsp lemon zest",
+            "1 tbsp / 15 ml olive oil for brushing"
+          ],
+          "steps": [
+            "Preheat the oven to 220 C / 425 F and line a baking tray with parchment.",
+            "Toss the grated zucchini with the salt and let it sit for 10 minutes, then squeeze out as much liquid as possible in a clean towel.",
+            "In a bowl, combine the drained zucchini, eggs, breadcrumbs, feta, half the dill, and the spring onions.",
+            "Scoop heaping tablespoons of the mixture onto the tray and flatten gently into rounds.",
+            "Brush the tops lightly with olive oil.",
+            "Bake for 18-20 minutes, flipping halfway, until golden and set.",
+            "Stir the remaining dill and lemon zest into the Greek yogurt with a pinch of salt.",
+            "Serve the warm fritters with the herbed yogurt on the side."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 20,
+          "servings": 4,
+          "calories": 190,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "high-protein", "low-carb"]
+        },
+        {
+          "title": "Spiced Chickpea and Sweet Potato Bites",
+          "about": "Inspired by falafel but baked instead of fried, these bites blend chickpeas with roasted sweet potato for natural sweetness and a tender interior. They deliver plant protein, complex carbs, and warming spices in a single two-bite package. Great warm or at room temperature for sharing.",
+          "ingredients": [
+            "250 g / 9 oz sweet potato, peeled and cubed",
+            "1 can (400 g / 14 oz) chickpeas, drained and rinsed",
+            "2 tbsp chickpea flour",
+            "2 cloves garlic, minced",
+            "1 tsp ground coriander",
+            "1 tsp ground cumin",
+            "1/2 tsp smoked paprika",
+            "3 tbsp chopped fresh parsley",
+            "1 tbsp / 15 ml olive oil",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F and line a tray with parchment.",
+            "Steam or boil the sweet potato until fork-tender, about 12 minutes, then drain well.",
+            "Pulse the chickpeas in a food processor until coarsely chopped, not pureed.",
+            "Add the sweet potato, chickpea flour, garlic, spices, parsley, and salt, then pulse to combine into a scoopable mixture.",
+            "Roll tablespoon-sized portions into balls and place on the tray.",
+            "Brush or spray lightly with olive oil.",
+            "Bake for 22-25 minutes, turning once, until golden and firm on the outside.",
+            "Cool slightly and serve with a lemon-tahini drizzle or plain yogurt."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 25,
+          "servings": 5,
+          "calories": 175,
+          "difficulty": "Medium",
+          "tags": ["vegan", "high-fiber", "plant-based"]
+        },
+        {
+          "title": "Cucumber Cups with Whipped Feta",
+          "about": "A fresh, no-cook appetizer that uses crisp cucumber as an edible vessel, keeping things light and hydrating. Whipped feta blended with yogurt turns tangy cheese into an airy, protein-forward filling. It comes together in minutes and looks far more elegant than the effort suggests.",
+          "ingredients": [
+            "2 large cucumbers",
+            "120 g / 4 oz feta cheese",
+            "80 g / 1/3 cup plain Greek yogurt",
+            "1 tsp lemon juice",
+            "1 tbsp / 15 ml olive oil",
+            "10 g / 2 tbsp chopped fresh mint",
+            "1 tbsp toasted pine nuts",
+            "1/4 tsp cracked black pepper"
+          ],
+          "steps": [
+            "Slice the cucumbers into 3 cm / 1.25 in thick rounds.",
+            "Using a small spoon or melon baller, scoop a shallow well into the top of each round, leaving the base intact.",
+            "Blend the feta, yogurt, lemon juice, and olive oil until smooth and fluffy.",
+            "Spoon or pipe the whipped feta into each cucumber cup.",
+            "Top each with a few pine nuts and a little chopped mint.",
+            "Finish with a crack of black pepper.",
+            "Chill for 10 minutes before serving for the crispest texture."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 0,
+          "servings": 4,
+          "calories": 140,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "low-carb", "gluten-free", "no-cook"]
+        },
+        {
+          "title": "Edamame and Avocado Smash Toasts",
+          "about": "This vibrant green smash pairs edamame, one of the few complete plant proteins, with creamy avocado for healthy monounsaturated fats. On crunchy whole-grain toast it becomes a filling, fiber-rich starter. A squeeze of lime and chili flakes keep it bright and lively.",
+          "ingredients": [
+            "150 g / 1 cup shelled edamame, cooked",
+            "1 ripe avocado",
+            "1 tbsp lime juice",
+            "1 tbsp chopped fresh cilantro",
+            "1/4 tsp chili flakes",
+            "4 slices whole-grain bread",
+            "1 tsp / 5 ml olive oil",
+            "1/4 tsp flaky salt",
+            "1 tbsp toasted sesame seeds"
+          ],
+          "steps": [
+            "Roughly mash the cooked edamame with a fork or pulse briefly in a food processor for a chunky texture.",
+            "Halve the avocado and add its flesh to the edamame with the lime juice.",
+            "Mash together, keeping some texture, then fold in the cilantro and chili flakes.",
+            "Season with flaky salt to taste.",
+            "Toast the bread until crisp and brush lightly with olive oil.",
+            "Spread the smash generously over each slice.",
+            "Sprinkle with toasted sesame seeds and serve immediately."
+          ],
+          "prepTimeMin": 12,
+          "cookTimeMin": 3,
+          "servings": 4,
+          "calories": 210,
+          "difficulty": "Easy",
+          "tags": ["vegan", "high-fiber", "plant-based", "high-protein"]
+        },
+        {
+          "title": "Stuffed Mini Peppers with Herbed Ricotta",
+          "about": "Sweet mini peppers are naturally low in calories and high in vitamin C, making them a perfect little cup for a creamy filling. Part-skim ricotta whipped with herbs keeps the protein up and the fat down. Roasting concentrates the peppers' sweetness for a warm, colorful bite.",
+          "ingredients": [
+            "12 mini sweet peppers",
+            "250 g / 1 cup part-skim ricotta",
+            "1 clove garlic, grated",
+            "2 tbsp chopped fresh basil",
+            "1 tbsp chopped fresh chives",
+            "1 tsp lemon zest",
+            "1 tbsp / 15 ml olive oil",
+            "1/4 tsp fine sea salt",
+            "1/4 tsp black pepper"
+          ],
+          "steps": [
+            "Preheat the oven to 190 C / 375 F.",
+            "Slice each mini pepper in half lengthwise and remove the seeds and membranes.",
+            "In a bowl, stir together the ricotta, garlic, basil, chives, lemon zest, salt, and pepper.",
+            "Spoon or pipe the herbed ricotta into each pepper half.",
+            "Arrange on a baking tray and drizzle lightly with olive oil.",
+            "Roast for 12-14 minutes until the peppers soften and the filling is warmed through.",
+            "Finish with an extra pinch of chives and serve warm."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 14,
+          "servings": 6,
+          "calories": 110,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "gluten-free", "low-carb"]
+        }
+      ]
+    },
+    {
+      "title": "Soups",
+      "recipes": [
+        {
+          "title": "Golden Lentil and Turmeric Soup",
+          "about": "Red lentils cook quickly and dissolve into a naturally thick, velvety soup without any cream. Turmeric and ginger add anti-inflammatory warmth while the lentils supply plant protein and fiber. This is a budget-friendly, one-pot meal that keeps and reheats beautifully.",
+          "ingredients": [
+            "200 g / 1 cup dried red lentils, rinsed",
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, diced",
+            "2 cloves garlic, minced",
+            "1 tbsp grated fresh ginger",
+            "1 tsp ground turmeric",
+            "1 tsp ground cumin",
+            "1 L / 4 cups low-sodium vegetable stock",
+            "1 can (400 ml / 13.5 oz) light coconut milk",
+            "1 tbsp lemon juice",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Warm the olive oil in a large pot over medium heat and soften the onion for 5 minutes.",
+            "Add the garlic, ginger, turmeric, and cumin, and stir for 1 minute until fragrant.",
+            "Add the rinsed lentils and stir to coat in the spices.",
+            "Pour in the vegetable stock and bring to a boil.",
+            "Reduce to a simmer and cook for 18-20 minutes until the lentils break down.",
+            "Stir in the coconut milk and warm through for 3 minutes.",
+            "Blend partially with an immersion blender for a creamy-yet-textured finish, if desired.",
+            "Stir in the lemon juice and salt, then serve hot."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 30,
+          "servings": 4,
+          "calories": 320,
+          "difficulty": "Easy",
+          "tags": ["vegan", "high-fiber", "gluten-free", "plant-based"]
+        },
+        {
+          "title": "Roasted Tomato and White Bean Soup",
+          "about": "Roasting the tomatoes first draws out sweetness and a light caramelized depth you can't get from the can alone. Blended white beans add body and protein so no cream is needed. It's a comforting bowl that stays light and heart-healthy.",
+          "ingredients": [
+            "800 g / 1.75 lb ripe tomatoes, halved",
+            "1 onion, quartered",
+            "3 cloves garlic, unpeeled",
+            "2 tbsp / 30 ml olive oil",
+            "1 can (400 g / 14 oz) cannellini beans, drained",
+            "500 ml / 2 cups low-sodium vegetable stock",
+            "1 tsp dried oregano",
+            "1/2 tsp fine sea salt",
+            "1/4 tsp black pepper",
+            "2 tbsp chopped fresh basil"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F.",
+            "Toss the tomatoes, onion, and garlic with the olive oil, salt, and pepper on a baking tray.",
+            "Roast for 30 minutes until soft and lightly charred at the edges.",
+            "Squeeze the roasted garlic from its skins and scrape everything into a pot.",
+            "Add the drained beans, stock, and oregano, then bring to a simmer.",
+            "Simmer for 10 minutes to marry the flavors.",
+            "Blend until smooth with an immersion blender, adding a splash more stock if too thick.",
+            "Stir in the fresh basil and serve warm."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 40,
+          "servings": 4,
+          "calories": 240,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "plant-based"]
+        },
+        {
+          "title": "Ginger Chicken and Bok Choy Broth",
+          "about": "A clean, restorative broth built on lean chicken and plenty of aromatics, this soup is low in calories but rich in flavor. Bok choy adds crunch and vitamins A and C, while ginger and garlic bring warmth. It's the kind of light meal that feels nourishing without weighing you down.",
+          "ingredients": [
+            "300 g / 10.5 oz skinless chicken breast",
+            "1.2 L / 5 cups low-sodium chicken stock",
+            "1 tbsp grated fresh ginger",
+            "2 cloves garlic, sliced",
+            "1 tbsp low-sodium soy sauce",
+            "2 heads baby bok choy, quartered",
+            "100 g / 3.5 oz shiitake mushrooms, sliced",
+            "2 spring onions, sliced",
+            "1 tsp toasted sesame oil",
+            "1/2 red chili, thinly sliced (optional)"
+          ],
+          "steps": [
+            "Bring the chicken stock, ginger, and garlic to a gentle simmer in a large pot.",
+            "Add the whole chicken breast and poach gently for 15 minutes until cooked through.",
+            "Remove the chicken, let it rest briefly, then shred with two forks.",
+            "Add the mushrooms and soy sauce to the broth and simmer for 4 minutes.",
+            "Add the bok choy and cook for 2-3 minutes until just tender but still green.",
+            "Return the shredded chicken to the pot to warm through.",
+            "Finish with sesame oil and taste for seasoning.",
+            "Ladle into bowls and top with spring onions and chili."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 25,
+          "servings": 4,
+          "calories": 210,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "low-carb", "dairy-free"]
+        },
+        {
+          "title": "Creamy Roasted Cauliflower Soup",
+          "about": "Roasting cauliflower before blending gives this soup a nutty, deep flavor while keeping it naturally low-carb. A modest amount of olive oil and stock create a silky texture without heavy cream. It's a cozy, gut-friendly bowl loaded with fiber and vitamin C.",
+          "ingredients": [
+            "1 large cauliflower (about 800 g / 1.75 lb), cut into florets",
+            "1 onion, diced",
+            "3 cloves garlic",
+            "2 tbsp / 30 ml olive oil",
+            "900 ml / 3.75 cups low-sodium vegetable stock",
+            "1/2 tsp ground nutmeg",
+            "1/2 tsp fine sea salt",
+            "1/4 tsp black pepper",
+            "2 tbsp chopped fresh chives"
+          ],
+          "steps": [
+            "Preheat the oven to 210 C / 410 F.",
+            "Toss the cauliflower florets and whole garlic cloves with 1 tbsp olive oil, salt, and pepper.",
+            "Roast for 25 minutes until deeply golden at the edges.",
+            "Meanwhile, soften the onion in the remaining oil in a pot over medium heat for 6 minutes.",
+            "Add the roasted cauliflower and garlic to the pot with the stock and nutmeg.",
+            "Simmer for 10 minutes to combine the flavors.",
+            "Blend until completely smooth, adding stock to reach your preferred consistency.",
+            "Adjust seasoning, ladle into bowls, and top with chives."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 40,
+          "servings": 4,
+          "calories": 180,
+          "difficulty": "Easy",
+          "tags": ["vegan", "low-carb", "gluten-free", "plant-based"]
+        },
+        {
+          "title": "Hearty Barley and Vegetable Soup",
+          "about": "Pearl barley gives this soup a satisfying chew and a steady release of energy thanks to its high soluble fiber. Packed with vegetables and herbs, it's a wholesome one-pot meal that fills you up on modest calories. A splash of vinegar at the end brightens the whole pot.",
+          "ingredients": [
+            "150 g / 3/4 cup pearl barley, rinsed",
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, diced",
+            "2 carrots, diced",
+            "2 celery stalks, diced",
+            "200 g / 7 oz mushrooms, sliced",
+            "2 cloves garlic, minced",
+            "1.2 L / 5 cups low-sodium vegetable stock",
+            "1 tsp dried thyme",
+            "1 tbsp red wine vinegar",
+            "2 tbsp chopped fresh parsley"
+          ],
+          "steps": [
+            "Heat the olive oil in a large pot and cook the onion, carrots, and celery for 7 minutes.",
+            "Add the mushrooms and garlic and cook for another 4 minutes until softened.",
+            "Stir in the barley and thyme to coat.",
+            "Pour in the stock and bring to a boil.",
+            "Reduce the heat and simmer, partly covered, for 35-40 minutes until the barley is tender.",
+            "Add a little more stock or water if the soup thickens too much.",
+            "Stir in the red wine vinegar and parsley off the heat.",
+            "Season to taste and serve hot."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 45,
+          "servings": 5,
+          "calories": 220,
+          "difficulty": "Easy",
+          "tags": ["vegan", "high-fiber", "plant-based"]
+        },
+        {
+          "title": "Spicy Black Bean and Corn Soup",
+          "about": "This Tex-Mex-inspired soup delivers a hearty dose of plant protein and fiber from black beans while staying quick to make. Charred corn and smoky chipotle bring layers of flavor without much fat. Top it with avocado and lime for a fresh, balanced bowl.",
+          "ingredients": [
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, diced",
+            "1 red bell pepper, diced",
+            "2 cloves garlic, minced",
+            "1 tsp ground cumin",
+            "1 tsp smoked paprika",
+            "1/2 tsp chipotle powder",
+            "2 cans (800 g / 28 oz total) black beans, drained",
+            "150 g / 1 cup corn kernels",
+            "700 ml / 3 cups low-sodium vegetable stock",
+            "1 lime, juiced",
+            "1/2 avocado, diced, to serve"
+          ],
+          "steps": [
+            "Warm the olive oil in a pot and cook the onion and bell pepper for 6 minutes.",
+            "Add the garlic, cumin, paprika, and chipotle powder and stir for 1 minute.",
+            "Add the corn and let it char lightly against the hot pan for 3 minutes.",
+            "Stir in the black beans and stock and bring to a simmer.",
+            "Simmer for 15 minutes to develop flavor.",
+            "Blend about a third of the soup and return it to the pot for a thicker body.",
+            "Stir in the lime juice and season to taste.",
+            "Serve topped with diced avocado."
+          ],
+          "prepTimeMin": 12,
+          "cookTimeMin": 25,
+          "servings": 4,
+          "calories": 300,
+          "difficulty": "Easy",
+          "tags": ["vegan", "high-fiber", "gluten-free", "high-protein"]
+        }
+      ]
+    },
+    {
+      "title": "Breads",
+      "recipes": [
+        {
+          "title": "Whole-Wheat Seeded Sandwich Loaf",
+          "about": "A soft everyday loaf made entirely with whole-wheat flour, delivering more fiber and minerals than white bread. A blend of seeds adds healthy fats, crunch, and staying power. It slices cleanly for sandwiches and toasts wonderfully.",
+          "ingredients": [
+            "400 g / 3 cups whole-wheat flour",
+            "7 g / 2.25 tsp instant yeast",
+            "1 tsp fine sea salt",
+            "1 tbsp honey",
+            "1 tbsp / 15 ml olive oil",
+            "280 ml / 1.25 cups warm water",
+            "2 tbsp sunflower seeds",
+            "2 tbsp pumpkin seeds",
+            "1 tbsp flax seeds"
+          ],
+          "steps": [
+            "In a large bowl, whisk together the flour, yeast, and salt.",
+            "Stir the honey and olive oil into the warm water until dissolved.",
+            "Pour the liquid into the flour and mix to a shaggy dough, then knead 8-10 minutes until smooth and elastic.",
+            "Knead in most of the seeds, reserving a spoonful for the top.",
+            "Cover and let rise in a warm spot for about 1 hour until doubled.",
+            "Punch down, shape into a loaf, and place in a greased 900 g / 2 lb loaf tin.",
+            "Scatter the reserved seeds on top, cover, and prove for 40 minutes.",
+            "Bake at 200 C / 400 F for 30-35 minutes until the loaf sounds hollow when tapped.",
+            "Cool completely on a rack before slicing."
+          ],
+          "prepTimeMin": 25,
+          "cookTimeMin": 35,
+          "servings": 12,
+          "calories": 165,
+          "difficulty": "Medium",
+          "tags": ["vegetarian", "high-fiber", "whole-grain"]
+        },
+        {
+          "title": "Oat and Banana Breakfast Bread",
+          "about": "This tender quick bread relies on ripe bananas for natural sweetness, cutting back on added sugar. Oats and whole-wheat flour boost fiber and give a hearty, moist crumb. It's a wholesome grab-and-go breakfast or snack that freezes well.",
+          "ingredients": [
+            "3 very ripe bananas, mashed",
+            "100 g / 1 cup rolled oats",
+            "150 g / 1.25 cups whole-wheat flour",
+            "2 large eggs",
+            "60 ml / 1/4 cup plain yogurt",
+            "3 tbsp honey or maple syrup",
+            "1 tsp baking soda",
+            "1 tsp ground cinnamon",
+            "2 tbsp / 30 ml light olive oil",
+            "1/4 tsp fine sea salt"
+          ],
+          "steps": [
+            "Preheat the oven to 180 C / 350 F and line a loaf tin with parchment.",
+            "In a bowl, mash the bananas until mostly smooth.",
+            "Whisk in the eggs, yogurt, honey, and olive oil.",
+            "In a separate bowl, combine the oats, flour, baking soda, cinnamon, and salt.",
+            "Fold the dry ingredients into the wet just until no streaks remain.",
+            "Pour the batter into the prepared tin and level the top.",
+            "Bake for 45-50 minutes until a skewer inserted in the center comes out clean.",
+            "Cool in the tin for 10 minutes, then transfer to a rack."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 50,
+          "servings": 10,
+          "calories": 195,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "high-fiber", "whole-grain"]
+        },
+        {
+          "title": "No-Knead Whole-Grain Focaccia",
+          "about": "This forgiving overnight dough delivers airy, dimpled focaccia with minimal effort and no kneading. Using part whole-wheat flour adds fiber and a nuttier taste. A light hand with the olive oil keeps it flavorful without being greasy.",
+          "ingredients": [
+            "250 g / 2 cups bread flour",
+            "150 g / 1.25 cups whole-wheat flour",
+            "7 g / 2.25 tsp instant yeast",
+            "1.5 tsp fine sea salt",
+            "320 ml / 1.33 cups warm water",
+            "3 tbsp / 45 ml extra-virgin olive oil",
+            "1 tsp flaky salt",
+            "1 tbsp fresh rosemary leaves"
+          ],
+          "steps": [
+            "Whisk the flours, yeast, and fine salt in a large bowl.",
+            "Add the warm water and 1 tbsp olive oil, then stir with a spatula until a sticky dough forms.",
+            "Cover and refrigerate for at least 8 hours or overnight to develop flavor.",
+            "Drizzle 1 tbsp oil into a baking pan and scrape in the dough, folding it over itself a few times.",
+            "Let it rise at room temperature for 1.5-2 hours until puffy.",
+            "Dimple the surface all over with oiled fingertips and drizzle with the remaining oil.",
+            "Scatter with rosemary and flaky salt.",
+            "Bake at 220 C / 425 F for 22-25 minutes until golden, then cool briefly before cutting."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 25,
+          "servings": 9,
+          "calories": 185,
+          "difficulty": "Medium",
+          "tags": ["vegan", "whole-grain", "plant-based"]
+        },
+        {
+          "title": "Spelt and Yogurt Flatbreads",
+          "about": "These quick stovetop flatbreads use spelt, an ancient grain that's easier to digest for many and rich in protein. Yogurt makes them soft and pliable without yeast or long rising times. They're perfect for wrapping, dipping, or serving alongside soups.",
+          "ingredients": [
+            "250 g / 2 cups spelt flour",
+            "200 g / 3/4 cup plain Greek yogurt",
+            "1 tsp baking powder",
+            "1/2 tsp fine sea salt",
+            "1 tbsp / 15 ml olive oil",
+            "2-3 tbsp water, if needed"
+          ],
+          "steps": [
+            "In a bowl, combine the spelt flour, baking powder, and salt.",
+            "Add the yogurt and olive oil and mix until a rough dough forms.",
+            "Knead briefly in the bowl, adding water only if the dough is too dry.",
+            "Divide into 6 pieces and roll each into a thin oval on a floured surface.",
+            "Heat a dry non-stick or cast-iron pan over medium-high heat.",
+            "Cook each flatbread for 1-2 minutes per side until puffed and speckled with brown spots.",
+            "Keep warm under a towel while you cook the rest.",
+            "Serve fresh and warm."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 15,
+          "servings": 6,
+          "calories": 175,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "quick", "whole-grain"]
+        },
+        {
+          "title": "Rye and Caraway Soda Bread",
+          "about": "This traditional Irish-style soda bread skips yeast entirely, relying on baking soda and buttermilk for a quick rise. Rye flour brings a dense, hearty texture and deep flavor, while caraway seeds add a classic aromatic note. It's ready start to finish in under an hour.",
+          "ingredients": [
+            "200 g / 1.5 cups rye flour",
+            "150 g / 1.25 cups whole-wheat flour",
+            "1 tsp baking soda",
+            "1 tsp fine sea salt",
+            "1 tbsp caraway seeds",
+            "300 ml / 1.25 cups buttermilk",
+            "1 tbsp honey"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F and line a tray with parchment.",
+            "Whisk together the rye flour, whole-wheat flour, baking soda, salt, and caraway seeds.",
+            "Stir the honey into the buttermilk until dissolved.",
+            "Pour the buttermilk into the dry ingredients and mix quickly with a spoon into a soft, sticky dough.",
+            "Turn out onto a floured surface and shape gently into a round, handling as little as possible.",
+            "Place on the tray and cut a deep cross into the top.",
+            "Bake for 35-40 minutes until the loaf sounds hollow when tapped underneath.",
+            "Cool on a rack and eat the same day for best texture."
+          ],
+          "prepTimeMin": 12,
+          "cookTimeMin": 40,
+          "servings": 10,
+          "calories": 150,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "high-fiber", "whole-grain"]
+        },
+        {
+          "title": "Sweet Potato Dinner Rolls",
+          "about": "Mashed sweet potato lends these soft rolls natural moisture, color, and a boost of vitamin A. The result is a pillowy roll with a subtle sweetness and less need for added fat. They pair well with soups and stews or hold up as mini sandwich buns.",
+          "ingredients": [
+            "200 g / 3/4 cup mashed cooked sweet potato",
+            "350 g / 2.75 cups whole-wheat bread flour",
+            "7 g / 2.25 tsp instant yeast",
+            "1 tsp fine sea salt",
+            "120 ml / 1/2 cup warm milk",
+            "1 tbsp honey",
+            "2 tbsp / 30 ml olive oil",
+            "1 egg, beaten, for glazing"
+          ],
+          "steps": [
+            "Combine the flour, yeast, and salt in a large bowl.",
+            "In another bowl, mix the mashed sweet potato, warm milk, honey, and olive oil.",
+            "Add the wet mixture to the flour and stir into a dough, then knead 8 minutes until smooth.",
+            "Cover and let rise for about 1 hour until doubled in size.",
+            "Divide into 10 equal pieces and shape each into a ball.",
+            "Arrange on a lined tray, cover, and prove for 30 minutes.",
+            "Brush with beaten egg and bake at 190 C / 375 F for 18-20 minutes until golden.",
+            "Cool slightly and serve warm."
+          ],
+          "prepTimeMin": 25,
+          "cookTimeMin": 20,
+          "servings": 10,
+          "calories": 175,
+          "difficulty": "Medium",
+          "tags": ["vegetarian", "whole-grain"]
+        }
+      ]
+    },
+    {
+      "title": "Vegetarian Salads",
+      "recipes": [
+        {
+          "title": "Quinoa Tabbouleh with Herbs",
+          "about": "A protein-packed twist on the Levantine classic, this tabbouleh swaps bulgur for quinoa to make it gluten-free and higher in complete protein. Loaded with parsley, mint, and lemon, it's refreshing and rich in antioxidants. It gets better as it sits, making it ideal for meal prep.",
+          "ingredients": [
+            "150 g / 3/4 cup quinoa, rinsed",
+            "300 ml / 1.25 cups water",
+            "60 g / 1.5 cups chopped fresh parsley",
+            "20 g / 1/2 cup chopped fresh mint",
+            "250 g / 1.5 cups cherry tomatoes, diced",
+            "1/2 cucumber, diced",
+            "3 spring onions, sliced",
+            "3 tbsp / 45 ml extra-virgin olive oil",
+            "3 tbsp lemon juice",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Bring the quinoa and water to a boil, then simmer covered for 15 minutes until the water is absorbed.",
+            "Fluff the quinoa with a fork and spread on a tray to cool completely.",
+            "Finely chop the parsley and mint and add to a large bowl.",
+            "Add the tomatoes, cucumber, and spring onions.",
+            "Whisk together the olive oil, lemon juice, and salt.",
+            "Fold the cooled quinoa into the herbs and vegetables.",
+            "Pour over the dressing and toss well.",
+            "Rest for 15 minutes before serving to let the flavors mingle."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 15,
+          "servings": 4,
+          "calories": 230,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "plant-based"]
+        },
+        {
+          "title": "Roasted Beet and Lentil Salad",
+          "about": "Earthy roasted beets pair with protein-rich green lentils for a satisfying, iron-boosting salad. A tangy mustard dressing cuts through the sweetness of the beets, while walnuts add crunch and healthy fats. It works as a hearty side or a light plant-based main.",
+          "ingredients": [
+            "3 medium beets, peeled and cubed",
+            "150 g / 3/4 cup dried green lentils",
+            "2 tbsp / 30 ml olive oil",
+            "1 tbsp balsamic vinegar",
+            "1 tsp Dijon mustard",
+            "60 g / 1/2 cup walnuts, toasted",
+            "50 g / 1.5 cups arugula",
+            "40 g / 1/3 cup crumbled goat cheese",
+            "1/2 tsp fine sea salt",
+            "1/4 tsp black pepper"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F.",
+            "Toss the beet cubes with 1 tbsp olive oil and a pinch of salt, then roast for 30 minutes until tender.",
+            "Meanwhile, simmer the lentils in plenty of water for 20-25 minutes until just tender, then drain.",
+            "Whisk the remaining olive oil with the balsamic vinegar, mustard, salt, and pepper.",
+            "Toss the warm lentils with half the dressing.",
+            "Arrange the arugula on a platter and scatter over the lentils and roasted beets.",
+            "Drizzle with the remaining dressing.",
+            "Top with toasted walnuts and crumbled goat cheese to serve."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 30,
+          "servings": 4,
+          "calories": 320,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "high-fiber", "gluten-free"]
+        },
+        {
+          "title": "Chickpea and Avocado Power Salad",
+          "about": "This no-cook salad combines fiber-rich chickpeas with creamy avocado for a filling meal that keeps you satisfied for hours. Crisp vegetables and a zesty lime dressing keep it bright and fresh. It's an ideal make-ahead lunch that travels well.",
+          "ingredients": [
+            "1 can (400 g / 14 oz) chickpeas, drained and rinsed",
+            "1 ripe avocado, diced",
+            "150 g / 1 cup cherry tomatoes, halved",
+            "1/2 red onion, finely diced",
+            "1/2 cucumber, diced",
+            "3 tbsp chopped fresh cilantro",
+            "3 tbsp lime juice",
+            "2 tbsp / 30 ml olive oil",
+            "1/2 tsp ground cumin",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Place the drained chickpeas in a large bowl.",
+            "Add the cherry tomatoes, red onion, and cucumber.",
+            "Whisk together the lime juice, olive oil, cumin, and salt.",
+            "Pour the dressing over the chickpeas and vegetables and toss to combine.",
+            "Gently fold in the diced avocado to keep it from breaking up.",
+            "Stir through the fresh cilantro.",
+            "Taste and adjust the seasoning.",
+            "Serve immediately or chill for up to a day."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 0,
+          "servings": 4,
+          "calories": 285,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "no-cook"]
+        },
+        {
+          "title": "Kale and Apple Crunch Salad",
+          "about": "Massaging kale softens its texture and mellows its bitterness, making this hearty green far more enjoyable raw. Crisp apple and toasted almonds add sweetness and crunch, while the leaves supply vitamins K, A, and C. A lemon-tahini dressing ties it all together.",
+          "ingredients": [
+            "200 g / 5 cups curly kale, stems removed",
+            "1 tbsp lemon juice",
+            "1 crisp apple, thinly sliced",
+            "40 g / 1/3 cup toasted almonds, chopped",
+            "30 g / 3 tbsp dried cranberries",
+            "2 tbsp tahini",
+            "2 tbsp water",
+            "1 tsp maple syrup",
+            "1 tbsp / 15 ml olive oil",
+            "1/4 tsp fine sea salt"
+          ],
+          "steps": [
+            "Tear the kale into bite-sized pieces and place in a large bowl.",
+            "Add the lemon juice, olive oil, and salt, then massage the kale with your hands for 2 minutes until softened and darker green.",
+            "Whisk the tahini with the water and maple syrup until pourable, adding more water if needed.",
+            "Add the sliced apple and dried cranberries to the kale.",
+            "Drizzle over the tahini dressing and toss well.",
+            "Scatter the toasted almonds on top.",
+            "Serve right away for the best crunch."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 0,
+          "servings": 4,
+          "calories": 240,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "no-cook"]
+        },
+        {
+          "title": "Mediterranean Farro Salad",
+          "about": "Farro is a chewy ancient wheat grain that brings fiber, protein, and a satisfying bite to this Mediterranean-inspired bowl. Olives, tomatoes, and herbs give it bright, sun-soaked flavor. It holds up beautifully overnight, making it great for packed lunches.",
+          "ingredients": [
+            "180 g / 1 cup pearled farro",
+            "150 g / 1 cup cherry tomatoes, halved",
+            "80 g / 1/2 cup Kalamata olives, pitted",
+            "1/2 red onion, thinly sliced",
+            "50 g / 1/3 cup diced cucumber",
+            "60 g / 1/2 cup crumbled feta",
+            "3 tbsp chopped fresh parsley",
+            "3 tbsp / 45 ml extra-virgin olive oil",
+            "2 tbsp red wine vinegar",
+            "1/2 tsp dried oregano"
+          ],
+          "steps": [
+            "Cook the farro in plenty of salted water for about 25 minutes until tender but chewy, then drain.",
+            "Spread the farro on a tray to cool to room temperature.",
+            "In a large bowl, combine the tomatoes, olives, red onion, and cucumber.",
+            "Whisk together the olive oil, red wine vinegar, and oregano.",
+            "Add the cooled farro to the vegetables.",
+            "Pour over the dressing and toss to coat.",
+            "Fold in the parsley and feta.",
+            "Season to taste and serve, or chill until needed."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 25,
+          "servings": 4,
+          "calories": 310,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "high-fiber", "whole-grain"]
+        },
+        {
+          "title": "Shaved Fennel and Orange Salad",
+          "about": "Crisp, anise-scented fennel meets juicy orange segments in this light, palate-cleansing salad. Both ingredients are rich in vitamin C and fiber, and the combination is naturally low in calories. A simple citrus-olive oil dressing lets the fresh flavors shine.",
+          "ingredients": [
+            "2 fennel bulbs, trimmed",
+            "2 oranges",
+            "50 g / 1.5 cups mixed salad greens",
+            "2 tbsp / 30 ml extra-virgin olive oil",
+            "1 tbsp lemon juice",
+            "20 g / 3 tbsp toasted pistachios, chopped",
+            "1/4 tsp flaky salt",
+            "1/4 tsp black pepper"
+          ],
+          "steps": [
+            "Shave the fennel bulbs very thinly using a mandoline or sharp knife.",
+            "Place the shaved fennel in ice water for 5 minutes to crisp, then drain and pat dry.",
+            "Segment the oranges over a bowl, catching any juice.",
+            "Whisk the caught orange juice with the olive oil, lemon juice, salt, and pepper.",
+            "Arrange the salad greens on a platter and top with the fennel and orange segments.",
+            "Drizzle the dressing over the salad.",
+            "Scatter with toasted pistachios and serve immediately."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 0,
+          "servings": 4,
+          "calories": 160,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "low-calorie", "no-cook"]
+        }
+      ]
+    },
+    {
+      "title": "Meatless Main Dishes",
+      "recipes": [
+        {
+          "title": "Chickpea and Spinach Coconut Curry",
+          "about": "This creamy, fragrant curry gets its protein and fiber from chickpeas and its richness from light coconut milk. Spinach wilts in at the end for a boost of iron and folate. It's a comforting, budget-friendly dinner that comes together in one pot.",
+          "ingredients": [
+            "1 tbsp / 15 ml coconut oil",
+            "1 onion, diced",
+            "3 cloves garlic, minced",
+            "1 tbsp grated fresh ginger",
+            "2 tbsp curry powder",
+            "1 can (400 g / 14 oz) chopped tomatoes",
+            "2 cans (800 g / 28 oz total) chickpeas, drained",
+            "1 can (400 ml / 13.5 oz) light coconut milk",
+            "150 g / 5 cups fresh spinach",
+            "1 lime, juiced",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Heat the coconut oil in a large pan and soften the onion for 5 minutes.",
+            "Add the garlic, ginger, and curry powder and stir for 1 minute until aromatic.",
+            "Pour in the chopped tomatoes and cook for 5 minutes until slightly reduced.",
+            "Add the chickpeas and coconut milk and bring to a gentle simmer.",
+            "Simmer for 12-15 minutes to thicken and develop flavor.",
+            "Stir in the spinach a handful at a time until wilted.",
+            "Add the lime juice and salt, then taste and adjust.",
+            "Serve over brown rice or with whole-grain flatbread."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 30,
+          "servings": 4,
+          "calories": 380,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "high-protein"]
+        },
+        {
+          "title": "Stuffed Bell Peppers with Quinoa and Beans",
+          "about": "These colorful stuffed peppers pack a complete protein punch from the quinoa and black bean filling. Baked until tender, the peppers turn sweet and juicy while the filling stays hearty. It's a wholesome, satisfying main that reheats well for leftovers.",
+          "ingredients": [
+            "4 large bell peppers",
+            "150 g / 3/4 cup quinoa, rinsed",
+            "1 can (400 g / 14 oz) black beans, drained",
+            "150 g / 1 cup corn kernels",
+            "1 tsp ground cumin",
+            "1 tsp smoked paprika",
+            "200 g / 3/4 cup tomato passata",
+            "60 g / 1/2 cup grated part-skim mozzarella",
+            "2 tbsp chopped fresh cilantro",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Preheat the oven to 190 C / 375 F.",
+            "Cook the quinoa in 300 ml water for 15 minutes until fluffy.",
+            "Slice the tops off the peppers and remove the seeds, then stand them upright in a baking dish.",
+            "Combine the cooked quinoa, black beans, corn, cumin, paprika, half the passata, and salt.",
+            "Spoon the filling into each pepper, packing gently.",
+            "Pour the remaining passata around the peppers and cover the dish with foil.",
+            "Bake for 30 minutes, then uncover, top with mozzarella, and bake 10 minutes more.",
+            "Garnish with cilantro and serve warm."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 40,
+          "servings": 4,
+          "calories": 340,
+          "difficulty": "Medium",
+          "tags": ["vegetarian", "high-fiber", "gluten-free", "high-protein"]
+        },
+        {
+          "title": "Mushroom and Lentil Bolognese",
+          "about": "This meat-free take on the Italian classic uses lentils and finely chopped mushrooms to mimic the texture and savory depth of a traditional ragu. It's high in fiber and plant protein while low in saturated fat. Served over whole-grain pasta, it's comfort food you can feel good about.",
+          "ingredients": [
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, finely diced",
+            "2 carrots, finely diced",
+            "300 g / 10.5 oz mushrooms, finely chopped",
+            "3 cloves garlic, minced",
+            "150 g / 3/4 cup dried brown lentils",
+            "1 can (400 g / 14 oz) chopped tomatoes",
+            "2 tbsp tomato paste",
+            "500 ml / 2 cups low-sodium vegetable stock",
+            "1 tsp dried oregano",
+            "300 g / 10.5 oz whole-grain pasta"
+          ],
+          "steps": [
+            "Heat the olive oil in a large pan and cook the onion and carrots for 6 minutes.",
+            "Add the mushrooms and cook until their liquid evaporates and they brown, about 8 minutes.",
+            "Stir in the garlic, oregano, and tomato paste and cook for 1 minute.",
+            "Add the lentils, chopped tomatoes, and stock, then bring to a simmer.",
+            "Simmer partly covered for 30-35 minutes until the lentils are tender and the sauce thickens.",
+            "Meanwhile, cook the whole-grain pasta according to package instructions.",
+            "Season the sauce to taste and add a splash of pasta water if needed.",
+            "Serve the bolognese over the pasta."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 40,
+          "servings": 4,
+          "calories": 430,
+          "difficulty": "Medium",
+          "tags": ["vegan", "high-fiber", "high-protein", "plant-based"]
+        },
+        {
+          "title": "Baked Falafel Bowl with Tahini",
+          "about": "Baked rather than fried, these herby falafel keep the fat in check while delivering all the flavor of the street-food original. Served over greens and grains with a creamy tahini drizzle, they make a balanced, protein-rich bowl. The chickpea base offers plenty of fiber to keep you full.",
+          "ingredients": [
+            "1 can (400 g / 14 oz) chickpeas, drained and dried well",
+            "1 small onion, roughly chopped",
+            "3 cloves garlic",
+            "20 g / 1/2 cup fresh parsley",
+            "1 tsp ground cumin",
+            "1 tsp ground coriander",
+            "2 tbsp chickpea flour",
+            "3 tbsp tahini",
+            "3 tbsp water",
+            "150 g / 3/4 cup cooked brown rice, to serve"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F and line a tray with parchment.",
+            "Pulse the chickpeas, onion, garlic, parsley, cumin, and coriander in a food processor to a coarse mixture.",
+            "Add the chickpea flour and pulse until the mixture holds together when pressed.",
+            "Shape into 12 small patties and place on the tray.",
+            "Spray or brush lightly with oil and bake for 25 minutes, turning halfway, until golden.",
+            "Whisk the tahini with the water and a pinch of salt until smooth.",
+            "Build bowls with brown rice, salad greens, and the falafel.",
+            "Drizzle generously with the tahini sauce and serve."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 25,
+          "servings": 4,
+          "calories": 360,
+          "difficulty": "Medium",
+          "tags": ["vegan", "high-fiber", "high-protein", "plant-based"]
+        },
+        {
+          "title": "Eggplant and Chickpea Tagine",
+          "about": "This North African-inspired stew simmers eggplant and chickpeas with warm spices and sweet dried apricots for a complex, aromatic dish. It's naturally plant-based and rich in fiber. Serve it over couscous or with flatbread to soak up the fragrant sauce.",
+          "ingredients": [
+            "1 large eggplant, cubed",
+            "2 tbsp / 30 ml olive oil",
+            "1 onion, diced",
+            "3 cloves garlic, minced",
+            "1 tsp ground cinnamon",
+            "1 tsp ground cumin",
+            "1 tsp smoked paprika",
+            "1 can (400 g / 14 oz) chopped tomatoes",
+            "1 can (400 g / 14 oz) chickpeas, drained",
+            "60 g / 1/3 cup dried apricots, chopped",
+            "300 ml / 1.25 cups vegetable stock"
+          ],
+          "steps": [
+            "Heat 1 tbsp olive oil in a large pan and brown the eggplant cubes for 8 minutes, then set aside.",
+            "Add the remaining oil and soften the onion for 5 minutes.",
+            "Stir in the garlic, cinnamon, cumin, and paprika and cook for 1 minute.",
+            "Return the eggplant to the pan with the tomatoes, chickpeas, apricots, and stock.",
+            "Bring to a simmer, then cook partly covered for 25 minutes until thickened.",
+            "Season to taste with salt and pepper.",
+            "Let the tagine rest for 5 minutes off the heat.",
+            "Serve over couscous with fresh herbs on top."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 40,
+          "servings": 4,
+          "calories": 320,
+          "difficulty": "Medium",
+          "tags": ["vegan", "gluten-free", "high-fiber", "plant-based"]
+        },
+        {
+          "title": "Spinach and Ricotta Whole-Wheat Frittata",
+          "about": "This oven-baked frittata is a protein-rich, low-carb main that works for any meal of the day. Eggs and ricotta provide staying power while spinach adds volume, iron, and vitamins with few calories. It's endlessly adaptable and just as good cold the next day.",
+          "ingredients": [
+            "8 large eggs",
+            "150 g / 2/3 cup part-skim ricotta",
+            "200 g / 7 cups fresh spinach",
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, finely diced",
+            "2 cloves garlic, minced",
+            "40 g / 1/3 cup grated parmesan",
+            "1/4 tsp ground nutmeg",
+            "1/2 tsp fine sea salt",
+            "1/4 tsp black pepper"
+          ],
+          "steps": [
+            "Preheat the oven to 180 C / 350 F.",
+            "Heat the olive oil in an ovenproof skillet and soften the onion for 5 minutes.",
+            "Add the garlic and spinach and cook until the spinach wilts, then let excess moisture cook off.",
+            "Whisk the eggs with the nutmeg, salt, pepper, and parmesan.",
+            "Pour the eggs over the spinach and stir gently to distribute.",
+            "Dollop spoonfuls of ricotta across the surface.",
+            "Cook on the stovetop for 3 minutes until the edges set, then transfer to the oven.",
+            "Bake for 15-18 minutes until fully set, then cool briefly before slicing."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 25,
+          "servings": 4,
+          "calories": 290,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "high-protein", "low-carb", "gluten-free"]
+        }
+      ]
+    },
+    {
+      "title": "Poultry",
+      "recipes": [
+        {
+          "title": "Herb-Marinated Grilled Chicken Breast",
+          "about": "A lean, high-protein staple, grilled chicken breast stays juicy thanks to a bright herb and lemon marinade. Grilling adds smoky char without extra fat. It's a versatile main to slice over salads, grains, or serve alongside roasted vegetables.",
+          "ingredients": [
+            "4 skinless chicken breasts (about 600 g / 1.3 lb)",
+            "3 tbsp / 45 ml olive oil",
+            "3 tbsp lemon juice",
+            "3 cloves garlic, minced",
+            "1 tbsp chopped fresh rosemary",
+            "1 tbsp chopped fresh thyme",
+            "1 tsp fine sea salt",
+            "1/2 tsp black pepper"
+          ],
+          "steps": [
+            "Whisk together the olive oil, lemon juice, garlic, herbs, salt, and pepper.",
+            "Place the chicken breasts in the marinade and coat well.",
+            "Cover and refrigerate for at least 30 minutes, or up to 4 hours.",
+            "Heat a grill or grill pan to medium-high.",
+            "Grill the chicken for 5-6 minutes per side until nicely charred and cooked through to 74 C / 165 F.",
+            "Let the chicken rest for 5 minutes to retain juices.",
+            "Slice against the grain and serve."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 12,
+          "servings": 4,
+          "calories": 280,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "low-carb", "gluten-free", "dairy-free"]
+        },
+        {
+          "title": "Baked Chicken and Vegetable Traybake",
+          "about": "This one-pan dinner roasts lean chicken thighs with a rainbow of vegetables for an easy, balanced meal with minimal cleanup. The vegetables soak up the savory juices while roasting caramelizes their natural sugars. It's weeknight-friendly and endlessly customizable.",
+          "ingredients": [
+            "6 skinless boneless chicken thighs (about 700 g / 1.5 lb)",
+            "2 zucchini, chunked",
+            "1 red onion, wedged",
+            "1 red bell pepper, chunked",
+            "200 g / 7 oz cherry tomatoes",
+            "3 tbsp / 45 ml olive oil",
+            "1 tbsp dried Italian herbs",
+            "3 cloves garlic, minced",
+            "1 tsp smoked paprika",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F.",
+            "Spread the zucchini, onion, and bell pepper across a large roasting tray.",
+            "Nestle the chicken thighs among the vegetables.",
+            "Whisk the olive oil, herbs, garlic, paprika, and salt, then pour over everything and toss.",
+            "Roast for 25 minutes.",
+            "Add the cherry tomatoes and roast for another 10-15 minutes until the chicken is cooked through.",
+            "Check the chicken reaches 74 C / 165 F internally.",
+            "Rest for 5 minutes and serve straight from the tray."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 40,
+          "servings": 4,
+          "calories": 340,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "low-carb", "gluten-free", "dairy-free"]
+        },
+        {
+          "title": "Turkey and Spinach Meatballs in Tomato Sauce",
+          "about": "Lean ground turkey makes these meatballs lower in saturated fat than the classic beef version, while grated vegetables and spinach keep them moist and add nutrients. Simmered in a simple tomato sauce, they're a comforting, protein-rich main. Serve over whole-grain pasta or zucchini noodles.",
+          "ingredients": [
+            "500 g / 1.1 lb lean ground turkey",
+            "100 g / 3 cups fresh spinach, finely chopped",
+            "1 small onion, grated",
+            "40 g / 1/2 cup whole-wheat breadcrumbs",
+            "1 egg",
+            "2 cloves garlic, minced",
+            "1 tsp dried oregano",
+            "700 g / 3 cups tomato passata",
+            "1 tbsp / 15 ml olive oil",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "In a bowl, combine the turkey, spinach, onion, breadcrumbs, egg, half the garlic, oregano, and salt.",
+            "Mix gently and shape into 20 small meatballs.",
+            "Heat the olive oil in a large pan and brown the meatballs on all sides, about 6 minutes.",
+            "Add the remaining garlic and cook for 30 seconds.",
+            "Pour in the passata and bring to a gentle simmer.",
+            "Cover and simmer for 20 minutes until the meatballs are cooked through.",
+            "Season the sauce to taste.",
+            "Serve over pasta or grains with fresh basil."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 30,
+          "servings": 4,
+          "calories": 310,
+          "difficulty": "Medium",
+          "tags": ["high-protein", "dairy-free"]
+        },
+        {
+          "title": "Lemon Garlic Chicken and Broccoli Stir-Fry",
+          "about": "This quick stir-fry balances lean chicken with fiber-rich broccoli in a bright, garlicky sauce. Cooking fast over high heat keeps the vegetables crisp and the nutrients intact. It's a fast, healthy weeknight dinner that beats takeout.",
+          "ingredients": [
+            "500 g / 1.1 lb chicken breast, sliced thin",
+            "400 g / 5 cups broccoli florets",
+            "2 tbsp / 30 ml olive oil",
+            "4 cloves garlic, minced",
+            "1 tbsp grated fresh ginger",
+            "3 tbsp low-sodium soy sauce",
+            "2 tbsp lemon juice",
+            "1 tsp honey",
+            "1 tsp cornstarch",
+            "2 spring onions, sliced"
+          ],
+          "steps": [
+            "Whisk the soy sauce, lemon juice, honey, and cornstarch with 3 tbsp water to make the sauce.",
+            "Heat 1 tbsp oil in a wok over high heat and stir-fry the chicken until golden and cooked, then remove.",
+            "Add the remaining oil and stir-fry the broccoli for 3 minutes.",
+            "Add a splash of water, cover, and steam for 2 minutes until crisp-tender.",
+            "Add the garlic and ginger and stir for 30 seconds.",
+            "Return the chicken to the wok and pour in the sauce.",
+            "Toss until the sauce thickens and coats everything, about 1 minute.",
+            "Top with spring onions and serve over brown rice."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 12,
+          "servings": 4,
+          "calories": 300,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "low-carb", "dairy-free"]
+        },
+        {
+          "title": "Moroccan Spiced Chicken Skewers",
+          "about": "These vibrant skewers are marinated in a blend of warm Moroccan spices and yogurt, which tenderizes the lean chicken and keeps it juicy. Packed with protein and big on flavor, they're low in fat and easy to grill. Serve with a fresh salad and whole-grain couscous.",
+          "ingredients": [
+            "600 g / 1.3 lb chicken breast, cubed",
+            "150 g / 2/3 cup plain Greek yogurt",
+            "1 tbsp ground cumin",
+            "1 tbsp smoked paprika",
+            "1 tsp ground cinnamon",
+            "1 tsp ground coriander",
+            "3 cloves garlic, grated",
+            "2 tbsp lemon juice",
+            "1 tbsp / 15 ml olive oil",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Combine the yogurt, spices, garlic, lemon juice, olive oil, and salt in a bowl.",
+            "Add the chicken cubes and coat thoroughly.",
+            "Marinate in the refrigerator for at least 1 hour, ideally 3.",
+            "Thread the chicken onto skewers, soaking wooden ones first.",
+            "Heat a grill or grill pan to medium-high.",
+            "Grill the skewers for 10-12 minutes, turning, until charred and cooked to 74 C / 165 F.",
+            "Rest for a few minutes.",
+            "Serve with lemon wedges and a herb salad."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 12,
+          "servings": 4,
+          "calories": 290,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "low-carb", "gluten-free"]
+        },
+        {
+          "title": "Slow-Cooked Chicken and White Bean Stew",
+          "about": "This cozy, protein-packed stew combines lean chicken with creamy white beans and plenty of vegetables for a wholesome one-pot meal. The long, gentle simmer develops deep flavor without much added fat. It's ideal for batch cooking and freezes well.",
+          "ingredients": [
+            "600 g / 1.3 lb skinless chicken thighs",
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, diced",
+            "2 carrots, sliced",
+            "2 celery stalks, sliced",
+            "3 cloves garlic, minced",
+            "2 cans (800 g / 28 oz total) cannellini beans, drained",
+            "700 ml / 3 cups low-sodium chicken stock",
+            "1 tsp dried thyme",
+            "2 bay leaves",
+            "2 tbsp chopped fresh parsley"
+          ],
+          "steps": [
+            "Heat the olive oil in a large pot and brown the chicken thighs on both sides, then set aside.",
+            "Add the onion, carrots, and celery and cook for 7 minutes.",
+            "Stir in the garlic and thyme and cook for 1 minute.",
+            "Return the chicken to the pot with the beans, stock, and bay leaves.",
+            "Bring to a simmer, then cover and cook gently for 45 minutes.",
+            "Remove the chicken, shred it, and return it to the pot.",
+            "Simmer uncovered for 10 minutes to thicken, then discard the bay leaves.",
+            "Stir in the parsley and serve hot."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 65,
+          "servings": 5,
+          "calories": 360,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "high-fiber", "gluten-free", "dairy-free"]
+        }
+      ]
+    },
+    {
+      "title": "Meat",
+      "recipes": [
+        {
+          "title": "Lean Beef and Vegetable Stir-Fry",
+          "about": "Using lean sirloin and a fast, high-heat method keeps this stir-fry low in fat while high in protein and iron. A colorful mix of vegetables adds fiber and vitamins with every bite. A light savory sauce brings it together without excess sodium or sugar.",
+          "ingredients": [
+            "450 g / 1 lb lean sirloin steak, thinly sliced",
+            "2 tbsp / 30 ml olive oil",
+            "1 red bell pepper, sliced",
+            "150 g / 2 cups snap peas",
+            "1 carrot, julienned",
+            "3 cloves garlic, minced",
+            "1 tbsp grated fresh ginger",
+            "3 tbsp low-sodium soy sauce",
+            "1 tbsp rice vinegar",
+            "1 tsp cornstarch"
+          ],
+          "steps": [
+            "Whisk the soy sauce, rice vinegar, and cornstarch with 3 tbsp water for the sauce.",
+            "Heat 1 tbsp oil in a wok over high heat until shimmering.",
+            "Sear the beef in a single layer for 1-2 minutes until browned, then remove.",
+            "Add the remaining oil and stir-fry the bell pepper, snap peas, and carrot for 3 minutes.",
+            "Add the garlic and ginger and stir for 30 seconds.",
+            "Return the beef to the wok and pour in the sauce.",
+            "Toss for 1 minute until the sauce thickens and glosses everything.",
+            "Serve immediately over brown rice."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 10,
+          "servings": 4,
+          "calories": 320,
+          "difficulty": "Medium",
+          "tags": ["high-protein", "low-carb", "dairy-free"]
+        },
+        {
+          "title": "Herb-Crusted Roast Pork Tenderloin",
+          "about": "Pork tenderloin is one of the leanest cuts available, comparable to skinless chicken breast in fat content. A fresh herb and mustard crust keeps it flavorful and moist during a quick roast. Sliced thin, it makes an elegant yet healthy centerpiece.",
+          "ingredients": [
+            "600 g / 1.3 lb pork tenderloin",
+            "2 tbsp Dijon mustard",
+            "2 cloves garlic, minced",
+            "1 tbsp chopped fresh rosemary",
+            "1 tbsp chopped fresh thyme",
+            "2 tbsp / 30 ml olive oil",
+            "1/2 tsp fine sea salt",
+            "1/2 tsp black pepper"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F.",
+            "Pat the pork dry and season all over with salt and pepper.",
+            "Mix the mustard, garlic, herbs, and 1 tbsp olive oil into a paste.",
+            "Heat the remaining oil in an ovenproof skillet and sear the pork on all sides until browned, about 5 minutes.",
+            "Brush the herb-mustard paste over the seared tenderloin.",
+            "Transfer to the oven and roast for 18-20 minutes until it reaches 63 C / 145 F internally.",
+            "Rest the pork for 8 minutes before slicing.",
+            "Slice into medallions and serve."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 25,
+          "servings": 4,
+          "calories": 260,
+          "difficulty": "Medium",
+          "tags": ["high-protein", "low-carb", "gluten-free", "dairy-free"]
+        },
+        {
+          "title": "Beef and Barley Stew",
+          "about": "This hearty stew stretches lean beef with fiber-rich pearl barley and vegetables for a filling, economical meal. Slow simmering makes the meat meltingly tender and thickens the broth naturally. It's a warming, balanced one-pot dinner.",
+          "ingredients": [
+            "450 g / 1 lb lean stewing beef, cubed",
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, diced",
+            "2 carrots, sliced",
+            "2 celery stalks, sliced",
+            "150 g / 3/4 cup pearl barley",
+            "1.2 L / 5 cups low-sodium beef stock",
+            "2 tbsp tomato paste",
+            "1 tsp dried thyme",
+            "2 bay leaves",
+            "200 g / 7 oz mushrooms, quartered"
+          ],
+          "steps": [
+            "Heat the oil in a large pot and brown the beef in batches, then set aside.",
+            "Add the onion, carrots, and celery and cook for 7 minutes.",
+            "Stir in the tomato paste and thyme and cook for 1 minute.",
+            "Return the beef to the pot with the barley, stock, and bay leaves.",
+            "Bring to a boil, then reduce to a low simmer and cover.",
+            "Cook for 1 hour, stirring occasionally.",
+            "Add the mushrooms and simmer uncovered for 20 minutes until the beef and barley are tender.",
+            "Discard the bay leaves, season to taste, and serve."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 90,
+          "servings": 5,
+          "calories": 350,
+          "difficulty": "Medium",
+          "tags": ["high-protein", "high-fiber", "dairy-free"]
+        },
+        {
+          "title": "Grilled Lamb and Mint Yogurt Kebabs",
+          "about": "These lean lamb kebabs are trimmed and grilled to keep fat moderate, delivering rich flavor and plenty of protein and zinc. A cooling mint-yogurt sauce balances the richness of the meat. Paired with a fresh salad, they make a satisfying Mediterranean-style meal.",
+          "ingredients": [
+            "500 g / 1.1 lb lean lamb leg, cubed",
+            "2 tbsp / 30 ml olive oil",
+            "3 cloves garlic, grated",
+            "1 tbsp ground cumin",
+            "1 tsp ground coriander",
+            "1 tsp smoked paprika",
+            "200 g / 3/4 cup plain Greek yogurt",
+            "3 tbsp chopped fresh mint",
+            "1 tbsp lemon juice",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Combine the olive oil, garlic, cumin, coriander, paprika, and half the salt in a bowl.",
+            "Add the lamb cubes and coat well, then marinate for at least 1 hour.",
+            "Stir the mint, lemon juice, and remaining salt into the yogurt and chill.",
+            "Thread the lamb onto skewers.",
+            "Heat a grill to medium-high and grill the skewers for 8-10 minutes, turning, until charred outside and pink within.",
+            "Rest the kebabs for a few minutes.",
+            "Serve with the mint yogurt and a crisp salad."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 10,
+          "servings": 4,
+          "calories": 330,
+          "difficulty": "Medium",
+          "tags": ["high-protein", "low-carb", "gluten-free"]
+        },
+        {
+          "title": "Stuffed Cabbage Rolls with Lean Beef and Rice",
+          "about": "These tender cabbage rolls wrap a lean beef and brown rice filling in soft blanched leaves, then bake in a light tomato sauce. Cabbage is low in calories and high in vitamin C, making it a smart wrapper. It's a comforting, portion-controlled dish that reheats beautifully.",
+          "ingredients": [
+            "1 large head savoy cabbage",
+            "400 g / 14 oz lean ground beef",
+            "150 g / 3/4 cup cooked brown rice",
+            "1 onion, finely diced",
+            "2 cloves garlic, minced",
+            "1 tsp dried oregano",
+            "1 egg",
+            "700 g / 3 cups tomato passata",
+            "1 tbsp / 15 ml olive oil",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Core the cabbage and blanch whole in boiling water for 5 minutes, peeling off softened leaves as you go.",
+            "Combine the beef, cooked rice, onion, garlic, oregano, egg, and salt.",
+            "Place a spoonful of filling on each leaf and roll up, tucking in the sides.",
+            "Spread a little passata in a baking dish and arrange the rolls seam-side down.",
+            "Pour the remaining passata over the top and drizzle with olive oil.",
+            "Cover with foil and bake at 180 C / 350 F for 45 minutes.",
+            "Uncover and bake 15 minutes more until bubbling.",
+            "Rest briefly and serve with the sauce spooned over."
+          ],
+          "prepTimeMin": 30,
+          "cookTimeMin": 60,
+          "servings": 5,
+          "calories": 300,
+          "difficulty": "Hard",
+          "tags": ["high-protein", "dairy-free"]
+        },
+        {
+          "title": "Spiced Beef and Lentil Lettuce Wraps",
+          "about": "These fresh lettuce wraps combine lean beef with lentils to boost fiber and stretch the meat further while cutting calories. Warm spices and a squeeze of lime keep them lively and light. Crisp lettuce cups replace bread for a low-carb, hands-on meal.",
+          "ingredients": [
+            "300 g / 10.5 oz lean ground beef",
+            "100 g / 1/2 cup dried red lentils, cooked",
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, finely diced",
+            "3 cloves garlic, minced",
+            "1 tbsp ground cumin",
+            "1 tsp smoked paprika",
+            "2 tbsp tomato paste",
+            "1 lime, juiced",
+            "1 head butter lettuce, leaves separated",
+            "3 tbsp chopped fresh cilantro"
+          ],
+          "steps": [
+            "Heat the olive oil in a pan and cook the onion for 4 minutes.",
+            "Add the beef and brown it, breaking it up as it cooks.",
+            "Stir in the garlic, cumin, paprika, and tomato paste and cook for 2 minutes.",
+            "Fold in the cooked lentils and a splash of water and simmer for 5 minutes.",
+            "Add the lime juice and season to taste.",
+            "Spoon the mixture into the lettuce leaves.",
+            "Top with fresh cilantro and serve."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 20,
+          "servings": 4,
+          "calories": 250,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "high-fiber", "low-carb", "dairy-free"]
+        }
+      ]
+    },
+    {
+      "title": "Seafood",
+      "recipes": [
+        {
+          "title": "Baked Lemon Herb Salmon",
+          "about": "Salmon is prized for its heart-healthy omega-3 fatty acids and high-quality protein. A simple lemon and herb topping lets the fish shine while baking keeps it moist and hands-off. It's a fast, elegant dinner ready in under half an hour.",
+          "ingredients": [
+            "4 skinless salmon fillets (about 600 g / 1.3 lb)",
+            "2 tbsp / 30 ml olive oil",
+            "2 tbsp lemon juice",
+            "1 tbsp lemon zest",
+            "3 cloves garlic, minced",
+            "2 tbsp chopped fresh dill",
+            "2 tbsp chopped fresh parsley",
+            "1/2 tsp fine sea salt",
+            "1/4 tsp black pepper"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F and line a tray with parchment.",
+            "Pat the salmon fillets dry and place on the tray.",
+            "Whisk together the olive oil, lemon juice, zest, garlic, herbs, salt, and pepper.",
+            "Spoon the mixture evenly over the salmon.",
+            "Bake for 12-15 minutes until the fish flakes easily and reaches 52-54 C / 125-130 F for medium.",
+            "Let it rest for 2 minutes.",
+            "Serve with lemon wedges and a green vegetable."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 15,
+          "servings": 4,
+          "calories": 330,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "omega-3", "low-carb", "gluten-free"]
+        },
+        {
+          "title": "Garlic Shrimp and Zucchini Noodles",
+          "about": "This light, low-carb dish swaps pasta for spiralized zucchini, cutting calories while keeping things satisfying. Shrimp cook in minutes and deliver lean protein and minerals like selenium. A garlicky, lemony sauce ties it together for a quick weeknight meal.",
+          "ingredients": [
+            "450 g / 1 lb raw shrimp, peeled and deveined",
+            "3 medium zucchini, spiralized",
+            "2 tbsp / 30 ml olive oil",
+            "4 cloves garlic, minced",
+            "1/4 tsp chili flakes",
+            "2 tbsp lemon juice",
+            "3 tbsp chopped fresh parsley",
+            "1/2 tsp fine sea salt",
+            "1/4 tsp black pepper"
+          ],
+          "steps": [
+            "Pat the shrimp dry and season with salt and pepper.",
+            "Heat 1 tbsp olive oil in a large pan over medium-high heat.",
+            "Cook the shrimp for 1-2 minutes per side until pink and opaque, then remove.",
+            "Add the remaining oil, garlic, and chili flakes and cook for 30 seconds.",
+            "Add the zucchini noodles and toss for 2-3 minutes until just tender.",
+            "Return the shrimp to the pan with the lemon juice.",
+            "Toss to combine and warm through.",
+            "Finish with parsley and serve immediately."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 8,
+          "servings": 4,
+          "calories": 220,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "low-carb", "gluten-free", "dairy-free"]
+        },
+        {
+          "title": "Mediterranean Baked Cod with Tomatoes",
+          "about": "Cod is a lean, mild white fish that's low in calories and high in protein. Baking it in a bright tomato, olive, and caper sauce infuses it with Mediterranean flavor without heavy fats. It's a light yet deeply flavorful one-dish dinner.",
+          "ingredients": [
+            "4 cod fillets (about 600 g / 1.3 lb)",
+            "2 tbsp / 30 ml olive oil",
+            "1 onion, thinly sliced",
+            "3 cloves garlic, sliced",
+            "1 can (400 g / 14 oz) cherry tomatoes",
+            "60 g / 1/2 cup Kalamata olives, pitted",
+            "2 tbsp capers, rinsed",
+            "1 tsp dried oregano",
+            "2 tbsp chopped fresh basil",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Preheat the oven to 190 C / 375 F.",
+            "Heat the olive oil in an ovenproof pan and soften the onion for 5 minutes.",
+            "Add the garlic and cook for 1 minute until fragrant.",
+            "Stir in the tomatoes, olives, capers, oregano, and salt, then simmer for 8 minutes.",
+            "Nestle the cod fillets into the sauce, spooning some over the top.",
+            "Transfer to the oven and bake for 15 minutes until the fish flakes easily.",
+            "Scatter with fresh basil.",
+            "Serve with crusty whole-grain bread or greens."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 25,
+          "servings": 4,
+          "calories": 250,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "low-carb", "gluten-free", "dairy-free"]
+        },
+        {
+          "title": "Seared Tuna with Sesame and Ginger Slaw",
+          "about": "Tuna steaks are lean and rich in protein and B vitamins, and a quick sear keeps them tender and rosy inside. A crunchy ginger-sesame slaw adds fiber and freshness for contrast. This restaurant-style plate comes together fast and feels indulgent while staying light.",
+          "ingredients": [
+            "4 tuna steaks (about 600 g / 1.3 lb)",
+            "2 tbsp sesame seeds",
+            "1 tbsp / 15 ml sesame oil",
+            "200 g / 3 cups shredded red cabbage",
+            "1 carrot, julienned",
+            "2 spring onions, sliced",
+            "1 tbsp grated fresh ginger",
+            "2 tbsp low-sodium soy sauce",
+            "1 tbsp rice vinegar",
+            "1 tsp honey"
+          ],
+          "steps": [
+            "Whisk the soy sauce, rice vinegar, honey, and ginger for the slaw dressing.",
+            "Toss the cabbage, carrot, and spring onions with the dressing and set aside.",
+            "Pat the tuna steaks dry and press sesame seeds onto both sides.",
+            "Heat the sesame oil in a pan over high heat.",
+            "Sear the tuna for 1-1.5 minutes per side for rare to medium-rare.",
+            "Let the tuna rest for 2 minutes, then slice thickly.",
+            "Divide the slaw among plates.",
+            "Fan the sliced tuna over the slaw and serve."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 5,
+          "servings": 4,
+          "calories": 290,
+          "difficulty": "Medium",
+          "tags": ["high-protein", "low-carb", "dairy-free", "omega-3"]
+        },
+        {
+          "title": "Spiced Fish Tacos with Cabbage Slaw",
+          "about": "These light fish tacos use a lean white fish rubbed with spices and pan-seared, then piled onto corn tortillas with a crunchy slaw. They deliver protein and fiber with far less fat than fried versions. A zesty lime-yogurt drizzle brings everything together.",
+          "ingredients": [
+            "500 g / 1.1 lb white fish fillets (tilapia or cod)",
+            "1 tsp ground cumin",
+            "1 tsp smoked paprika",
+            "1/2 tsp chili powder",
+            "1 tbsp / 15 ml olive oil",
+            "8 small corn tortillas",
+            "200 g / 3 cups shredded cabbage",
+            "120 g / 1/2 cup plain Greek yogurt",
+            "2 tbsp lime juice",
+            "3 tbsp chopped fresh cilantro"
+          ],
+          "steps": [
+            "Mix the cumin, paprika, chili powder, and a pinch of salt, then rub over the fish.",
+            "Heat the olive oil in a pan and cook the fish for 3-4 minutes per side until it flakes.",
+            "Break the fish into large chunks.",
+            "Whisk the yogurt with the lime juice and a pinch of salt.",
+            "Toss the shredded cabbage with half the yogurt dressing.",
+            "Warm the corn tortillas in a dry pan.",
+            "Fill each tortilla with slaw and fish.",
+            "Drizzle with the remaining yogurt dressing and top with cilantro."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 10,
+          "servings": 4,
+          "calories": 310,
+          "difficulty": "Easy",
+          "tags": ["high-protein", "high-fiber", "gluten-free"]
+        },
+        {
+          "title": "Steamed Mussels in Tomato Broth",
+          "about": "Mussels are an affordable, sustainable shellfish that's remarkably high in protein, iron, and vitamin B12 while low in fat. Steaming them in a light garlic-tomato broth keeps the dish healthy and quick. Serve with whole-grain bread to soak up the flavorful liquid.",
+          "ingredients": [
+            "1.5 kg / 3.3 lb fresh mussels, cleaned",
+            "2 tbsp / 30 ml olive oil",
+            "1 onion, finely diced",
+            "4 cloves garlic, minced",
+            "1/4 tsp chili flakes",
+            "1 can (400 g / 14 oz) chopped tomatoes",
+            "200 ml / 3/4 cup dry white wine",
+            "3 tbsp chopped fresh parsley",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Scrub the mussels and discard any that are open and won't close when tapped.",
+            "Heat the olive oil in a large pot and cook the onion for 5 minutes.",
+            "Add the garlic and chili flakes and cook for 1 minute.",
+            "Pour in the white wine and let it bubble for 2 minutes.",
+            "Add the chopped tomatoes and salt and simmer for 5 minutes.",
+            "Add the mussels, cover, and steam for 4-5 minutes until they open.",
+            "Discard any mussels that remain closed.",
+            "Stir in the parsley and serve in bowls with the broth."
+          ],
+          "prepTimeMin": 20,
+          "cookTimeMin": 15,
+          "servings": 4,
+          "calories": 260,
+          "difficulty": "Medium",
+          "tags": ["high-protein", "low-carb", "dairy-free"]
+        }
+      ]
+    },
+    {
+      "title": "Vegetables & Legumes",
+      "recipes": [
+        {
+          "title": "Roasted Balsamic Brussels Sprouts",
+          "about": "Roasting transforms Brussels sprouts, caramelizing their edges and taming any bitterness. Rich in fiber, vitamin K, and antioxidants, they become sweet and crisp with a glossy balsamic finish. This simple side pairs with almost any main.",
+          "ingredients": [
+            "600 g / 1.3 lb Brussels sprouts, halved",
+            "2 tbsp / 30 ml olive oil",
+            "2 tbsp balsamic vinegar",
+            "1 tsp honey",
+            "2 cloves garlic, minced",
+            "1/2 tsp fine sea salt",
+            "1/4 tsp black pepper",
+            "2 tbsp toasted pine nuts"
+          ],
+          "steps": [
+            "Preheat the oven to 210 C / 410 F.",
+            "Toss the halved sprouts with 1 tbsp olive oil, salt, and pepper.",
+            "Spread cut-side down on a baking tray in a single layer.",
+            "Roast for 20-25 minutes until deeply golden and crisp at the edges.",
+            "Whisk the remaining oil with the balsamic vinegar, honey, and garlic.",
+            "Toss the roasted sprouts with the balsamic glaze.",
+            "Scatter with toasted pine nuts and serve warm."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 25,
+          "servings": 4,
+          "calories": 150,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "plant-based"]
+        },
+        {
+          "title": "Smoky Braised White Beans and Greens",
+          "about": "This one-pot dish simmers creamy white beans with hearty greens for a fiber- and protein-rich vegetable main or side. Smoked paprika adds a savory depth that makes it taste slow-cooked in a fraction of the time. A splash of vinegar at the end keeps it bright.",
+          "ingredients": [
+            "2 cans (800 g / 28 oz total) cannellini beans, drained",
+            "2 tbsp / 30 ml olive oil",
+            "1 onion, diced",
+            "4 cloves garlic, sliced",
+            "1 tsp smoked paprika",
+            "200 g / 6 cups kale or chard, chopped",
+            "400 ml / 1.66 cups low-sodium vegetable stock",
+            "1 tbsp red wine vinegar",
+            "1/2 tsp fine sea salt",
+            "1/4 tsp chili flakes"
+          ],
+          "steps": [
+            "Heat the olive oil in a large pan and soften the onion for 5 minutes.",
+            "Add the garlic, smoked paprika, and chili flakes and cook for 1 minute.",
+            "Add the beans and stock and bring to a gentle simmer.",
+            "Simmer for 10 minutes, mashing a few beans against the pan to thicken.",
+            "Stir in the greens and cook until wilted and tender, about 5 minutes.",
+            "Add the vinegar and salt and adjust to taste.",
+            "Serve warm with crusty bread or as a side."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 20,
+          "servings": 4,
+          "calories": 250,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "high-protein"]
+        },
+        {
+          "title": "Curried Cauliflower and Chickpeas",
+          "about": "Roasting cauliflower and chickpeas together with curry spices creates a satisfying dish with crispy edges and warm flavor. It's high in fiber and plant protein, and naturally vegan and gluten-free. Serve it as a side or over rice for a light main.",
+          "ingredients": [
+            "1 cauliflower (about 700 g / 1.5 lb), cut into florets",
+            "1 can (400 g / 14 oz) chickpeas, drained and dried",
+            "2 tbsp / 30 ml olive oil",
+            "1 tbsp curry powder",
+            "1 tsp ground turmeric",
+            "1/2 tsp ground cumin",
+            "1/2 tsp fine sea salt",
+            "2 tbsp chopped fresh cilantro",
+            "1 lime, cut into wedges"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F.",
+            "Toss the cauliflower florets and chickpeas with the olive oil.",
+            "Sprinkle over the curry powder, turmeric, cumin, and salt and toss to coat.",
+            "Spread in a single layer on a large baking tray.",
+            "Roast for 28-30 minutes, stirring once, until the cauliflower is tender and golden.",
+            "Transfer to a serving dish.",
+            "Scatter with cilantro and serve with lime wedges."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 30,
+          "servings": 4,
+          "calories": 230,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "plant-based"]
+        },
+        {
+          "title": "Garlicky Sauteed Green Beans and Almonds",
+          "about": "This quick side keeps green beans crisp-tender to preserve their vitamins and vibrant color. Toasted almonds add crunch and healthy fats while garlic brings savory depth. It's a fast, elegant vegetable side for any meal.",
+          "ingredients": [
+            "500 g / 1.1 lb green beans, trimmed",
+            "2 tbsp / 30 ml olive oil",
+            "4 cloves garlic, sliced",
+            "40 g / 1/3 cup sliced almonds",
+            "1 tbsp lemon juice",
+            "1/2 tsp fine sea salt",
+            "1/4 tsp black pepper"
+          ],
+          "steps": [
+            "Blanch the green beans in boiling salted water for 3 minutes, then drain and shock in ice water.",
+            "Toast the sliced almonds in a dry pan until golden, then set aside.",
+            "Heat the olive oil in the same pan over medium heat.",
+            "Add the garlic and cook for 1 minute until just fragrant, not browned.",
+            "Add the drained green beans and saute for 3-4 minutes until heated and glossy.",
+            "Season with salt, pepper, and lemon juice.",
+            "Toss with the toasted almonds and serve."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 10,
+          "servings": 4,
+          "calories": 140,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "low-carb", "plant-based"]
+        },
+        {
+          "title": "Spiced Red Lentil Dal",
+          "about": "Dal is a cornerstone of Indian home cooking, turning inexpensive lentils into a comforting, protein-rich dish. Red lentils cook down quickly into a soft, creamy consistency without any dairy. A fragrant tempering of spices bloomed in oil gives it authentic depth.",
+          "ingredients": [
+            "250 g / 1.25 cups dried red lentils, rinsed",
+            "700 ml / 3 cups water",
+            "1 tsp ground turmeric",
+            "2 tbsp / 30 ml coconut oil",
+            "1 onion, diced",
+            "3 cloves garlic, minced",
+            "1 tbsp grated fresh ginger",
+            "1 tsp cumin seeds",
+            "1 tsp garam masala",
+            "1 can (400 g / 14 oz) chopped tomatoes",
+            "3 tbsp chopped fresh cilantro"
+          ],
+          "steps": [
+            "Simmer the lentils with the water and turmeric for 15-18 minutes until soft, stirring occasionally.",
+            "In a separate pan, heat the coconut oil and add the cumin seeds until they sizzle.",
+            "Add the onion and cook for 6 minutes until golden.",
+            "Stir in the garlic, ginger, and garam masala and cook for 1 minute.",
+            "Add the chopped tomatoes and simmer for 5 minutes.",
+            "Stir the spiced tomato mixture into the cooked lentils.",
+            "Simmer together for 5 minutes and season with salt.",
+            "Top with cilantro and serve with rice or flatbread."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 30,
+          "servings": 4,
+          "calories": 290,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "high-protein"]
+        },
+        {
+          "title": "Honey-Roasted Carrots with Cumin",
+          "about": "Roasting concentrates the natural sugars in carrots, and a touch of honey and cumin enhances their earthy sweetness. High in beta-carotene and fiber, they make a colorful, nutrient-dense side. This dish is simple enough for weeknights but pretty enough for guests.",
+          "ingredients": [
+            "600 g / 1.3 lb carrots, cut into batons",
+            "2 tbsp / 30 ml olive oil",
+            "1 tbsp honey",
+            "1 tsp ground cumin",
+            "1/2 tsp ground coriander",
+            "1/2 tsp fine sea salt",
+            "2 tbsp chopped fresh parsley",
+            "1 tbsp pumpkin seeds"
+          ],
+          "steps": [
+            "Preheat the oven to 200 C / 400 F.",
+            "Toss the carrot batons with the olive oil, honey, cumin, coriander, and salt.",
+            "Spread in a single layer on a baking tray.",
+            "Roast for 25-30 minutes, turning once, until tender and caramelized.",
+            "Transfer to a serving dish.",
+            "Scatter with parsley and pumpkin seeds.",
+            "Serve warm."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 30,
+          "servings": 4,
+          "calories": 160,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "gluten-free", "high-fiber"]
+        }
+      ]
+    },
+    {
+      "title": "Grains",
+      "recipes": [
+        {
+          "title": "Herbed Lemon Quinoa Pilaf",
+          "about": "Quinoa is a complete plant protein that cooks in about 15 minutes, making it a fast, nutritious base. Toasting the grains first adds a nutty aroma, while lemon and fresh herbs keep the pilaf bright. It's a versatile side that pairs with almost anything.",
+          "ingredients": [
+            "200 g / 1 cup quinoa, rinsed",
+            "1 tbsp / 15 ml olive oil",
+            "1 small onion, finely diced",
+            "2 cloves garlic, minced",
+            "400 ml / 1.66 cups low-sodium vegetable stock",
+            "2 tbsp lemon juice",
+            "1 tsp lemon zest",
+            "3 tbsp chopped fresh parsley",
+            "2 tbsp chopped fresh mint",
+            "1/4 tsp fine sea salt"
+          ],
+          "steps": [
+            "Heat the olive oil in a saucepan and soften the onion for 4 minutes.",
+            "Add the garlic and cook for 30 seconds.",
+            "Add the rinsed quinoa and toast, stirring, for 2 minutes.",
+            "Pour in the stock and bring to a boil.",
+            "Reduce the heat, cover, and simmer for 15 minutes until the liquid is absorbed.",
+            "Remove from the heat and let it steam, covered, for 5 minutes.",
+            "Fluff with a fork and stir in the lemon juice, zest, herbs, and salt.",
+            "Serve warm or at room temperature."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 22,
+          "servings": 4,
+          "calories": 210,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-protein", "plant-based"]
+        },
+        {
+          "title": "Brown Rice and Vegetable Buddha Bowl",
+          "about": "This colorful bowl builds a balanced meal around fiber-rich brown rice, roasted vegetables, and chickpeas for plant protein. A creamy tahini-lemon dressing ties the components together. It's a satisfying, nutrient-dense lunch that's easy to prep ahead.",
+          "ingredients": [
+            "200 g / 1 cup brown rice",
+            "1 sweet potato, cubed",
+            "1 red bell pepper, chunked",
+            "1 can (400 g / 14 oz) chickpeas, drained",
+            "2 tbsp / 30 ml olive oil",
+            "1 tsp smoked paprika",
+            "3 tbsp tahini",
+            "2 tbsp lemon juice",
+            "3 tbsp water",
+            "100 g / 3 cups baby spinach"
+          ],
+          "steps": [
+            "Cook the brown rice according to package instructions, about 30 minutes.",
+            "Preheat the oven to 200 C / 400 F.",
+            "Toss the sweet potato, bell pepper, and chickpeas with the olive oil and paprika.",
+            "Roast on a tray for 25 minutes until tender and lightly crisp.",
+            "Whisk the tahini, lemon juice, and water into a pourable dressing.",
+            "Divide the rice among bowls and top with the roasted vegetables and chickpeas.",
+            "Add a handful of fresh spinach to each bowl.",
+            "Drizzle with the tahini dressing and serve."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 30,
+          "servings": 4,
+          "calories": 420,
+          "difficulty": "Easy",
+          "tags": ["vegan", "high-fiber", "high-protein", "plant-based"]
+        },
+        {
+          "title": "Mushroom and Spinach Barley Risotto",
+          "about": "This hearty risotto swaps traditional arborio rice for pearl barley, boosting fiber and giving a pleasant chew. Mushrooms lend umami depth while spinach adds color and nutrients. It's a comforting, lightened-up take on a classic without heavy cream.",
+          "ingredients": [
+            "200 g / 1 cup pearl barley",
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, finely diced",
+            "300 g / 10.5 oz mushrooms, sliced",
+            "3 cloves garlic, minced",
+            "1 L / 4 cups low-sodium vegetable stock, warmed",
+            "100 g / 3 cups baby spinach",
+            "40 g / 1/3 cup grated parmesan",
+            "1 tbsp lemon juice",
+            "2 tbsp chopped fresh parsley"
+          ],
+          "steps": [
+            "Heat the olive oil in a wide pan and cook the onion for 5 minutes.",
+            "Add the mushrooms and cook until browned and their liquid evaporates, about 8 minutes.",
+            "Stir in the garlic and barley and toast for 1 minute.",
+            "Add the warm stock one ladleful at a time, stirring often and letting it absorb before adding more.",
+            "Continue for 35-40 minutes until the barley is tender and creamy.",
+            "Stir in the spinach until wilted.",
+            "Remove from the heat and stir in the parmesan, lemon juice, and parsley.",
+            "Season to taste and serve immediately."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 45,
+          "servings": 4,
+          "calories": 320,
+          "difficulty": "Medium",
+          "tags": ["vegetarian", "high-fiber", "whole-grain"]
+        },
+        {
+          "title": "Warm Freekeh and Roasted Vegetable Salad",
+          "about": "Freekeh is young green wheat that's roasted and cracked, giving it a smoky flavor and high fiber and protein content. Paired with roasted vegetables and a lemony dressing, it makes a hearty grain salad. Serve it warm or at room temperature as a main or side.",
+          "ingredients": [
+            "200 g / 1 cup cracked freekeh",
+            "500 ml / 2 cups low-sodium vegetable stock",
+            "1 zucchini, chunked",
+            "1 red onion, wedged",
+            "150 g / 1 cup cherry tomatoes",
+            "3 tbsp / 45 ml olive oil",
+            "2 tbsp lemon juice",
+            "3 tbsp chopped fresh parsley",
+            "40 g / 1/3 cup crumbled feta",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Rinse the freekeh and simmer in the stock for about 20 minutes until tender, then drain any excess.",
+            "Preheat the oven to 200 C / 400 F.",
+            "Toss the zucchini, red onion, and cherry tomatoes with 1 tbsp olive oil and roast for 20 minutes.",
+            "Whisk the remaining olive oil with the lemon juice and salt.",
+            "Combine the cooked freekeh and roasted vegetables in a bowl.",
+            "Pour over the dressing and toss gently.",
+            "Fold in the parsley and crumbled feta.",
+            "Serve warm or at room temperature."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 25,
+          "servings": 4,
+          "calories": 300,
+          "difficulty": "Medium",
+          "tags": ["vegetarian", "high-fiber", "whole-grain"]
+        },
+        {
+          "title": "Overnight Oats with Chia and Berries",
+          "about": "This no-cook breakfast lets oats soften in the fridge overnight, making them creamy and easy to digest. Chia seeds add omega-3s and fiber that help thicken the mixture and keep you full. Topped with berries, it's a make-ahead, balanced start to the day.",
+          "ingredients": [
+            "80 g / 1 cup rolled oats",
+            "2 tbsp chia seeds",
+            "250 ml / 1 cup milk or plant milk",
+            "80 g / 1/3 cup plain yogurt",
+            "1 tbsp maple syrup",
+            "1/2 tsp vanilla extract",
+            "150 g / 1 cup mixed berries",
+            "1 tbsp chopped nuts"
+          ],
+          "steps": [
+            "In a jar or bowl, combine the oats and chia seeds.",
+            "Pour in the milk and add the yogurt, maple syrup, and vanilla.",
+            "Stir well to ensure the chia is evenly distributed.",
+            "Cover and refrigerate overnight, or at least 6 hours.",
+            "In the morning, stir the oats and add a splash more milk if too thick.",
+            "Top with the mixed berries and chopped nuts.",
+            "Serve chilled."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 0,
+          "servings": 2,
+          "calories": 320,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "high-fiber", "no-cook", "whole-grain"]
+        },
+        {
+          "title": "Spiced Bulgur with Chickpeas and Herbs",
+          "about": "Bulgur is a quick-cooking cracked wheat that's rich in fiber and needs little more than a soak in hot liquid. Combined with chickpeas and warm spices, it becomes a protein-rich, satisfying grain dish. Fresh herbs and lemon keep it light and fresh.",
+          "ingredients": [
+            "200 g / 1 cup coarse bulgur",
+            "350 ml / 1.5 cups boiling low-sodium vegetable stock",
+            "1 tbsp / 15 ml olive oil",
+            "1 onion, diced",
+            "1 tsp ground cumin",
+            "1/2 tsp ground cinnamon",
+            "1 can (400 g / 14 oz) chickpeas, drained",
+            "3 tbsp chopped fresh parsley",
+            "2 tbsp chopped fresh mint",
+            "2 tbsp lemon juice"
+          ],
+          "steps": [
+            "Place the bulgur in a bowl and pour over the boiling stock, then cover and let stand for 15 minutes.",
+            "Meanwhile, heat the olive oil in a pan and cook the onion for 5 minutes.",
+            "Add the cumin and cinnamon and cook for 30 seconds.",
+            "Stir in the chickpeas and warm through for 3 minutes.",
+            "Fluff the soaked bulgur with a fork.",
+            "Combine the bulgur with the spiced chickpeas.",
+            "Fold in the parsley, mint, and lemon juice.",
+            "Season to taste and serve warm or cold."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 10,
+          "servings": 4,
+          "calories": 290,
+          "difficulty": "Easy",
+          "tags": ["vegan", "high-fiber", "high-protein", "plant-based"]
+        }
+      ]
+    },
+    {
+      "title": "Sauces & Condiments",
+      "recipes": [
+        {
+          "title": "Classic Lemon Tahini Sauce",
+          "about": "This versatile Middle Eastern sauce turns sesame paste into a creamy, tangy dressing with just a few ingredients. Tahini provides healthy fats, calcium, and a rich nutty flavor. Drizzle it over grain bowls, roasted vegetables, or falafel.",
+          "ingredients": [
+            "120 g / 1/2 cup tahini",
+            "3 tbsp lemon juice",
+            "1 clove garlic, grated",
+            "4-6 tbsp cold water",
+            "1/4 tsp ground cumin",
+            "1/4 tsp fine sea salt"
+          ],
+          "steps": [
+            "In a bowl, whisk together the tahini, lemon juice, garlic, cumin, and salt.",
+            "The mixture will seize and thicken at first, which is normal.",
+            "Add cold water one tablespoon at a time, whisking constantly.",
+            "Continue until the sauce loosens into a smooth, pourable consistency.",
+            "Taste and adjust the salt and lemon.",
+            "Store in the refrigerator for up to 5 days, thinning with water as needed."
+          ],
+          "prepTimeMin": 8,
+          "cookTimeMin": 0,
+          "servings": 8,
+          "calories": 90,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "no-cook", "plant-based"]
+        },
+        {
+          "title": "Fresh Basil and Walnut Pesto",
+          "about": "This lighter pesto uses walnuts in place of pricier pine nuts, adding omega-3 fatty acids and a rich toasty flavor. Reducing the cheese and oil keeps it fresh and vibrant without excess calories. Toss it with pasta, spread on toast, or stir into soups.",
+          "ingredients": [
+            "60 g / 2 cups fresh basil leaves",
+            "40 g / 1/3 cup walnuts, toasted",
+            "1 clove garlic",
+            "30 g / 1/3 cup grated parmesan",
+            "3 tbsp / 45 ml extra-virgin olive oil",
+            "1 tbsp lemon juice",
+            "2-3 tbsp water",
+            "1/4 tsp fine sea salt"
+          ],
+          "steps": [
+            "Add the basil, walnuts, garlic, and parmesan to a food processor.",
+            "Pulse until coarsely chopped.",
+            "With the motor running, drizzle in the olive oil.",
+            "Add the lemon juice and salt.",
+            "Blend in water a tablespoon at a time until you reach a loose, spoonable texture.",
+            "Taste and adjust the seasoning.",
+            "Store in a jar with a thin film of oil on top for up to 4 days."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 0,
+          "servings": 8,
+          "calories": 85,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "gluten-free", "no-cook"]
+        },
+        {
+          "title": "Roasted Tomato Salsa",
+          "about": "Roasting the tomatoes, onion, and chilies before blending gives this salsa a smoky, concentrated flavor. It's fat-free, low in calories, and packed with vitamin C and antioxidants. Use it as a dip, taco topping, or sauce for grilled proteins.",
+          "ingredients": [
+            "500 g / 1.1 lb ripe tomatoes, halved",
+            "1/2 onion, quartered",
+            "2 cloves garlic, unpeeled",
+            "1 jalapeno, halved and seeded",
+            "2 tbsp lime juice",
+            "3 tbsp chopped fresh cilantro",
+            "1/2 tsp ground cumin",
+            "1/2 tsp fine sea salt"
+          ],
+          "steps": [
+            "Preheat the broiler and line a tray with foil.",
+            "Place the tomatoes, onion, garlic, and jalapeno on the tray.",
+            "Broil for 8-10 minutes until charred in spots, turning once.",
+            "Let the vegetables cool, then squeeze the garlic from its skin.",
+            "Add everything to a blender with the lime juice, cumin, and salt.",
+            "Pulse to a chunky or smooth salsa as you prefer.",
+            "Stir in the fresh cilantro.",
+            "Chill for 20 minutes to let the flavors develop before serving."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 10,
+          "servings": 8,
+          "calories": 25,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "low-calorie", "plant-based"]
+        },
+        {
+          "title": "Greek Yogurt Tzatziki",
+          "about": "This cooling Greek cucumber-yogurt sauce is high in protein and probiotics while low in fat when made with strained yogurt. Squeezing the cucumber keeps it thick and prevents wateriness. Serve it with grilled meats, vegetables, or as a dip.",
+          "ingredients": [
+            "300 g / 1.25 cups plain Greek yogurt",
+            "1/2 cucumber, grated",
+            "2 cloves garlic, grated",
+            "1 tbsp lemon juice",
+            "1 tbsp / 15 ml extra-virgin olive oil",
+            "2 tbsp chopped fresh dill",
+            "1/4 tsp fine sea salt"
+          ],
+          "steps": [
+            "Grate the cucumber and place it in a clean towel.",
+            "Squeeze out as much liquid as possible.",
+            "In a bowl, combine the Greek yogurt, garlic, lemon juice, and olive oil.",
+            "Stir in the drained cucumber.",
+            "Add the dill and salt and mix well.",
+            "Chill for at least 30 minutes to let the flavors meld.",
+            "Stir before serving and adjust the seasoning."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 0,
+          "servings": 8,
+          "calories": 45,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "gluten-free", "high-protein", "no-cook"]
+        },
+        {
+          "title": "Quick Pickled Red Onions",
+          "about": "These bright pink pickled onions add tang and crunch to almost any dish while being virtually fat-free. A quick vinegar brine softens their bite and mellows their sharpness in minutes. They keep for weeks and liven up tacos, salads, and grain bowls.",
+          "ingredients": [
+            "2 red onions, thinly sliced",
+            "150 ml / 2/3 cup apple cider vinegar",
+            "150 ml / 2/3 cup water",
+            "1 tbsp honey or sugar",
+            "1 tsp fine sea salt",
+            "1 tsp black peppercorns",
+            "1 bay leaf"
+          ],
+          "steps": [
+            "Pack the thinly sliced onions into a clean jar.",
+            "In a small saucepan, combine the vinegar, water, honey, and salt.",
+            "Warm gently until the honey and salt dissolve, without boiling.",
+            "Add the peppercorns and bay leaf to the jar.",
+            "Pour the warm brine over the onions to cover them fully.",
+            "Let cool to room temperature, pressing the onions under the liquid.",
+            "Seal and refrigerate for at least 1 hour before using; keeps for 2 weeks."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 5,
+          "servings": 12,
+          "calories": 20,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "low-calorie", "plant-based"]
+        },
+        {
+          "title": "Roasted Red Pepper and Almond Romesco",
+          "about": "This Spanish sauce blends roasted red peppers with almonds for a smoky, nutty condiment rich in vitamin C and healthy fats. It's naturally thickened by the nuts rather than cream, keeping it light. Spoon it over grilled vegetables, fish, or chicken.",
+          "ingredients": [
+            "2 roasted red peppers (jarred or homemade)",
+            "50 g / 1/2 cup almonds, toasted",
+            "1 clove garlic",
+            "2 tbsp / 30 ml extra-virgin olive oil",
+            "1 tbsp sherry or red wine vinegar",
+            "1 tsp smoked paprika",
+            "1/4 tsp fine sea salt",
+            "2 tbsp water, if needed"
+          ],
+          "steps": [
+            "Add the roasted red peppers, almonds, and garlic to a food processor.",
+            "Pulse until the almonds are finely ground.",
+            "Add the smoked paprika, vinegar, and salt.",
+            "With the motor running, drizzle in the olive oil.",
+            "Blend until fairly smooth, adding water if needed to loosen.",
+            "Taste and adjust the vinegar and salt.",
+            "Serve at room temperature; store refrigerated for up to 5 days."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 0,
+          "servings": 8,
+          "calories": 75,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "no-cook", "plant-based"]
+        }
+      ]
+    },
+    {
+      "title": "Desserts",
+      "recipes": [
+        {
+          "title": "Greek Yogurt Berry Bark",
+          "about": "This frozen treat turns protein-rich Greek yogurt into a refreshing, snackable bark studded with fresh berries. A touch of honey keeps added sugar low while the fruit provides natural sweetness and antioxidants. It's a guilt-free dessert or cooling snack.",
+          "ingredients": [
+            "400 g / 1.66 cups plain Greek yogurt",
+            "2 tbsp honey",
+            "1/2 tsp vanilla extract",
+            "100 g / 2/3 cup mixed berries",
+            "2 tbsp chopped pistachios",
+            "1 tbsp unsweetened shredded coconut"
+          ],
+          "steps": [
+            "Line a baking tray with parchment paper.",
+            "Stir together the Greek yogurt, honey, and vanilla.",
+            "Spread the yogurt evenly over the parchment to about 1 cm / 0.4 in thick.",
+            "Scatter the berries, pistachios, and coconut over the surface.",
+            "Freeze for at least 4 hours until solid.",
+            "Break or cut the bark into pieces.",
+            "Serve immediately and keep any extra in the freezer."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 0,
+          "servings": 6,
+          "calories": 110,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "gluten-free", "high-protein", "no-bake"]
+        },
+        {
+          "title": "Baked Cinnamon Apples with Oats",
+          "about": "These warm baked apples deliver cozy dessert flavor with the natural sweetness of fruit and a fraction of the sugar of a pie. A crunchy oat topping adds fiber and texture. It's a comforting treat that fills the kitchen with the scent of cinnamon.",
+          "ingredients": [
+            "4 apples, cored",
+            "40 g / 1/2 cup rolled oats",
+            "2 tbsp chopped walnuts",
+            "2 tbsp maple syrup",
+            "1 tsp ground cinnamon",
+            "1 tbsp / 15 ml melted coconut oil",
+            "1/4 tsp ground nutmeg",
+            "60 ml / 1/4 cup water"
+          ],
+          "steps": [
+            "Preheat the oven to 180 C / 350 F.",
+            "Core the apples, leaving the base intact to form a cup.",
+            "Combine the oats, walnuts, maple syrup, cinnamon, nutmeg, and coconut oil.",
+            "Stuff the oat mixture into the center of each apple.",
+            "Place the apples in a baking dish and pour the water around them.",
+            "Cover with foil and bake for 25 minutes.",
+            "Uncover and bake for 10-15 minutes more until the apples are tender.",
+            "Serve warm, optionally with a spoonful of yogurt."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 40,
+          "servings": 4,
+          "calories": 200,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "plant-based"]
+        },
+        {
+          "title": "Dark Chocolate Avocado Mousse",
+          "about": "Ripe avocado creates a luxuriously creamy mousse base while adding heart-healthy fats and fiber, with no dairy or eggs needed. Dark cocoa and a little maple syrup make it rich and satisfying. Nobody will guess the secret ingredient.",
+          "ingredients": [
+            "2 ripe avocados",
+            "40 g / 1/2 cup unsweetened cocoa powder",
+            "4 tbsp maple syrup",
+            "60 ml / 1/4 cup almond milk",
+            "1 tsp vanilla extract",
+            "1 pinch fine sea salt",
+            "20 g / 2 tbsp dark chocolate shavings, to garnish"
+          ],
+          "steps": [
+            "Halve the avocados and scoop the flesh into a food processor.",
+            "Add the cocoa powder, maple syrup, almond milk, vanilla, and salt.",
+            "Blend until completely smooth, scraping down the sides as needed.",
+            "Taste and adjust the sweetness or cocoa to preference.",
+            "Add a splash more almond milk if a lighter texture is desired.",
+            "Spoon into small serving glasses.",
+            "Chill for at least 30 minutes.",
+            "Garnish with dark chocolate shavings before serving."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 0,
+          "servings": 4,
+          "calories": 220,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "no-bake", "plant-based"]
+        },
+        {
+          "title": "Chia Seed Pudding with Mango",
+          "about": "Chia seeds swell into a tapioca-like pudding when soaked, delivering plant-based omega-3s, fiber, and protein. Coconut milk makes it creamy and dairy-free, while ripe mango adds tropical sweetness. It's an easy make-ahead dessert or breakfast.",
+          "ingredients": [
+            "60 g / 1/3 cup chia seeds",
+            "300 ml / 1.25 cups light coconut milk",
+            "1 tbsp maple syrup",
+            "1/2 tsp vanilla extract",
+            "1 ripe mango, diced",
+            "1 tbsp unsweetened shredded coconut",
+            "1 tbsp lime juice"
+          ],
+          "steps": [
+            "Whisk together the chia seeds, coconut milk, maple syrup, and vanilla.",
+            "Let the mixture sit for 5 minutes, then whisk again to prevent clumping.",
+            "Cover and refrigerate for at least 4 hours or overnight until thick.",
+            "Toss the diced mango with the lime juice.",
+            "Stir the pudding and divide among serving glasses.",
+            "Top with the mango.",
+            "Finish with a sprinkle of shredded coconut and serve chilled."
+          ],
+          "prepTimeMin": 10,
+          "cookTimeMin": 0,
+          "servings": 4,
+          "calories": 190,
+          "difficulty": "Easy",
+          "tags": ["vegan", "gluten-free", "high-fiber", "no-bake"]
+        },
+        {
+          "title": "Flourless Almond and Banana Cookies",
+          "about": "These simple cookies rely on mashed banana and almond flour for a naturally sweet, gluten-free treat with no refined sugar. Almond flour adds protein and healthy fats for a satisfying bite. They come together in one bowl in minutes.",
+          "ingredients": [
+            "2 ripe bananas, mashed",
+            "150 g / 1.5 cups almond flour",
+            "40 g / 1/2 cup rolled oats",
+            "2 tbsp almond butter",
+            "1 tsp ground cinnamon",
+            "1/2 tsp baking powder",
+            "30 g / 3 tbsp dark chocolate chips",
+            "1 pinch fine sea salt"
+          ],
+          "steps": [
+            "Preheat the oven to 180 C / 350 F and line a tray with parchment.",
+            "Mash the bananas in a bowl until smooth.",
+            "Stir in the almond butter until combined.",
+            "Add the almond flour, oats, cinnamon, baking powder, and salt.",
+            "Fold in the dark chocolate chips.",
+            "Scoop tablespoon mounds onto the tray and flatten slightly.",
+            "Bake for 14-16 minutes until golden at the edges.",
+            "Cool on the tray for 5 minutes before transferring to a rack."
+          ],
+          "prepTimeMin": 12,
+          "cookTimeMin": 16,
+          "servings": 12,
+          "calories": 130,
+          "difficulty": "Easy",
+          "tags": ["vegetarian", "gluten-free", "high-fiber"]
+        },
+        {
+          "title": "Poached Pears in Spiced Tea",
+          "about": "Gently poaching pears in spiced tea infuses them with warm aromatic flavor while keeping the dessert light and fat-free. The fruit provides natural sweetness and fiber, so little added sugar is needed. It's an elegant, low-calorie finish to any meal.",
+          "ingredients": [
+            "4 firm pears, peeled",
+            "750 ml / 3 cups brewed black tea",
+            "2 tbsp honey",
+            "1 cinnamon stick",
+            "3 whole cloves",
+            "2 star anise",
+            "1 strip orange peel",
+            "1 tsp vanilla extract"
+          ],
+          "steps": [
+            "Peel the pears, leaving the stems intact, and trim the bases so they stand upright.",
+            "Combine the brewed tea, honey, cinnamon, cloves, star anise, and orange peel in a pot.",
+            "Bring to a gentle simmer.",
+            "Add the pears and lay a piece of parchment on top to keep them submerged.",
+            "Poach gently for 20-25 minutes until tender when pierced.",
+            "Remove the pears and simmer the liquid until reduced and syrupy, about 10 minutes.",
+            "Stir the vanilla into the syrup.",
+            "Serve the pears warm or chilled with the spiced syrup spooned over."
+          ],
+          "prepTimeMin": 15,
+          "cookTimeMin": 35,
+          "servings": 4,
+          "calories": 150,
+          "difficulty": "Medium",
+          "tags": ["vegan", "gluten-free", "low-fat", "plant-based"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+
+# database
+prisma/*.db
+prisma/*.db-journal
+prisma/migrations/dev.db*
+
+# uploaded media (self-hosted video/images)
+uploads/*
+!uploads/.gitkeep
+
+# secrets — never commit OAuth client files
+client_secret_*.json
+
+# misc
+.DS_Store
+.vite/
+coverage/

@@ -1,0 +1,516 @@
+import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Flame, Trophy, CheckCircle2, TrendingDown, Medal, Share2, Ruler, Plus, Trash2, X, ImagePlus } from 'lucide-react';
+import { api, getAccessToken } from '../lib/api';
+import { shareMilestone } from '../lib/shareCard';
+import { toast } from '../lib/toast';
+import { Loader, MediaImage } from '../components/ui';
+import TopBar from '../components/TopBar';
+import AmbientBg from '../components/AmbientBg';
+import WeekRecap from '../components/WeekRecap';
+import CountUp from '../components/CountUp';
+import StreakCalendar from '../components/StreakCalendar';
+
+const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
+
+export default function Progress() {
+  const { t, i18n } = useTranslation();
+  const { data: p, isLoading } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
+  const { data: badges } = useQuery({ queryKey: ['badges'], queryFn: () => api.get('/api/gamification/badges') });
+  const { data: prsData } = useQuery({ queryKey: ['prs'], queryFn: () => api.get('/api/tracker/prs') });
+  const { data: act } = useQuery({ queryKey: ['activity'], queryFn: () => api.get('/api/daily/activity?days=119') });
+
+  if (isLoading) return <Loader />;
+
+  const week: { day: string; count: number }[] = p?.weekActivity ?? [];
+  const maxCount = Math.max(1, ...week.map((w) => w.count));
+  const weights: { date: string; weightKg: number }[] = p?.weights ?? [];
+  const prs: { exercise: string; weightKg: number; reps: number; createdAt: string }[] = prsData ?? [];
+  const activity: { date: string; count: number }[] = act?.activity ?? [];
+  const activeDays = activity.filter((a) => a.count > 0).length;
+
+  return (
+    <div className="relative min-h-screen overflow-x-hidden pb-10">
+      <AmbientBg tone="warm" />
+      <TopBar title={t('tracker.progress')} color="bg-gradient-to-b from-brand-teal to-cyan-500" textColor="text-white" />
+
+      {/* Above the raw stats on purpose: the sentence is what people read, the tiles
+          are what they check afterwards. */}
+      <WeekRecap className="mx-4 mb-4" />
+
+      <div className="grid grid-cols-3 gap-3 px-4">
+        <Stat
+          icon={<Flame className="text-orange-500" />}
+          value={p?.currentStreak ?? 0}
+          label={t('tracker.streak')}
+          delay={0}
+          onShare={() => void shareMilestone({ kind: 'streak', title: t('share.streak'), value: `${p?.currentStreak ?? 0} ${t('duels.days').toUpperCase()}`, emoji: '🔥', savedMsg: t('share.saved') })}
+        />
+        <Stat icon={<Trophy className="text-amber-500" />} value={p?.longestStreak ?? 0} label="Best streak" delay={0.06} />
+        <Stat icon={<CheckCircle2 className="text-brand-green" />} value={p?.totalCompletions ?? 0} label="Completed" delay={0.12} />
+      </div>
+
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+        transition={spring}
+        className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm"
+      >
+        <div className="mb-3 flex items-baseline justify-between gap-2">
+          <h2 className="min-w-0 truncate font-bold">{t('daily.streakCalendar')}</h2>
+          <span className="shrink-0 text-[11px] text-gray-400">{t('daily.activeDays', { n: activeDays })}</span>
+        </div>
+
+        <div className="mb-4 grid grid-cols-3 gap-2">
+          <MiniStat emoji="🔥" value={act?.currentStreak ?? 0} label={t('tracker.streak')} />
+          <MiniStat emoji="🏆" value={act?.longestStreak ?? 0} label={t('daily.longest')} />
+          <MiniStat emoji="🧊" value={act?.streakFreezes ?? 0} label={t('daily.freezes')} />
+        </div>
+
+        <StreakCalendar activity={activity} />
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+        transition={spring}
+        className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm"
+      >
+        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('tracker.today')}</p>
+        <h2 className="mb-4 font-bold">{t('home2.thisWeek')}</h2>
+        <div className="flex items-end justify-between gap-2" style={{ height: 120 }}>
+          {week.map((w, i) => (
+            <div key={w.day} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+              <motion.div
+                initial={{ scaleY: 0 }}
+                whileInView={{ scaleY: 1 }}
+                viewport={{ once: true }}
+                transition={{ ...spring, delay: 0.1 + i * 0.05 }}
+                className="w-full origin-bottom rounded-t-md bg-brand-teal"
+                style={{ height: `${(w.count / maxCount) * 90 + 4}px`, opacity: w.count ? 1 : 0.25 }}
+              />
+              <span className="text-[10px] text-gray-400">{new Date(w.day).toLocaleDateString(i18n.language, { weekday: 'narrow' })}</span>
+            </div>
+          ))}
+        </div>
+      </motion.section>
+
+      {weights.length > 1 && (
+        <motion.section
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+          transition={spring}
+          className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm"
+        >
+          <h2 className="mb-3 flex items-center gap-2 font-bold"><TrendingDown size={16} /> Weight trend</h2>
+          <Sparkline points={weights.map((w) => w.weightKg)} />
+          <div className="mt-2 flex justify-between text-xs text-gray-400">
+            <span>{weights[0].weightKg} {t('session.kg')}</span>
+            <span>{weights[weights.length - 1].weightKg} {t('session.kg')}</span>
+          </div>
+        </motion.section>
+      )}
+
+      <BodySection />
+
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+        transition={spring}
+        className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm"
+      >
+        <h2 className="mb-3 flex items-center gap-2 font-bold"><Trophy size={16} className="text-amber-500" /> {t('progress2.prs')}</h2>
+        {prs.length === 0 ? (
+          <p className="text-sm text-gray-400">{t('progress2.prsEmpty')}</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {prs.map((r, i) => (
+              <motion.div
+                key={r.exercise}
+                initial={{ opacity: 0, scale: 0.85 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ ...spring, delay: i * 0.05 }}
+                className="relative min-w-0 rounded-2xl bg-gradient-to-b from-amber-50 to-white p-3 shadow-sm ring-1 ring-amber-100"
+              >
+                <button
+                  onClick={() => void shareMilestone({ kind: 'pr', title: t('share.pr'), value: `${r.weightKg} ${t('session.kg').toUpperCase()}`, subtitle: `${r.exercise} · ${r.reps} ${t('session.reps')}`, emoji: '🏆', savedMsg: t('share.saved') })}
+                  aria-label={`Share ${r.exercise} record`}
+                  className="absolute end-2 top-2 p-1 text-amber-300 hover:text-amber-500"
+                >
+                  <Share2 size={14} />
+                </button>
+                <div className="flex items-center gap-1.5">
+                  <span className="shrink-0 text-lg">{i === 0 ? '🏆' : '🥇'}</span>
+                  <span className="min-w-0 truncate text-sm font-semibold">{r.exercise}</span>
+                </div>
+                <p className="mt-1 text-2xl font-extrabold">
+                  {r.weightKg}<span className="text-sm font-bold text-gray-400"> {t('session.kg')}</span>
+                </p>
+                <p className="text-[11px] text-gray-400">
+                  {r.reps} {t('session.reps')} · {new Date(r.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+        transition={spring}
+        className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm"
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-bold"><Medal size={16} /> Badges</h2>
+          <Link to="/achievements" className="flex min-h-[40px] items-center text-sm font-semibold text-brand-teal">{t('common.viewAll')}</Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto">
+          {(badges?.badges ?? []).slice(0, 5).map((b: any, i: number) => (
+            <motion.div
+              key={b.id}
+              initial={{ opacity: 0, scale: 0.7 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ ...spring, delay: i * 0.06 }}
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-2xl ${b.earned ? 'bg-amber-100' : 'bg-gray-100 opacity-40 grayscale'}`}
+            >
+              {b.icon ?? '🏅'}
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+    </div>
+  );
+}
+
+function Stat({ icon, value, label, delay, onShare }: { icon: React.ReactNode; value: number; label: string; delay: number; onShare?: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...spring, delay }}
+      className="relative flex flex-col items-center gap-1 rounded-2xl bg-gradient-to-b from-white to-gray-50 p-4 shadow-sm"
+    >
+      {onShare && (
+        <button onClick={onShare} aria-label={`Share ${label}`} className="absolute end-1.5 top-1.5 p-1 text-gray-300 hover:text-orange-500">
+          <Share2 size={14} />
+        </button>
+      )}
+      {icon}
+      <CountUp value={value} className="text-2xl font-extrabold" />
+      <span className="truncate text-[10px] text-gray-400">{label}</span>
+    </motion.div>
+  );
+}
+
+function MiniStat({ emoji, value, label }: { emoji: string; value: number; label: string }) {
+  return (
+    <div className="min-w-0 rounded-xl bg-gray-50 px-2 py-2 text-center">
+      <div className="flex items-baseline justify-center gap-1">
+        <span className="shrink-0 text-sm">{emoji}</span>
+        <span className="text-lg font-extrabold leading-none">{value}</span>
+      </div>
+      <p className="mt-1 truncate text-[10px] text-gray-400">{label}</p>
+    </div>
+  );
+}
+
+/* ---------------------------------- Body ---------------------------------- */
+
+type BodyEntry = {
+  id: string;
+  date: string;
+  waistCm?: number | null;
+  chestCm?: number | null;
+  armCm?: number | null;
+  hipCm?: number | null;
+  thighCm?: number | null;
+  photo?: string | null;
+  note?: string | null;
+  createdAt: string;
+};
+
+type FieldKey = 'waistCm' | 'chestCm' | 'armCm' | 'hipCm' | 'thighCm';
+
+const FIELDS: { key: FieldKey; label: string; good: 'up' | 'down' | null }[] = [
+  { key: 'waistCm', label: 'daily.waist', good: 'down' },
+  { key: 'chestCm', label: 'daily.chest', good: 'up' },
+  { key: 'armCm', label: 'daily.arm', good: 'up' },
+  { key: 'hipCm', label: 'daily.hip', good: 'down' },
+  { key: 'thighCm', label: 'daily.thigh', good: null },
+];
+
+const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+function BodySection() {
+  const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<Partial<Record<FieldKey, string>>>({});
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const { data } = useQuery({ queryKey: ['body'], queryFn: () => api.get('/api/daily/body') });
+  const entries: BodyEntry[] = data ?? [];
+
+  const values = FIELDS.map((f) => parseFloat(form[f.key] ?? '')).filter((v) => Number.isFinite(v));
+  const canSave = values.length > 0 && !uploading;
+
+  const close = () => {
+    setOpen(false);
+    setForm({});
+    setPhoto(null);
+  };
+
+  const save = useMutation({
+    mutationFn: () => {
+      const body: Record<string, unknown> = {};
+      for (const f of FIELDS) {
+        const v = parseFloat(form[f.key] ?? '');
+        if (Number.isFinite(v)) body[f.key] = v;
+      }
+      if (photo) body.photo = photo;
+      return api.post('/api/daily/body', body);
+    },
+    onSuccess: () => {
+      toast(t('daily.saved'), 'success');
+      qc.invalidateQueries({ queryKey: ['body'] });
+      close();
+    },
+    onError: (e: unknown) => toast(e instanceof Error ? e.message : 'Something went wrong', 'error'),
+  });
+
+  const del = useMutation({
+    mutationFn: (id: string) => api.del(`/api/daily/body/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['body'] }),
+  });
+
+  const onFile = async (file: File) => {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/social/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getAccessToken()}` },
+        credentials: 'include',
+        body: fd,
+      });
+      if (res.ok) setPhoto((await res.json()).mediaUrl ?? null);
+    } catch {
+      /* keep the sheet open — saving without a photo still works */
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const prev = entries[1];
+
+  return (
+    <>
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+        transition={spring}
+        className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm"
+      >
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="flex min-w-0 items-center gap-2 font-bold">
+            <Ruler size={16} className="shrink-0 text-brand-teal" />
+            <span className="truncate">{t('daily.body')}</span>
+          </h2>
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            onClick={() => setOpen(true)}
+            className="flex shrink-0 items-center gap-1 rounded-full btn-primary px-3 py-1.5 text-xs font-bold"
+          >
+            <Plus size={14} /> <span className="truncate">{t('daily.addMeasure')}</span>
+          </motion.button>
+        </div>
+
+        {entries.length === 0 ? (
+          <p className="py-4 text-sm text-gray-400">{t('daily.noBody')}</p>
+        ) : (
+          <div className="space-y-2">
+            {entries.map((e, i) => (
+              <motion.div
+                key={e.id}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ ...spring, delay: Math.min(i, 4) * 0.04 }}
+                className="flex items-start gap-3 rounded-xl bg-gray-50 p-2.5"
+              >
+                {e.photo && (
+                  <MediaImage path={e.photo} label="" className="h-12 w-12 shrink-0 rounded-lg" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-semibold text-gray-400">
+                    {new Date(e.date ?? e.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {FIELDS.map((f) => {
+                      const v = num(e[f.key]);
+                      if (v === null) return null;
+                      const before = i === 0 && prev ? num(prev[f.key]) : null;
+                      const delta = before === null ? null : Math.round((v - before) * 10) / 10;
+                      return (
+                        <span key={f.key} className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[11px] shadow-sm">
+                          <span className="text-gray-400">{t(f.label)}</span>
+                          <span className="font-bold">{v}{t('daily.cm')}</span>
+                          {delta !== null && delta !== 0 && (
+                            <span className={`font-bold ${deltaColor(f.good, delta)}`}>
+                              {delta < 0 ? '↓' : '↑'}{Math.abs(delta)}
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  {e.note && <p className="mt-1 break-words text-[11px] text-gray-500">{e.note}</p>}
+                </div>
+                <button
+                  onClick={() => window.confirm('Delete this measurement?') && del.mutate(e.id)}
+                  aria-label={t('progress.deleteMeasure')}
+                  className="-me-1 shrink-0 p-1.5 text-gray-300 transition-colors hover:text-red-500"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </motion.section>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
+            onClick={close}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+              className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-white p-5 pb-8"
+              onClick={(ev) => ev.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <h3 className="min-w-0 truncate text-lg font-extrabold">{t('daily.addMeasure')}</h3>
+                <button onClick={close} aria-label={t('common.close')} className="-me-1 shrink-0 p-1.5 text-gray-400">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {FIELDS.map((f) => (
+                  <label key={f.key} className="flex items-center gap-3 rounded-xl bg-gray-50 px-3 py-2.5">
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold">{t(f.label)}</span>
+                    <input
+                      dir="ltr"
+                      inputMode="decimal"
+                      value={form[f.key] ?? ''}
+                      onChange={(ev) => setForm((s) => ({ ...s, [f.key]: ev.target.value }))}
+                      placeholder="—"
+                      className="w-20 shrink-0 rounded-lg bg-white px-2 py-1 text-end text-sm font-bold outline-none ring-1 ring-gray-200 focus:ring-brand-pink"
+                    />
+                    <span className="shrink-0 text-xs text-gray-400">{t('daily.cm')}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-500 disabled:opacity-60"
+                >
+                  <ImagePlus size={16} /> {uploading ? t('common.loading') : 'Photo'}
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(ev) => ev.target.files?.[0] && void onFile(ev.target.files[0])}
+                />
+                {photo && (
+                  <div className="relative">
+                    <MediaImage path={photo} label="" className="h-14 w-14 rounded-lg" />
+                    <button
+                      onClick={() => setPhoto(null)}
+                      aria-label="Remove photo"
+                      className="absolute -end-2 -top-2 rounded-full bg-black/70 p-1 text-white"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => canSave && save.mutate()}
+                disabled={!canSave || save.isPending}
+                className="mt-5 w-full rounded-2xl btn-primary py-3 font-bold disabled:opacity-50"
+              >
+                {t('common.save')}
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+/** Green when moving the good way (waist/hip down), orange when growing (arm/chest). */
+function deltaColor(good: 'up' | 'down' | null, delta: number): string {
+  if (good === 'down') return delta < 0 ? 'text-brand-green' : 'text-gray-400';
+  if (good === 'up') return delta > 0 ? 'text-brand-pink' : 'text-gray-400';
+  return 'text-gray-400';
+}
+
+function Sparkline({ points }: { points: number[] }) {
+  if (points.length < 2) return null;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min || 1;
+  const w = 280;
+  const h = 60;
+  const d = points
+    .map((v, i) => `${(i / (points.length - 1)) * w},${h - ((v - min) / range) * h}`)
+    .join(' ');
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" preserveAspectRatio="none" height={60}>
+      <motion.polyline
+        points={d}
+        fill="none"
+        stroke="#00BCD4"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+      />
+    </svg>
+  );
+}

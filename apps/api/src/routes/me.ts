@@ -1,0 +1,262 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { prisma } from '../lib/prisma';
+import { hashPassword, verifyPassword } from '../lib/auth';
+import { AuthedRequest, requireAuth } from '../middleware/auth';
+import { touchStreak } from '../lib/gamify';
+import { awardXp, createFeedPost, bumpChallenges, XP_PER_LESSON } from '../lib/social';
+import { signMedia } from '../lib/mediaSign';
+import { env } from '../env';
+
+export const meRouter = Router();
+meRouter.use(requireAuth);
+
+// Issue a short-lived signed URL for protected video/audio.
+meRouter.get('/media-sign', (req: AuthedRequest, res) => {
+  const type = req.query.type === 'audio' ? 'audio' : 'video';
+  const id = String(req.query.id || '');
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+  const { exp, sig } = signMedia(type, id);
+  res.json({ url: `/media/${type}/${id}?exp=${exp}&sig=${sig}` });
+});
+
+meRouter.get('/', async (req: AuthedRequest, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.userId! },
+    include: { subscription: { include: { plan: true } } },
+  });
+  if (!user) return res.status(404).json({ error: 'Not found' });
+  const { passwordHash, ...safe } = user;
+  res.json(safe);
+});
+
+meRouter.patch('/', async (req: AuthedRequest, res) => {
+  const schema = z.object({
+    firstName: z.string().min(1).optional(),
+    lastName: z.string().min(1).optional(),
+    mobile: z.string().optional(),
+    zip: z.string().optional(),
+    avatarUrl: z.string().optional(),
+    bio: z.string().max(300).optional(),
+    gender: z.enum(['male', 'female']).optional(),
+    birthYear: z.number().int().min(1930).max(new Date().getFullYear() - 5).optional(),
+    heightCm: z.number().int().min(80).max(250).optional(),
+    weightKg: z.number().min(20).max(400).optional(),
+    /** ISO-3166 alpha-2. Scopes gyms, deals, store and events — never the training
+     *  library, which is the same wherever you are. */
+    country: z.string().regex(/^[A-Za-z]{2}$/).transform((c) => c.toUpperCase()).optional(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const user = await prisma.user.update({ where: { id: req.userId! }, data: parsed.data });
+  const { passwordHash, ...safe } = user;
+  res.json(safe);
+});
+
+// ---- Referral code (generated lazily, stable once created) ----
+meRouter.get('/referral', async (req: AuthedRequest, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.userId! }, select: { referralCode: true, firstName: true } });
+  let code = user?.referralCode;
+  if (!code) {
+    // Short, readable, collision-checked code.
+    for (let i = 0; i < 5 && !code; i++) {
+      const candidate = Math.random().toString(36).slice(2, 8).toUpperCase();
+      try {
+        // Guarded write: only fills if still empty (parallel request may have won),
+        // and the unique constraint referees code collisions.
+        const set = await prisma.user.updateMany({
+          where: { id: req.userId!, referralCode: null },
+          data: { referralCode: candidate },
+        });
+        if (set.count === 1) code = candidate;
+        else {
+          const again = await prisma.user.findUnique({ where: { id: req.userId! }, select: { referralCode: true } });
+          if (again?.referralCode) code = again.referralCode;
+        }
+      } catch {
+        /* collision — loop tries another candidate */
+      }
+    }
+    if (!code) return res.status(500).json({ error: 'Could not generate a code, try again' });
+  }
+  const invited = await prisma.user.count({ where: { referredById: req.userId! } });
+  res.json({ code, invited, link: `${env.WEB_ORIGIN}/register?ref=${code}` });
+});
+
+// ---- Weekly training schedule (user-editable, persisted) ----
+const DEFAULT_SCHEDULE = [
+  { day: 'Monday', focus: 'Chest & Triceps', groups: ['Chest', 'Triceps'] },
+  { day: 'Tuesday', focus: 'Back & Biceps', groups: ['Lats', 'Biceps'] },
+  { day: 'Wednesday', focus: 'Legs', groups: ['Quads', 'Hamstrings', 'Calves'] },
+  { day: 'Thursday', focus: 'Shoulders & Abs', groups: ['Shoulders', 'Abs'] },
+  { day: 'Friday', focus: 'Cardio', groups: ['Cardio'] },
+  { day: 'Saturday', focus: 'Full Body', groups: ['Chest', 'Lats', 'Quads'] },
+  { day: 'Sunday', focus: 'Rest', groups: [] as string[] },
+];
+
+meRouter.get('/schedule', async (req: AuthedRequest, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.userId! }, select: { scheduleJson: true } });
+  let schedule: typeof DEFAULT_SCHEDULE = DEFAULT_SCHEDULE;
+  if (user?.scheduleJson) {
+    try {
+      const parsed = JSON.parse(user.scheduleJson);
+      if (Array.isArray(parsed) && parsed.length) schedule = parsed;
+    } catch { /* keep default */ }
+  }
+  res.json({ schedule });
+});
+
+meRouter.patch('/schedule', async (req: AuthedRequest, res) => {
+  const daySchema = z.object({ day: z.string().min(1), focus: z.string(), groups: z.array(z.string()) });
+  const parsed = z.object({ schedule: z.array(daySchema).min(1).max(7) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid schedule' });
+  await prisma.user.update({ where: { id: req.userId! }, data: { scheduleJson: JSON.stringify(parsed.data.schedule) } });
+  res.json({ schedule: parsed.data.schedule });
+});
+
+meRouter.patch('/email', async (req: AuthedRequest, res) => {
+  const schema = z.object({ email: z.string().email() });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid email' });
+  const taken = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+  if (taken && taken.id !== req.userId) return res.status(409).json({ error: 'Email in use' });
+  await prisma.user.update({ where: { id: req.userId! }, data: { email: parsed.data.email } });
+  res.json({ ok: true });
+});
+
+meRouter.patch('/password', async (req: AuthedRequest, res) => {
+  const schema = z.object({ currentPassword: z.string(), newPassword: z.string().min(6) });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const user = await prisma.user.findUnique({ where: { id: req.userId! } });
+  if (!user?.passwordHash || !(await verifyPassword(parsed.data.currentPassword, user.passwordHash))) {
+    return res.status(401).json({ error: 'Current password is wrong' });
+  }
+  await prisma.user.update({
+    where: { id: req.userId! },
+    data: { passwordHash: await hashPassword(parsed.data.newPassword) },
+  });
+  res.json({ ok: true });
+});
+
+// ---- Bookmarks ----
+meRouter.get('/bookmarks', async (req: AuthedRequest, res) => {
+  const bookmarks = await prisma.bookmark.findMany({
+    where: { userId: req.userId! },
+    orderBy: { createdAt: 'desc' },
+  });
+  res.json(bookmarks);
+});
+
+meRouter.post('/bookmarks', async (req: AuthedRequest, res) => {
+  const schema = z.object({
+    contentType: z.enum(['lesson', 'recipe', 'article', 'program']),
+    contentId: z.string(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const bookmark = await prisma.bookmark.upsert({
+    where: {
+      userId_contentType_contentId: {
+        userId: req.userId!,
+        contentType: parsed.data.contentType,
+        contentId: parsed.data.contentId,
+      },
+    },
+    create: { userId: req.userId!, ...parsed.data },
+    update: {},
+  });
+  res.json(bookmark);
+});
+
+meRouter.delete('/bookmarks', async (req: AuthedRequest, res) => {
+  const schema = z.object({ contentType: z.string(), contentId: z.string() });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  await prisma.bookmark.deleteMany({
+    where: { userId: req.userId!, contentType: parsed.data.contentType, contentId: parsed.data.contentId },
+  });
+  res.json({ ok: true });
+});
+
+// ---- Completions ("Programs Done") ----
+meRouter.get('/completions', async (req: AuthedRequest, res) => {
+  const completions = await prisma.lessonCompletion.findMany({
+    where: { userId: req.userId! },
+    include: { lesson: { include: { program: { include: { coach: true } } } } },
+    orderBy: { completedAt: 'desc' },
+  });
+  res.json(completions);
+});
+
+meRouter.post('/completions', async (req: AuthedRequest, res) => {
+  const schema = z.object({ lessonId: z.string() });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const existing = await prisma.lessonCompletion.findUnique({
+    where: { userId_lessonId: { userId: req.userId!, lessonId: parsed.data.lessonId } },
+  });
+  // Re-completing must NOT bump completedAt — that would let old lessons be
+  // recycled into duel/challenge windows (verified exploit).
+  const completion = await prisma.lessonCompletion.upsert({
+    where: { userId_lessonId: { userId: req.userId!, lessonId: parsed.data.lessonId } },
+    create: { userId: req.userId!, lessonId: parsed.data.lessonId },
+    update: {},
+  });
+  if (!existing) {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: parsed.data.lessonId },
+      include: { program: true },
+    });
+    await awardXp(req.userId!, XP_PER_LESSON);
+    await createFeedPost(
+      req.userId!,
+      'completion',
+      `Completed "${lesson?.title ?? 'a workout'}"${lesson?.program ? ` — ${lesson.program.title}` : ''} ✅`,
+      'lesson',
+      parsed.data.lessonId,
+    );
+  }
+  await touchStreak(req.userId!);
+  if (!existing) await bumpChallenges(req.userId!);
+  res.json(completion);
+});
+
+// A guided workout session finished (exercise-based, not a lesson).
+meRouter.post('/workout-done', async (req: AuthedRequest, res) => {
+  const schema = z.object({ name: z.string().optional(), exercises: z.number().optional() });
+  const parsed = schema.safeParse(req.body);
+  const name = parsed.success ? parsed.data.name : undefined;
+  // Throttle: ignore repeat "finishes" within 8 min (prevents XP/feed farming).
+  const recent = await prisma.xpEvent.findFirst({
+    where: { userId: req.userId!, reason: 'workout-session', createdAt: { gte: new Date(Date.now() - 8 * 60 * 1000) } },
+  });
+  if (recent) return res.json({ ok: true, throttled: true });
+  await awardXp(req.userId!, 60, 'workout-session');
+  await createFeedPost(req.userId!, 'completion', `Crushed a workout${name ? ` — ${name}` : ''} 💪`, 'workout');
+  await touchStreak(req.userId!);
+  await bumpChallenges(req.userId!);
+  res.json({ ok: true });
+});
+
+// Become / update a coach profile.
+meRouter.patch('/coach-profile', async (req: AuthedRequest, res) => {
+  const schema = z.object({
+    coachHeadline: z.string().max(120).optional(),
+    coachBio: z.string().max(1000).optional(),
+    coachSpecialties: z.array(z.string()).optional(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const user = await prisma.user.update({
+    where: { id: req.userId! },
+    data: {
+      isCoach: true,
+      coachHeadline: parsed.data.coachHeadline,
+      coachBio: parsed.data.coachBio,
+      coachSpecialties: JSON.stringify(parsed.data.coachSpecialties ?? []),
+    },
+  });
+  const { passwordHash, ...safe } = user;
+  res.json(safe);
+});
