@@ -38,11 +38,34 @@ const THEMES: Theme[] = [
   { re: /workout|muscle|strength|exercise|fitness|active|travel|road|تمرين|عضل|قوة|لياقة|نشيط/i, from: '#f97316', to: '#fb923c', Icon: Dumbbell },
 ];
 
-const DEFAULT: Theme = { re: /.*/, from: '#f97316', to: '#fb923c', Icon: Activity };
+/**
+ * Unmatched titles used to share ONE default (orange + Activity), so any list
+ * of keyword-less content became a wall of identical cards. Now the title
+ * hashes into a curated set of distinct looks — varied across a list, but
+ * stable for the same title forever.
+ */
+const FALLBACKS: Omit<Theme, 're'>[] = [
+  { from: '#f97316', to: '#fb923c', Icon: Dumbbell },
+  { from: '#2563eb', to: '#60a5fa', Icon: Activity },
+  { from: '#0d9488', to: '#2dd4bf', Icon: Flower2 },
+  { from: '#16a34a', to: '#4ade80', Icon: HeartPulse },
+  { from: '#7c3aed', to: '#a78bfa', Icon: Sparkles },
+  { from: '#db2777', to: '#f472b6', Icon: Wind },
+  { from: '#ca8a04', to: '#facc15', Icon: ShieldPlus },
+  { from: '#0891b2', to: '#22d3ee', Icon: Droplets },
+];
 
-function pickTheme(label?: string): Theme {
+function hashLabel(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function pickTheme(label?: string): Theme | Omit<Theme, 're'> {
   const t = label || '';
-  return THEMES.find((th) => th.re.test(t)) ?? DEFAULT;
+  const matched = THEMES.find((th) => th.re.test(t));
+  if (matched) return matched;
+  return FALLBACKS[hashLabel(t) % FALLBACKS.length];
 }
 
 /**

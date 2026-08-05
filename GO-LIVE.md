@@ -55,6 +55,31 @@ survive the machine:
    (this catches the DB being down, not just the web server).
 4. Alert contact: your email (add Telegram/WhatsApp via their integrations if you like).
 
+## 5 · Admin content pass (in the Admin CMS, ~1–2 hours, before announcing)
+
+Work through Admin (`/admin`) in this order — highest user-visible impact first:
+
+1. **Videos worklist** — Admin → Video Import → Status shows exactly which lessons/
+   exercises/articles/recipes still lack a video. Paste YouTube links via the bulk
+   importer for anything at zero. (Real filmed form videos come later — links now.)
+2. **Cover images for the top surfaces** — upload real images for: the 8 content
+   coaches (their circular cards are the face of Home), the featured programs, and
+   the ~15 recipes the meal planner serves most. Everything without an image now gets
+   varied generated art automatically — so this is polish, not a blocker.
+3. **Official accounts** — after running `clean-demo.ts`: give PULSE Team + Coach PULSE
+   real avatars (upload via their profiles), write one welcome post from PULSE Team,
+   and use Admin → **pinned announcement** for the launch-day welcome + PULSE14 invite
+   (set pinnedUntil ~7 days out).
+4. **Challenge cover** — optionally upload a coverImage on the PULSE14 challenge row
+   (Admin → Challenges) so its Home card carries campaign art.
+5. **Arabic spot-check** — any content you edited recently was auto-translated into
+   the empty *Ar fields; skim 5–10 items in Arabic mode for tone.
+6. **Sanity sweep in user mode** — switch to عربي, walk: Home → a program → a lesson →
+   meal plan → tracker (log by voice) → challenge join by code PULSE14 → profile.
+   Anything broken here is what users hit in hour one.
+7. **Daily during launch week** — Admin → Support inbox (reply within the promised
+   24h) and Admin → Analytics (watch `client-error` in top events — that's crashes).
+
 ## 9 · Launch week (marketing — start the same evening)
 
 Everything is pre-written in **MARKETING-POSTS.md**; this is just the order:
