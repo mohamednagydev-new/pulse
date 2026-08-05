@@ -80,6 +80,11 @@ export async function bumpChallenges(userId: string, trigger: 'workout' | 'calor
   const since = (day: string) => startOfDayTz(day);
 
   for (const p of parts) {
+    // Only challenges whose window is open today can move — activity before the
+    // start or after the end must not count toward the goal.
+    const today = dayString();
+    if (p.challenge.startsOn > today || p.challenge.endsOn < today) continue;
+
     let progress = p.progress;
     const goal = p.challenge.goalType;
 

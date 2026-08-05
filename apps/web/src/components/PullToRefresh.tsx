@@ -12,7 +12,7 @@ import { useLocation } from 'react-router-dom';
  * Excluded surfaces: full-screen gesture UIs where a downward drag means
  * something else (reels swiping, chat scrollback, live group rooms, sessions).
  */
-const EXCLUDED = [/^\/reels/, /^\/session\//, /^\/chat\//, /^\/group\//, /^\/admin/, /^\/onboarding/];
+const EXCLUDED = [/^\/reels/, /^\/session\//, /^\/chat\//, /^\/group\//, /^\/admin/, /^\/onboarding/, /^\/challenge\//];
 
 const MAX_PULL = 110; // px of indicator travel
 const TRIGGER = 64; // indicator px needed to fire (≈145px of finger travel)

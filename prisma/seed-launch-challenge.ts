@@ -59,7 +59,14 @@ async function main() {
   const existing = await prisma.challenge.findUnique({ where: { inviteCode: 'PULSE14' } });
   if (existing) {
     await prisma.challenge.update({ where: { id: existing.id }, data });
-    console.log(`[launch] PULSE14 window RESET: ${startsOn} → ${endsOn} (participants kept: their progress re-counts from activity)`);
+    // A fresh window means fresh progress — otherwise pre-reset workouts count
+    // toward the new window. completedAt is intentionally KEPT so anyone who
+    // already finished a previous window can't earn the reward twice.
+    await prisma.challengeParticipant.updateMany({
+      where: { challengeId: existing.id },
+      data: { progress: 0 },
+    });
+    console.log(`[launch] PULSE14 window RESET: ${startsOn} → ${endsOn} (participants kept, progress reset to zero; past finishers keep completedAt so rewards never double-pay)`);
   } else {
     await prisma.challenge.create({ data: { ...data, inviteCode: 'PULSE14' } });
     console.log(`[launch] PULSE14 created: ${startsOn} → ${endsOn}`);

@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { env } from '../env';
 import { notifyUser, pushEnabled } from '../routes/push';
 import { ensureCurrentSeason } from './seasons';
 import { settleStaleRooms, promotionCliffhangers } from './leagues';
@@ -173,7 +174,13 @@ async function runCheck() {
   if (hour === 18 && (await claimJob(`lapsed:${day}`))) {
     const threeAgo = daysAgoStr(3);
     const lapsed = await prisma.user.findMany({
-      where: { ...(pushEnabled() ? { pushSubs: { some: {} } } : {}), lastActiveOn: { lt: threeAgo } },
+      // lastActiveOn: null catches users who signed up but never came back —
+      // the createdAt guard keeps brand-new signups (< 3 days) out of the sweep.
+      where: {
+        OR: [{ lastActiveOn: { lt: threeAgo } }, { lastActiveOn: null }],
+        createdAt: { lt: new Date(Date.now() - 3 * 86_400_000) },
+        ...(pushEnabled() ? { pushSubs: { some: {} } } : {}),
+      },
       select: { id: true, firstName: true, preferredLang: true },
     });
     for (const u of lapsed) {
@@ -241,12 +248,12 @@ async function postLeaguePromotions() {
     `${promoted.length} متدرب طلعوا لدوري أعلى الأسبوع ده 🔼\n` +
     `مبروك لـ ${names.join('، ')}${more > 0 ? ` و${more} كمان` : ''} 🥇\n\n` +
     `الأسبوع الجديد بدأ من دلوقتي — كل نقطة بتتحسب.\n` +
-    `ادخل دوريك 👇\nhttps://pulse.geddo.online/leagues`;
+    `ادخل دوريك 👇\n${env.WEB_ORIGIN}/leagues`;
 
   const res = await fetch(`https://graph.facebook.com/v21.0/${pageId}/feed`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ message, link: 'https://pulse.geddo.online/leagues', access_token: token }),
+    body: new URLSearchParams({ message, link: `${env.WEB_ORIGIN}/leagues`, access_token: token }),
   });
   const json: any = await res.json().catch(() => ({}));
   if (json.id) console.log(`[fb-league] posted ${json.id} (${promoted.length} promotions)`);

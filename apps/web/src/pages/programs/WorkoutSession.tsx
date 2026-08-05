@@ -269,7 +269,7 @@ export default function WorkoutSession() {
           queryFn: () => api.get('/api/tracker/progress'),
           staleTime: 0,
         });
-        const total = Number(progress?.totalCompletions ?? 0);
+        const total = Number(progress?.totalWorkouts ?? progress?.totalCompletions ?? 0);
         const streak = Number(progress?.currentStreak ?? 0);
         if (total === 1) {
           autoShared.current = true;

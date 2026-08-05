@@ -6,6 +6,11 @@
 
   Every script here is idempotent — safe to re-run after any deploy. Nothing is
   deleted and nothing is overwritten that an admin has since edited by hand.
+
+  Demo-data scripts (demo users, demo partners, demo events, demo venue data) are
+  NOT in the active list: prisma/clean-demo.ts removes exactly that data before
+  launch, and re-running them here would re-create it on a cleaned production DB.
+  They are kept commented out below for first-install / demo environments only.
 #>
 [CmdletBinding()]
 param(
@@ -33,18 +38,25 @@ if (-not (Test-Path $node)) { Die 'node.exe not found. Add Node to PATH or insta
 #   challengeParticipant, which destroys every user's earned badges and challenge
 #   progress. It belongs to a fresh database only. Never run it on a live server.
 #
+# FIRST-INSTALL / DEMO ONLY — never on a cleaned production DB.
+#   prisma/clean-demo.ts deletes the demo users, demo " (Demo)" partners, the
+#   seed-board demo events and the demo venue data these scripts create.
+#   Re-enabling them after clean-demo.ts has run would resurrect that demo data.
+#   Kept here (commented out) for reference / fresh demo environments:
+#     'prisma\seed-users.ts',            # demo @pulse.app user accounts
+#     'prisma\seed-partners.ts',         # demo partners + store products + deals
+#     'prisma\seed-board.ts',            # demo events board + lead forms (needs partners)
+#     'prisma\seed-venue-demo.ts',       # coordinates/hours/facilities on demo partners
+#
 # Order matters: content before the Arabic passes, partners before anything that
 # attaches to a partner.
 $scripts = @(
-  'prisma\seed-users.ts',                # demo users (upserts — safe)
-  'prisma\seed-coaches-challenges.ts',   # demo coaches — MUST come before seed-coach-programs,
+  'prisma\seed-coaches-challenges.ts',   # content Coach rows (no user accounts) — MUST come before seed-coach-programs,
   'prisma\seed-coach-programs.ts',       #   which only fills coaches that exist and have no programs yet
   'prisma\seed-program-naming.ts',       # readable programme names, levels, and specialised-audience marks
   'prisma\seed-engagement.ts',
   'prisma\seed-onboarding.ts',
   'prisma\seed-reel-overrides.ts',
-  'prisma\seed-partners.ts',             # partners + store products + deals
-  'prisma\seed-board.ts',                # events board + lead forms  (needs partners)
   'prisma\seed-gamification.ts',         # badges, challenges, league enrolment
   'prisma\seed-videos.ts',               # YouTube lesson links (verified; --clear undoes it)
   'prisma\seed-exercise-videos.ts',      # YouTube exercise demos + woman-led variants
@@ -56,7 +68,6 @@ $scripts = @(
   'prisma\seed-egyptian-recipes.ts',     # 20 Egyptian dishes + the breakfast category the library never had
   'prisma\seed-foods.ts',                # 154-item Egyptian food table for calorie logging
   'prisma\seed-reels.ts',                # 29 vetted YouTube reels (verifies each is still embeddable)
-  'prisma\seed-venue-demo.ts',           # coordinates/hours/facilities on demo partners (needs seed-partners)
   'prisma\translate-manual.ts',          # Arabic passes — fills any empty *Ar columns
   'prisma\ar\base.ts',
   'prisma\ar\articles-1.ts',

@@ -24,7 +24,7 @@ export default function Bookmarks() {
   return (
     <div className="relative min-h-screen">
       <AmbientBg tone="warm" />
-      <TopBar title="Bookmarks" color="bg-gradient-to-b from-brand-teal to-cyan-500" textColor="text-white" />
+      <TopBar title={t('profile.bookmarks')} color="bg-gradient-to-b from-brand-teal to-cyan-500" textColor="text-white" />
       {isLoading ? (
         <Loader />
       ) : isError ? (
@@ -35,7 +35,7 @@ export default function Bookmarks() {
           title={t('bookmarks.empty')}
           action={
             <Link to="/" className="btn-pill btn-primary px-6">
-              {t('home2.explore')}
+              {t('today.explore')}
             </Link>
           }
         />

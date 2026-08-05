@@ -41,9 +41,14 @@ document.addEventListener('visibilitychange', () => {
 });
 
 const queryClient = new QueryClient({
-  // Any failed mutation surfaces a toast automatically.
+  // Any failed mutation surfaces a toast automatically — unless the mutation
+  // defines its own onError handler, which then owns the error UX (avoids
+  // double toasts for the same failure).
   mutationCache: new MutationCache({
-    onError: (e) => toast(e instanceof Error ? e.message : 'Something went wrong', 'error'),
+    onError: (e, _variables, _context, mutation) => {
+      if (mutation.options.onError) return;
+      toast(e instanceof Error ? e.message : 'Something went wrong', 'error');
+    },
   }),
   defaultOptions: {
     queries: { staleTime: 60_000, retry: 1, refetchOnWindowFocus: false },

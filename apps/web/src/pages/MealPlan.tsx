@@ -367,6 +367,17 @@ function GrocerySheet({ open, onClose }: { open: boolean; onClose: () => void })
   );
 }
 
+/** avoidFoods is stored as a JSON string — tolerate corrupt/legacy values. */
+function parseAvoidFoods(raw: unknown): string[] {
+  if (typeof raw !== 'string' || !raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
 /** Diet type + foods to avoid — the two dials the planner reads per user. */
 function PrefsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
@@ -378,7 +389,7 @@ function PrefsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me'), enabled: open });
   // Local state seeds from the profile once, then the user edits freely.
   const dietValue = diet ?? me?.dietPref ?? 'none';
-  const avoidValue = avoid ?? (me?.avoidFoods ? (JSON.parse(me.avoidFoods) as string[]) : []);
+  const avoidValue = avoid ?? parseAvoidFoods(me?.avoidFoods);
 
   const save = useMutation({
     mutationFn: () => api.patch('/api/meals/prefs', { dietPref: dietValue, avoidFoods: avoidValue }),

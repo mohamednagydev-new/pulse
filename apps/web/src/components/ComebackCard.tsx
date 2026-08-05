@@ -23,7 +23,7 @@ export default function ComebackCard() {
 
   // Only speak to people who have trained before and then drifted.
   const last: string | null | undefined = me?.lastActiveOn;
-  if (!last || (progress?.totalCompletions ?? 0) < 1) return null;
+  if (!last || (progress?.totalWorkouts ?? progress?.totalCompletions ?? 0) < 1) return null;
 
   const lastDate = new Date(`${last}T00:00:00`);
   if (Number.isNaN(lastDate.getTime())) return null;

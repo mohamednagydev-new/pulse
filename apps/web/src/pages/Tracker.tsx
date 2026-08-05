@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -24,6 +24,10 @@ export default function Tracker() {
   const [picking, setPicking] = useState(false);
   const [photo, setPhoto] = useState(false);
   const [listening, setListening] = useState(false);
+  const voice = useRef<{ cancel: () => void } | null>(null);
+
+  // Leaving the page mid-dictation must release the microphone.
+  useEffect(() => () => voice.current?.cancel(), []);
 
   const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: ['tracker-day'], queryFn: () => api.get('/api/tracker/day') });
 
@@ -175,10 +179,15 @@ export default function Tracker() {
             {voiceSupported() && (
               <button
                 onClick={async () => {
-                  if (listening) return;
+                  // Second tap while listening stops the dictation.
+                  if (listening) {
+                    voice.current?.cancel();
+                    return;
+                  }
                   setListening(true);
                   try {
                     const session = listenOnce(i18n.language.startsWith('ar') ? 'ar-EG' : 'en-US', (s) => setText(s));
+                    voice.current = session;
                     const said = await session.promise;
                     if (said) setText(said);
                   } catch (e) {
@@ -186,6 +195,7 @@ export default function Tracker() {
                       toast(t('food.micDenied'), 'error');
                     }
                   } finally {
+                    voice.current = null;
                     setListening(false);
                   }
                 }}

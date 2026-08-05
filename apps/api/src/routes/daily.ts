@@ -36,14 +36,31 @@ dailyRouter.post('/water', async (req: AuthedRequest, res) => {
   const parsed = z.object({ delta: z.number().int().min(-20).max(20).optional(), set: z.number().int().min(0).max(30).optional() }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
   const date = dayString();
-  const existing = await prisma.waterLog.findUnique({ where: { userId_date: { userId: req.userId!, date } } });
-  const current = existing?.glasses ?? 0;
-  const next = Math.max(0, Math.min(30, parsed.data.set ?? current + (parsed.data.delta ?? 1)));
-  const row = await prisma.waterLog.upsert({
+
+  if (parsed.data.set !== undefined) {
+    // Absolute set — already clamped by the schema (0..30).
+    const row = await prisma.waterLog.upsert({
+      where: { userId_date: { userId: req.userId!, date } },
+      create: { userId: req.userId!, date, glasses: parsed.data.set },
+      update: { glasses: parsed.data.set },
+    });
+    return res.json({ glasses: row.glasses, goal: WATER_GOAL });
+  }
+
+  // Delta — atomic increment so two rapid taps can't lose an update.
+  const delta = parsed.data.delta ?? 1;
+  let row = await prisma.waterLog.upsert({
     where: { userId_date: { userId: req.userId!, date } },
-    create: { userId: req.userId!, date, glasses: next },
-    update: { glasses: next },
+    create: { userId: req.userId!, date, glasses: Math.max(0, Math.min(30, delta)) },
+    update: { glasses: { increment: delta } },
   });
+  // Prisma can't clamp inside an increment; fix up only when out of range.
+  if (row.glasses < 0 || row.glasses > 30) {
+    row = await prisma.waterLog.update({
+      where: { userId_date: { userId: req.userId!, date } },
+      data: { glasses: Math.max(0, Math.min(30, row.glasses)) },
+    });
+  }
   res.json({ glasses: row.glasses, goal: WATER_GOAL });
 });
 

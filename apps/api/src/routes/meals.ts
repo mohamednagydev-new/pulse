@@ -390,7 +390,7 @@ mealsRouter.get('/grocery', async (req: AuthedRequest, res) => {
     } catch { /* unparseable recipe — skip its lines */ }
     for (const line of lines) {
       const key = line.trim();
-      if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
+      if (key) counts.set(key, (counts.get(key) ?? 0) + (servings.get(r.id) ?? 1));
     }
   }
 
@@ -404,7 +404,7 @@ mealsRouter.get('/grocery', async (req: AuthedRequest, res) => {
 // Diet preferences — the one thing the plan needs that the intake does not ask.
 const prefSchema = z.object({
   dietPref: z.enum(['none', 'vegetarian', 'vegan']).optional(),
-  avoidFoods: z.array(z.string()).max(12).optional(),
+  avoidFoods: z.array(z.string().max(60)).max(12).optional(),
 });
 
 mealsRouter.patch('/prefs', async (req: AuthedRequest, res) => {

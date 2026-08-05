@@ -98,8 +98,9 @@ trackerRouter.get('/progress', async (req: AuthedRequest, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.userId! } });
   const since = new Date();
   since.setDate(since.getDate() - 27);
-  const [totalCompletions, recent, weights] = await Promise.all([
+  const [totalCompletions, workoutSessions, recent, weights] = await Promise.all([
     prisma.lessonCompletion.count({ where: { userId: req.userId! } }),
+    prisma.xpEvent.count({ where: { userId: req.userId!, reason: 'workout-session' } }),
     prisma.lessonCompletion.findMany({ where: { userId: req.userId!, completedAt: { gte: since } } }),
     prisma.weightLog.findMany({ where: { userId: req.userId! }, orderBy: { date: 'asc' }, take: 60 }),
   ]);
@@ -117,6 +118,9 @@ trackerRouter.get('/progress', async (req: AuthedRequest, res) => {
     currentStreak: user?.currentStreak ?? 0,
     longestStreak: user?.longestStreak ?? 0,
     totalCompletions,
+    // Lesson completions + standalone workout sessions — "have you ever worked
+    // out in the app at all", which is what comeback/first-workout UI wants.
+    totalWorkouts: totalCompletions + workoutSessions,
     weekActivity: week,
     weights,
   });

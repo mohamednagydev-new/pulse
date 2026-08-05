@@ -28,10 +28,33 @@ export function usePageMeta(opts: {
       document.head.appendChild(script);
     }
 
+    // Canonical URL for the current page. There is no static canonical in
+    // index.html (a site-wide "/" canonical would tell Google every page is
+    // the homepage), so pages that set a title claim their own.
+    let canonical: HTMLLinkElement | null = null;
+    let createdCanonical = false;
+    let prevCanonicalHref: string | null = null;
+    if (opts.title) {
+      canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+      if (canonical) {
+        prevCanonicalHref = canonical.getAttribute('href');
+      } else {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        document.head.appendChild(canonical);
+        createdCanonical = true;
+      }
+      canonical.href = `https://pulse.geddo.online${window.location.pathname}`;
+    }
+
     return () => {
       document.title = prevTitle;
       if (meta && prevDesc !== undefined) meta.content = prevDesc;
       script?.remove();
+      if (canonical) {
+        if (createdCanonical) canonical.remove();
+        else if (prevCanonicalHref !== null) canonical.setAttribute('href', prevCanonicalHref);
+      }
     };
     // Stringified deps: callers pass fresh objects every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps

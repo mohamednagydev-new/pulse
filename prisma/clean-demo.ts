@@ -146,11 +146,18 @@ async function rebrandKeptAccounts() {
     }
 
     const target = old ?? already!;
+    const firstTimeRebrand = Boolean(old);
 
-    // Seeded fake content on the kept account goes too.
-    const posts = (await prisma.feedPost.deleteMany({ where: { userId: target.id } })).count;
-    const xp = (await prisma.xpEvent.deleteMany({ where: { userId: target.id } })).count;
-    await prisma.refreshToken.deleteMany({ where: { userId: target.id } }); // kill old sessions
+    // Seeded fake content goes too — but ONLY on the first-time rebrand
+    // (old -> new). Once the account is already in place, its posts, XP,
+    // sessions and stats are REAL and must survive a re-run.
+    let posts = 0;
+    let xp = 0;
+    if (firstTimeRebrand) {
+      posts = (await prisma.feedPost.deleteMany({ where: { userId: target.id } })).count;
+      xp = (await prisma.xpEvent.deleteMany({ where: { userId: target.id } })).count;
+      await prisma.refreshToken.deleteMany({ where: { userId: target.id } }); // kill old sessions
+    }
 
     const data: Record<string, unknown> = {
       email: r.newEmail,
@@ -158,13 +165,15 @@ async function rebrandKeptAccounts() {
       lastName: r.lastName,
       bio: r.bio,
       isCoach: r.isCoach,
-      // fake seeded stats -> honest zeros
-      xp: 0,
-      level: 1,
-      currentStreak: 0,
-      longestStreak: 0,
       onboarded: true,
     };
+    if (firstTimeRebrand) {
+      // fake seeded stats -> honest zeros (first rebrand only)
+      data.xp = 0;
+      data.level = 1;
+      data.currentStreak = 0;
+      data.longestStreak = 0;
+    }
     if (r.coach) {
       data.coachHeadline = r.coach.headline;
       data.coachBio = r.bio;
@@ -230,8 +239,12 @@ async function deleteDemoEvents() {
 }
 
 async function deleteSponsorBanner() {
-  const deleted = (await prisma.banner.deleteMany({ where: { section: 'home_sponsor' } })).count;
-  console.log(`home_sponsor banners deleted: ${deleted} (onboarding banners untouched)`);
+  // Only the known fake seeded banner — an admin-created home_sponsor banner
+  // with any other title survives a re-run.
+  const deleted = (await prisma.banner.deleteMany({
+    where: { section: 'home_sponsor', title: 'Exclusive Fit It Offers' },
+  })).count;
+  console.log(`home_sponsor banners deleted: ${deleted} (onboarding + admin banners untouched)`);
   return deleted;
 }
 
