@@ -32,8 +32,11 @@ impressions). **EGP 5,000–15,000 total** is a real launch budget here, not a t
 
 ### Campaign A — «التحدي الكبير» The Big Launch Challenge (weeks 1–2) — THE centerpiece
 The app already has group challenges with invite codes and leaderboards. Turn launch into one:
-1. Create an official 14-day challenge in-app: e.g. **"أول ١٤ يوم — تحدي البداية"**, goal type
-   lessons/workouts, generous XP reward, seasonal badge.
+1. ✅ BUILT: `prisma/seed-launch-challenge.ts` creates **«التحدي الكبير — أول ١٤ يوم»** —
+   code **PULSE14**, 10 workouts in 14 days, 300 XP + the exclusive 🚀 «من الأوائل»
+   (Founding Member) badge on completion, visible on Home for everyone.
+   **On launch day, run on the server:** `node node_modules/tsx/dist/cli.mjs prisma/seed-launch-challenge.ts`
+   (re-running resets the 14-day window to that day — that's why it's not in seed.ps1).
 2. Announce (POST 7 as the template): "افتح التطبيق، ادخل التحدي بالكود **PULSE14** —
    أول ١٠٠ واحد يخلصوه هيدخلوا لوحة الشرف". Pin the post on FB, link-in-bio on IG.
 3. Daily Story: the live leaderboard screenshot at 9pm ("مين هيلحق التوب ١٠ النهارده؟").
