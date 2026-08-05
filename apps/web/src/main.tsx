@@ -30,6 +30,16 @@ window.addEventListener('load', () => {
   setTimeout(() => { try { sessionStorage.removeItem('pulse_chunk_reload'); } catch { /* ignore */ } }, 10_000);
 });
 
+// Update checks normally run only at page load — an installed app left open for
+// days would never see a deploy. Re-check whenever the app returns to the
+// foreground (rate-limited to once per 10 minutes).
+let lastUpdateCheck = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || Date.now() - lastUpdateCheck < 10 * 60_000) return;
+  lastUpdateCheck = Date.now();
+  navigator.serviceWorker?.getRegistration().then((r) => r?.update()).catch(() => {});
+});
+
 const queryClient = new QueryClient({
   // Any failed mutation surfaces a toast automatically.
   mutationCache: new MutationCache({
