@@ -16,7 +16,7 @@ if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 # Copy source only; skip artifacts + secrets + local data.
 robocopy $src $stage /E `
   /XD node_modules dist dev-dist uploads backups logs .git .vscode `
-  /XF *.db *.db-journal *.db-wal *.db-shm *.log .env `
+  /XF *.db *.db-journal *.db-wal *.db-shm *.log .env client_secret_*.json `
   | Out-Null
 
 if (Test-Path $out) { Remove-Item $out -Force }
