@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Info, RefreshCw, UtensilsCrossed } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Check, Info, RefreshCw, SlidersHorizontal, UtensilsCrossed, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { Loader } from '../components/ui';
+import Sheet from '../components/Sheet';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 
@@ -47,6 +48,7 @@ export default function MealPlan() {
   const isAr = i18n.language.startsWith('ar');
   const pick = (b?: Bi) => (b ? (isAr ? b.ar : b.en) : '');
   const [swapping, setSwapping] = useState<Meal['slot'] | null>(null);
+  const [prefsOpen, setPrefsOpen] = useState(false);
 
   const { data, isLoading } = useQuery({ queryKey: ['meal-plan'], queryFn: () => api.get('/api/meals/plan') });
 
@@ -77,7 +79,17 @@ export default function MealPlan() {
         transition={spring}
         className="mx-4 rounded-2xl bg-white p-5 shadow-sm"
       >
-        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('meals.todayTarget')}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('meals.todayTarget')}</p>
+          {/* Diet preferences were PATCH-able for months with no UI — the planner
+              could never be told about vegetarians or food dislikes. */}
+          <button
+            onClick={() => setPrefsOpen(true)}
+            className="flex min-h-9 items-center gap-1.5 rounded-full bg-gray-100 px-3 text-xs font-bold text-gray-600 transition active:scale-95"
+          >
+            <SlidersHorizontal size={13} /> {t('meals.prefs')}
+          </button>
+        </div>
         <div className="mt-1 flex items-end justify-between gap-3">
           <div className="min-w-0">
             <p className="text-3xl font-extrabold" dir="ltr">
@@ -205,16 +217,119 @@ export default function MealPlan() {
         </Link>
       )}
 
-      <AnimatePresence>
-        {swapping && (
-          <SwapSheet
-            slot={swapping}
-            currentId={meals.find((m) => m.slot === swapping)?.recipe.id ?? ''}
-            onClose={() => setSwapping(null)}
-          />
-        )}
-      </AnimatePresence>
+      {swapping && (
+        <SwapSheet
+          slot={swapping}
+          currentId={meals.find((m) => m.slot === swapping)?.recipe.id ?? ''}
+          onClose={() => setSwapping(null)}
+        />
+      )}
+
+      <PrefsSheet open={prefsOpen} onClose={() => setPrefsOpen(false)} />
     </div>
+  );
+}
+
+/** Diet type + foods to avoid — the two dials the planner reads per user. */
+function PrefsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [diet, setDiet] = useState<string | null>(null);
+  const [avoid, setAvoid] = useState<string[] | null>(null);
+  const [entry, setEntry] = useState('');
+
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me'), enabled: open });
+  // Local state seeds from the profile once, then the user edits freely.
+  const dietValue = diet ?? me?.dietPref ?? 'none';
+  const avoidValue = avoid ?? (me?.avoidFoods ? (JSON.parse(me.avoidFoods) as string[]) : []);
+
+  const save = useMutation({
+    mutationFn: () => api.patch('/api/meals/prefs', { dietPref: dietValue, avoidFoods: avoidValue }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['meal-plan'] });
+      qc.invalidateQueries({ queryKey: ['me'] });
+      onClose();
+    },
+  });
+
+  const addEntry = () => {
+    const v = entry.trim();
+    if (!v || avoidValue.length >= 12) return;
+    if (!avoidValue.some((a) => a.toLowerCase() === v.toLowerCase())) setAvoid([...avoidValue, v]);
+    setEntry('');
+  };
+
+  const DIETS = [
+    { key: 'none', label: t('meals.dietNone') },
+    { key: 'vegetarian', label: t('meals.dietVegetarian') },
+    { key: 'vegan', label: t('meals.dietVegan') },
+  ];
+
+  return (
+    <Sheet open={open} onClose={onClose} label={t('meals.prefsTitle')}>
+      <div className="p-5">
+        <h2 className="text-lg font-extrabold">{t('meals.prefsTitle')}</h2>
+
+        <p className="mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('meals.dietType')}</p>
+        <div className="mt-2 flex gap-2">
+          {DIETS.map((d) => (
+            <button
+              key={d.key}
+              onClick={() => setDiet(d.key)}
+              className={`min-h-10 flex-1 rounded-full text-sm font-bold transition active:scale-95 ${
+                dietValue === d.key ? 'bg-brand-orange text-white' : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="mt-5 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('meals.avoid')}</p>
+        <div className="mt-2 flex gap-2">
+          <input
+            className="input-field flex-1"
+            value={entry}
+            onChange={(e) => setEntry(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEntry())}
+            placeholder={t('meals.avoidPh')}
+            maxLength={40}
+          />
+          <button
+            onClick={addEntry}
+            disabled={!entry.trim() || avoidValue.length >= 12}
+            className="btn-pill btn-primary min-h-11 px-5 text-sm disabled:opacity-50"
+          >
+            {t('meals.add')}
+          </button>
+        </div>
+        {avoidValue.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {avoidValue.map((a) => (
+              <span key={a} className="flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-sm font-semibold text-brand-orange">
+                {a}
+                <button
+                  onClick={() => setAvoid(avoidValue.filter((x) => x !== a))}
+                  aria-label={`${t('common.close')} ${a}`}
+                  className="rounded-full p-0.5"
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => save.mutate()}
+          disabled={save.isPending}
+          className="btn-pill btn-primary mt-6 w-full disabled:opacity-60"
+        >
+          {save.isPending ? t('common.loading') : t('common.save')}
+        </motion.button>
+      </div>
+    </Sheet>
   );
 }
 
@@ -239,29 +354,13 @@ function SwapSheet({ slot, currentId, onClose }: { slot: string; currentId: stri
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex flex-col bg-black/40 backdrop-blur-sm"
-    >
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-        onClick={(e) => e.stopPropagation()}
-        className="mt-auto flex max-h-[80dvh] min-h-0 flex-col rounded-t-3xl bg-white"
-      >
-        <div className="shrink-0 px-5 pb-2 pt-4">
+    <Sheet open onClose={onClose} label={t('meals.swapTitle')}>
+      <div className="flex max-h-[78dvh] min-h-0 flex-col">
+        <div className="shrink-0 px-5 pb-2 pt-2">
           <p className="font-bold">{t('meals.swapTitle')}</p>
           <p className="text-xs text-gray-400">{t('meals.swapSub')}</p>
         </div>
-        <div
-          className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-3"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
-        >
+        <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-3">
           {isLoading && <p className="py-8 text-center text-sm text-gray-400">…</p>}
           {(data?.options ?? []).map((r: any) => (
             <button
@@ -282,7 +381,7 @@ function SwapSheet({ slot, currentId, onClose }: { slot: string; currentId: stri
             <p className="py-8 text-center text-sm text-gray-400">{t('meals.noSwaps')}</p>
           )}
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </Sheet>
   );
 }

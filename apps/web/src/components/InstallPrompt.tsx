@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X, Share, PlusSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import Sheet from './Sheet';
 
 const SNOOZE_KEY = 'pulse_install_snooze';
 const SNOOZE_DAYS = 3;
@@ -77,8 +78,9 @@ export default function InstallPrompt() {
   };
 
   return (
-    <AnimatePresence>
-      {visible && !iosHelp && (
+    <>
+      <AnimatePresence>
+        {visible && !iosHelp && (
         <motion.div
           initial={{ y: 90, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -99,25 +101,11 @@ export default function InstallPrompt() {
             <button onClick={dismiss} aria-label={t('install.gotIt')} className="shrink-0 p-1 text-gray-400"><X size={18} /></button>
           </div>
         </motion.div>
-      )}
+        )}
+      </AnimatePresence>
 
-      {visible && iosHelp && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-          onClick={dismiss}
-        >
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-            className="w-full max-w-[480px] rounded-t-3xl bg-white p-6 pb-10 text-ink"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200" />
+      <Sheet open={visible && iosHelp} onClose={dismiss} label={t('install.iosTitle')}>
+        <div className="px-6 pb-8 pt-3 text-ink">
             <h2 className="text-lg font-bold">{t('install.iosTitle')}</h2>
             <ol className="mt-4 space-y-3 text-sm text-gray-600">
               <li className="flex items-center gap-3 text-start">
@@ -134,9 +122,8 @@ export default function InstallPrompt() {
               </li>
             </ol>
             <button onClick={dismiss} className="btn-pill btn-primary mt-6 w-full">{t('install.gotIt')}</button>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
+      </Sheet>
+    </>
   );
 }

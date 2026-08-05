@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Building2, Clock, MapPin, Navigation, Phone } from 'lucide-react';
 import { api } from '../lib/api';
 import { priceLabel } from '../lib/money';
-import { Loader } from '../components/ui';
+import { Loader, ErrorMsg } from '../components/ui';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 
@@ -85,7 +85,7 @@ export default function Venues() {
     );
   };
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['venues', city, facility, ladies, point],
     queryFn: () => {
       const qs = new URLSearchParams({ type: 'gym' });
@@ -158,7 +158,9 @@ export default function Venues() {
 
       {isLoading && <Loader />}
 
-      {!isLoading && venues.length === 0 && (
+      {isError && <ErrorMsg error={error} onRetry={() => refetch()} />}
+
+      {!isLoading && !isError && venues.length === 0 && (
         <div className="mx-4 mt-6 rounded-2xl bg-white p-8 text-center shadow-sm">
           <Building2 size={28} className="mx-auto text-gray-300" />
           <p className="mt-3 text-sm font-semibold">{t('venues.empty')}</p>

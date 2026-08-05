@@ -6,11 +6,11 @@ import { ChevronRight, Flame, Dumbbell, Activity, Salad, type LucideIcon } from 
 import { api } from '../lib/api';
 import LanguageToggle from '../components/LanguageToggle';
 
-const slides: { title: string; text: string; g: string; Icon: LucideIcon }[] = [
-  { title: 'Count Your Calories', text: 'Track the nutritional value of everything you eat.', g: 'from-orange-600 via-orange-700 to-slate-900', Icon: Flame },
-  { title: 'A Workout For Everybody', text: "HIIT, strength, or a calm yoga session — you'll find your fit here.", g: 'from-blue-700 via-blue-800 to-slate-900', Icon: Dumbbell },
-  { title: 'Yoga & Meditation', text: 'Guided classes and mindful meditation for inner calm.', g: 'from-teal-700 via-teal-800 to-slate-900', Icon: Activity },
-  { title: 'The Wellness Kitchen', text: "Easy, healthy recipes that don't need advanced cooking skills.", g: 'from-emerald-700 via-emerald-800 to-slate-900', Icon: Salad },
+const slides: { titleKey: string; textKey: string; g: string; Icon: LucideIcon }[] = [
+  { titleKey: 'onboarding.slide1Title', textKey: 'onboarding.slide1Body', g: 'from-orange-600 via-orange-700 to-slate-900', Icon: Flame },
+  { titleKey: 'onboarding.slide2Title', textKey: 'onboarding.slide2Body', g: 'from-blue-700 via-blue-800 to-slate-900', Icon: Dumbbell },
+  { titleKey: 'onboarding.slide3Title', textKey: 'onboarding.slide3Body', g: 'from-teal-700 via-teal-800 to-slate-900', Icon: Activity },
+  { titleKey: 'onboarding.slide4Title', textKey: 'onboarding.slide4Body', g: 'from-emerald-700 via-emerald-800 to-slate-900', Icon: Salad },
 ];
 
 export default function Onboarding() {
@@ -65,8 +65,8 @@ export default function Onboarding() {
       </div>
 
       <div className="mx-5 mb-4 rounded-3xl bg-white p-7 text-center text-ink shadow-xl">
-        <h2 className="text-xl font-bold uppercase">{slide.title}</h2>
-        <p className="mt-3 text-gray-600">{slide.text}</p>
+        <h2 className="text-xl font-bold uppercase">{t(slide.titleKey)}</h2>
+        <p className="mt-3 text-gray-600">{t(slide.textKey)}</p>
       </div>
 
       <div className="mb-10 flex items-center justify-center gap-2">
@@ -75,7 +75,7 @@ export default function Onboarding() {
             key={idx}
             onClick={() => setI(idx)}
             className={`h-2.5 rounded-full transition-all ${idx === i ? 'w-6 bg-white' : 'w-2.5 bg-white/40'}`}
-            aria-label={`Slide ${idx + 1}`}
+            aria-label={t('onboarding.goToSlide', { n: idx + 1 })}
           />
         ))}
       </div>

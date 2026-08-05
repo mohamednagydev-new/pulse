@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from './store/auth';
 import TabBar from './components/TabBar';
@@ -8,6 +8,7 @@ import Toaster from './components/Toaster';
 import DesktopGate from './components/DesktopGate';
 import InstallPrompt from './components/InstallPrompt';
 import ErrorBoundary from './components/ErrorBoundary';
+import OfflineBanner from './components/OfflineBanner';
 import { getSocket } from './lib/socket';
 import { celebrateFeedback } from './lib/haptics';
 import { track } from './lib/track';
@@ -146,9 +147,22 @@ export default function App() {
     return () => window.removeEventListener('pulse:session-expired', onExpired);
   }, []);
 
-  // Reset scroll on navigation + screen-view analytics
+  // Scroll handling + screen-view analytics. Forward navigations start at the
+  // top; Back (POP) restores where you were — returning from a recipe to a
+  // scrolled list used to dump you at the top of the feed.
+  const navType = useNavigationType();
+  const scrollPositions = useRef(new Map<string, number>());
+  const prevLocationKey = useRef(location.key);
   useEffect(() => {
-    window.scrollTo(0, 0);
+    scrollPositions.current.set(prevLocationKey.current, window.scrollY);
+    prevLocationKey.current = location.key;
+    if (navType === 'POP') {
+      const y = scrollPositions.current.get(location.key) ?? 0;
+      // rAF: let the (usually query-cached) content lay out first.
+      requestAnimationFrame(() => window.scrollTo(0, y));
+    } else {
+      window.scrollTo(0, 0);
+    }
     if (useAuth.getState().status === 'authed') {
       // Normalize dynamic segments so screens group cleanly (e.g. /recipe/:id).
       const path = location.pathname.replace(/\/[a-z0-9]{20,}/gi, '/:id');
@@ -160,6 +174,7 @@ export default function App() {
     <>
       <DesktopBackdrop />
       <Toaster />
+      <OfflineBanner />
       <div className="app-frame">
       {/* Enter-only transition. An exit animation with mode="wait" could leave the
           next route unmounted if the outgoing page stalled (e.g. tearing down the

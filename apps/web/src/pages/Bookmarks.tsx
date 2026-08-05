@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Bookmark } from 'lucide-react';
 import { api } from '../lib/api';
-import { Loader } from '../components/ui';
+import { Loader, ErrorMsg, EmptyState } from '../components/ui';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 
@@ -19,7 +19,7 @@ const ROUTE: Record<string, (id: string) => string> = {
 
 export default function Bookmarks() {
   const { t } = useTranslation();
-  const { data: bookmarks, isLoading } = useQuery({ queryKey: ['bookmarks'], queryFn: () => api.get('/api/me/bookmarks') });
+  const { data: bookmarks, isLoading, isError, error, refetch } = useQuery({ queryKey: ['bookmarks'], queryFn: () => api.get('/api/me/bookmarks') });
 
   return (
     <div className="relative min-h-screen">
@@ -27,8 +27,18 @@ export default function Bookmarks() {
       <TopBar title="Bookmarks" color="bg-gradient-to-b from-brand-teal to-cyan-500" textColor="text-white" />
       {isLoading ? (
         <Loader />
+      ) : isError ? (
+        <ErrorMsg error={error} onRetry={() => refetch()} />
       ) : !bookmarks?.length ? (
-        <p className="py-16 text-center text-gray-400">{t('bookmarks.empty')}</p>
+        <EmptyState
+          icon={<Bookmark size={40} />}
+          title={t('bookmarks.empty')}
+          action={
+            <Link to="/" className="btn-pill btn-primary px-6">
+              {t('home2.explore')}
+            </Link>
+          }
+        />
       ) : (
         <div className="space-y-2 px-4 pt-4">
           {bookmarks.map((b: any, i: number) => (

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AlertTriangle, ArrowRight, CalendarDays, ClipboardList, Target, X } from 'lucide-react';
+import Sheet from './Sheet';
 
 /**
  * Asked once, at the moment it matters: someone is about to start a programme.
@@ -33,22 +34,8 @@ export default function PlanPrompt({
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex flex-col bg-black/50 backdrop-blur-sm"
-    >
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-        onClick={(e) => e.stopPropagation()}
-        className="mt-auto rounded-t-3xl bg-white p-5"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
-      >
+    <Sheet open onClose={onClose} label={t('planPrompt.title')}>
+      <div className="p-5">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-lg font-extrabold leading-snug">{t('planPrompt.title')}</p>
@@ -85,7 +72,7 @@ export default function PlanPrompt({
         >
           {t('planPrompt.skip')}
         </button>
-      </motion.div>
-    </motion.div>
+      </div>
+    </Sheet>
   );
 }

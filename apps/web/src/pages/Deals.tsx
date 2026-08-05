@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Ticket, Copy, Check, X, MessageCircle, Phone, ChevronRight, Info, Clock } from 'lucide-react';
 import { api } from '../lib/api';
 import { Loader, MediaImage, EmptyState } from '../components/ui';
+import Sheet from '../components/Sheet';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 import { toast } from '../lib/toast';
@@ -60,21 +61,8 @@ function DealSheet({ deal, onClose }: { deal: Deal; onClose: () => void }) {
     : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-        className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-white pb-8"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Sheet open onClose={onClose} label={deal.title}>
+      <div className="pb-8">
         <div className="relative">
           <MediaImage path={deal.image} label={deal.title} className="h-44 w-full" />
           <button onClick={onClose} aria-label={t('common.close')} className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur">
@@ -153,8 +141,8 @@ function DealSheet({ deal, onClose }: { deal: Deal; onClose: () => void }) {
             )}
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </Sheet>
   );
 }
 
@@ -233,7 +221,7 @@ export default function Deals() {
         </div>
       )}
 
-      <AnimatePresence>{active && <DealSheet deal={active} onClose={() => setActive(null)} />}</AnimatePresence>
+      {active && <DealSheet deal={active} onClose={() => setActive(null)} />}
     </div>
   );
 }

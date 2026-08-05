@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Play, Check, X, Dumbbell, UserPlus } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../store/auth';
-import { Loader, MediaImage, EmptyState } from '../../components/ui';
+import { Loader, MediaImage, EmptyState, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import { toast } from '../../lib/toast';
 
@@ -16,7 +16,7 @@ export default function CoachDashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { user } = useAuth();
-  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
+  const { data: me, isError: meError, error: meErr, refetch: refetchMe } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
   const meId = user?.id;
 
   const { data: workouts } = useQuery({ queryKey: ['coach-workouts', meId], queryFn: () => api.get(`/api/coach/${meId}/workouts`), enabled: !!meId && !!me?.isCoach });
@@ -57,6 +57,14 @@ export default function CoachDashboard() {
   });
   const delProg = useMutation({ mutationFn: (id: string) => api.del(`/api/coach/programs/${id}`), onSuccess: () => qc.invalidateQueries({ queryKey: ['coach-programs', meId] }) });
 
+  // A failed /api/me used to leave this on the skeleton forever.
+  if (meError)
+    return (
+      <div className="min-h-screen">
+        <TopBar title="Coach" color="fitness-hero" textColor="text-white" />
+        <ErrorMsg error={meErr} onRetry={() => refetchMe()} />
+      </div>
+    );
   if (!me) return <Loader />;
 
   if (!me.isCoach) {

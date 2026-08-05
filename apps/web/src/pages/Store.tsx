@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Info, MessageCircle, Phone, Globe, ChevronRight, ShoppingBag, X, Ticket } from 'lucide-react';
 import { api } from '../lib/api';
 import { priceLabel } from '../lib/money';
 import { Loader, MediaImage, HScroll, EmptyState } from '../components/ui';
+import Sheet from '../components/Sheet';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 
@@ -69,21 +70,8 @@ export function ProductSheet({ product, onClose }: { product: StoreProduct; onCl
   const waText = encodeURIComponent(`${product.title} — PULSE`);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-        className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-white pb-8"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Sheet open onClose={onClose} label={product.title}>
+      <div className="pb-8">
         <div className="relative">
           <MediaImage path={product.image} label={product.title} className="h-52 w-full" />
           <button onClick={onClose} aria-label={t('common.close')} className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur">
@@ -139,8 +127,8 @@ export function ProductSheet({ product, onClose }: { product: StoreProduct; onCl
 
           <p className="pt-1 text-center text-[11px] leading-relaxed text-gray-400">{t('store.offlineNote')}</p>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </Sheet>
   );
 }
 
@@ -293,9 +281,7 @@ export default function Store() {
         </>
       )}
 
-      <AnimatePresence>
-        {active && <ProductSheet product={active} onClose={() => setActive(null)} />}
-      </AnimatePresence>
+      {active && <ProductSheet product={active} onClose={() => setActive(null)} />}
     </div>
   );
 }

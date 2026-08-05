@@ -2,12 +2,13 @@ import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Flame, Trophy, CheckCircle2, TrendingDown, Medal, Share2, Ruler, Plus, Trash2, X, ImagePlus } from 'lucide-react';
 import { api, getAccessToken } from '../lib/api';
 import { shareMilestone } from '../lib/shareCard';
 import { toast } from '../lib/toast';
 import { Loader, MediaImage } from '../components/ui';
+import Sheet from '../components/Sheet';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 import WeekRecap from '../components/WeekRecap';
@@ -402,23 +403,8 @@ function BodySection() {
         )}
       </motion.section>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-            onClick={close}
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-              className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-white p-5 pb-8"
-              onClick={(ev) => ev.stopPropagation()}
-            >
+      <Sheet open={open} onClose={close} label={t('daily.addMeasure')}>
+        <div className="p-5 pb-8">
               <div className="mb-4 flex items-center justify-between gap-2">
                 <h3 className="min-w-0 truncate text-lg font-extrabold">{t('daily.addMeasure')}</h3>
                 <button onClick={close} aria-label={t('common.close')} className="-me-1 shrink-0 p-1.5 text-gray-400">
@@ -480,10 +466,8 @@ function BodySection() {
               >
                 {t('common.save')}
               </motion.button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      </Sheet>
     </>
   );
 }

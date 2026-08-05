@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Bookmark, Camera, Dumbbell, ChevronRight, Flame, Loader2, Pencil, Ruler, TrendingUp, Medal, Settings, Weight } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { api, getAccessToken } from '../lib/api';
 import { toast } from '../lib/toast';
 import { MediaImage } from '../components/ui';
+import MenuDrawer from '../components/MenuDrawer';
+import Sheet from '../components/Sheet';
 import ShareCardButton from '../components/ShareCardButton';
 import { levelLabel, levelTitle, nextRank } from '../lib/levels';
 
@@ -136,25 +138,8 @@ function EditProfileSheet({ open, onClose, me }: { open: boolean; onClose: () =>
   });
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-50" role="dialog" aria-label="Edit profile">
-          <motion.div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
-          <motion.div
-            className="absolute inset-x-0 bottom-0 max-h-[88dvh] overflow-y-auto rounded-t-[28px] bg-white px-5 pb-8 pt-3"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 380, damping: 38 }}
-          >
-            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-200" />
+    <Sheet open={open} onClose={onClose} label="Edit profile">
+      <div className="px-5 pb-8 pt-3">
             <h2 className="text-lg font-extrabold uppercase">{t('profile.edit')}</h2>
 
             <div className="mt-4 space-y-4">
@@ -217,10 +202,8 @@ function EditProfileSheet({ open, onClose, me }: { open: boolean; onClose: () =>
             <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-pill btn-primary mt-6 w-full disabled:opacity-60">
               {save.isPending ? 'Saving…' : 'Save changes'}
             </button>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+      </div>
+    </Sheet>
   );
 }
 
@@ -273,6 +256,10 @@ export default function Profile() {
     <div className="min-h-screen overflow-x-hidden pb-6">
       <header className="relative rounded-b-[40%] fitness-hero pb-16 pt-12 text-center text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
         <h1 className="text-lg font-bold uppercase tracking-wide">{t('profile.title')}</h1>
+        {/* Drawer on every tab, not just Home. Mirrors the Settings link's slot. */}
+        <div className="absolute start-3 flex h-10 w-10 items-center justify-center" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 2.5rem)' }}>
+          <MenuDrawer />
+        </div>
         <Link to="/info" aria-label="Settings" className="absolute end-3 flex h-10 w-10 items-center justify-center" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 2.5rem)' }}><Settings size={22} /></Link>
       </header>
 

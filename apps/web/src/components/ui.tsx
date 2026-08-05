@@ -22,13 +22,44 @@ export function Loader({ label }: { label?: string }) {
   );
 }
 
-export function ErrorMsg({ error }: { error: unknown }) {
+export function ErrorMsg({ error, onRetry }: { error?: unknown; onRetry?: () => void }) {
   const msg = error instanceof Error ? error.message : 'Something went wrong';
   return (
     <div className="m-4 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
       {msg}
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="mt-3 block min-h-11 rounded-full bg-gray-100 px-6 font-semibold text-gray-700"
+        >
+          Retry
+        </button>
+      )}
     </div>
   );
+}
+
+/** One-stop gate for query-backed screens: skeleton while loading, retryable
+ *  error when the request failed, an optional empty state, else the content. */
+export function QueryGate({
+  isLoading,
+  isError,
+  onRetry,
+  empty,
+  emptyState,
+  children,
+}: {
+  isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
+  empty?: boolean;
+  emptyState?: ReactNode;
+  children: ReactNode;
+}) {
+  if (isLoading) return <Loader />;
+  if (isError) return <ErrorMsg onRetry={onRetry} />;
+  if (empty) return <>{emptyState ?? null}</>;
+  return <>{children}</>;
 }
 
 export function EmptyState({

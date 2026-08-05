@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Dumbbell } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../store/auth';
+import { Loader, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import { toast } from '../../lib/toast';
 
@@ -12,7 +13,7 @@ export default function CoachProfileEdit() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
-  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
+  const { data: me, isLoading, isError, error, refetch } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
 
   const [headline, setHeadline] = useState('');
   const [bio, setBio] = useState('');
@@ -52,6 +53,23 @@ export default function CoachProfileEdit() {
   };
 
   const isCoach = me?.isCoach;
+
+  // Wait for the profile before showing the form — otherwise it renders empty
+  // and the fields snap to their saved values a moment later.
+  if (isLoading)
+    return (
+      <div className="min-h-screen pb-10">
+        <TopBar title="Coach Profile" color="fitness-hero" textColor="text-white" />
+        <Loader />
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="min-h-screen pb-10">
+        <TopBar title="Coach Profile" color="fitness-hero" textColor="text-white" />
+        <ErrorMsg error={error} onRetry={() => refetch()} />
+      </div>
+    );
 
   return (
     <div className="min-h-screen pb-10">

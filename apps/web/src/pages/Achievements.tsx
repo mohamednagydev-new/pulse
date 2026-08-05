@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, MessageSquare, Swords, Plus, Trash2, Share2, KeyRound, ChevronRight } from 'lucide-react';
 import { api } from '../lib/api';
 import { Loader, MediaImage } from '../components/ui';
+import Sheet from '../components/Sheet';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 import ShareCardButton from '../components/ShareCardButton';
@@ -435,25 +436,8 @@ export default function Achievements() {
       </section>
 
       {/* ── Create challenge sheet ─────────────────────────────────── */}
-      <AnimatePresence>
-        {sheet === 'create' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-            onClick={() => setSheet(null)}
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-              className="max-h-[88vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-white p-5 pb-8 text-ink"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200" />
-
+      <Sheet open={sheet === 'create'} onClose={() => setSheet(null)} label={t('challenges.create')}>
+        <div className="p-5 pb-8 text-ink">
               {createdCode ? (
                 <div className="text-center">
                   <motion.p initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={spring} className="text-5xl">🎯</motion.p>
@@ -554,10 +538,8 @@ export default function Achievements() {
                   </motion.button>
                 </>
               )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      </Sheet>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Search, Flame, UserPlus, Check, HeartHandshake, Clock, Zap, MessageSquare } from 'lucide-react';
 import { api } from '../../lib/api';
-import { MediaImage, Loader } from '../../components/ui';
+import { MediaImage, Loader, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import AmbientBg from '../../components/AmbientBg';
 import CoachBadge from '../../components/CoachBadge';
@@ -20,7 +20,7 @@ export default function People() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const key = ['people', q];
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, isError, error, refetch } = useQuery({
     queryKey: key,
     queryFn: () => api.get(q.trim() ? `/api/social/users?q=${encodeURIComponent(q)}` : '/api/social/suggested'),
   });
@@ -65,6 +65,8 @@ export default function People() {
 
       {isLoading ? (
         <Loader />
+      ) : isError ? (
+        <ErrorMsg error={error} onRetry={() => refetch()} />
       ) : (
         <div className="mt-2 space-y-2 px-4">
           {(users ?? []).map((u: any, i: number) => (

@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Camera, Plus, Search, Trash2, Sparkles, UtensilsCrossed } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
-import { Loader } from '../components/ui';
+import { Loader, ErrorMsg } from '../components/ui';
 import TopBar from '../components/TopBar';
 import CountUp from '../components/CountUp';
 import AmbientBg from '../components/AmbientBg';
@@ -22,7 +22,7 @@ export default function Tracker() {
   const [picking, setPicking] = useState(false);
   const [photo, setPhoto] = useState(false);
 
-  const { data, isLoading } = useQuery({ queryKey: ['tracker-day'], queryFn: () => api.get('/api/tracker/day') });
+  const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: ['tracker-day'], queryFn: () => api.get('/api/tracker/day') });
 
   // The free-text estimator needs a configured key. Asking first means we show the
   // box only where it works, instead of offering a button that quietly fails.
@@ -52,6 +52,13 @@ export default function Tracker() {
   };
 
   if (isLoading) return <Loader />;
+  if (isError)
+    return (
+      <div className="min-h-screen">
+        <TopBar title={t('tracker.calories')} color="bg-gradient-to-b from-brand-green to-emerald-600" textColor="text-white" />
+        <ErrorMsg error={error} onRetry={() => refetch()} />
+      </div>
+    );
 
   const totals = data?.totals ?? { calories: 0, protein: 0, carbs: 0, fat: 0 };
   const goals = data?.goals ?? {};

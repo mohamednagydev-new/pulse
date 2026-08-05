@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { UserPlus, Megaphone, MessageSquare, Heart, Award, Flame, Bell, CheckCheck } from 'lucide-react';
 import { api } from '../lib/api';
-import { Loader } from '../components/ui';
+import { Loader, ErrorMsg } from '../components/ui';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 import { toast } from '../lib/toast';
@@ -53,7 +53,7 @@ export function Notifications() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const { data: notifications, isLoading } = useQuery<Notification[]>({
+  const { data: notifications, isLoading, isError, error, refetch } = useQuery<Notification[]>({
     queryKey: ['notifications'],
     queryFn: () => api.get('/api/notifications'),
   });
@@ -98,6 +98,8 @@ export function Notifications() {
 
       {isLoading ? (
         <Loader />
+      ) : isError ? (
+        <ErrorMsg error={error} onRetry={() => refetch()} />
       ) : (
         <div className="px-4 pt-2">
           <div className="flex min-h-8 items-center justify-between px-1 pb-2">

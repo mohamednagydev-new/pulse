@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { CalendarDays, ExternalLink, MapPin, Star, Users } from 'lucide-react';
 import { api } from '../lib/api';
-import { Loader, MediaImage } from '../components/ui';
+import { Loader, MediaImage, ErrorMsg } from '../components/ui';
 import TopBar from '../components/TopBar';
 import CoverArt from '../components/CoverArt';
 import AmbientBg from '../components/AmbientBg';
@@ -42,7 +42,7 @@ export default function Events() {
   const isAr = i18n.language.startsWith('ar');
   const [city, setCity] = useState('');
 
-  const { data, isLoading } = useQuery<{ events: FitEvent[]; cities: { city: string; count: number }[] }>({
+  const { data, isLoading, isError, error, refetch } = useQuery<{ events: FitEvent[]; cities: { city: string; count: number }[] }>({
     queryKey: ['events-board', city],
     queryFn: () => api.get(`/api/board/events${city ? `?city=${encodeURIComponent(city)}` : ''}`),
   });
@@ -100,6 +100,8 @@ export default function Events() {
 
       {isLoading ? (
         <Loader />
+      ) : isError ? (
+        <ErrorMsg error={error} onRetry={() => refetch()} />
       ) : events.length === 0 ? (
         <div className="px-4 py-16 text-center">
           <CalendarDays size={40} className="mx-auto text-gray-300" />

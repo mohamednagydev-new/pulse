@@ -8,6 +8,7 @@ import { api, getAccessToken } from '../../lib/api';
 import { trackAd } from '../../lib/ads';
 import { getSocket } from '../../lib/socket';
 import { Loader, MediaImage } from '../../components/ui';
+import MenuDrawer from '../../components/MenuDrawer';
 import PostCard from '../../components/PostCard';
 
 const FEED_KEY = ['feed'];
@@ -69,14 +70,18 @@ export default function Community() {
   return (
     <div className="min-h-screen pb-6">
       <header className="flex items-center justify-between rounded-b-[28px] fitness-hero px-5 pb-6 pt-12 text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
-        <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="text-2xl font-extrabold"
-        >
-          Community
-        </motion.h1>
+        <div className="flex items-center gap-3">
+          {/* Drawer on every tab, not just Home. */}
+          <MenuDrawer />
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="text-2xl font-extrabold"
+          >
+            {t('nav.community')}
+          </motion.h1>
+        </div>
         <div className="flex items-center gap-1">
           <button onClick={() => navigate('/coaches-community')} aria-label="Coaches" className="flex h-10 w-10 items-center justify-center rounded-full"><Award size={24} /></button>
           <button onClick={() => navigate('/people')} aria-label="People" className="flex h-10 w-10 items-center justify-center rounded-full"><Users size={24} /></button>

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, Star, Play, Dumbbell, CalendarDays, UserPlus, Check, Clock, Zap, HeartHandshake } from 'lucide-react';
 import { api } from '../../lib/api';
-import { MediaImage, Loader } from '../../components/ui';
+import { MediaImage, Loader, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import PostCard from '../../components/PostCard';
 import CoachBadge from '../../components/CoachBadge';
@@ -19,7 +19,7 @@ export default function UserProfile() {
   const qc = useQueryClient();
   const { t } = useTranslation();
   const key = ['user-profile', id];
-  const { data, isLoading } = useQuery({ queryKey: key, queryFn: () => api.get(`/api/social/users/${id}`) });
+  const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: key, queryFn: () => api.get(`/api/social/users/${id}`) });
 
   const follow = useMutation({
     mutationFn: (on: boolean) => (on ? api.post(`/api/social/users/${id}/follow`) : api.del(`/api/social/users/${id}/follow`)),
@@ -42,7 +42,14 @@ export default function UserProfile() {
   });
 
   if (isLoading) return <Loader />;
-  if (!data) return null;
+  // A failed fetch used to render a blank screen — keep the back bar and offer a retry.
+  if (isError || !data)
+    return (
+      <div className="min-h-screen">
+        <TopBar title="" color="fitness-hero" textColor="text-white" />
+        <ErrorMsg error={error} onRetry={() => refetch()} />
+      </div>
+    );
   const { user, stats, isFollowing, posts } = data;
 
   return (

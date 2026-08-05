@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowLeft, Clapperboard, Heart, Loader2, Plus, RefreshCw, Upload, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { api, getAccessToken } from '../lib/api';
 import { toast } from '../lib/toast';
+import Sheet from '../components/Sheet';
 import ReelVideo, { type Reel } from '../components/ReelVideo';
 
 type Topic = 'foryou' | 'workout' | 'yoga';
@@ -265,23 +266,16 @@ function UploadSheet({
   };
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="absolute inset-0 z-30" role="dialog" aria-label={t('reels.upload')}>
-          <motion.div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => !uploading && onClose()}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          />
-          <motion.div
-            className="absolute inset-x-0 bottom-0 rounded-t-[28px] bg-zinc-900 px-5 pb-8 pt-3 text-white"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 380, damping: 38 }}
-          >
+    <Sheet open={open} onClose={() => !uploading && onClose()} label={t('reels.upload')}>
+      {/* Dark composer inside the shared white shell: the wrapper pulls itself up
+          over the sheet's own handle and paints the whole panel zinc-900. */}
+      <div
+        className="-mt-[14px] rounded-t-[28px] bg-zinc-900 px-5 pt-3 text-white"
+        style={{
+          marginBottom: 'calc(env(safe-area-inset-bottom, 0px) * -1)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)',
+        }}
+      >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20" />
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-extrabold">{t('reels.upload')}</h2>
@@ -347,9 +341,7 @@ function UploadSheet({
                 t('reels.post')
               )}
             </button>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+      </div>
+    </Sheet>
   );
 }

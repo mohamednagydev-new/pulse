@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Plus, Search, X } from 'lucide-react';
 import { api } from '../lib/api';
+import Sheet from './Sheet';
 
 /**
  * Pick what you ate from the Egyptian food table.
@@ -60,21 +61,8 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
   const unit = (f: Food) => f.portion;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-        onClick={(e) => e.stopPropagation()}
-        className="mt-auto flex max-h-[85dvh] min-h-0 flex-col rounded-t-3xl bg-white"
-      >
+    <Sheet open onClose={onClose} label={t('food.search')}>
+      <div className="flex max-h-[80dvh] min-h-0 flex-col">
         <div className="flex shrink-0 items-center gap-2 border-b border-gray-100 px-4 py-3">
           <Search size={18} className="shrink-0 text-gray-400" />
           <input
@@ -130,7 +118,6 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
               exit={{ y: 80, opacity: 0 }}
               transition={tapSpring}
               className="shrink-0 space-y-3 border-t border-gray-100 bg-white p-4"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
@@ -191,7 +178,7 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
-    </motion.div>
+      </div>
+    </Sheet>
   );
 }

@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Flame, Zap, Dumbbell, Crown, Swords, Megaphone, MessageSquare } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../store/auth';
 import { MediaImage, Loader } from '../../components/ui';
+import Sheet from '../../components/Sheet';
 import TopBar from '../../components/TopBar';
 import AmbientBg from '../../components/AmbientBg';
 import { toast } from '../../lib/toast';
@@ -65,6 +66,10 @@ export function Buddies() {
   const [duelMetric, setDuelMetric] = useState<DuelMetric>('workouts');
   const [duelDays, setDuelDays] = useState<number>(7);
   const [duelWager, setDuelWager] = useState<number>(0);
+  // Keep the last target around so the sheet still has content while it slides out.
+  const lastDuelTarget = useRef<any>(null);
+  if (duelTarget) lastDuelTarget.current = duelTarget;
+  const duelShown = duelTarget ?? lastDuelTarget.current;
 
   const openDuelSheet = (b: any) => {
     setDuelMetric('workouts');
@@ -441,33 +446,22 @@ export function Buddies() {
         </div>
       )}
 
-      <AnimatePresence>
-        {duelTarget && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-            onClick={() => setDuelTarget(null)}
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-              className="w-full max-w-[480px] rounded-t-3xl bg-white p-5 pb-8 text-ink"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200" />
+      <Sheet
+        open={!!duelTarget}
+        onClose={() => setDuelTarget(null)}
+        label={duelShown ? t('duels.challengeTitle', { name: duelShown.firstName }) : t('duels.duel')}
+      >
+        {duelShown && (
+          <div className="p-5 pb-8 text-ink">
               <div className="flex items-center gap-3">
                 <MediaImage
-                  path={duelTarget.avatarUrl}
-                  label={duelTarget.firstName}
+                  path={duelShown.avatarUrl}
+                  label={duelShown.firstName}
                   className="h-12 w-12 shrink-0 rounded-full"
-                  seed={duelTarget.id?.length}
+                  seed={duelShown.id?.length}
                 />
                 <div>
-                  <h2 className="text-lg font-bold">{t('duels.challengeTitle', { name: duelTarget.firstName })}</h2>
+                  <h2 className="text-lg font-bold">{t('duels.challengeTitle', { name: duelShown.firstName })}</h2>
                   <p className="text-xs text-gray-400">{t('duels.title')} ⚔️</p>
                 </div>
               </div>
@@ -533,10 +527,9 @@ export function Buddies() {
               >
                 {createDuel.isPending ? t('common.loading') : t('duels.send')}
               </motion.button>
-            </motion.div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </Sheet>
     </div>
   );
 }

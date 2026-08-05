@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Users, Plus, Calendar } from 'lucide-react';
 import { api } from '../../lib/api';
-import { Loader, MediaImage, EmptyState } from '../../components/ui';
+import { Loader, MediaImage, EmptyState, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import CoachBadge from '../../components/CoachBadge';
 import AmbientBg from '../../components/AmbientBg';
@@ -19,7 +19,7 @@ export default function GroupSessions() {
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
   const meId = me?.id;
 
-  const { data: sessions, isLoading } = useQuery({ queryKey: ['group-upcoming'], queryFn: () => api.get('/api/group/upcoming') });
+  const { data: sessions, isLoading, isError, error, refetch } = useQuery({ queryKey: ['group-upcoming'], queryFn: () => api.get('/api/group/upcoming') });
   const { data: myWorkouts } = useQuery({
     queryKey: ['coach-workouts', meId],
     queryFn: () => api.get(`/api/coach/${meId}/workouts`),
@@ -86,6 +86,8 @@ export default function GroupSessions() {
         <h2 className="mb-2 font-bold">Upcoming</h2>
         {isLoading ? (
           <Loader />
+        ) : isError ? (
+          <ErrorMsg error={error} onRetry={() => refetch()} />
         ) : !sessions?.length ? (
           <EmptyState icon={<Users size={40} />} title={t('group.empty')} hint={t('group.emptyHint')} />
         ) : (

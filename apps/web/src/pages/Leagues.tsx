@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, Flame, Minus, Timer, Zap } from 'lucide-react';
 import { api } from '../lib/api';
-import { Loader, MediaImage } from '../components/ui';
+import { Loader, MediaImage, ErrorMsg } from '../components/ui';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 import { levelLabel } from '../lib/levels';
@@ -26,7 +26,7 @@ export default function Leagues() {
   const { t, i18n } = useTranslation();
   const isAr = i18n.language.startsWith('ar');
 
-  const { data, isLoading } = useQuery<Standings>({
+  const { data, isLoading, isError, error, refetch } = useQuery<Standings>({
     queryKey: ['league'],
     queryFn: () => api.get('/api/gamification/league'),
     staleTime: 60_000,
@@ -37,7 +37,15 @@ export default function Leagues() {
     staleTime: 5 * 60_000,
   });
 
-  if (isLoading || !data) return <><TopBar title={t('league.title')} color="fitness-hero" textColor="text-white" /><Loader /></>;
+  if (isLoading) return <><TopBar title={t('league.title')} color="fitness-hero" textColor="text-white" /><Loader /></>;
+  // A failed fetch used to leave the skeleton up forever — surface it with a retry.
+  if (isError || !data)
+    return (
+      <>
+        <TopBar title={t('league.title')} color="fitness-hero" textColor="text-white" />
+        <ErrorMsg error={error} onRetry={() => refetch()} />
+      </>
+    );
 
   const tierName = (tier: Tier) => (isAr ? tier.ar : tier.en);
   const promoteLine = data.promoteCount;

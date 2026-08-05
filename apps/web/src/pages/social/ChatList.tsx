@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { api } from '../../lib/api';
-import { MediaImage, Loader } from '../../components/ui';
+import { MediaImage, Loader, ErrorMsg } from '../../components/ui';
 import { timeAgo } from '../../components/PostCard';
 import TopBar from '../../components/TopBar';
 import AmbientBg from '../../components/AmbientBg';
@@ -12,7 +12,7 @@ const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
 export default function ChatList() {
   const { t } = useTranslation();
-  const { data: threads, isLoading, error } = useQuery({
+  const { data: threads, isLoading, error, refetch } = useQuery({
     queryKey: ['chat-threads'],
     queryFn: () => api.get('/api/chat/threads'),
     refetchInterval: 15000,
@@ -30,6 +30,10 @@ export default function ChatList() {
           <p>{t('chat.connectFirst')}</p>
           <Link to="/buddies" className="mt-2 inline-block font-semibold text-brand-pink">Find buddies →</Link>
         </div>
+      ) : error ? (
+        // Non-gated failures (network, server) used to fall through to the
+        // "no conversations" branch — indistinguishable from an empty inbox.
+        <ErrorMsg error={error} onRetry={() => refetch()} />
       ) : isLoading ? (
         <Loader />
       ) : !threads?.length ? (

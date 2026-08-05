@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Bell, BellOff } from 'lucide-react';
-import { getPushState, enablePush, type PushState } from '../lib/push';
+import { useTranslation } from 'react-i18next';
+import { getPushState, enablePush, disablePush, type PushState } from '../lib/push';
 
 export default function PushToggle() {
+  const { t } = useTranslation();
   const [state, setState] = useState<PushState>('default');
   const [busy, setBusy] = useState(false);
 
@@ -15,22 +17,27 @@ export default function PushToggle() {
 
   // Server has no VAPID key configured, SW not active yet, etc.
   if (state === 'unavailable') {
-    return <p className="text-sm text-gray-400">Push notifications aren't available right now.</p>;
+    return <p className="text-sm text-gray-400">{t('reminders.unavailable')}</p>;
   }
 
   const label =
     state === 'subscribed'
-      ? 'Notifications on'
+      ? t('reminders.on')
       : state === 'denied'
-        ? 'Notifications blocked'
-        : 'Enable notifications';
+        ? t('reminders.blocked')
+        : t('reminders.enable');
 
   const onClick = async () => {
-    if (state !== 'default') return;
+    if (state !== 'default' && state !== 'subscribed') return;
     setBusy(true);
     try {
-      const ok = await enablePush();
-      setState(ok ? 'subscribed' : 'denied');
+      if (state === 'subscribed') {
+        await disablePush();
+        setState('default');
+      } else {
+        const ok = await enablePush();
+        setState(ok ? 'subscribed' : 'denied');
+      }
     } catch {
       setState('unavailable');
     } finally {
@@ -42,20 +49,29 @@ export default function PushToggle() {
     <div className="space-y-1">
       <button
         onClick={onClick}
-        disabled={busy || state !== 'default'}
-        className="flex w-full items-center gap-2 rounded-2xl border border-gray-200 bg-white p-4 font-semibold disabled:opacity-70"
+        disabled={busy || state === 'denied'}
+        className={`flex w-full items-center gap-2 rounded-2xl border p-4 font-semibold disabled:opacity-70 ${
+          state === 'subscribed'
+            ? 'border-brand-green/40 bg-brand-green/5 text-brand-green'
+            : 'border-gray-200 bg-white'
+        }`}
       >
         {state === 'subscribed' ? (
           <Bell size={18} className="text-brand-green" />
         ) : (
           <BellOff size={18} />
         )}
-        {busy ? 'Enabling…' : label}
+        {busy
+          ? state === 'subscribed'
+            ? t('reminders.disabling')
+            : t('reminders.enabling')
+          : label}
       </button>
+      {state === 'subscribed' && !busy && (
+        <p className="text-xs text-gray-400">{t('reminders.tapOff')}</p>
+      )}
       {state === 'denied' && (
-        <p className="text-xs text-gray-400">
-          Notifications are blocked in your browser settings. Allow them for this site to turn reminders on.
-        </p>
+        <p className="text-xs text-gray-400">{t('reminders.blockedHint')}</p>
       )}
     </div>
   );

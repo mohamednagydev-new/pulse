@@ -3,20 +3,22 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2 } from 'lucide-react';
 import { api } from '../lib/api';
-import { Loader } from '../components/ui';
+import { Loader, ErrorMsg, EmptyState } from '../components/ui';
 import TopBar from '../components/TopBar';
 
 export default function ProgramsDone() {
   const { t } = useTranslation();
-  const { data: completions, isLoading } = useQuery({ queryKey: ['completions'], queryFn: () => api.get('/api/me/completions') });
+  const { data: completions, isLoading, isError, error, refetch } = useQuery({ queryKey: ['completions'], queryFn: () => api.get('/api/me/completions') });
 
   return (
     <div className="min-h-screen">
       <TopBar title={t('profile.programsDone')} color="bg-gradient-to-b from-brand-teal to-cyan-500" textColor="text-white" />
       {isLoading ? (
         <Loader />
+      ) : isError ? (
+        <ErrorMsg error={error} onRetry={() => refetch()} />
       ) : !completions?.length ? (
-        <p className="py-16 text-center text-gray-400">{t('profile.doneEmpty')}</p>
+        <EmptyState icon={<CheckCircle2 size={40} />} title={t('profile.doneEmpty')} />
       ) : (
         <div className="space-y-2 px-4 pt-4">
           {completions.map((c: any) => (

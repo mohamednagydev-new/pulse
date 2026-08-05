@@ -27,6 +27,17 @@
     "next": "Next",
     "copyFailed": "Couldn't copy"
   },
+  "onboarding": {
+    "slide1Title": "Count Your Calories",
+    "slide1Body": "Track the nutritional value of everything you eat.",
+    "slide2Title": "A Workout For Everybody",
+    "slide2Body": "HIIT, strength, or a calm yoga session — you'll find your fit here.",
+    "slide3Title": "Yoga & Meditation",
+    "slide3Body": "Guided classes and mindful meditation for inner calm.",
+    "slide4Title": "The Wellness Kitchen",
+    "slide4Body": "Easy, healthy recipes that don't need advanced cooking skills.",
+    "goToSlide": "Go to slide {{n}}"
+  },
   "auth": {
     "signIn": "SIGN IN",
     "signUp": "SIGN UP",
@@ -62,7 +73,9 @@
     "checkInbox": "Check your inbox",
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
-    "badLinkTitle": "Invalid reset link"
+    "badLinkTitle": "Invalid reset link",
+    "creating": "Creating…",
+    "invitedBonus": "🎁 You were invited — you'll start with a bonus streak freeze!"
   },
   "home": {
     "fitForLife": "Fit For Life",
@@ -216,7 +229,13 @@
     "saved": "Reminder time saved",
     "enable": "Enable notifications",
     "on": "Notifications on",
-    "desc": "A gentle nudge to log your day and keep your streak alive."
+    "desc": "A gentle nudge to log your day and keep your streak alive.",
+    "blocked": "Notifications blocked",
+    "blockedHint": "Notifications are blocked in your browser settings. Allow them for this site to turn reminders on.",
+    "unavailable": "Push notifications aren't available right now.",
+    "enabling": "Enabling…",
+    "disabling": "Turning off…",
+    "tapOff": "Tap to turn notifications off."
   },
   "session": {
     "logSet": "Log your best set",
@@ -768,6 +787,15 @@
     "title": "Meal plan",
     "subtitle": "Your day, built from your targets",
     "todayTarget": "Today's plan vs your target",
+    "prefs": "Preferences",
+    "prefsTitle": "Meal preferences",
+    "dietType": "Diet type",
+    "dietNone": "Everything",
+    "dietVegetarian": "Vegetarian",
+    "dietVegan": "Vegan",
+    "avoid": "Foods to avoid",
+    "avoidPh": "e.g. shrimp, liver…",
+    "add": "Add",
     "protein": "protein",
     "breakfast": "Breakfast",
     "lunch": "Lunch",

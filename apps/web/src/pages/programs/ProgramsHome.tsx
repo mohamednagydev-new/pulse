@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarDays, ScanLine, ChevronRight, Users, Flame, Play } from 'lucide-react';
 import { api } from '../../lib/api';
-import { MediaImage, HScroll } from '../../components/ui';
+import { MediaImage, HScroll, Loader, ErrorMsg } from '../../components/ui';
+import MenuDrawer from '../../components/MenuDrawer';
 import { CurlAnim, BreatheAnim, exerciseAnim } from '../../components/TrainingAnim';
 
 const rise = {
@@ -26,8 +27,17 @@ export default function ProgramsHome() {
 
   const { data: sched } = useQuery({ queryKey: ['schedule'], queryFn: () => api.get('/api/me/schedule') });
   const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
-  const { data: groups } = useQuery({ queryKey: ['muscle-groups'], queryFn: () => api.get('/api/muscle-groups') });
-  const { data: programs } = useQuery({ queryKey: ['programs'], queryFn: () => api.get('/api/programs') });
+  const {
+    data: groups,
+    isLoading: groupsLoading,
+    refetch: refetchGroups,
+  } = useQuery({ queryKey: ['muscle-groups'], queryFn: () => api.get('/api/muscle-groups') });
+  const {
+    data: programs,
+    isLoading: programsLoading,
+    isError: programsError,
+    refetch: refetchPrograms,
+  } = useQuery({ queryKey: ['programs'], queryFn: () => api.get('/api/programs') });
   // Ranked by the goal and experience captured at onboarding, so a first-time user
   // is pointed somewhere sensible instead of choosing from eighteen cards blind.
   const { data: rec } = useQuery({ queryKey: ['path-recommended'], queryFn: () => api.get('/api/path/recommended') });
@@ -59,6 +69,9 @@ export default function ProgramsHome() {
   return (
     <div className="min-h-screen overflow-x-hidden pb-8">
       <header className="fitness-hero rounded-b-[28px] px-5 pb-8 pt-12 text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
+        {/* Drawer on every tab, not just Home — 19 destinations were unreachable
+            from here without a round-trip through the home screen. */}
+        <MenuDrawer className="mb-2" />
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
           <p className="text-sm opacity-80">{t('programs.welcome')}</p>
           <h1 className="text-3xl font-extrabold">{t('programs.title')}</h1>
@@ -117,6 +130,18 @@ export default function ProgramsHome() {
           </div>
         </motion.button>
       </div>
+
+      {/* Network states for the catalogue-driven sections below — they render
+          nothing while their data is absent, so without this the page is blank. */}
+      {(programsLoading || groupsLoading) && <Loader />}
+      {programsError && !programsLoading && (
+        <ErrorMsg
+          onRetry={() => {
+            refetchPrograms();
+            refetchGroups();
+          }}
+        />
+      )}
 
       {/* Where to start — ranked for this user, ahead of the full catalogue */}
       {!!rec?.programs?.length && (

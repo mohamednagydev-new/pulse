@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Sparkles } from 'lucide-react';
 import { api } from '../lib/api';
+import { Loader, ErrorMsg } from '../components/ui';
 import TopBar from '../components/TopBar';
 
 const ROUTE: Record<string, (id: string) => string> = {
@@ -15,11 +16,12 @@ const ROUTE: Record<string, (id: string) => string> = {
 };
 
 export default function SearchPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
   const [q, setQ] = useState('');
   const enabled = q.trim().length >= 2;
 
-  const { data } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['search', q],
     queryFn: () => api.get(`/api/search?q=${encodeURIComponent(q)}`),
     enabled,
@@ -43,6 +45,7 @@ export default function SearchPage() {
   ];
 
   const smartResults: any[] = (smart?.results ?? []).filter((r: any) => ROUTE[r.contentType]);
+  const hasResults = smartResults.length > 0 || groups.some((g) => (data?.[g.key] ?? []).length > 0);
 
   return (
     <div className="min-h-screen">
@@ -62,6 +65,14 @@ export default function SearchPage() {
 
       <div className="mt-4 px-4">
         {!enabled && <p className="py-10 text-center text-sm text-gray-400">{t('search.minChars')}</p>}
+
+        {enabled && isLoading && <Loader />}
+        {enabled && isError && <ErrorMsg onRetry={() => refetch()} />}
+        {enabled && !isLoading && !isError && !!data && !hasResults && (
+          <p className="py-10 text-center text-sm text-gray-400">
+            {isAr ? `مفيش نتايج لـ "${q.trim()}"` : `No results for "${q.trim()}"`}
+          </p>
+        )}
 
         {!!smartResults.length && (
           <div className="mb-5">

@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Camera, Check, Minus, Plus, X } from 'lucide-react';
 import { api } from '../lib/api';
+import Sheet from './Sheet';
 
 /**
  * Photograph a plate, get an estimate, confirm what to log.
@@ -117,21 +118,8 @@ export default function MealPhoto({ onClose }: { onClose: () => void }) {
   const total = (items ?? []).reduce((n, i) => n + i.calories, 0);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex flex-col bg-black/50 backdrop-blur-sm"
-    >
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-        onClick={(e) => e.stopPropagation()}
-        className="mt-auto flex max-h-[88dvh] min-h-0 flex-col rounded-t-3xl bg-white"
-      >
+    <Sheet open onClose={onClose} label={t('photo.title')}>
+      <div className="flex max-h-[80dvh] min-h-0 flex-col">
         <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-3">
           <p className="font-bold">{t('photo.title')}</p>
           <button onClick={onClose} aria-label={t('common.close')} className="-me-1 p-1 text-gray-400">
@@ -238,7 +226,6 @@ export default function MealPhoto({ onClose }: { onClose: () => void }) {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               className="shrink-0 space-y-3 border-t border-gray-100 p-4"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
             >
               <div className="flex gap-1.5">
                 {SLOTS.map((s) => (
@@ -265,7 +252,7 @@ export default function MealPhoto({ onClose }: { onClose: () => void }) {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
-    </motion.div>
+      </div>
+    </Sheet>
   );
 }

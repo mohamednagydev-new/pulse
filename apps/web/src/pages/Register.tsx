@@ -42,34 +42,35 @@ export default function Register() {
   };
 
   const fields = [
-    { k: 'firstName' as const, ph: 'First Name', icon: User, type: 'text' },
-    { k: 'lastName' as const, ph: 'Last Name', icon: User, type: 'text' },
-    { k: 'mobile' as const, ph: 'Mobile Number', icon: Phone, type: 'tel' },
-    { k: 'email' as const, ph: 'Email', icon: Mail, type: 'email' },
-    { k: 'password' as const, ph: 'Password', icon: Lock, type: 'password' },
-    { k: 'zip' as const, ph: 'Zip/ Postal Code', icon: MapPin, type: 'text' },
+    { k: 'firstName' as const, ph: t('auth.firstName'), icon: User, type: 'text', ac: 'given-name' },
+    { k: 'lastName' as const, ph: t('auth.lastName'), icon: User, type: 'text', ac: 'family-name' },
+    { k: 'mobile' as const, ph: t('auth.mobile'), icon: Phone, type: 'tel', ac: 'tel' },
+    { k: 'email' as const, ph: t('auth.email'), icon: Mail, type: 'email', ac: 'email' },
+    { k: 'password' as const, ph: t('auth.password'), icon: Lock, type: 'password', ac: 'new-password' },
+    { k: 'zip' as const, ph: t('auth.zip'), icon: MapPin, type: 'text', ac: 'postal-code' },
   ];
 
   return (
     <div className="min-h-screen">
       <div className="rounded-b-[40%] fitness-hero pb-12 pt-14 text-center text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3.5rem)' }}>
         <div className="text-4xl font-extrabold italic">PULSE</div>
-        <div className="mt-1 text-[11px] uppercase tracking-[0.25em] opacity-90">A Fresh Start To Get Healthy</div>
+        <div className="mt-1 text-[11px] uppercase tracking-[0.25em] opacity-90">{t('auth.tagline')}</div>
       </div>
 
       {ref && (
         <div className="mx-7 mt-6 rounded-2xl border border-brand-teal/30 bg-brand-teal/10 p-3 text-center text-sm font-semibold text-brand-teal">
-          🎁 You were invited — you'll start with a bonus streak freeze!
+          {t('auth.invitedBonus')}
         </div>
       )}
 
       <form onSubmit={onSubmit} className={`space-y-3.5 px-7 ${ref ? 'pt-4' : 'pt-7'}`}>
-        {fields.map(({ k, ph, icon: Icon, type }) => (
+        {fields.map(({ k, ph, icon: Icon, type, ac }) => (
           <div key={k} className="relative">
             <Icon size={18} className="pointer-events-none absolute start-5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               className="input-field ps-12"
               type={type}
+              autoComplete={ac}
               placeholder={ph}
               value={form[k]}
               onChange={set(k)}
@@ -86,7 +87,7 @@ export default function Register() {
           whileTap={{ scale: 0.97 }}
           className="btn-pill btn-primary w-full gap-2 text-lg disabled:opacity-60"
         >
-          {busy ? 'Creating…' : t('auth.signUp')}
+          {busy ? t('auth.creating') : t('auth.signUp')}
           <motion.span
             aria-hidden
             animate={{ x: [0, 4, 0] }}

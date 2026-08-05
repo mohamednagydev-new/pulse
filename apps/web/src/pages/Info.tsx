@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Bell, Check, ChevronDown, Copy, Download, Gift, HelpCircle, Instagram, LayoutDashboard, LogOut, MessageSquare, Share2 } from 'lucide-react';
 import { api } from '../lib/api';
+import { ErrorMsg } from '../components/ui';
 import { useAuth } from '../store/auth';
 import LanguageToggle from '../components/LanguageToggle';
 import PushToggle from '../components/PushToggle';
@@ -18,7 +19,7 @@ export default function Info() {
   const { t } = useTranslation();
   const logout = useAuth((s) => s.logout);
   const [open, setOpen] = useState<string | null>('settings');
-  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
+  const { data: me, isLoading: meLoading, isError: meError, refetch } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
 
   const doLogout = async () => {
     await logout();
@@ -34,6 +35,10 @@ export default function Info() {
       </header>
 
       <div className="space-y-3 px-4">
+        {/* The static settings below stay usable even if /api/me fails — this
+            banner just surfaces the failure and offers a retry. */}
+        {meError && <ErrorMsg onRetry={() => refetch()} />}
+
         <Accordion id="settings" title={t('info.settings')} open={open} setOpen={setOpen}>
           <SettingsForms />
         </Accordion>
@@ -53,7 +58,9 @@ export default function Info() {
           <LanguageToggle />
         </div>
 
-        <CountryPicker me={me} />
+        {/* Wait for /api/me so the pickers open on the saved values instead of
+            rendering defaults and snapping once the response lands. */}
+        {!meLoading && <CountryPicker me={me} />}
 
         <motion.button
           whileTap={{ scale: 0.98 }}
@@ -92,7 +99,7 @@ export default function Info() {
 
         <InviteFriendsCard />
 
-        <ReminderSection me={me} />
+        {!meLoading && <ReminderSection me={me} />}
 
         <Accordion id="support" title={t('info.support')} open={open} setOpen={setOpen}>
           <div className="space-y-3">

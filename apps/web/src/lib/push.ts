@@ -37,3 +37,12 @@ export async function enablePush(): Promise<boolean> {
   await api.post('/api/push/subscribe', { endpoint: json.endpoint, keys: json.keys });
   return true;
 }
+
+export async function disablePush(): Promise<void> {
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  if (!sub) return;
+  const endpoint = sub.endpoint;
+  await sub.unsubscribe();
+  await api.post('/api/push/unsubscribe', { endpoint });
+}

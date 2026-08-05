@@ -7,6 +7,7 @@ import { HeartPulse, Salad, BookOpen, ChevronRight, Search, Flame } from 'lucide
 import { api } from '../../lib/api';
 import { MediaImage, HScroll, Loader, EmptyState } from '../../components/ui';
 import AmbientBg from '../../components/AmbientBg';
+import MenuDrawer from '../../components/MenuDrawer';
 import RelatedReels from '../../components/RelatedReels';
 
 const MotionLink = motion.create(Link);
@@ -60,6 +61,9 @@ export default function WellnessHome() {
         className="rounded-b-[28px] bg-gradient-to-b from-brand-green to-emerald-600 px-5 pb-8 pt-12 text-white"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}
       >
+        {/* Drawer on every tab, not just Home — 19 destinations were unreachable
+            from here without a round-trip through the home screen. */}
+        <MenuDrawer className="mb-2" />
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
           <p className="text-sm opacity-80">{t('wellness.welcome')}</p>
           <h1 className="text-3xl font-extrabold">{t('wellness.title')}</h1>
