@@ -50,7 +50,9 @@ export default defineConfig({
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api',
-              networkTimeoutSeconds: 5,
+              // 3s, not 5: on a slow connection every widget on Home used to
+              // hang the full timeout before falling back to cached data.
+              networkTimeoutSeconds: 3,
               // Bounded: personalised JSON must not accumulate forever or be
               // served arbitrarily stale after a long offline stretch.
               expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 },
@@ -71,6 +73,22 @@ export default defineConfig({
       devOptions: { enabled: true, type: 'module' },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Stable vendor chunks: the framework code changes far less often than
+        // app code, so splitting it means (a) redeploys invalidate less of the
+        // installed app's cache — fewer stale-chunk failures on iOS — and
+        // (b) the main bundle shrinks for faster parse on phones.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          motion: ['framer-motion'],
+          data: ['@tanstack/react-query', 'zustand', 'socket.io-client'],
+          i18n: ['i18next', 'react-i18next'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

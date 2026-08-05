@@ -10,6 +10,26 @@ import { toast } from './lib/toast';
 
 initTheme();
 
+/**
+ * Stale-deploy recovery. Pages are code-split, so after a deploy an installed
+ * app (worst on iOS, which aggressively kills/restarts PWAs) can hold an old
+ * shell that requests chunk files which no longer exist — the page then simply
+ * fails to open. Vite reports that as `vite:preloadError`; one reload fetches
+ * the fresh shell and fixes it. The sessionStorage flag stops a reload loop if
+ * the network itself is the problem.
+ */
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  const KEY = 'pulse_chunk_reload';
+  if (sessionStorage.getItem(KEY)) return; // already tried once this session
+  try { sessionStorage.setItem(KEY, '1'); } catch { /* private mode */ }
+  window.location.reload();
+});
+window.addEventListener('load', () => {
+  // A successful load clears the guard so the *next* deploy can also recover.
+  setTimeout(() => { try { sessionStorage.removeItem('pulse_chunk_reload'); } catch { /* ignore */ } }, 10_000);
+});
+
 const queryClient = new QueryClient({
   // Any failed mutation surfaces a toast automatically.
   mutationCache: new MutationCache({
