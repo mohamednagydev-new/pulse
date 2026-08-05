@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  // Class-based dark mode: `dark:` variants now work alongside the legacy
+  // .dark overrides in index.css (theme.ts stamps .dark on <html>).
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -8,6 +11,10 @@ export default {
         // orange primary — a unisex, motivational "energy" color.
         brand: {
           pink: '#F97316',
+          // Alias of brand.pink: the primary IS orange, and five call sites
+          // already wrote `brand-orange` assuming this existed (they silently
+          // rendered colorless until it did).
+          orange: '#F97316',
           blue: '#2563EB',
           green: '#16A34A',
           teal: '#0D9488',

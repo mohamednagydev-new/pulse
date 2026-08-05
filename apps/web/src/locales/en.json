@@ -49,6 +49,8 @@
     "createOne": "Create one",
     "signUpFailed": "Sign up failed",
     "oauthOff": "Social login isn't set up yet.",
+    "oauthEmailConflict": "An account with this email already exists — sign in with your password first, then link Google from Settings.",
+    "oauthError": "Social sign-in failed. Please try again.",
     "backToSignIn": "Back to sign in",
     "setNewTitle": "Set a new password",
     "setNewSub": "Choose a strong password to get back into your account.",

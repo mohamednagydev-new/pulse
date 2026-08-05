@@ -258,6 +258,7 @@ function BodySection() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Partial<Record<FieldKey, string>>>({});
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -271,6 +272,7 @@ function BodySection() {
     setOpen(false);
     setForm({});
     setPhoto(null);
+    setPhotoPreview(null);
   };
 
   const save = useMutation({
@@ -301,13 +303,19 @@ function BodySection() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/social/upload', {
+      // Dedicated private endpoint — progress photos must never land in the
+      // public images directory the social feed uses.
+      const res = await fetch('/api/daily/body-photo', {
         method: 'POST',
         headers: { Authorization: `Bearer ${getAccessToken()}` },
         credentials: 'include',
         body: fd,
       });
-      if (res.ok) setPhoto((await res.json()).mediaUrl ?? null);
+      if (res.ok) {
+        const data = await res.json();
+        setPhoto(data.photo ?? null); // stored path, saved with the entry
+        setPhotoPreview(data.url ?? null); // signed URL, renders the thumbnail
+      }
     } catch {
       /* keep the sheet open — saving without a photo still works */
     } finally {
@@ -452,9 +460,9 @@ function BodySection() {
                 />
                 {photo && (
                   <div className="relative">
-                    <MediaImage path={photo} label="" className="h-14 w-14 rounded-lg" />
+                    <MediaImage path={photoPreview ?? photo} label="" className="h-14 w-14 rounded-lg" />
                     <button
-                      onClick={() => setPhoto(null)}
+                      onClick={() => { setPhoto(null); setPhotoPreview(null); }}
                       aria-label="Remove photo"
                       className="absolute -end-2 -top-2 rounded-full bg-black/70 p-1 text-white"
                     >

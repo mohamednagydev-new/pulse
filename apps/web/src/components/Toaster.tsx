@@ -4,7 +4,15 @@ import { useToasts } from '../lib/toast';
 export default function Toaster() {
   const toasts = useToasts((s) => s.toasts);
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-4 z-[90] mx-auto flex max-w-[480px] flex-col items-center gap-2 px-4">
+    // role=status + aria-live: toasts are the app's primary error channel, and
+    // without this every failure is silent to a screen reader. Safe-area top so
+    // they clear the notch in installed/standalone mode.
+    <div
+      role="status"
+      aria-live="polite"
+      className="pointer-events-none fixed inset-x-0 z-[90] mx-auto flex max-w-[480px] flex-col items-center gap-2 px-4"
+      style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+    >
       <AnimatePresence>
         {toasts.map((t) => (
           <motion.div

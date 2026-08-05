@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api, setAccessToken } from '../lib/api';
+import { refreshSocketAuth, disconnectSocket } from '../lib/socket';
 
 export interface User {
   id: string;
@@ -45,6 +46,7 @@ export const useAuth = create<AuthState>((set) => ({
       try {
         const user = await api.get('/api/me');
         set({ user, status: 'authed' });
+        refreshSocketAuth(); // the socket may have tried (and failed) before the token existed
         return;
       } catch {
         /* fall through */
@@ -57,17 +59,20 @@ export const useAuth = create<AuthState>((set) => ({
     const { accessToken, user } = await api.post('/api/auth/login', { email, password, remember });
     setAccessToken(accessToken);
     set({ user, status: 'authed' });
+    refreshSocketAuth();
   },
 
   register: async (data) => {
     const { accessToken, user } = await api.post('/api/auth/register', data);
     setAccessToken(accessToken);
     set({ user, status: 'authed' });
+    refreshSocketAuth();
   },
 
   logout: async () => {
     await api.post('/api/auth/logout');
     setAccessToken(null);
+    disconnectSocket();
     set({ user: null, status: 'guest' });
   },
 

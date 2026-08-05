@@ -76,12 +76,18 @@ export default function MenuDrawer({ className = '' }: { className?: string }) {
   const isAr = i18n.language.startsWith('ar');
   const L = (en: string, ar: string) => (isAr ? ar : en);
 
-  // Lock the page behind the drawer so scrolling stays inside the menu.
+  // Lock the page behind the drawer so scrolling stays inside the menu,
+  // and close on Escape like any dialog.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
   }, [open]);
 
   const close = () => setOpen(false);
@@ -115,7 +121,7 @@ export default function MenuDrawer({ className = '' }: { className?: string }) {
             with it the footer - sat below the visible area and could not be reached.
             dvh tracks the visible viewport instead. */}
         {open && (
-          <div className="fixed inset-0 z-[80] h-[100dvh]" role="dialog">
+          <div className="fixed inset-0 z-[80] h-[100dvh]" role="dialog" aria-modal="true">
             <motion.div
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={close}
@@ -125,9 +131,12 @@ export default function MenuDrawer({ className = '' }: { className?: string }) {
             />
             <motion.div
               className="fitness-hero absolute inset-y-0 start-0 flex h-full w-80 max-w-[88%] flex-col overflow-hidden text-white shadow-2xl"
-              initial={{ x: '-100%' }}
+              // start-0 anchors to the right edge in RTL, but framer's x is
+              // physical — without the flip the panel flies across the whole
+              // screen from off-screen-left in Arabic.
+              initial={{ x: isAr ? '100%' : '-100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
+              exit={{ x: isAr ? '100%' : '-100%' }}
               transition={{ type: 'spring', stiffness: 420, damping: 40 }}
             >
               <div className="flex shrink-0 items-center justify-between px-5 pb-3" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 2.5rem)' }}>

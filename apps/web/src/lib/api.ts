@@ -43,8 +43,13 @@ async function request(path: string, options: RequestInit = {}, retry = true): P
     credentials: 'include',
   });
 
-  if (res.status === 401 && retry && !path.includes('/api/auth/')) {
-    if (await tryRefresh()) return request(path, options, false);
+  if (res.status === 401 && !path.includes('/api/auth/')) {
+    if (retry && (await tryRefresh())) return request(path, options, false);
+    // Refresh failed: the session is gone. Tell the shell to reset to guest so
+    // the user lands on /login instead of a half-broken screen of error toasts.
+    // (Event, not a store import — store/auth already imports this module.)
+    setAccessToken(null);
+    window.dispatchEvent(new Event('pulse:session-expired'));
   }
 
   if (!res.ok) {

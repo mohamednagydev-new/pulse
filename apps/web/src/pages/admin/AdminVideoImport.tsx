@@ -64,7 +64,13 @@ export default function AdminVideoImport() {
   });
 
   const apply = useMutation({
-    mutationFn: () => api.post('/api/admin/video-import/apply', { target, text }),
+    // Send the previewed matches themselves — applying from the raw text again
+    // could write a different set than the one just reviewed.
+    mutationFn: () =>
+      api.post('/api/admin/video-import/apply', {
+        target,
+        rows: (rows ?? []).filter((r) => r.status === 'matched').map((r) => ({ id: r.id, url: r.url })),
+      }),
     onSuccess: (res: any) => {
       toast(`${res.applied} updated, ${res.skipped} skipped`, 'success');
       setRows(null);

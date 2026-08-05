@@ -41,10 +41,12 @@ export default function TopBar({
       }`}
       style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
     >
-      <button onClick={goBack} aria-label="Back" className="p-1">
-        <ChevronLeft size={26} />
+      {/* min 44px target; rtl:rotate-180 so the arrow points "back" in Arabic too —
+          this header is on 40+ screens, so a wrong-way arrow here is app-wide. */}
+      <button onClick={goBack} aria-label="Back" className="-ms-2 flex min-h-11 min-w-11 items-center justify-center">
+        <ChevronLeft size={26} className="rtl:rotate-180" />
       </button>
-      {title && <h1 className="mx-auto pr-8 text-lg font-bold uppercase tracking-wide">{title}</h1>}
+      {title && <h1 className="mx-auto pe-8 text-lg font-bold uppercase tracking-wide">{title}</h1>}
     </header>
   );
 }

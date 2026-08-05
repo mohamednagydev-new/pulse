@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from './store/auth';
 import TabBar from './components/TabBar';
 import Confetti from './components/Confetti';
 import Toaster from './components/Toaster';
 import DesktopGate from './components/DesktopGate';
 import InstallPrompt from './components/InstallPrompt';
+import ErrorBoundary from './components/ErrorBoundary';
 import { getSocket } from './lib/socket';
 import { celebrateFeedback } from './lib/haptics';
 import { track } from './lib/track';
@@ -14,6 +15,10 @@ import { track } from './lib/track';
 const TAB_ROUTES = ['/', '/programs', '/community', '/wellness', '/profile'];
 import AppLayout from './components/AppLayout';
 import Splash from './components/Splash';
+
+// Eager: the auth funnel and the five tab screens — the first paint for
+// everyone. Everything else code-splits so the initial bundle stops shipping
+// all 68 pages to a phone that wanted the login screen.
 import Onboarding from './pages/Onboarding';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -21,68 +26,67 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import ProgramsHome from './pages/programs/ProgramsHome';
-import WorkoutHub from './pages/programs/WorkoutHub';
-import YogaHub from './pages/programs/YogaHub';
-import Schedule from './pages/programs/Schedule';
-import WorkoutSession from './pages/programs/WorkoutSession';
-import CoachPage from './pages/programs/CoachPage';
-import ProgramPage from './pages/programs/ProgramPage';
-import LessonPage from './pages/programs/LessonPage';
-import ExercisesPage from './pages/programs/ExercisesPage';
-import MuscleGroupPage from './pages/programs/MuscleGroupPage';
 import WellnessHome from './pages/wellness/WellnessHome';
-import WellnessSection from './pages/wellness/WellnessSection';
-import CategoryPage from './pages/wellness/CategoryPage';
-import RecipePage from './pages/wellness/RecipePage';
-import ArticlePage from './pages/wellness/ArticlePage';
 import Profile from './pages/Profile';
-import Info from './pages/Info';
-import SearchPage from './pages/SearchPage';
-import Bookmarks from './pages/Bookmarks';
-import ProgramsDone from './pages/ProgramsDone';
-import Buddies from './pages/social/Buddies';
-import Reels from './pages/Reels';
-import Notifications from './pages/Notifications';
-import Store from './pages/Store';
-import Deals from './pages/Deals';
-import Events from './pages/Events';
-import Leagues from './pages/Leagues';
-import PartnerPage from './pages/PartnerPage';
-import Help from './pages/Help';
-import Tracker from './pages/Tracker';
-import MealPlan from './pages/MealPlan';
-import Venues from './pages/Venues';
-import Progress from './pages/Progress';
-import Achievements from './pages/Achievements';
-import Leaderboard from './pages/Leaderboard';
-import MusicGallery from './pages/MusicGallery';
-import AdminHome from './pages/admin/AdminHome';
-import AdminResource from './pages/admin/AdminResource';
-import AdminUpload from './pages/admin/AdminUpload';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminAnalytics from './pages/admin/AdminAnalytics';
-import AdminReels from './pages/admin/AdminReels';
-import AdminLeads from './pages/admin/AdminLeads';
-import AdminVideoImport from './pages/admin/AdminVideoImport';
-import AdminSupport from './pages/admin/AdminSupport';
-import Support from './pages/Support';
-import Assessment from './pages/Assessment';
 import Community from './pages/social/Community';
-import People from './pages/social/People';
-import UserProfile from './pages/social/UserProfile';
-import ChatList from './pages/social/ChatList';
-import ChatRoom from './pages/social/ChatRoom';
-import ChallengeRoom from './pages/social/ChallengeRoom';
-import CoachesDirectory from './pages/social/CoachesDirectory';
-import CoachProfileEdit from './pages/social/CoachProfileEdit';
-import CoachDashboard from './pages/social/CoachDashboard';
-import CoachProgramDetail from './pages/social/CoachProgramDetail';
-import GroupSessions from './pages/social/GroupSessions';
-import GroupSessionDetail from './pages/social/GroupSessionDetail';
+
+const WorkoutHub = lazy(() => import('./pages/programs/WorkoutHub'));
+const YogaHub = lazy(() => import('./pages/programs/YogaHub'));
+const Schedule = lazy(() => import('./pages/programs/Schedule'));
+const WorkoutSession = lazy(() => import('./pages/programs/WorkoutSession'));
+const CoachPage = lazy(() => import('./pages/programs/CoachPage'));
+const ProgramPage = lazy(() => import('./pages/programs/ProgramPage'));
+const LessonPage = lazy(() => import('./pages/programs/LessonPage'));
+const ExercisesPage = lazy(() => import('./pages/programs/ExercisesPage'));
+const MuscleGroupPage = lazy(() => import('./pages/programs/MuscleGroupPage'));
+const WellnessSection = lazy(() => import('./pages/wellness/WellnessSection'));
+const CategoryPage = lazy(() => import('./pages/wellness/CategoryPage'));
+const RecipePage = lazy(() => import('./pages/wellness/RecipePage'));
+const ArticlePage = lazy(() => import('./pages/wellness/ArticlePage'));
+const Info = lazy(() => import('./pages/Info'));
+const SearchPage = lazy(() => import('./pages/SearchPage'));
+const Bookmarks = lazy(() => import('./pages/Bookmarks'));
+const ProgramsDone = lazy(() => import('./pages/ProgramsDone'));
+const Buddies = lazy(() => import('./pages/social/Buddies'));
+const Reels = lazy(() => import('./pages/Reels'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Store = lazy(() => import('./pages/Store'));
+const Deals = lazy(() => import('./pages/Deals'));
+const Events = lazy(() => import('./pages/Events'));
+const Leagues = lazy(() => import('./pages/Leagues'));
+const PartnerPage = lazy(() => import('./pages/PartnerPage'));
+const Help = lazy(() => import('./pages/Help'));
+const Tracker = lazy(() => import('./pages/Tracker'));
+const MealPlan = lazy(() => import('./pages/MealPlan'));
+const Venues = lazy(() => import('./pages/Venues'));
+const Progress = lazy(() => import('./pages/Progress'));
+const Achievements = lazy(() => import('./pages/Achievements'));
+const MusicGallery = lazy(() => import('./pages/MusicGallery'));
+const AdminHome = lazy(() => import('./pages/admin/AdminHome'));
+const AdminResource = lazy(() => import('./pages/admin/AdminResource'));
+const AdminUpload = lazy(() => import('./pages/admin/AdminUpload'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
+const AdminReels = lazy(() => import('./pages/admin/AdminReels'));
+const AdminLeads = lazy(() => import('./pages/admin/AdminLeads'));
+const AdminVideoImport = lazy(() => import('./pages/admin/AdminVideoImport'));
+const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'));
+const Support = lazy(() => import('./pages/Support'));
+const Assessment = lazy(() => import('./pages/Assessment'));
+const People = lazy(() => import('./pages/social/People'));
+const UserProfile = lazy(() => import('./pages/social/UserProfile'));
+const ChatList = lazy(() => import('./pages/social/ChatList'));
+const ChatRoom = lazy(() => import('./pages/social/ChatRoom'));
+const ChallengeRoom = lazy(() => import('./pages/social/ChallengeRoom'));
+const CoachesDirectory = lazy(() => import('./pages/social/CoachesDirectory'));
+const CoachProfileEdit = lazy(() => import('./pages/social/CoachProfileEdit'));
+const CoachDashboard = lazy(() => import('./pages/social/CoachDashboard'));
+const CoachProgramDetail = lazy(() => import('./pages/social/CoachProgramDetail'));
+const GroupSessions = lazy(() => import('./pages/social/GroupSessions'));
+const GroupSessionDetail = lazy(() => import('./pages/social/GroupSessionDetail'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const status = useAuth((s) => s.status);
-  const user = useAuth((s) => s.user);
   const location = useLocation();
 
   if (status === 'authed') {
@@ -129,6 +133,19 @@ export default function App() {
     }
   }, [bootstrap]);
 
+  // The API layer fires this when a 401 survives the refresh attempt: the
+  // session is dead, so reset to guest — RequireAuth then routes to /login
+  // (carrying state.from) instead of leaving a screen of failed queries.
+  useEffect(() => {
+    const onExpired = () => {
+      if (useAuth.getState().status === 'authed') {
+        useAuth.setState({ user: null, status: 'guest' });
+      }
+    };
+    window.addEventListener('pulse:session-expired', onExpired);
+    return () => window.removeEventListener('pulse:session-expired', onExpired);
+  }, []);
+
   // Reset scroll on navigation + screen-view analytics
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -153,6 +170,8 @@ export default function App() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ type: 'spring', stiffness: 420, damping: 38, mass: 0.6 }}
       >
+      <ErrorBoundary>
+      <Suspense fallback={<Splash />}>
       <Routes location={location}>
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
@@ -201,7 +220,8 @@ export default function App() {
           <Route path="/gyms" element={<Venues />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/achievements" element={<Achievements />} />
-          <Route path="/leaderboard/:id" element={<Leaderboard />} />
+          {/* /leaderboard/:id removed — nothing ever linked to it; the weekly
+              board lives in Achievements and each challenge room has its own. */}
           {/* /plan was the language-model plan generator. It is replaced by the
               rule-based meal plan, which explains every choice. Old links and
               cached bundles land on the thing that superseded it. */}
@@ -257,6 +277,8 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
+      </ErrorBoundary>
       </motion.div>
       {TAB_ROUTES.includes(location.pathname) && <TabBar />}
       <InstallPrompt />

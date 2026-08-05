@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +32,8 @@ function GoogleLogo() {
 export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const login = useAuth((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,13 +47,18 @@ export default function Login() {
     setBusy(true);
     try {
       await login(email, password, remember);
-      navigate('/');
+      // Deep links survive the login bounce: RequireAuth put the original
+      // destination in state.from — land there, not on Home.
+      const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
+      navigate(from?.pathname ? `${from.pathname}${from.search ?? ''}` : '/', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setBusy(false);
     }
   };
+
+  const oauthStatus = searchParams.get('oauth');
 
   return (
     <div className="min-h-screen">
@@ -67,6 +74,7 @@ export default function Login() {
           <input
             className="input-field ps-12"
             type="email"
+            autoComplete="email"
             placeholder={t('auth.email')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -78,6 +86,7 @@ export default function Login() {
           <input
             className="input-field ps-12"
             type="password"
+            autoComplete="current-password"
             placeholder={t('auth.password')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -94,8 +103,14 @@ export default function Login() {
         </div>
 
         {error && <p className="text-center text-sm text-red-500">{error}</p>}
-        {new URLSearchParams(window.location.search).get('oauth') === 'unconfigured' && (
+        {oauthStatus === 'unconfigured' && (
           <p className="text-center text-sm text-amber-600">{t('auth.oauthOff')}</p>
+        )}
+        {oauthStatus === 'email_conflict' && (
+          <p className="text-center text-sm text-amber-600">{t('auth.oauthEmailConflict')}</p>
+        )}
+        {oauthStatus === 'error' && (
+          <p className="text-center text-sm text-red-500">{t('auth.oauthError')}</p>
         )}
 
         <div className="flex items-center gap-3 py-2 text-brand-teal">
