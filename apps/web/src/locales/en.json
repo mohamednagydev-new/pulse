@@ -838,6 +838,9 @@
   "food": {
     "search": "Search food — fuul, koshari, chicken…",
     "noMatch": "Nothing matched. Try the Arabic name.",
+    "speak": "Say what you ate",
+    "listening": "Listening… say it, e.g. a plate of koshari",
+    "micDenied": "Microphone is blocked — allow it in browser settings to log by voice.",
     "add": "Add to today",
     "addFood": "Add food",
     "addFoodSub": "Egyptian portions with real numbers",

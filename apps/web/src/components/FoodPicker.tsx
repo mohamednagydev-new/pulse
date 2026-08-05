@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, Search, X } from 'lucide-react';
+import { Mic, Minus, Plus, Search, X } from 'lucide-react';
 import { api } from '../lib/api';
+import { toast } from '../lib/toast';
+import { listenOnce, voiceSupported } from '../lib/voiceInput';
 import Sheet from './Sheet';
 
 /**
@@ -32,12 +34,39 @@ const tapSpring = { type: 'spring', stiffness: 500, damping: 30 } as const;
 const SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 
 export default function FoodPicker({ onClose, date }: { onClose: () => void; date?: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [q, setQ] = useState('');
   const [picked, setPicked] = useState<Food | null>(null);
   const [portions, setPortions] = useState(1);
   const [slot, setSlot] = useState<(typeof SLOTS)[number]>('snack');
+  const [listening, setListening] = useState(false);
+  const voice = useRef<{ cancel: () => void } | null>(null);
+
+  useEffect(() => () => voice.current?.cancel(), []);
+
+  // Dialect voice logging: the transcript drops straight into the search box,
+  // and the API's Arabic normalisation does the matching ("كشري" → koshari).
+  const speak = async () => {
+    if (listening) {
+      voice.current?.cancel();
+      return;
+    }
+    setListening(true);
+    try {
+      const session = listenOnce(i18n.language.startsWith('ar') ? 'ar-EG' : 'en-US', (interim) => setQ(interim));
+      voice.current = session;
+      const text = await session.promise;
+      if (text) setQ(text);
+    } catch (e) {
+      const code = e instanceof Error ? e.message : '';
+      if (code === 'not-allowed' || code === 'service-not-allowed') toast(t('food.micDenied'), 'error');
+      // 'no-speech' and cancels are silent — nothing to scold the user about.
+    } finally {
+      voice.current = null;
+      setListening(false);
+    }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['foods', q],
@@ -68,10 +97,22 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
           <input
             autoFocus
             className="min-w-0 flex-1 bg-transparent text-sm outline-none"
-            placeholder={t('food.search')}
+            placeholder={listening ? t('food.listening') : t('food.search')}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
+          {voiceSupported() && (
+            <button
+              onClick={speak}
+              aria-label={t('food.speak')}
+              aria-pressed={listening}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition active:scale-90 ${
+                listening ? 'bg-red-500 text-white' : 'bg-emerald-50 text-brand-green'
+              }`}
+            >
+              <Mic size={16} className={listening ? 'animate-pulse' : ''} />
+            </button>
+          )}
           <button onClick={onClose} aria-label={t('common.close')} className="-me-1 shrink-0 p-1 text-gray-400">
             <X size={20} />
           </button>
