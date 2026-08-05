@@ -1,6 +1,29 @@
 # PULSE — Wearables & Watch Integration: Feasibility + Plan
 
-**Date:** 2026-08-05 · Status: assessment (nothing built yet)
+**Date:** 2026-08-05 · Status: Phase 1 built (Bluetooth HR, free, live) · Phase 2 built but **dormant**
+
+> **⚠️ CORRECTION (verified 2026-08-05):** Strava paywalled its developer API —
+> since June 1, 2026 a Standard-Tier API app requires a paid Strava
+> subscription (~$12/mo). The Strava integration in this repo stays fully
+> built and **env-gated dormant** (zero cost while the keys are blank); it
+> activates in minutes if the economics ever make sense or an Extended-Access
+> exemption is granted. The free path forward is below.
+>
+> **Revised free plan:**
+> 1. **Bluetooth live HR** (shipped) — completely free, no accounts, works today.
+> 2. **Poll users first** ("which watch do you wear?" via the events pipeline) —
+>    build nothing until the demand data says which brand matters.
+> 3. **Free direct APIs by demand:** Huawei Health cloud (free dev account —
+>    Huawei/Honor bands are big locally), Fitbit (free), Polar (free),
+>    Garmin Health (free after partner approval — apply early, it takes weeks).
+> 4. **The real free jackpot: Health Connect via a Capacitor Android shell.**
+>    PLAY-STORE.md/deploy/twa show a Play Store release is already planned —
+>    upgrading that TWA plan to a Capacitor shell (same web app inside) unlocks
+>    Health Connect: Samsung Health, Mi Fitness (Xiaomi!), and Google data,
+>    on-device, no vendor APIs, no recurring fees. Cost: the $25 one-time Play
+>    registration already implied by the store plan. This now replaces Strava
+>    as the recommended hub, since it covers the same brands for free on
+>    Android — which is where the Egyptian audience overwhelmingly is.
 
 ## 1. The honest constraint map
 
