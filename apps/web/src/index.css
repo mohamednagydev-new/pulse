@@ -312,12 +312,45 @@ h3 {
 /* Tinted blurred card backdrops — richer than a flat gradient */
 .hero-blue,
 .hero-pink,
-.hero-green {
+.hero-green,
+.hero-teal,
+.hero-violet {
   position: relative;
   overflow: hidden;
   isolation: isolate;
 }
-.hero-blue { background-color: #0e1730; }
+/* Two extra section tones so every tab can own a distinct header color
+   (teal = profile, violet = community). Same recipe as the others. */
+.hero-teal { background-color: #115e59; background-image: linear-gradient(150deg, #0d9488 0%, #164e63 100%); }
+.hero-teal::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  background:
+    radial-gradient(42% 46% at 24% 26%, rgba(20, 184, 166, 0.75), transparent 62%),
+    radial-gradient(38% 42% at 82% 20%, rgba(6, 182, 212, 0.5), transparent 60%),
+    radial-gradient(42% 46% at 72% 86%, rgba(16, 185, 129, 0.45), transparent 62%);
+  filter: blur(42px);
+  animation: heroDrift 17s ease-in-out infinite alternate;
+}
+.hero-violet { background-color: #4c1d95; background-image: linear-gradient(150deg, #7c3aed 0%, #6d28d9 100%); }
+.hero-violet::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  background:
+    radial-gradient(42% 46% at 24% 26%, rgba(167, 139, 250, 0.7), transparent 62%),
+    radial-gradient(38% 42% at 82% 20%, rgba(217, 70, 239, 0.5), transparent 60%),
+    radial-gradient(42% 46% at 72% 86%, rgba(99, 102, 241, 0.5), transparent 62%);
+  filter: blur(42px);
+  animation: heroDrift 18s ease-in-out infinite alternate;
+}
+/* Vibrant gradient bases: the blurred glows alone rendered weak (near-grey) on
+   many mobile GPUs — the linear base guarantees the section color reads even
+   when the blur doesn't. */
+.hero-blue { background-color: #1e3a8a; background-image: linear-gradient(150deg, #2563eb 0%, #312e81 100%); }
 .hero-blue::before {
   content: '';
   position: absolute;
@@ -330,7 +363,7 @@ h3 {
   filter: blur(42px);
   animation: heroDrift 16s ease-in-out infinite alternate;
 }
-.hero-pink { background-color: #2a0f12; }
+.hero-pink { background-color: #9f1239; background-image: linear-gradient(150deg, #f97316 0%, #be123c 100%); }
 .hero-pink::before {
   content: '';
   position: absolute;
@@ -343,7 +376,7 @@ h3 {
   filter: blur(42px);
   animation: heroDrift 18s ease-in-out infinite alternate;
 }
-.hero-green { background-color: #0c1f16; }
+.hero-green { background-color: #14532d; background-image: linear-gradient(150deg, #16a34a 0%, #115e59 100%); }
 .hero-green::before {
   content: '';
   position: absolute;

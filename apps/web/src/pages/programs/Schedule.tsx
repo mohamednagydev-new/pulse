@@ -7,6 +7,7 @@ import { api } from '../../lib/api';
 import { Loader } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import { toast } from '../../lib/toast';
+import { sameMuscle } from '../../lib/muscleNames';
 
 type Day = { day: string; focus: string; groups: string[] };
 const DAY_INDEX = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -31,7 +32,7 @@ export default function Schedule() {
   if (isLoading) return <Loader />;
 
   const groupNames: string[] = (groups ?? []).map((g: any) => g.name);
-  const idFor = (name: string) => (groups ?? []).find((g: any) => g.name.toLowerCase() === name.toLowerCase())?.id;
+  const idFor = (name: string) => (groups ?? []).find((g: any) => sameMuscle(g.name, name))?.id;
   const startDay = (d: Day) => { const first = d.groups.map(idFor).find(Boolean); if (first) navigate(`/session/${first}`); };
   const setFocus = (i: number, v: string) => setDays((a) => a.map((d, k) => (k === i ? { ...d, focus: v } : d)));
   const toggleGroup = (i: number, name: string) =>

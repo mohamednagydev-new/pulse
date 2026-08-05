@@ -4,6 +4,9 @@
  * `currentColor`, so the caller sets the tone (dark silhouette on white cards,
  * light on dark heroes). Swap this for real Canva/SVG art later by replacing the
  * <path> data — the hotspot overlay is independent.
+ */
+import { canonicalMuscle } from '../lib/muscleNames';
+/**
  *
  * Pass `highlight` (a muscle-group name, case-insensitive) to light up the
  * matching anatomical region with a pulsing brand-orange fill.
@@ -107,9 +110,11 @@ const REGIONS: Record<string, JSX.Element> = {
   ),
 };
 
-/** True when a muscle-group name maps to an anatomical region overlay. */
+/** True when a muscle-group name maps to an anatomical region overlay.
+ *  canonicalMuscle translates Arabic names — the API localises `name`, and
+ *  without this every Arabic muscle map fell back to the generic dot. */
 export function hasRegion(name?: string | null): boolean {
-  return !!name && !!REGIONS[name.trim().toLowerCase()];
+  return !!name && !!REGIONS[canonicalMuscle(name)];
 }
 
 export default function BodySvg({
@@ -121,7 +126,7 @@ export default function BodySvg({
   highlight?: string;
   className?: string;
 }) {
-  const region = highlight ? REGIONS[highlight.trim().toLowerCase()] : undefined;
+  const region = highlight ? REGIONS[canonicalMuscle(highlight)] : undefined;
 
   return (
     <svg viewBox="0 0 200 470" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">

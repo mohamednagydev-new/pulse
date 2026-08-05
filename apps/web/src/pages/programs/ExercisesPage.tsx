@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCw, Timer, Flame, ChevronRight } from 'lucide-react';
+import { sameMuscle } from '../../lib/muscleNames';
 import { api } from '../../lib/api';
 import { Loader, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -24,7 +25,7 @@ export default function ExercisesPage() {
 
   const all: Group[] = groups ?? [];
   const visible = all.filter((g) => g.bodySide === side);
-  const cardio = all.find((g) => g.name.toLowerCase() === 'cardio');
+  const cardio = all.find((g) => sameMuscle(g.name, 'cardio'));
 
   const flip = () => {
     setActive(null);

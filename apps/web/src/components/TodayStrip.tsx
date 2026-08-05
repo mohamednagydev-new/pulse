@@ -5,6 +5,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Flame, Megaphone, Flower2, Droplets, Wind } from 'lucide-react';
 import { api } from '../lib/api';
 import { getSocket } from '../lib/socket';
+import { sameMuscle } from '../lib/muscleNames';
 import { MediaImage } from './ui';
 import { toast } from '../lib/toast';
 import { tapFeedback } from '../lib/haptics';
@@ -58,7 +59,7 @@ export default function TodayStrip() {
   const startToday = () => {
     if (path?.enrolled && path.next?.id) return navigate(`/lesson/${path.next.id}`);
     const id = (today?.groups ?? [])
-      .map((name: string) => (groups ?? []).find((g: any) => g.name.toLowerCase() === name.toLowerCase())?.id)
+      .map((name: string) => (groups ?? []).find((g: any) => sameMuscle(g.name, name))?.id)
       .find(Boolean);
     navigate(id ? `/session/${id}` : '/programs');
   };

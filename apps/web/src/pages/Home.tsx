@@ -18,6 +18,7 @@ import { LeagueCard } from './Leagues';
 import PathCard from '../components/PathCard';
 import CheckInCard from '../components/CheckInCard';
 import MenuDrawer from '../components/MenuDrawer';
+import ScreenHeader from '../components/ScreenHeader';
 import VideoPlayer from '../components/VideoPlayer';
 import CountUp from '../components/CountUp';
 import { CurlAnim } from '../components/TrainingAnim';
@@ -52,7 +53,7 @@ export default function Home() {
 
   return (
     <div className="pb-6">
-      <header className="animate-fade-up rounded-b-[28px] fitness-hero px-5 pb-6 pt-12 text-white shadow-lg" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
+      <ScreenHeader tone="hero" padBottom="pb-6" className="animate-fade-up shadow-lg">
         <div className="flex items-center justify-between">
           <MenuDrawer />
           <span className="text-2xl font-extrabold italic tracking-tight">PULSE</span>
@@ -62,7 +63,7 @@ export default function Home() {
           </div>
         </div>
         <Greeting />
-      </header>
+      </ScreenHeader>
 
       {/* Warm re-entry after 3+ idle days — sits above the strip so a returning
           user sees the easy way back before anything asks for effort. */}

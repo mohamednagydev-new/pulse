@@ -10,6 +10,7 @@ import { installAvailable, openInstall } from '../lib/install';
 import { toast } from '../lib/toast';
 import { MediaImage } from '../components/ui';
 import MenuDrawer from '../components/MenuDrawer';
+import ScreenHeader from '../components/ScreenHeader';
 import Sheet from '../components/Sheet';
 import ShareCardButton from '../components/ShareCardButton';
 import { levelLabel, levelTitle, nextRank, rankRing } from '../lib/levels';
@@ -256,14 +257,15 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen overflow-x-hidden pb-6">
-      <header className="relative rounded-b-[40%] fitness-hero pb-16 pt-12 text-center text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
+      {/* Section tone: Profile owns teal. Same 28px curve as every other tab. */}
+      <ScreenHeader tone="teal" padBottom="pb-16" className="text-center">
         <h1 className="text-lg font-bold uppercase tracking-wide">{t('profile.title')}</h1>
         {/* Drawer on every tab, not just Home. Mirrors the Settings link's slot. */}
         <div className="absolute start-3 flex h-10 w-10 items-center justify-center" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 2.5rem)' }}>
           <MenuDrawer />
         </div>
         <Link to="/info" aria-label="Settings" className="absolute end-3 flex h-10 w-10 items-center justify-center" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 2.5rem)' }}><Settings size={22} /></Link>
-      </header>
+      </ScreenHeader>
 
       <div className="-mt-12 flex flex-col items-center">
         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={spring} className="relative">

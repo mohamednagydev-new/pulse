@@ -10,6 +10,7 @@ import InstallPrompt from './components/InstallPrompt';
 import InstallFab from './components/InstallFab';
 import ErrorBoundary from './components/ErrorBoundary';
 import OfflineBanner from './components/OfflineBanner';
+import PullToRefresh from './components/PullToRefresh';
 import { getSocket } from './lib/socket';
 import { celebrateFeedback } from './lib/haptics';
 import { track } from './lib/track';
@@ -177,6 +178,7 @@ export default function App() {
       <DesktopBackdrop />
       <Toaster />
       <OfflineBanner />
+      <PullToRefresh />
       <div className="app-frame">
       {/* Enter-only transition. An exit animation with mode="wait" could leave the
           next route unmounted if the outgoing page stalled (e.g. tearing down the

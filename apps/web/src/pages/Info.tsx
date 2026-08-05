@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Bell, Check, ChevronDown, Copy, Download, Gift, HelpCircle, Instagram, LayoutDashboard, LogOut, MessageSquare, Share2 } from 'lucide-react';
+import { Bell, Check, ChevronDown, ChevronLeft, Copy, Download, Gift, HelpCircle, Instagram, LayoutDashboard, LogOut, MessageSquare, Share2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { ErrorMsg } from '../components/ui';
 import { useAuth } from '../store/auth';
@@ -29,9 +29,22 @@ export default function Info() {
   return (
     <div className="relative min-h-screen pb-10">
       <AmbientBg tone="cool" />
-      <header className="flex items-center px-5 pt-12 pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
+      <header className="flex items-center gap-1 px-4 pt-12 pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
+        {/* Back first — Settings is a detail screen people arrive at from
+            Profile/the drawer and expect to leave the same way. */}
+        <button
+          onClick={() => {
+            const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+            if (idx > 0) navigate(-1);
+            else navigate('/profile', { replace: true });
+          }}
+          aria-label={t('common.back')}
+          className="flex min-h-11 min-w-11 items-center justify-center"
+        >
+          <ChevronLeft size={26} className="rtl:rotate-180" />
+        </button>
+        <h1 className="mx-auto text-lg font-bold uppercase">{t('info.title')}</h1>
         <MenuDrawer />
-        <h1 className="mx-auto pe-6 text-lg font-bold uppercase">{t('info.title')}</h1>
       </header>
 
       <div className="space-y-3 px-4">

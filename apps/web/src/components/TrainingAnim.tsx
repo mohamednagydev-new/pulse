@@ -2,6 +2,7 @@ import BodySvg, { hasRegion } from './BodySvg';
 import {
   RowAnim, PullAnim, TricepsAnim, CalfAnim, SideLyingAnim, CarryAnim, TwistAnim, WristAnim,
 } from './MoveAnims';
+import { canonicalMuscle } from '../lib/muscleNames';
 
 type AnimProps = { className?: string };
 const EASE = '0.4 0 0.2 1';
@@ -141,7 +142,11 @@ export function BreatheAnim({ className = '' }: AnimProps) {
 
 /** Pick the animation that best matches an exercise (or muscle-group) name. */
 export function exerciseAnim(text?: string): (p: AnimProps) => JSX.Element {
-  const t = (text || '').toLowerCase();
+  // canonicalMuscle folds Arabic group names into their English form so the
+  // regexes below match in both languages — in Arabic, every quick-session
+  // card used to fall through to the same default curl icon. The raw text is
+  // kept alongside so Arabic *exercise* names still hit the Arabic keywords.
+  const t = `${canonicalMuscle(text)} ${text || ''}`.toLowerCase();
 
   // Most specific first: a name can contain several of these words, and the first
   // match wins. "Standing Calf Raise" is a calf raise, not a lateral raise; a
@@ -161,6 +166,23 @@ export function exerciseAnim(text?: string): (p: AnimProps) => JSX.Element {
   if (/(bench|push-?up|chest|fly|pec)/.test(t)) return PushUpAnim;
   if (/(overhead|shoulder|press|lateral raise|front raise|delt|arnold|y raise)/.test(t)) return PressAnim;
   if (/(yoga|breath|stretch|mobility|flow|meditat|pose|cobra|warrior|pigeon)/.test(t)) return BreatheAnim;
+
+  // Arabic exercise names (the API localises `name` when the app runs in Arabic).
+  // Same most-specific-first discipline as the English block above.
+  if (/رسغ|معصم/.test(t)) return WristAnim;
+  if (/سمانة/.test(t)) return CalfAnim;
+  if (/متوازي|فرنساوي/.test(t)) return TricepsAnim;
+  if (/عقلة|سحب لأعلى|سحب علوي/.test(t)) return PullAnim;
+  if (/تجديف/.test(t)) return RowAnim;
+  if (/حمل المزارع|هز الكتف|هز الأكتاف|تعليق/.test(t)) return CarryAnim;
+  if (/صدفة|مبعدات|مقربات|رفع جانبي للرجل|جانبي وانت نايم/.test(t)) return SideLyingAnim;
+  if (/حطاب|لف الجذع|تدوير روسي/.test(t)) return TwistAnim;
+  if (/سكوات|قرفصاء|طعن|اندفاع|رفعة|ديدليفت|جسر|فخد|فخذ|مؤخرة|رجل/.test(t)) return SquatAnim;
+  if (/بلانك|كرنش|طحن|سوبرمان|بطن/.test(t)) return PlankAnim;
+  if (/جري|نط الحبل|قفز|دراجة|هيت/.test(t)) return JumpAnim;
+  if (/رفرفة|علوي بالدمبل/.test(t)) return PressAnim;
+  if (/ضغط|بنش|تفتيح/.test(t)) return PushUpAnim;
+  if (/يوجا|تنفس|إطالة|تأمل|استرخاء/.test(t)) return BreatheAnim;
   return CurlAnim; // curls and anything else arm-flexion shaped
 }
 

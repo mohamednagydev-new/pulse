@@ -233,11 +233,13 @@ contentRouter.get('/search', async (req, res) => {
   const q = (typeof req.query.q === 'string' ? req.query.q : '').trim();
   if (q.length < 2) return res.json({ programs: [], recipes: [], articles: [], exercises: [] });
   const contains = { contains: q };
+  // Arabic columns included — most of the audience types Arabic, and a search
+  // that only reads the English columns silently returns nothing for them.
   const [programs, recipes, articles, exercises] = await Promise.all([
-    prisma.program.findMany({ where: { title: contains }, take: 10, include: { coach: true } }),
-    prisma.recipe.findMany({ where: { OR: [{ title: contains }, { about: contains }] }, take: 10 }),
-    prisma.article.findMany({ where: { OR: [{ title: contains }, { body: contains }] }, take: 10 }),
-    prisma.exercise.findMany({ where: { name: contains }, take: 10 }),
+    prisma.program.findMany({ where: { OR: [{ title: contains }, { titleAr: contains }] }, take: 10, include: { coach: true } }),
+    prisma.recipe.findMany({ where: { OR: [{ title: contains }, { titleAr: contains }, { about: contains }, { aboutAr: contains }] }, take: 10 }),
+    prisma.article.findMany({ where: { OR: [{ title: contains }, { titleAr: contains }, { body: contains }, { bodyAr: contains }] }, take: 10 }),
+    prisma.exercise.findMany({ where: { OR: [{ name: contains }, { nameAr: contains }] }, take: 10 }),
   ]);
   res.json({ programs, recipes, articles, exercises });
 });

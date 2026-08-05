@@ -6,6 +6,8 @@ import { CalendarDays, ScanLine, ChevronRight, Users, Flame, Play } from 'lucide
 import { api } from '../../lib/api';
 import { MediaImage, HScroll, Loader, ErrorMsg } from '../../components/ui';
 import MenuDrawer from '../../components/MenuDrawer';
+import ScreenHeader from '../../components/ScreenHeader';
+import { sameMuscle } from '../../lib/muscleNames';
 import { CurlAnim, BreatheAnim, exerciseAnim } from '../../components/TrainingAnim';
 
 const rise = {
@@ -55,7 +57,7 @@ export default function ProgramsHome() {
   const streak = progress?.currentStreak ?? 0;
   const startToday = () => {
     const id = (today?.groups ?? [])
-      .map((name: string) => (groups ?? []).find((g: any) => g.name.toLowerCase() === name.toLowerCase())?.id)
+      .map((name: string) => (groups ?? []).find((g: any) => sameMuscle(g.name, name))?.id)
       .find(Boolean);
     navigate(id ? `/session/${id}` : '/workout');
   };
@@ -68,7 +70,8 @@ export default function ProgramsHome() {
 
   return (
     <div className="min-h-screen overflow-x-hidden pb-8">
-      <header className="fitness-hero rounded-b-[28px] px-5 pb-8 pt-12 text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
+      {/* Section tone: Programs owns blue (per the original per-section design). */}
+      <ScreenHeader tone="blue" padBottom="pb-8">
         {/* Drawer on every tab, not just Home — 19 destinations were unreachable
             from here without a round-trip through the home screen. */}
         <MenuDrawer className="mb-2" />
@@ -77,7 +80,7 @@ export default function ProgramsHome() {
           <h1 className="text-3xl font-extrabold">{t('programs.title')}</h1>
           <p className="mt-2 text-white/80">{t('programs.motto')}</p>
         </motion.div>
-      </header>
+      </ScreenHeader>
 
       {/* Today — pulled from the user's schedule, one-tap start */}
       {today && (

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import { api } from '../lib/api';
+import { sameMuscle } from '../lib/muscleNames';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 const DAY_INDEX = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -37,7 +38,7 @@ export default function ComebackCard() {
   const todayName = DAY_INDEX[new Date().getDay()];
   const todayPlan = (sched?.schedule ?? []).find((d: any) => d?.day === todayName);
   const preferred = (todayPlan?.groups ?? [])
-    .map((name: string) => list.find((g: any) => g?.name?.toLowerCase() === String(name).toLowerCase())?.id)
+    .map((name: string) => list.find((g: any) => sameMuscle(g?.name, name))?.id)
     .find(Boolean);
   const groupId: string | undefined = preferred ?? list[0]?.id;
   if (!groupId) return null;

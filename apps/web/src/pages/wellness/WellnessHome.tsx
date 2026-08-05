@@ -8,6 +8,7 @@ import { api } from '../../lib/api';
 import { MediaImage, HScroll, Loader, EmptyState } from '../../components/ui';
 import AmbientBg from '../../components/AmbientBg';
 import MenuDrawer from '../../components/MenuDrawer';
+import ScreenHeader from '../../components/ScreenHeader';
 import RelatedReels from '../../components/RelatedReels';
 
 const MotionLink = motion.create(Link);
@@ -57,10 +58,8 @@ export default function WellnessHome() {
     <div className="relative overflow-x-hidden pb-6">
       <AmbientBg tone="green" />
 
-      <header
-        className="rounded-b-[28px] bg-gradient-to-b from-brand-green to-emerald-600 px-5 pb-8 pt-12 text-white"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}
-      >
+      {/* Section tone: Wellness owns green. */}
+      <ScreenHeader tone="green" padBottom="pb-8">
         {/* Drawer on every tab, not just Home — 19 destinations were unreachable
             from here without a round-trip through the home screen. */}
         <MenuDrawer className="mb-2" />
@@ -68,7 +67,7 @@ export default function WellnessHome() {
           <p className="text-sm opacity-80">{t('wellness.welcome')}</p>
           <h1 className="text-3xl font-extrabold">{t('wellness.title')}</h1>
         </motion.div>
-      </header>
+      </ScreenHeader>
 
       {/* Search pill */}
       <div className="px-4">

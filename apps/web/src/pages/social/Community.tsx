@@ -9,6 +9,7 @@ import { trackAd } from '../../lib/ads';
 import { getSocket } from '../../lib/socket';
 import { Loader, MediaImage } from '../../components/ui';
 import MenuDrawer from '../../components/MenuDrawer';
+import ScreenHeader from '../../components/ScreenHeader';
 import PostCard from '../../components/PostCard';
 
 const FEED_KEY = ['feed'];
@@ -69,7 +70,8 @@ export default function Community() {
 
   return (
     <div className="min-h-screen pb-6">
-      <header className="flex items-center justify-between rounded-b-[28px] fitness-hero px-5 pb-6 pt-12 text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
+      {/* Section tone: Community owns violet. */}
+      <ScreenHeader tone="violet" padBottom="pb-6" className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Drawer on every tab, not just Home. */}
           <MenuDrawer />
@@ -90,7 +92,7 @@ export default function Community() {
             {unread?.unread > 0 && <span className="absolute end-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-brand-pink">{unread.unread}</span>}
           </button>
         </div>
-      </header>
+      </ScreenHeader>
 
       {/* Feed | Reels switcher — Reels opens the full-screen vertical player */}
       <div className="mx-4 -mt-3 mb-3 flex rounded-full glass p-1 text-sm font-bold">
