@@ -18,6 +18,21 @@ Work through this top to bottom; each block says exactly where it runs.
    restarts the NSSM service.
 4. Run `powershell -File C:\pulse\deploy\seed.ps1` — adds the progression ladder
    (84 exercises) and the Ramadan guide pack. Existing user data untouched.
+4b. **Launch-day data scripts** (from `C:\pulse`, in this order — deliberately manual,
+    never in seed.ps1):
+    ```
+    node node_modules/tsx/dist/cli.mjs prisma/clean-demo.ts
+    node node_modules/tsx/dist/cli.mjs prisma/seed-real-venues.ts
+    node node_modules/tsx/dist/cli.mjs prisma/seed-launch-challenge.ts
+    ```
+    - `clean-demo` purges all demo users/partners/deals/events + the fake sponsor
+      banner, and rebrands 2 accounts into **PULSE Team** + **Coach PULSE** —
+      **it prints their fresh passwords ONCE: save them immediately.**
+    - `seed-real-venues` adds 11 real Cairo/Alex gyms + 4 real events (source URLs
+      in the file). Store/deals stay empty until real partners sign — by design.
+    - `seed-launch-challenge` starts the PULSE14 window from that day.
+    - Also check prod for stray `*@t.co` / `*@test.local` users from old testing —
+      the cleaner only deletes its exact known list.
 5. Smoke check: open the site → Home loads → `pulse.geddo.online/api/health`
    returns `{"ok":true}` → change language to عربي → open a workout, quick session
    cards show *different* icons now → Tracker → add food → the mic button appears
