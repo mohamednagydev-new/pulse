@@ -20,8 +20,10 @@ contentRouter.get('/home', async (_req, res) => {
     // Real challenges, not FeaturedItem placeholders. The two placeholders here
     // named challenges that did not exist, had no Arabic, and both linked to the
     // same page — while 37 joinable challenges sat unused behind them.
+    // Live window only: startsOn ≤ today ≤ endsOn. Without the startsOn bound,
+    // seasonal challenges staged months ahead (Ramadan, future waves) leak onto Home.
     prisma.challenge.findMany({
-      where: { kind: 'global', endsOn: { gte: dayString() } },
+      where: { kind: 'global', startsOn: { lte: dayString() }, endsOn: { gte: dayString() } },
       orderBy: [{ startsOn: 'desc' }],
       take: 10,
       include: { _count: { select: { participants: true } } },

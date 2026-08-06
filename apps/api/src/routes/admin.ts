@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -585,11 +586,91 @@ adminRouter.get('/users', async (req, res) => {
     where: q
       ? { OR: [{ email: { contains: q } }, { firstName: { contains: q } }, { lastName: { contains: q } }] }
       : {},
-    select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true, isCoach: true, coachVerified: true, coachFeatured: true },
+    select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true, isCoach: true, coachVerified: true, coachFeatured: true, avatarUrl: true, xp: true, level: true, currentStreak: true, lastActiveOn: true },
     orderBy: { createdAt: 'desc' },
     take,
   });
   res.json(users);
+});
+
+// ---- Full user control (edit / reset password / delete) ----
+
+const adminUserPatch = z.object({
+  firstName: z.string().min(1).max(60).optional(),
+  lastName: z.string().max(60).optional(),
+  email: z.string().email().optional(),
+  role: z.enum(['USER', 'ADMIN']).optional(),
+  isCoach: z.boolean().optional(),
+  coachVerified: z.boolean().optional(),
+  coachFeatured: z.boolean().optional(),
+});
+
+adminRouter.patch('/users/:id', async (req: any, res) => {
+  const parsed = adminUserPatch.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid fields' });
+  // The last admin must not be able to lock everyone out by demoting themselves.
+  if (parsed.data.role === 'USER' && req.params.id === req.userId) {
+    const admins = await prisma.user.count({ where: { role: 'ADMIN' } });
+    if (admins <= 1) return res.status(400).json({ error: 'You are the only admin — promote someone else first' });
+  }
+  try {
+    const user = await prisma.user.update({ where: { id: req.params.id }, data: parsed.data });
+    const { passwordHash, ...safe } = user;
+    res.json(safe);
+  } catch (e) {
+    if (!asBadRequest(res, e)) throw e;
+  }
+});
+
+/** New random password, returned exactly once. All sessions are revoked. */
+adminRouter.post('/users/:id/reset-password', async (req, res) => {
+  const crypto = await import('crypto');
+  const bcrypt = await import('bcryptjs');
+  const pw = crypto.randomBytes(9).toString('base64url');
+  try {
+    await prisma.user.update({ where: { id: req.params.id }, data: { passwordHash: await bcrypt.hash(pw, 10) } });
+    await prisma.refreshToken.deleteMany({ where: { userId: req.params.id } });
+    res.json({ password: pw });
+  } catch (e) {
+    if (!asBadRequest(res, e)) throw e;
+  }
+});
+
+/** Hard delete: FK cascades handle most tables; the loose-id tables (same set
+ *  clean-demo.ts sweeps) are cleared explicitly so no orphan rows remain. */
+adminRouter.delete('/users/:id', async (req: any, res) => {
+  const id = req.params.id;
+  if (id === req.userId) return res.status(400).json({ error: "You can't delete your own account" });
+  const target = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+  if (!target) return res.status(404).json({ error: 'Not found' });
+  if (target.role === 'ADMIN') return res.status(400).json({ error: 'Demote the admin to USER first' });
+
+  const inId = { in: [id] };
+  await prisma.notification.deleteMany({ where: { userId: inId } });
+  await prisma.connection.deleteMany({ where: { OR: [{ requesterId: inId }, { addresseeId: inId }] } });
+  await prisma.eventRsvp.deleteMany({ where: { userId: inId } });
+  await prisma.reelFavorite.deleteMany({ where: { userId: inId } });
+  await prisma.reelWatch.deleteMany({ where: { userId: inId } });
+  await prisma.spinClaim.deleteMany({ where: { userId: inId } });
+  await prisma.questClaim.deleteMany({ where: { userId: inId } });
+  await prisma.waterLog.deleteMany({ where: { userId: inId } });
+  await prisma.bodyLog.deleteMany({ where: { userId: inId } });
+  await prisma.liftLog.deleteMany({ where: { userId: inId } });
+  await prisma.postReaction.deleteMany({ where: { userId: inId } });
+  await prisma.passwordResetToken.deleteMany({ where: { userId: inId } });
+  await prisma.groupParticipant.deleteMany({ where: { userId: inId } });
+  await prisma.groupSession.deleteMany({ where: { coachUserId: inId } });
+  await prisma.coachRating.deleteMany({ where: { OR: [{ coachUserId: inId }, { clientId: inId }] } });
+  await prisma.coachRequest.deleteMany({ where: { OR: [{ coachUserId: inId }, { clientId: inId }] } });
+  await prisma.coachWorkout.deleteMany({ where: { coachUserId: inId } });
+  await prisma.coachProgram.deleteMany({ where: { coachUserId: inId } });
+  await prisma.dMThread.deleteMany({ where: { OR: [{ userAId: inId }, { userBId: inId }] } });
+  await prisma.buddyChallenge.deleteMany({ where: { OR: [{ challengerId: inId }, { opponentId: inId }] } });
+  await prisma.lead.deleteMany({ where: { userId: inId } });
+  await prisma.aiUsage.deleteMany({ where: { userId: inId } });
+  await prisma.weeklyRecap.deleteMany({ where: { userId: inId } });
+  await prisma.user.delete({ where: { id } });
+  res.json({ ok: true });
 });
 
 // ---- Uploads ----

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Flame, Trophy, Zap } from 'lucide-react';
 import { api } from '../lib/api';
-import { MediaImage } from './ui';
+import Avatar from './Avatar';
 
 interface Person {
   id: string;
@@ -19,8 +19,7 @@ interface Person {
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
-/** This week's top movers. Kept to a single horizontal row: recognition earns its
- *  place on Home, but not five stacked rows of it. */
+/** This week's top movers: a 3-person podium, then ranked rows to #10. */
 export default function HallOfFame() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<'xp' | 'streak'>('xp');
@@ -32,6 +31,18 @@ export default function HallOfFame() {
 
   const rows = (tab === 'xp' ? data?.topXp : data?.topStreaks) ?? [];
   if (!data || rows.length === 0) return null;
+
+  const podium = rows.slice(0, 3);
+  const rest = rows.slice(3, 10);
+  // Center the champion: silver — gold — bronze.
+  const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean) as Person[];
+
+  const score = (p: Person) =>
+    tab === 'xp' ? (
+      <>{p.xp ?? 0} XP</>
+    ) : (
+      <><Flame size={10} /> {p.currentStreak ?? 0}</>
+    );
 
   return (
     <motion.section
@@ -46,7 +57,6 @@ export default function HallOfFame() {
           <Trophy size={16} className="shrink-0 text-amber-500" /> {t('fun.hallOfFame')}
         </h2>
 
-        {/* Segmented control instead of a full-width tab bar — saves a row of height */}
         <div className="flex shrink-0 gap-0.5 rounded-full bg-gray-100 p-0.5">
           {([
             { key: 'xp' as const, icon: Zap, label: t('fun.topXp') },
@@ -66,40 +76,66 @@ export default function HallOfFame() {
         </div>
       </div>
 
-      <div className="no-scrollbar mt-2.5 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-4 pb-1">
-        {rows.map((p, i) => (
-          <motion.div
-            key={p.id}
-            initial={{ opacity: 0, scale: 0.94 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.04 * i }}
-            className="snap-start"
-          >
-            <Link
-              to={`/u/${p.id}`}
-              className="flex w-[92px] flex-col items-center rounded-2xl bg-white px-2 py-3 shadow-sm transition active:scale-95"
-            >
-              <span className="relative">
-                <MediaImage path={p.avatarUrl} label={p.firstName} className="h-12 w-12 rounded-full" />
-                <span
-                  className="absolute -bottom-1 -end-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] shadow"
-                  aria-hidden
-                >
-                  {MEDALS[i] ?? <span className="text-[9px] font-bold text-gray-400">{i + 1}</span>}
-                </span>
-              </span>
+      <div className="mx-4 mt-2.5 overflow-hidden rounded-2xl bg-white shadow-sm">
+        {/* Podium */}
+        <div className="flex items-end justify-center gap-5 bg-gradient-to-b from-amber-50/80 to-white px-4 pb-3 pt-4">
+          {podiumOrder.map((p) => {
+            const rank = podium.indexOf(p);
+            const champion = rank === 0;
+            return (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.05 * rank }}
+              >
+                <Link to={`/u/${p.id}`} className="flex w-[76px] flex-col items-center transition active:scale-95">
+                  <span className={`relative rounded-full ${champion ? 'ring-2 ring-amber-400 ring-offset-2' : ''}`}>
+                    <Avatar
+                      path={p.avatarUrl}
+                      name={`${p.firstName ?? ''} ${p.lastName ?? ''}`}
+                      className={champion ? 'h-16 w-16' : 'h-12 w-12'}
+                      textClass={champion ? 'text-xl' : 'text-base'}
+                    />
+                    <span
+                      className="absolute -bottom-1 -end-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] shadow"
+                      aria-hidden
+                    >
+                      {MEDALS[rank]}
+                    </span>
+                  </span>
+                  <span className="mt-1.5 w-full truncate text-center text-[11px] font-semibold">{p.firstName}</span>
+                  <span className="flex items-center gap-0.5 text-[11px] font-bold tabular-nums text-orange-500">
+                    {score(p)}
+                  </span>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
 
-              <span className="mt-2 w-full truncate text-center text-[11px] font-semibold">{p.firstName}</span>
-              <span className="mt-0.5 flex items-center gap-0.5 text-[11px] font-bold tabular-nums text-orange-500">
-                {tab === 'xp' ? (
-                  <>{p.xp ?? 0} XP</>
-                ) : (
-                  <><Flame size={10} /> {p.currentStreak ?? 0}</>
-                )}
-              </span>
-            </Link>
-          </motion.div>
-        ))}
+        {/* Ranks 4–10 */}
+        {rest.length > 0 && (
+          <div className="divide-y divide-gray-50 border-t border-gray-50">
+            {rest.map((p, i) => (
+              <Link key={p.id} to={`/u/${p.id}`} className="flex items-center gap-3 px-4 py-2 transition active:bg-gray-50">
+                <span className="w-4 text-center text-[11px] font-bold tabular-nums text-gray-400">{i + 4}</span>
+                <Avatar
+                  path={p.avatarUrl}
+                  name={`${p.firstName ?? ''} ${p.lastName ?? ''}`}
+                  className="h-8 w-8"
+                  textClass="text-xs"
+                />
+                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">
+                  {p.firstName} {p.lastName}
+                </span>
+                <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-bold tabular-nums text-orange-500">
+                  {score(p)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </motion.section>
   );

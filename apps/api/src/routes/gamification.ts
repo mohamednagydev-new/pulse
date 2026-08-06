@@ -47,11 +47,14 @@ gamificationRouter.get('/badges', async (req: AuthedRequest, res) => {
 gamificationRouter.get('/challenges', async (req: AuthedRequest, res) => {
   const mine = await prisma.challengeParticipant.findMany({ where: { userId: req.userId! } });
   const joinedIds = mine.map((m) => m.challengeId);
-  // Public challenges + any personal/group ones I created or joined.
+  // Public challenges in their live window + any I created or joined.
+  // Global challenges staged for future waves (or already ended) stay hidden
+  // until their startsOn/endsOn window — unless I'm already a participant.
+  const today = dayString();
   const challenges = await prisma.challenge.findMany({
     where: {
       OR: [
-        { kind: 'global' },
+        { kind: 'global', startsOn: { lte: today }, endsOn: { gte: today } },
         { ownerId: req.userId! },
         { id: { in: joinedIds } },
       ],

@@ -369,11 +369,11 @@ dailyRouter.get('/hall-of-fame', async (_req, res) => {
     prisma.user.findMany({
       where: { currentStreak: { gt: 0 } },
       orderBy: { currentStreak: 'desc' },
-      take: 5,
+      take: 10,
       select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true, currentStreak: true },
     }),
   ]);
-  const top = xpRows.sort((a, b) => (b._sum.amount ?? 0) - (a._sum.amount ?? 0)).slice(0, 5);
+  const top = xpRows.sort((a, b) => (b._sum.amount ?? 0) - (a._sum.amount ?? 0)).slice(0, 10);
   const users = await prisma.user.findMany({
     where: { id: { in: top.map((t) => t.userId) } },
     select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true },
