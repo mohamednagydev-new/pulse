@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { HeartPulse, Salad, BookOpen, ChevronRight, Search, Flame } from 'lucide-react';
 import { api } from '../../lib/api';
 import { MediaImage, HScroll, Loader, EmptyState } from '../../components/ui';
-import AmbientBg from '../../components/AmbientBg';
 import MenuDrawer from '../../components/MenuDrawer';
 import ScreenHeader from '../../components/ScreenHeader';
 import RelatedReels from '../../components/RelatedReels';
@@ -56,7 +55,8 @@ export default function WellnessHome() {
 
   return (
     <div className="relative overflow-x-hidden pb-6">
-      <AmbientBg tone="green" />
+      {/* AmbientBg removed: its edge-hugging blur blobs read as dirty grey
+          shadows on the screen sides, not as ambience. */}
 
       {/* Section tone: Wellness owns green. */}
       <ScreenHeader tone="green" padBottom="pb-8">

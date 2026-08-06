@@ -10,10 +10,13 @@ import TopBar from '../../components/TopBar';
 const MotionLink = motion.create(Link);
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
-const KIND_MAP: Record<string, { kind: string; titleKey: string }> = {
-  initiatives: { kind: 'initiative', titleKey: 'wellness.initiatives' },
-  kitchen: { kind: 'recipe', titleKey: 'wellness.kitchen' },
-  articles: { kind: 'article', titleKey: 'wellness.articles' },
+// Each section keeps its own colour so Kitchen stops looking like Articles:
+// the three destinations used to share one dark-teal template and users read
+// them all as "the articles screen".
+const KIND_MAP: Record<string, { kind: string; titleKey: string; hero: string }> = {
+  initiatives: { kind: 'initiative', titleKey: 'wellness.initiatives', hero: 'hero-green' },
+  kitchen: { kind: 'recipe', titleKey: 'wellness.kitchen', hero: 'hero-pink' },
+  articles: { kind: 'article', titleKey: 'wellness.articles', hero: 'hero-blue' },
 };
 
 export default function WellnessSection() {
@@ -28,16 +31,16 @@ export default function WellnessSection() {
   });
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gray-900 pb-10 text-white">
-      <TopBar title={t(conf.titleKey)} color="bg-transparent" textColor="text-white" />
-      <div className="px-4">
+    <div className="min-h-screen pb-10">
+      <TopBar title={t(conf.titleKey)} color={conf.hero} textColor="text-white" curved />
+      <div className="-mt-5 px-4">
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={spring}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/search')}
-          className="flex min-h-[44px] w-full items-center justify-between rounded-full bg-white px-5 py-3 text-gray-400"
+          className="flex min-h-[44px] w-full items-center justify-between rounded-full bg-white px-5 py-3 text-gray-400 shadow-md"
         >
           {t('common.search')} <Search size={18} />
         </motion.button>
@@ -46,7 +49,8 @@ export default function WellnessSection() {
       {isLoading && <Loader />}
       {error && <ErrorMsg error={error} />}
 
-      <div className="mt-5 grid grid-cols-3 gap-3 px-4">
+      {/* Image-forward category cards — food looks like food, topics like topics */}
+      <div className="mt-5 grid grid-cols-2 gap-3 px-4">
         {(categories ?? []).map((c: any, idx: number) => (
           <MotionLink
             key={c.id}
@@ -54,14 +58,12 @@ export default function WellnessSection() {
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '0px 0px -40px 0px' }}
-            transition={{ ...spring, delay: (idx % 3) * 0.06 }}
+            transition={{ ...spring, delay: (idx % 2) * 0.06 }}
             whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center"
+            className="card-hover min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm"
           >
-            <div className="card-hover relative flex h-full w-full flex-col items-center rounded-2xl bg-teal-600 pb-3 pt-8">
-              <MediaImage path={c.image} label={c.title} seed={idx} className="absolute -top-5 h-16 w-16 rounded-full ring-2 ring-white" />
-              <span className="mt-6 line-clamp-2 px-1 text-center text-xs font-semibold leading-tight">{c.title}</span>
-            </div>
+            <MediaImage path={c.image} label={c.title} seed={idx} className="h-28 w-full" />
+            <p className="truncate p-2.5 text-sm font-semibold">{c.title}</p>
           </MotionLink>
         ))}
       </div>

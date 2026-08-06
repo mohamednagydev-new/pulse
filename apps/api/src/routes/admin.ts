@@ -563,8 +563,25 @@ adminRouter.get('/analytics', async (_req, res) => {
     ]),
   ]);
 
+  // Acquisition funnel: landing → onboarding → register view → registered,
+  // split by ad source ("tiktok/campaign", "facebook", "direct"). The meta is
+  // first-touch, so a user who registers days after the ad click still counts
+  // toward the ad that brought them.
+  const since30 = new Date(Date.now() - 30 * 86400000);
+  const funnelRaw = await prisma.event.groupBy({
+    by: ['name', 'meta'],
+    where: { name: { startsWith: 'funnel-' }, createdAt: { gte: since30 } },
+    _count: true,
+  });
+  const funnel: Record<string, Record<string, number>> = {};
+  for (const row of funnelRaw) {
+    const source = row.meta || 'direct';
+    (funnel[source] ??= {})[row.name] = row._count;
+  }
+
   res.json({
     dau: dau.map((d) => ({ day: d.day, users: Number(d.users) })),
+    funnel,
     topScreens: topScreensRaw.map((s) => ({ path: s.meta, count: s._count })),
     topEvents: topEventsRaw.map((e) => ({ name: e.name, count: e._count })),
     totals: {

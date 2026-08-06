@@ -1,10 +1,12 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../store/auth';
 import LanguageToggle from '../components/LanguageToggle';
+import { track } from '../lib/track';
+import { utmMeta } from '../lib/utm';
 
 function GoogleLogo() {
   return (
@@ -40,6 +42,8 @@ export default function Login() {
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // Funnel step: ad click → landing → this screen.
+  useEffect(() => track('funnel-login-view', utmMeta()), []);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,6 +51,7 @@ export default function Login() {
     setBusy(true);
     try {
       await login(email, password, remember);
+      track('funnel-login', utmMeta());
       // Deep links survive the login bounce: RequireAuth put the original
       // destination in state.from — land there, not on Home.
       const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
@@ -141,8 +146,12 @@ export default function Login() {
           </span>
         </motion.button>
 
-        <p className="pb-8 text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-gray-500">
           <Link to="/register" className="font-semibold text-brand-teal underline">{t('auth.noAccount')}</Link> {t('auth.createOne')}
+        </p>
+        {/* Escape hatch for people stuck at the door — goes to the admin inbox. */}
+        <p className="pb-8 text-center text-xs text-gray-400">
+          <Link to="/contact" className="underline">{t('auth.needHelp')}</Link>
         </p>
       </form>
     </div>

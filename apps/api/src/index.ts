@@ -91,6 +91,8 @@ app.use('/api/ai', aiLimiter);
 app.use('/api/events', eventsLimiter);
 app.use('/api/social/upload', uploadLimiter);
 app.use('/api/admin/upload', uploadLimiter);
+// Guest tickets are unauthenticated writes — keep the door open but narrow.
+app.use('/api/support/guest', rateLimit({ windowMs: 60 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false }));
 // Writes only — GET lists/details must stay unthrottled for normal browsing.
 const onPost = (limiter: ReturnType<typeof rateLimit>): express.RequestHandler =>
   (req, res, next) => (req.method === 'POST' ? limiter(req, res, next) : next());

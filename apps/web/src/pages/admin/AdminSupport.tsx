@@ -108,7 +108,11 @@ function Tickets() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold">{tk.subject}</p>
                     <p className="truncate text-[11px] text-gray-400">
-                      {tk.user ? `${tk.user.firstName} ${tk.user.lastName} · ${tk.user.email}` : 'Deleted user'}
+                      {tk.user
+                        ? `${tk.user.firstName} ${tk.user.lastName} · ${tk.user.email}`
+                        : tk.contact
+                          ? `Guest · ${tk.contact}`
+                          : 'Deleted user'}
                       {tk.screen ? ` · ${tk.screen}` : ''}
                     </p>
                   </div>

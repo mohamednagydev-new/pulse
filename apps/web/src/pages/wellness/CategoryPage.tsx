@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Flame, Clock, Play } from 'lucide-react';
+import { Flame, Clock } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Loader, ErrorMsg, MediaImage } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -13,11 +13,10 @@ export default function CategoryPage() {
     queryFn: () => api.get(`/api/categories/${id}`),
   });
 
-  // Loading/error keep the dark shell + a back affordance — no white flash, never stranded.
   if (isLoading || error) {
     return (
-      <div className="min-h-screen bg-gray-900 pb-10 text-white">
-        <TopBar color="bg-transparent" textColor="text-white" />
+      <div className="min-h-screen pb-10">
+        <TopBar color="hero-green" textColor="text-white" />
         {isLoading ? <Loader /> : <ErrorMsg error={error} />}
       </div>
     );
@@ -25,40 +24,37 @@ export default function CategoryPage() {
 
   const recipes: any[] = category.recipes ?? [];
   const articles: any[] = category.articles ?? [];
+  // Recipe categories get the Kitchen pink, article ones the Articles blue —
+  // consistent with the section screens they were opened from.
+  const hero = category.kind === 'recipe' ? 'hero-pink' : category.kind === 'initiative' ? 'hero-green' : 'hero-blue';
 
   return (
-    <div className="min-h-screen bg-gray-900 pb-10 text-white">
-      <TopBar title={category.title} color="bg-transparent" textColor="text-white" />
-      <div className="mb-4 inline-block max-w-[80%] break-words rounded-e-full bg-gradient-to-r from-teal-600 to-teal-500 py-2 ps-6 pe-10 text-lg font-bold">
-        {category.title}
-      </div>
+    <div className="min-h-screen pb-10">
+      <TopBar title={category.title} color={hero} textColor="text-white" curved />
 
-      {/* Media-forward grid: image dominates, minimal text */}
-      <div className="grid grid-cols-2 gap-3 px-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 px-4">
         {recipes.map((r, idx) => (
-          <Link key={r.id} to={`/recipe/${r.id}`} className="overflow-hidden rounded-2xl bg-white/5">
+          <Link key={r.id} to={`/recipe/${r.id}`} className="card-hover overflow-hidden rounded-2xl bg-white shadow-sm">
             <div className="relative">
               <MediaImage path={r.coverImage} label={r.title} seed={idx} className="h-32 w-full" />
               {r.calories ? (
-                <span className="absolute bottom-2 start-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[11px]"><Flame size={11} />{r.calories}</span>
+                <span className="absolute bottom-2 start-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[11px] text-white"><Flame size={11} />{r.calories}</span>
               ) : null}
             </div>
-            <p className="line-clamp-1 px-2 py-2 text-sm font-semibold">{r.title}</p>
+            <p className="line-clamp-1 px-2.5 py-2 text-sm font-semibold">{r.title}</p>
           </Link>
         ))}
 
+        {/* Articles are reads — no play button pretending they're videos. */}
         {articles.map((a, idx) => (
-          <Link key={a.id} to={`/article/${a.id}`} className="overflow-hidden rounded-2xl bg-white/5">
+          <Link key={a.id} to={`/article/${a.id}`} className="card-hover overflow-hidden rounded-2xl bg-white shadow-sm">
             <div className="relative">
               <MediaImage path={a.coverImage} label={a.title} seed={idx + 3} className="h-32 w-full" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/25 backdrop-blur"><Play size={16} fill="white" className="text-white" /></div>
-              </div>
               {a.readTimeMin ? (
-                <span className="absolute bottom-2 start-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[11px]"><Clock size={11} />{a.readTimeMin}m</span>
+                <span className="absolute bottom-2 start-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[11px] text-white"><Clock size={11} />{a.readTimeMin}m</span>
               ) : null}
             </div>
-            <p className="line-clamp-2 px-2 py-2 text-sm font-semibold leading-tight">{a.title}</p>
+            <p className="line-clamp-2 px-2.5 py-2 text-sm font-semibold leading-tight">{a.title}</p>
           </Link>
         ))}
       </div>

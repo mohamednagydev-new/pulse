@@ -1,14 +1,18 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { User, Phone, Mail, Lock, MapPin, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../store/auth';
+import { track } from '../lib/track';
+import { utmMeta } from '../lib/utm';
 
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const register = useAuth((s) => s.register);
+  // Funnel step: how many ad clicks make it to the register form.
+  useEffect(() => track('funnel-register-view', utmMeta()), []);
   const [searchParams] = useSearchParams();
   const [ref] = useState(() => searchParams.get('ref') ?? '');
   const [form, setForm] = useState({ firstName: '', lastName: '', mobile: '', email: '', password: '', zip: '' });
@@ -25,6 +29,7 @@ export default function Register() {
     try {
       const payload = ref ? { ...form, ref } : form;
       await register(payload);
+      track('funnel-registered', utmMeta());
       /**
        * Land on Home, not on the intake.
        *

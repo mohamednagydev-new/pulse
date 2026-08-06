@@ -16,6 +16,7 @@ interface CountRow {
 }
 interface AnalyticsData {
   dau: DauPoint[];
+  funnel?: Record<string, Record<string, number>>;
   topScreens: { path: string; count: number }[];
   topEvents: { name: string; count: number }[];
   totals: {
@@ -121,6 +122,57 @@ function DauChart({ dau }: { dau: DauPoint[] | undefined }) {
   );
 }
 
+/** Acquisition funnel per ad source: where people stall between the ad click
+ *  and a created account. Steps ordered; each shows count + % of that source's
+ *  landings, so TikTok and Facebook campaigns are directly comparable. */
+const FUNNEL_STEPS: { key: string; label: string }[] = [
+  { key: 'funnel-landing', label: 'Landed' },
+  { key: 'funnel-onboarding', label: 'Onboarding' },
+  { key: 'funnel-login-view', label: 'Saw login' },
+  { key: 'funnel-register-view', label: 'Saw register' },
+  { key: 'funnel-registered', label: 'Registered ✓' },
+];
+
+function FunnelCard({ funnel }: { funnel?: Record<string, Record<string, number>> }) {
+  const sources = Object.entries(funnel ?? {})
+    .sort((a, b) => (b[1]['funnel-landing'] ?? 0) - (a[1]['funnel-landing'] ?? 0));
+  if (!sources.length) {
+    return <p className="py-4 text-center text-sm text-gray-400">No funnel data yet — appears once ad links with utm_source are visited.</p>;
+  }
+  return (
+    <div className="space-y-5">
+      {sources.map(([source, steps]) => {
+        const base = Math.max(steps['funnel-landing'] ?? 0, 1);
+        return (
+          <div key={source}>
+            <p className="mb-2 text-sm font-bold">{source}</p>
+            <div className="space-y-2">
+              {FUNNEL_STEPS.map((s) => {
+                const n = steps[s.key] ?? 0;
+                const pct = Math.round((n / base) * 100);
+                return (
+                  <div key={s.key} className="flex items-center gap-2">
+                    <span className="w-24 shrink-0 text-xs text-gray-500">{s.label}</span>
+                    <div className="h-4 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-100">
+                      <div
+                        className={`h-full rounded-full ${s.key === 'funnel-registered' ? 'bg-emerald-500' : 'bg-ink/60'}`}
+                        style={{ width: `${Math.min(Math.max(pct, n > 0 ? 3 : 0), 100)}%` }}
+                      />
+                    </div>
+                    <span className="w-16 shrink-0 text-end text-xs font-semibold tabular-nums">
+                      {n.toLocaleString()} · {pct}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm">
@@ -167,6 +219,10 @@ export default function AdminAnalytics() {
 
           <Card title="Daily active users (14 days)">
             <DauChart dau={data.dau} />
+          </Card>
+
+          <Card title="Ad funnel by source (30 days)">
+            <FunnelCard funnel={data.funnel} />
           </Card>
 
           <Card title="Top screens (7 days)">

@@ -10,9 +10,42 @@ import { requireAuth, AuthedRequest } from '../middleware/auth';
  * They can see what they sent and any reply; `adminNote` is never returned here.
  */
 export const supportRouter = Router();
-supportRouter.use(requireAuth);
 
 const KINDS = ['suggestion', 'issue', 'question'] as const;
+
+/**
+ * Guest tickets — BEFORE the auth gate. People blocked at the door (can't log
+ * in, can't register, OAuth loops) are exactly the ones who need support and
+ * exactly the ones who can't reach the in-app form. Contact is required here:
+ * with no account there is no other way to answer them. Rate-limited per IP
+ * in index.ts.
+ */
+const guestSchema = z.object({
+  name: z.string().trim().max(80).optional(),
+  contact: z.string().trim().min(5).max(120),
+  subject: z.string().trim().min(3).max(120),
+  body: z.string().trim().min(10).max(4000),
+});
+
+supportRouter.post('/guest', async (req, res) => {
+  const parsed = guestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Add your email/phone, a subject and at least a sentence of detail.' });
+  }
+  const { name, ...data } = parsed.data;
+  const ticket = await prisma.supportTicket.create({
+    data: {
+      ...data,
+      kind: 'question',
+      subject: name ? `${data.subject} — ${name}` : data.subject,
+      screen: 'guest:login',
+    },
+    select: { id: true, createdAt: true },
+  });
+  res.status(201).json(ticket);
+});
+
+supportRouter.use(requireAuth);
 
 /** Rate limit by hand: cheap, and stops a frustrated user filing forty tickets. */
 const MAX_OPEN_PER_USER = 10;

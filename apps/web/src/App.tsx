@@ -28,6 +28,7 @@ import Onboarding from './pages/Onboarding';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import GuestContact from './pages/GuestContact';
 import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import ProgramsHome from './pages/programs/ProgramsHome';
@@ -198,6 +199,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/contact" element={<GuestContact />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route

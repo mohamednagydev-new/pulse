@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +6,8 @@ import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
 import { ChevronRight, Flame, Dumbbell, Activity, Salad, type LucideIcon } from 'lucide-react';
 import { api } from '../lib/api';
 import LanguageToggle from '../components/LanguageToggle';
+import { track } from '../lib/track';
+import { utmMeta } from '../lib/utm';
 
 const slides: { titleKey: string; textKey: string; g: string; Icon: LucideIcon }[] = [
   { titleKey: 'onboarding.slide1Title', textKey: 'onboarding.slide1Body', g: 'from-orange-600 via-orange-700 to-slate-900', Icon: Flame },
@@ -21,6 +23,8 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const rtl = i18n.dir() === 'rtl';
+  // Funnel step: ad click → landing → onboarding slides.
+  useEffect(() => track('funnel-onboarding', utmMeta()), []);
 
   // Admin-managed slide media: Banners with section "onboarding" (image per slide, by order).
   const { data: media } = useQuery({
