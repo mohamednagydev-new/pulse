@@ -324,6 +324,26 @@ h3 {
   overflow: hidden;
   isolation: isolate;
 }
+/* Safety net for the ::before glow layers, learned the hard way TWICE:
+   1) These classes must NOT set `position` at normal specificity — that
+      overrode Tailwind's `.absolute` and collapsed the Programs tiles.
+   2) But an element using them WITHOUT any positioning class anchors its
+      inset:-25% ::before to the page instead: a screen-wide invisible glow
+      that swallowed every tap on Wellness home into the last hero card.
+   :where() has ZERO specificity, so any Tailwind position utility
+   (absolute/fixed/sticky/relative) still wins — while bare usages get the
+   `relative` they need. And the glow itself never takes pointer events. */
+:where(.fitness-hero, .hero-blue, .hero-pink, .hero-green, .hero-teal, .hero-violet) {
+  position: relative;
+}
+.fitness-hero::before,
+.hero-blue::before,
+.hero-pink::before,
+.hero-green::before,
+.hero-teal::before,
+.hero-violet::before {
+  pointer-events: none;
+}
 /* Two extra section tones so every tab can own a distinct header color
    (teal = profile, violet = community). Same recipe as the others. */
 .hero-teal { background-color: #115e59; background-image: linear-gradient(150deg, #0d9488 0%, #164e63 100%); }
