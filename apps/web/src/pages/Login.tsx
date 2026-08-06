@@ -7,6 +7,7 @@ import { useAuth } from '../store/auth';
 import LanguageToggle from '../components/LanguageToggle';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
+import { isInAppBrowser } from '../lib/install';
 
 function GoogleLogo() {
   return (
@@ -122,15 +123,24 @@ export default function Login() {
           <span className="h-px flex-1 bg-gray-200" /> {t('auth.or')} <span className="h-px flex-1 bg-gray-200" />
         </div>
 
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.97 }}
-          onClick={() => (window.location.href = '/api/auth/google')}
-          className="flex min-h-[48px] w-full items-center justify-center gap-3 rounded-full border border-gray-200 bg-white px-6 py-3 font-semibold text-ink shadow-sm shadow-gray-200/60"
-        >
-          <GoogleLogo />
-          {t('auth.google')}
-        </motion.button>
+        {/* Google BLOCKS OAuth inside in-app webviews (403 disallowed_useragent) —
+            exactly where FB/TikTok ad traffic lands. Showing the button there sends
+            people into a dead end; steer them to email (or a real browser) instead. */}
+        {isInAppBrowser() ? (
+          <p className="rounded-xl bg-amber-50 px-4 py-3 text-center text-xs text-amber-700">
+            {t('auth.webviewGoogle')}
+          </p>
+        ) : (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.97 }}
+            onClick={() => (window.location.href = '/api/auth/google')}
+            className="flex min-h-[48px] w-full items-center justify-center gap-3 rounded-full border border-gray-200 bg-white px-6 py-3 font-semibold text-ink shadow-sm shadow-gray-200/60"
+          >
+            <GoogleLogo />
+            {t('auth.google')}
+          </motion.button>
+        )}
 
         <motion.button
           type="submit"

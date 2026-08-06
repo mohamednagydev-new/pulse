@@ -61,6 +61,7 @@
     "google": "Sign in with Google",
     "noAccount": "Don't have an account?",
     "needHelp": "Trouble signing in? Contact us",
+    "webviewGoogle": "Google sign-in doesn't work inside the Facebook/TikTok browser — sign up with email below, or open pulse.geddo.online in Chrome/Safari.",
     "createNew": "Create new one",
     "haveAccount": "Already have an account?",
     "tagline": "A Fresh Start To Get Healthy",
