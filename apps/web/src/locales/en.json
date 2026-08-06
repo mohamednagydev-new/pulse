@@ -43,7 +43,8 @@
     "slide3Body": "Guided classes and mindful meditation for inner calm.",
     "slide4Title": "The Wellness Kitchen",
     "slide4Body": "Easy, healthy recipes that don't need advanced cooking skills.",
-    "goToSlide": "Go to slide {{n}}"
+    "goToSlide": "Go to slide {{n}}",
+    "getStarted": "Get started"
   },
   "auth": {
     "signIn": "SIGN IN",
