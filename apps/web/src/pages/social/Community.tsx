@@ -173,13 +173,18 @@ export default function Community() {
               transition={spring}
               whileTap={{ scale: 0.97 }}
               href={ad.url ?? undefined}
-              target="_blank"
+              target={ad.url ? '_blank' : undefined}
               rel="noreferrer sponsored"
-              className="card-hover block rounded-2xl bg-gradient-to-r from-brand-blue to-cyan-500 p-4 text-white"
+              onClick={() => ad.url && trackAd(ad.id, 'click')}
+              className="card-hover block overflow-hidden rounded-2xl bg-gradient-to-r from-brand-blue to-cyan-500 text-white"
             >
-              <div className="text-[10px] font-bold uppercase tracking-wide opacity-70">{t('ads.sponsored')}</div>
-              <div className="truncate font-bold">{ad.title}</div>
-              {ad.subtitle && <div className="line-clamp-2 text-sm opacity-90">{ad.subtitle}</div>}
+              {/* The uploaded creative IS the ad — it was never rendered before. */}
+              {ad.image && <MediaImage path={ad.image} label={ad.title} className="h-36 w-full" />}
+              <div className="p-4">
+                <div className="text-[10px] font-bold uppercase tracking-wide opacity-70">{t('ads.sponsored')}</div>
+                <div className="truncate font-bold">{ad.title}</div>
+                {ad.subtitle && <div className="line-clamp-2 text-sm opacity-90">{ad.subtitle}</div>}
+              </div>
             </motion.a>
           )}
           {(feed ?? []).map((p: any, i: number) => (
