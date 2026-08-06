@@ -11,16 +11,26 @@ export function setApiLang(l: string) {
   lang = l;
 }
 
-async function tryRefresh(): Promise<boolean> {
+/** 'denied' = the server rejected the session (log out). 'offline' = the
+ *  network failed us (KEEP the session — a dropped packet on a mobile
+ *  connection must never sign anyone out). */
+type RefreshResult = 'ok' | 'denied' | 'offline';
+
+async function tryRefreshEx(): Promise<RefreshResult> {
   try {
     const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
-    if (!res.ok) return false;
+    if (res.status === 401 || res.status === 403) return 'denied';
+    if (!res.ok) return 'offline';
     const data = await res.json();
     setAccessToken(data.accessToken);
-    return true;
+    return 'ok';
   } catch {
-    return false;
+    return 'offline';
   }
+}
+
+async function tryRefresh(): Promise<boolean> {
+  return (await tryRefreshEx()) === 'ok';
 }
 
 function extractError(payload: any, fallback: string): string {
@@ -44,12 +54,17 @@ async function request(path: string, options: RequestInit = {}, retry = true): P
   });
 
   if (res.status === 401 && !path.includes('/api/auth/')) {
-    if (retry && (await tryRefresh())) return request(path, options, false);
-    // Refresh failed: the session is gone. Tell the shell to reset to guest so
-    // the user lands on /login instead of a half-broken screen of error toasts.
-    // (Event, not a store import — store/auth already imports this module.)
-    setAccessToken(null);
-    window.dispatchEvent(new Event('pulse:session-expired'));
+    const r = retry ? await tryRefreshEx() : ('denied' as RefreshResult);
+    if (r === 'ok') return request(path, options, false);
+    if (r === 'denied') {
+      // The server itself said no: the session is truly gone. Reset to guest so
+      // the user lands on /login instead of a half-broken screen of error toasts.
+      // (Event, not a store import — store/auth already imports this module.)
+      setAccessToken(null);
+      window.dispatchEvent(new Event('pulse:session-expired'));
+    }
+    // 'offline': transient network failure — the request below still errors,
+    // but the session survives and the next successful call recovers.
   }
 
   if (!res.ok) {
@@ -71,5 +86,14 @@ export const api = {
   patch: (p: string, body?: unknown) => request(p, { method: 'PATCH', body: JSON.stringify(body ?? {}) }),
   del: (p: string, body?: unknown) =>
     request(p, { method: 'DELETE', body: body ? JSON.stringify(body) : undefined }),
-  refresh: tryRefresh,
+  // Bootstrap refresh retries once on a transient failure: a single dropped
+  // request at app-open must not dump a signed-in user onto the login screen.
+  refresh: async () => {
+    let r = await tryRefreshEx();
+    if (r === 'offline') {
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      r = await tryRefreshEx();
+    }
+    return r === 'ok';
+  },
 };

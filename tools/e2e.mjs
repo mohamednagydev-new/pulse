@@ -226,6 +226,96 @@ await step('settings + gyms + help', async () => {
   }
 });
 
+// ---- Full-app sweep: every remaining destination, screenshot + error capture ----
+
+await step('wellness kitchen depth', async () => {
+  await page.goto(`${BASE}/wellness/kitchen`, { waitUntil: 'domcontentloaded' });
+  await settle(2200);
+  await shot(page, 'kitchen-categories');
+  const cats = await page.evaluate(async () => (await fetch('/api/categories?kind=recipe')).json());
+  if (Array.isArray(cats) && cats[0]) {
+    const cat = await page.evaluate(async (id) => (await fetch(`/api/categories/${id}`)).json(), cats[0].id);
+    await page.goto(`${BASE}/category/${cats[0].id}`, { waitUntil: 'domcontentloaded' });
+    await settle(2000);
+    await shot(page, 'kitchen-category');
+    if (cat.recipes?.[0]) {
+      await page.goto(`${BASE}/recipe/${cat.recipes[0].id}`, { waitUntil: 'domcontentloaded' });
+      await settle(2000);
+      await shot(page, 'recipe-detail');
+    } else note('WARN', 'kitchen', `recipe category "${cat.title}" has no recipes`);
+  }
+});
+
+await step('article read', async () => {
+  const cats = await page.evaluate(async () => (await fetch('/api/categories?kind=article')).json());
+  if (Array.isArray(cats) && cats[0]) {
+    const cat = await page.evaluate(async (id) => (await fetch(`/api/categories/${id}`)).json(), cats[0].id);
+    if (cat.articles?.[0]) {
+      await page.goto(`${BASE}/article/${cat.articles[0].id}`, { waitUntil: 'domcontentloaded' });
+      await settle(2000);
+      await shot(page, 'article-detail');
+    } else note('WARN', 'articles', `article category "${cat.title}" has no articles`);
+  }
+});
+
+await step('program -> lesson', async () => {
+  const programs = await page.evaluate(async () => (await fetch('/api/programs')).json());
+  if (Array.isArray(programs) && programs[0]) {
+    await page.goto(`${BASE}/programs/${programs[0].id}`, { waitUntil: 'domcontentloaded' });
+    await settle(2200);
+    await shot(page, 'program-detail');
+  } else note('WARN', 'programs', 'no programs from API');
+});
+
+await step('social sweep', async () => {
+  for (const [route, name] of [['/community', 'community-feed'], ['/people', 'people'], ['/buddies', 'buddies'], ['/chat', 'chat-list'], ['/coaches', 'coaches-dir'], ['/group', 'group-sessions'], ['/duels', 'duels']]) {
+    await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' });
+    await settle(2000);
+    await shot(page, name);
+  }
+});
+
+await step('reels', async () => {
+  await page.goto(`${BASE}/reels`, { waitUntil: 'domcontentloaded' });
+  await settle(3000);
+  await shot(page, 'reels');
+});
+
+await step('progress + leagues + notifications', async () => {
+  for (const [route, name] of [['/progress', 'progress'], ['/leagues', 'leagues'], ['/notifications', 'notifications'], ['/bookmarks', 'bookmarks'], ['/schedule', 'schedule']]) {
+    await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' });
+    await settle(2000);
+    await shot(page, name);
+  }
+});
+
+await step('discovery + commerce', async () => {
+  for (const [route, name] of [['/search', 'search'], ['/store', 'store'], ['/deals', 'deals'], ['/events', 'events'], ['/exercises', 'muscle-map'], ['/music', 'music'], ['/yoga', 'yoga']]) {
+    await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' });
+    await settle(2000);
+    await shot(page, name);
+  }
+});
+
+await step('search interaction', async () => {
+  await page.goto(`${BASE}/search`, { waitUntil: 'domcontentloaded' });
+  await settle(1200);
+  const input = page.locator('input').first();
+  if (await input.isVisible().catch(() => false)) {
+    await input.fill('yoga');
+    await settle(1800);
+    await shot(page, 'search-results');
+  } else note('WARN', 'search', 'search input not found');
+});
+
+await step('guest contact page (logged-out surface)', async () => {
+  await page.goto(`${BASE}/contact`, { waitUntil: 'domcontentloaded' });
+  await settle(1800);
+  await shot(page, 'contact');
+  const hasForm = await page.locator('form').first().isVisible().catch(() => false);
+  if (!hasForm) note('WARN', 'contact', 'no form at /contact (old deploy or route missing)');
+});
+
 await step('switch to Arabic', async () => {
   await page.evaluate(() => localStorage.setItem('fitit_lang', 'ar'));
   await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
