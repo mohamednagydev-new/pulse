@@ -54,7 +54,12 @@ async function request(path: string, options: RequestInit = {}, retry = true): P
 
   if (!res.ok) {
     const payload = await res.json().catch(() => null);
-    throw new Error(extractError(payload, res.statusText));
+    // Status travels on the error so callers can react to WHAT failed (403 gate
+    // vs 500) instead of pattern-matching message strings — Safari's transient
+    // "The network connection was lost" must never be mistaken for a server rule.
+    const err = new Error(extractError(payload, res.statusText)) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
   }
   if (res.status === 204) return null;
   return res.json();

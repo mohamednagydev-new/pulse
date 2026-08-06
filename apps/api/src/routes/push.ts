@@ -67,6 +67,27 @@ export async function notifyUser(
   await prisma.notification
     .create({ data: { userId, type: payload.type ?? 'general', title, body, url: payload.url } })
     .catch(() => {});
+  await sendWebPush(userId, title, body, payload.url);
+}
+
+/** Push-only, no in-app notification row — for high-frequency events (chat
+ *  messages) where a row per message would drown the notifications center. */
+export async function pushToUser(
+  userId: string,
+  payload: { title: string; body: string; url?: string; titleAr?: string; bodyAr?: string },
+) {
+  let { title, body } = payload;
+  if (payload.titleAr || payload.bodyAr) {
+    const u = await prisma.user.findUnique({ where: { id: userId }, select: { preferredLang: true } }).catch(() => null);
+    if (u?.preferredLang === 'ar') {
+      title = payload.titleAr ?? title;
+      body = payload.bodyAr ?? body;
+    }
+  }
+  await sendWebPush(userId, title, body, payload.url);
+}
+
+async function sendWebPush(userId: string, title: string, body: string, url?: string) {
   if (!pushEnabled()) return;
   const subs = await prisma.pushSubscription.findMany({ where: { userId } });
   await Promise.all(
@@ -74,7 +95,7 @@ export async function notifyUser(
       webpush
         .sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-          JSON.stringify({ title, body, url: payload.url }),
+          JSON.stringify({ title, body, url }),
         )
         .catch(async (err: any) => {
           if (err?.statusCode === 410) await prisma.pushSubscription.delete({ where: { id: s.id } });

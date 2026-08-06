@@ -182,28 +182,15 @@ export default function Home() {
         </HScroll>
       </Section>
 
-      {/* PULSE Reels */}
-      <motion.button
-        whileTap={{ scale: 0.98 }}
-        onClick={() => navigate('/reels')}
-        className="card-hover mx-4 mt-6 flex w-[calc(100%-2rem)] items-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-fuchsia-600 via-rose-500 to-orange-500 p-5 text-start text-white shadow-lg"
-      >
-        <span className="animate-float flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
-          <Clapperboard size={24} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-lg font-extrabold">PULSE Reels</span>
-          <span className="block truncate text-sm text-white/80">{t('home2.reelsSub')}</span>
-        </span>
-        <ChevronRight className="shrink-0 opacity-80 rtl:rotate-180" />
-      </motion.button>
-
+      {/* The big Reels banner that used to sit here duplicated the Reels quick
+          action above — one more full-width row for a destination already one
+          tap away. Removed to shorten the page. */}
       <Section title={t('home.coaches')} onSeeAll={() => navigate('/programs')}>
         <HScroll>
           {coaches.map((c: any, idx: number) => (
             <Link key={c.id} to={`/programs/coach/${c.id}`} className="w-28 shrink-0 text-center">
               <MediaImage path={c.avatarUrl} seed={idx + 2} label={c.name} className="mx-auto h-24 w-24 rounded-full" />
-              <p className="mt-2 truncate text-sm font-semibold text-brand-pink">{c.name}</p>
+              <p className="mt-2 truncate text-sm font-semibold">{c.name}</p>
             </Link>
           ))}
         </HScroll>
@@ -217,7 +204,7 @@ export default function Home() {
                 <MediaImage path={m.image} seed={idx + 4} label={m.title} className="h-32 w-full rounded-2xl" />
                 {m.videoId && <PlayBadge />}
               </div>
-              <p className="mt-2 line-clamp-2 text-xs font-semibold text-brand-green">{m.title}</p>
+              <p className="mt-2 line-clamp-2 text-sm font-semibold">{m.title}</p>
             </motion.button>
           ))}
         </HScroll>
@@ -408,8 +395,8 @@ function NotifBell() {
 
 function Section({ title, children, onSeeAll }: { title: string; children: React.ReactNode; onSeeAll?: () => void }) {
   return (
-    <section className="mt-6">
-      <div className="mb-3 flex items-center justify-between px-4">
+    <section className="mt-4">
+      <div className="mb-2 flex items-center justify-between px-4">
         <h2 className="text-lg font-bold">{title}</h2>
         {onSeeAll && (
           <button onClick={onSeeAll} className="text-gray-400"><ChevronRight size={22} className="rtl:rotate-180" /></button>

@@ -1,14 +1,27 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { prisma } from '../lib/prisma';
+import { env } from '../env';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
-import { emitToThread, emitToUser } from '../lib/realtime';
+import { emitToThread, emitToUser, isOnline } from '../lib/realtime';
 import { areConnected } from '../lib/social';
+import { signMedia } from '../lib/mediaSign';
+import { pushToUser } from './push';
 
 export const chatRouter = Router();
 chatRouter.use(requireAuth);
 
 const userSelect = { id: true, firstName: true, lastName: true, avatarUrl: true, level: true } as const;
+
+/** Voice notes are private — attach a signed, expiring URL instead of the raw path. */
+function shapeMessage<T extends { audio?: string | null }>(m: T) {
+  if (!m.audio) return { ...m, audioUrl: null };
+  const { exp, sig } = signMedia('voice', m.audio);
+  return { ...m, audioUrl: `/media/voice/${m.audio}?exp=${exp}&sig=${sig}` };
+}
 
 async function getOrCreateThread(a: string, b: string) {
   const [userAId, userBId] = [a, b].sort();
@@ -37,7 +50,7 @@ chatRouter.get('/threads', async (req: AuthedRequest, res) => {
         prisma.dMMessage.findFirst({ where: { threadId: t.id }, orderBy: { createdAt: 'desc' } }),
         prisma.dMMessage.count({ where: { threadId: t.id, senderId: { not: req.userId! }, readAt: null } }),
       ]);
-      return { id: t.id, other, lastMessage: last?.text ?? null, lastMessageAt: t.lastMessageAt, unread };
+      return { id: t.id, other, lastMessage: last ? (last.audio ? '🎤' : last.text) : null, lastMessageAt: t.lastMessageAt, unread };
     }),
   );
   res.json(result);
@@ -79,13 +92,50 @@ chatRouter.get('/threads/:id/messages', async (req: AuthedRequest, res) => {
   });
   const messages = await prisma.dMMessage.findMany({ where: { threadId: thread.id }, orderBy: { createdAt: 'asc' }, take: 200 });
   const other = await otherUser(thread, req.userId!);
-  res.json({ other, messages });
+  res.json({ other, messages: messages.map(shapeMessage) });
 });
 
-// ---- Send a message ----
+// ---- Upload a voice note (returns the path to send with the message) ----
+const voiceDir = path.join(env.UPLOAD_DIR, 'audio', 'dm');
+fs.mkdirSync(voiceDir, { recursive: true });
+const voiceUpload = multer({ dest: voiceDir, limits: { fileSize: 15 * 1024 * 1024 } });
+const VOICE_EXT: Record<string, string> = {
+  'audio/webm': '.webm',
+  'audio/mp4': '.m4a',
+  'audio/aac': '.m4a',
+  'audio/x-m4a': '.m4a',
+  'audio/mpeg': '.mp3',
+  'audio/ogg': '.ogg',
+  'audio/wav': '.wav',
+};
+
+chatRouter.post('/voice', voiceUpload.single('file'), async (req: AuthedRequest, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file' });
+  // MediaRecorder mimetypes carry codec suffixes ("audio/webm;codecs=opus").
+  const base = (req.file.mimetype || '').split(';')[0].trim();
+  const ext = VOICE_EXT[base];
+  if (!ext) {
+    fs.unlink(req.file.path, () => {});
+    return res.status(400).json({ error: 'Unsupported audio format' });
+  }
+  const name = `${req.file.filename}${ext}`;
+  fs.renameSync(req.file.path, path.join(voiceDir, name));
+  res.json({ audio: `dm/${name}` });
+});
+
+// ---- Send a message (text and/or voice note) ----
 chatRouter.post('/threads/:id/messages', async (req: AuthedRequest, res) => {
-  const parsed = z.object({ text: z.string().min(1).max(2000) }).safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const parsed = z
+    .object({
+      text: z.string().max(2000).optional(),
+      // Path shape from our own /voice endpoint only — never a free string that
+      // could point the signed media URL at an arbitrary file.
+      audio: z.string().regex(/^dm\/[A-Za-z0-9_-]+\.(webm|m4a|mp3|ogg|wav)$/).optional(),
+    })
+    .safeParse(req.body);
+  if (!parsed.success || (!parsed.data.text?.trim() && !parsed.data.audio)) {
+    return res.status(400).json({ error: 'Invalid input' });
+  }
   const thread = await prisma.dMThread.findUnique({ where: { id: req.params.id } });
   if (!thread || (thread.userAId !== req.userId && thread.userBId !== req.userId)) {
     return res.status(404).json({ error: 'Not found' });
@@ -94,14 +144,31 @@ chatRouter.post('/threads/:id/messages', async (req: AuthedRequest, res) => {
   if (!(await areConnected(req.userId!, otherIdForGate))) {
     return res.status(403).json({ error: 'Connect with this person to chat' });
   }
+  if (parsed.data.audio && !fs.existsSync(path.join(voiceDir, path.basename(parsed.data.audio)))) {
+    return res.status(400).json({ error: 'Invalid audio' });
+  }
   const message = await prisma.dMMessage.create({
-    data: { threadId: thread.id, senderId: req.userId!, text: parsed.data.text },
+    data: { threadId: thread.id, senderId: req.userId!, text: parsed.data.text?.trim() || null, audio: parsed.data.audio ?? null },
   });
   await prisma.dMThread.update({ where: { id: thread.id }, data: { lastMessageAt: new Date() } });
 
-  emitToThread(thread.id, 'dm:new', message);
+  const shaped = shapeMessage(message);
+  emitToThread(thread.id, 'dm:new', shaped);
   const otherId = thread.userAId === req.userId ? thread.userBId : thread.userAId;
-  emitToUser(otherId, 'dm:inbox', { threadId: thread.id, text: message.text });
+  emitToUser(otherId, 'dm:inbox', { threadId: thread.id, text: message.audio ? '🎤' : message.text });
 
-  res.status(201).json(message);
+  // App closed/backgrounded → web push (no in-app row; the chat badge covers
+  // that). Online recipients get the socket events above instead of a buzz.
+  if (!isOnline(otherId)) {
+    const sender = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } });
+    const preview = message.audio ? '🎤 Voice note' : (message.text ?? '').slice(0, 90);
+    pushToUser(otherId, {
+      title: sender?.firstName ?? 'New message',
+      body: preview,
+      bodyAr: message.audio ? '🎤 رسالة صوتية' : undefined,
+      url: `/chat/${thread.id}`,
+    }).catch(() => {});
+  }
+
+  res.status(201).json(shaped);
 });

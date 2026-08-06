@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useAuth } from './store/auth';
 import TabBar from './components/TabBar';
@@ -319,6 +320,7 @@ export default function App() {
 /** App-wide level-up celebration (confetti + toast) driven by the socket. */
 function CelebrationListener() {
   const { t } = useTranslation();
+  const qc = useQueryClient();
   const [levelUp, setLevelUp] = useState<number | null>(null);
   useEffect(() => {
     const socket = getSocket();
@@ -326,11 +328,22 @@ function CelebrationListener() {
       setLevelUp(d.level);
       celebrateFeedback(); // haptic + fanfare on level-up
     };
+    // Server-side events (buddy accepted, cheer, DM…) refresh the bell badge and
+    // lists instantly while the app is open — no more waiting for the 60s poll.
+    const onNotify = () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications', 'unread'] });
+    };
+    const onInbox = () => qc.invalidateQueries({ queryKey: ['chat-unread'] });
     socket.on('levelup', onLevel);
+    socket.on('notify', onNotify);
+    socket.on('dm:inbox', onInbox);
     return () => {
       socket.off('levelup', onLevel);
+      socket.off('notify', onNotify);
+      socket.off('dm:inbox', onInbox);
     };
-  }, []);
+  }, [qc]);
   if (levelUp === null) return null;
   return (
     <>

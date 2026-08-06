@@ -274,7 +274,7 @@ function parseSpecialties(json?: string): string[] {
 function Stat({ n, label }: { n: number; label: string }) {
   return (
     <div>
-      <p className="text-lg font-extrabold">{n}</p>
+      <p className="font-display text-lg font-extrabold">{n}</p>
       <p className="text-[11px] text-gray-400">{label}</p>
     </div>
   );

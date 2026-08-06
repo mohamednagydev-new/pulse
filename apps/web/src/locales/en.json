@@ -909,7 +909,11 @@
     "findBuddies": "Find buddies →",
     "findPeople": "Find people →",
     "sayHi": "Say hi 👋",
-    "messagePh": "Message…"
+    "messagePh": "Message…",
+    "voiceNote": "Record a voice note",
+    "recording": "Recording…",
+    "micDenied": "Allow microphone access to record a voice note",
+    "voiceFailed": "Voice note didn't send — try again"
   },
   "meals": {
     "title": "Meal plan",

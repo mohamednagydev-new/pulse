@@ -23,6 +23,8 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 export default function HallOfFame() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<'xp' | 'streak'>('xp');
+  // Podium always shows; ranks 4-10 fold away so Home stays short by default.
+  const [expanded, setExpanded] = useState(false);
   const { data } = useQuery<{ topXp: Person[]; topStreaks: Person[] }>({
     queryKey: ['hall-of-fame'],
     queryFn: () => api.get('/api/daily/hall-of-fame'),
@@ -105,7 +107,7 @@ export default function HallOfFame() {
                     </span>
                   </span>
                   <span className="mt-1.5 w-full truncate text-center text-[11px] font-semibold">{p.firstName}</span>
-                  <span className="flex items-center gap-0.5 text-[11px] font-bold tabular-nums text-orange-500">
+                  <span className="font-display flex items-center gap-0.5 text-[11px] font-bold tabular-nums text-orange-500">
                     {score(p)}
                   </span>
                 </Link>
@@ -115,7 +117,15 @@ export default function HallOfFame() {
         </div>
 
         {/* Ranks 4–10 */}
-        {rest.length > 0 && (
+        {rest.length > 0 && !expanded && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="w-full border-t border-gray-50 py-2 text-center text-xs font-bold text-gray-400"
+          >
+            {t('common.seeAll')} · {rest.length + 3} ↓
+          </button>
+        )}
+        {rest.length > 0 && expanded && (
           <div className="divide-y divide-gray-50 border-t border-gray-50">
             {rest.map((p, i) => (
               <Link key={p.id} to={`/u/${p.id}`} className="flex items-center gap-3 px-4 py-2 transition active:bg-gray-50">
@@ -129,7 +139,7 @@ export default function HallOfFame() {
                 <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">
                   {p.firstName} {p.lastName}
                 </span>
-                <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-bold tabular-nums text-orange-500">
+                <span className="font-display flex shrink-0 items-center gap-0.5 text-[11px] font-bold tabular-nums text-orange-500">
                   {score(p)}
                 </span>
               </Link>

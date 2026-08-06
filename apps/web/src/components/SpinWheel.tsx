@@ -67,6 +67,18 @@ export default function SpinWheel() {
   const alreadyDone = data.spun && !won;
   const label = won ? (isAr ? won.ar : won.en) : null;
 
+  // Spun already (and not mid-celebration) → one slim row instead of the full
+  // wheel card taking Home real estate for the rest of the day.
+  if (alreadyDone && !spinning) {
+    return (
+      <section className="mx-4 mt-4 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#1B1330] to-[#2C1A3D] px-4 py-3 text-white shadow-sm">
+        <Sparkles size={16} className="shrink-0 text-amber-300" />
+        <p className="min-w-0 flex-1 truncate text-sm font-semibold">{t('fun.spinTitle')}</p>
+        <p className="shrink-0 text-xs text-white/60">{t('fun.comeBackTomorrow')}</p>
+      </section>
+    );
+  }
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 14 }}

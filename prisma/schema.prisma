@@ -697,7 +697,9 @@ model DMMessage {
   threadId  String
   thread    DMThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   senderId  String
-  text      String
+  text      String?
+  /** Voice note file, relative to uploads/audio (e.g. "dm/<name>.webm"). */
+  audio     String?
   createdAt DateTime @default(now())
   readAt    DateTime?
 

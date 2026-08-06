@@ -165,6 +165,12 @@ async function main() {
     console.warn('PRAGMA setup skipped:', e);
   }
   const server = http.createServer(app);
+  // Node's default keepAliveTimeout (5s) is shorter than IIS/ARR's idle reuse
+  // window: Node closes the kept-alive socket just as ARR sends the next request
+  // down it, which surfaces to users as random "network connection was lost" /
+  // HTTP2_PROTOCOL_ERROR on requests that actually succeeded. Outlive the proxy.
+  server.keepAliveTimeout = 65_000;
+  server.headersTimeout = 66_000;
   initRealtime(server, env.WEB_ORIGIN);
   startReminderScheduler();
   server.listen(env.PORT, () => {

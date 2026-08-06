@@ -13,7 +13,11 @@ export function getSocket(): Socket {
       // killed realtime for the whole session — the server rejects the
       // handshake and socket.io does not retry after a middleware rejection.
       auth: (cb) => cb({ token: getAccessToken() }),
-      transports: ['websocket', 'polling'],
+      // Polling first, then upgrade to websocket. With websocket listed first
+      // there is NO fallback within a connection attempt (documented socket.io
+      // gotcha) — one blocked ws:// upgrade at the proxy and realtime is dead
+      // for the whole session. Polling always gets through IIS/ARR.
+      transports: ['polling', 'websocket'],
     });
     socket.on('connect_error', (err) => {
       // Rejected while we *do* hold a token → transient (expired JWT mid-

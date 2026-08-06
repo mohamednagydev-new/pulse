@@ -66,6 +66,22 @@ mediaRouter.get('/audio/:id', async (req, res) => {
   res.sendFile(abs);
 });
 
+// DM voice notes — always signed: they're private audio between two people.
+mediaRouter.get('/voice/*', (req, res) => {
+  const rel = (req.params as any)[0] as string;
+  if (!verifyMedia('voice', rel, Number(req.query.exp), String(req.query.sig || ''))) {
+    return res.status(403).json({ error: 'Invalid or expired media link' });
+  }
+  const baseDir = path.resolve(env.UPLOAD_DIR, 'audio');
+  const abs = path.resolve(baseDir, rel);
+  if (abs !== baseDir && !abs.startsWith(baseDir + path.sep)) {
+    return res.status(400).json({ error: 'Bad path' });
+  }
+  if (!fs.existsSync(abs)) return res.status(404).json({ error: 'Not found' });
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.sendFile(abs);
+});
+
 // Static image passthrough for uploaded thumbnails/covers.
 // Public content images (banners, thumbnails, avatars) stay unsigned so plain
 // <img> tags work. Anything under private/ (body progress photos) requires a
