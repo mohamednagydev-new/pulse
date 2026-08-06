@@ -101,7 +101,8 @@ export default function DailyQuests() {
         )}
       </div>
 
-      <div className="mt-3 space-y-2.5">
+      {/* Three mini-tiles instead of three full rows — half the height, same info. */}
+      <div className="mt-3 grid grid-cols-3 gap-2">
         {quests.map((q, i) => {
           const target = Math.max(1, q.target ?? 1);
           const pct = Math.min(100, Math.round(((q.progress ?? 0) / target) * 100));
@@ -113,47 +114,31 @@ export default function DailyQuests() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ ...spring, delay: 0.06 * i }}
-              className="flex items-center gap-3"
+              className={`flex min-w-0 flex-col items-center rounded-xl px-1.5 py-2.5 text-center ${
+                q.done ? 'bg-emerald-50' : 'bg-gray-50'
+              }`}
             >
               <span
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
-                  q.done ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-50 text-orange-500'
+                className={`flex h-9 w-9 items-center justify-center rounded-xl text-base ${
+                  q.done ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-500'
                 }`}
                 aria-hidden
               >
-                {Anim ? <Anim className="h-7 w-7" /> : q.icon || '🎯'}
+                {q.done ? <Check size={16} strokeWidth={3} /> : Anim ? <Anim className="h-6 w-6" /> : q.icon || '🎯'}
               </span>
-
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className={`min-w-0 truncate text-sm font-semibold ${q.done ? 'text-gray-400 line-through' : ''}`}>
-                    {isAr ? q.ar : q.en}
-                  </p>
-                  <span className="shrink-0 text-[11px] font-bold tabular-nums text-gray-400">
-                    {Math.min(q.progress ?? 0, target)}/{target}
-                  </span>
-                </div>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ ...spring, delay: 0.1 + 0.06 * i }}
-                    className={`h-full rounded-full ${q.done ? 'bg-emerald-500' : 'bg-orange-500'}`}
-                  />
-                </div>
+              <p className={`mt-1.5 line-clamp-2 w-full text-[10px] font-semibold leading-tight ${q.done ? 'text-emerald-700' : 'text-gray-600'}`}>
+                {isAr ? q.ar : q.en}
+              </p>
+              <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ ...spring, delay: 0.1 + 0.06 * i }}
+                  className={`h-full rounded-full ${q.done ? 'bg-emerald-500' : 'bg-orange-500'}`}
+                />
               </div>
-
-              <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-                  q.claimed
-                    ? 'bg-emerald-500 text-white'
-                    : q.done
-                      ? 'bg-emerald-100 text-emerald-600'
-                      : 'bg-gray-100 text-gray-300'
-                }`}
-                aria-label={q.done ? t('daily.claimed') : undefined}
-              >
-                {q.done ? <Check size={13} strokeWidth={3} /> : `+${q.xp ?? 0}`}
+              <span className={`mt-1 text-[10px] font-bold tabular-nums ${q.done ? 'text-emerald-600' : 'text-gray-400'}`}>
+                {q.done ? (q.claimed ? t('daily.claimed') : `+${q.xp ?? 0} XP`) : `${Math.min(q.progress ?? 0, target)}/${target}`}
               </span>
             </motion.div>
           );

@@ -21,7 +21,6 @@ import MenuDrawer from '../components/MenuDrawer';
 import ScreenHeader from '../components/ScreenHeader';
 import VideoPlayer from '../components/VideoPlayer';
 import CountUp from '../components/CountUp';
-import { CurlAnim } from '../components/TrainingAnim';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
@@ -73,34 +72,15 @@ export default function Home() {
 
       <TodayStrip />
 
-      <WeekZeroEntryCard />
-
+      {/* WeekZeroEntryCard and the "Start training" slab are gone: Week Zero
+          lives as a chip inside the Today strip, and Start/Muscle Map are both
+          one tap away (hero Start button + quick action). Fewer stacked CTAs,
+          same destinations. */}
       <CheckInCard />
 
       <PathCard />
 
       <QuickActions />
-
-      {/* Was a 144px slab sitting below the meal section — a billboard for a link, and
-          the third "start" call to action on one screen. Same destination, ~72px. */}
-      <motion.button
-        initial={{ opacity: 0, y: 12 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={spring}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => navigate('/workout')}
-        className="card-hover fitness-hero relative mx-4 mt-3 flex w-[calc(100%-2rem)] items-center gap-3 overflow-hidden rounded-2xl px-4 py-3 text-start text-white shadow-sm"
-      >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
-          <CurlAnim className="h-7 w-7" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-extrabold">{t('home2.startTraining')}</span>
-          <span className="block truncate text-xs text-white/70">{t('home2.pickMuscle')}</span>
-        </span>
-        <ChevronRight size={18} className="shrink-0 opacity-70 rtl:rotate-180" />
-      </motion.button>
 
       {/* Today's habits — the things that reset every morning */}
       <DailyQuests />
@@ -268,15 +248,17 @@ function Greeting() {
   );
 }
 
-/** Four one-tap shortcuts to the most-used corners of the app. */
+/** Four one-tap shortcuts to the most-used corners of the app.
+ *  Gradient icon tiles with a soft matching glow — flat pastel squares read
+ *  as placeholders next to the rest of the design language. */
 function QuickActions() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const actions = [
-    { label: t('home2.tracker'), icon: <Flame size={22} />, to: '/tracker', tint: 'bg-orange-100 text-orange-600' },
-    { label: t('home2.reels'), icon: <Clapperboard size={22} />, to: '/reels', tint: 'bg-fuchsia-100 text-fuchsia-600' },
-    { label: t('home2.buddies'), icon: <HeartHandshake size={22} />, to: '/buddies', tint: 'bg-emerald-100 text-emerald-600' },
-    { label: t('home2.muscleMap'), icon: <ScanLine size={22} />, to: '/exercises', tint: 'bg-sky-100 text-sky-600' },
+    { label: t('home2.tracker'), icon: <Flame size={22} />, to: '/tracker', g: 'from-orange-500 to-amber-500', glow: 'shadow-orange-500/30' },
+    { label: t('home2.reels'), icon: <Clapperboard size={22} />, to: '/reels', g: 'from-fuchsia-500 to-pink-500', glow: 'shadow-fuchsia-500/30' },
+    { label: t('home2.buddies'), icon: <HeartHandshake size={22} />, to: '/buddies', g: 'from-emerald-500 to-teal-500', glow: 'shadow-emerald-500/30' },
+    { label: t('home2.muscleMap'), icon: <ScanLine size={22} />, to: '/exercises', g: 'from-sky-500 to-blue-500', glow: 'shadow-sky-500/30' },
   ];
   return (
     <div className="mx-4 mt-4 grid grid-cols-4 gap-2">
@@ -287,42 +269,17 @@ function QuickActions() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ ...spring, delay: i * 0.05 }}
-          whileTap={{ scale: 0.92 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => navigate(a.to)}
-          className="flex min-w-0 flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm"
+          className="flex min-w-0 flex-col items-center gap-1.5 rounded-2xl bg-white py-3.5 shadow-sm transition-shadow active:shadow-none"
         >
-          <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${a.tint}`}>{a.icon}</span>
-          <span className="w-full truncate px-1 text-center text-[11px] font-semibold text-gray-600">{a.label}</span>
+          <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${a.g} text-white shadow-lg ${a.glow}`}>
+            {a.icon}
+          </span>
+          <span className="w-full truncate px-1 text-center text-[11px] font-bold text-gray-700">{a.label}</span>
         </motion.button>
       ))}
     </div>
-  );
-}
-
-/** First-timer on-ramp — shown only while the user has zero completed workouts. */
-function WeekZeroEntryCard() {
-  const { t } = useTranslation();
-  const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
-  if (progress?.totalCompletions !== 0) return null;
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={spring}
-      className="mx-4 mt-4 rounded-2xl bg-white shadow-sm"
-    >
-      <Link to="/week-zero" className="card-hover flex items-center gap-3 rounded-2xl p-4">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-2xl" aria-hidden>
-          🌱
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-extrabold">{t('weekzero.cardTitle')}</span>
-          <span className="block truncate text-xs text-gray-400">{t('weekzero.cardSub')}</span>
-        </span>
-        <ChevronRight size={18} className="shrink-0 text-gray-300 rtl:rotate-180" />
-      </Link>
-    </motion.section>
   );
 }
 

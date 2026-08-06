@@ -1,8 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ArrowRight, ClipboardList, Compass, Play } from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 import { api } from '../lib/api';
 import { MediaImage } from './ui';
 
@@ -36,14 +36,6 @@ export default function PathCard() {
     queryFn: () => api.get('/api/path/current'),
     staleTime: 60_000,
   });
-  // Has this user ever done the intake? Someone who skipped it needs to be pointed
-  // at it, not at a catalogue of eighteen programs to guess between.
-  const { data: plan } = useQuery<{ hasPlan: boolean }>({
-    queryKey: ['assessment'],
-    queryFn: () => api.get('/api/assessment'),
-    staleTime: 5 * 60_000,
-  });
-
   if (!data) return null;
 
   // Just finished one — celebrate it and hand over the next, rather than dropping
@@ -80,60 +72,9 @@ export default function PathCard() {
     );
   }
 
-  // No plan at all — this is the single most important thing on the screen, so it
-  // is loud and it goes to the intake, not to a list of programs.
-  if (!data.enrolled && plan && !plan.hasPlan) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-        className="mx-4 mt-4"
-      >
-        <Link
-          to="/my-plan"
-          className="relative flex items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-orange-500 to-pink-500 p-4 text-white shadow-md transition active:scale-[0.98]"
-        >
-          <span className="absolute -end-4 -top-4 h-20 w-20 rounded-full bg-white/10" aria-hidden />
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20">
-            <ClipboardList size={20} />
-          </span>
-          <span className="relative min-w-0 flex-1">
-            <span className="block text-sm font-extrabold">{t('assess.cta')}</span>
-            <span className="block truncate text-xs text-white/85">{t('assess.ctaSub')}</span>
-          </span>
-          <ArrowRight size={18} className="relative shrink-0 rtl:rotate-180" />
-        </Link>
-      </motion.div>
-    );
-  }
-
-  // Has a plan but isn't mid-program — send them to the recommendations.
-  if (!data.enrolled) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-        className="mx-4 mt-4"
-      >
-        <Link
-          to="/programs"
-          className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-brand-blue to-cyan-500 p-4 text-white shadow-sm transition active:scale-[0.98]"
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20">
-            <Compass size={20} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-bold">{t('path.pickTitle')}</span>
-            <span className="block truncate text-xs text-white/80">{t('path.pickSub')}</span>
-          </span>
-          <ArrowRight size={18} className="shrink-0 rtl:rotate-180" />
-        </Link>
-      </motion.div>
-    );
-  }
+  // Not mid-program: the "get my plan" / "pick a program" next steps now live
+  // as chips inside the Today strip — one hero, not a stack of CTA cards.
+  if (!data.enrolled) return null;
 
   const p = data.program!;
   const total = data.total ?? 0;

@@ -21,6 +21,7 @@ export default function TodayStrip() {
   const { data: groups } = useQuery({ queryKey: ['muscle-groups'], queryFn: () => api.get('/api/muscle-groups') });
   const { data: buddies } = useQuery({ queryKey: ['buddies'], queryFn: () => api.get('/api/social/buddies') });
   const { data: path } = useQuery({ queryKey: ['path-current'], queryFn: () => api.get('/api/path/current') });
+  const { data: plan } = useQuery({ queryKey: ['assessment'], queryFn: () => api.get('/api/assessment'), staleTime: 5 * 60_000 });
   const [online, setOnline] = useState<number | null>(null);
 
   useEffect(() => {
@@ -95,6 +96,37 @@ export default function TodayStrip() {
           {isRest && !path?.enrolled ? t('today.explore') : t('today.start')}
         </button>
       </div>
+
+      {/* Next-step chips folded INTO the hero. "New here? Week Zero", "Get my
+          plan" and "Pick a program" were each a full-width card — three stacked
+          CTAs all answering the same question this strip already owns. */}
+      {!path?.enrolled && ((progress?.totalCompletions ?? 1) === 0 || plan?.hasPlan === false) && (
+        <div className="mt-3 flex gap-2 border-t border-gray-200/40 pt-3">
+          {(progress?.totalCompletions ?? 1) === 0 && (
+            <button
+              onClick={() => navigate('/week-zero')}
+              className="flex min-h-[38px] flex-1 items-center justify-center gap-1.5 rounded-full bg-emerald-100 px-3 text-xs font-bold text-emerald-700 transition active:scale-95"
+            >
+              🌱 {t('today.chipWeekZero')}
+            </button>
+          )}
+          {plan?.hasPlan === false ? (
+            <button
+              onClick={() => navigate('/my-plan')}
+              className="flex min-h-[38px] flex-1 items-center justify-center gap-1.5 rounded-full bg-orange-100 px-3 text-xs font-bold text-orange-600 transition active:scale-95"
+            >
+              📋 {t('assess.cta')}
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/programs')}
+              className="flex min-h-[38px] flex-1 items-center justify-center gap-1.5 rounded-full bg-blue-100 px-3 text-xs font-bold text-brand-blue transition active:scale-95"
+            >
+              🧭 {t('path.pickTitle')}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Rest day: offer recovery actions instead of a dead end — this is where streaks die */}
       {isRest && !path?.enrolled && todayCount < goal && (

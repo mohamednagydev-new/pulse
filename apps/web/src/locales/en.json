@@ -303,6 +303,7 @@
     "nextTrack": "Next track"
   },
   "today": {
+    "chipWeekZero": "New? Week Zero",
     "goal": "Today's goal",
     "goalDone": "Today's goal done! 🎉",
     "restDay": "Rest day — recover well 😌",
