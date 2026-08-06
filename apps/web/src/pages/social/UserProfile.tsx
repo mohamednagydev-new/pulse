@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { MessageSquare, Star, Play, Dumbbell, CalendarDays, UserPlus, Check, Clock, Zap, HeartHandshake } from 'lucide-react';
 import { api } from '../../lib/api';
 import { MediaImage, Loader, ErrorMsg } from '../../components/ui';
+import Sheet from '../../components/Sheet';
 import TopBar from '../../components/TopBar';
 import PostCard from '../../components/PostCard';
 import CoachBadge from '../../components/CoachBadge';
@@ -18,6 +19,8 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { t } = useTranslation();
+  // "Connect to chat" explainer, opened by the message button when not yet buddies.
+  const [gate, setGate] = useState(false);
   const key = ['user-profile', id];
   const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: key, queryFn: () => api.get(`/api/social/users/${id}`) });
 
@@ -96,20 +99,68 @@ export default function UserProfile() {
           <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => message.mutate()} className="btn-pill btn-ghost flex min-h-[44px] flex-1 items-center justify-center gap-2">
             <MessageSquare size={16} /> {t('buddies.message')}
           </motion.button>
-        ) : user.connectionStatus === 'pending_out' ? (
-          <button disabled className="btn-pill btn-ghost flex min-h-[44px] flex-1 items-center justify-center gap-2 text-gray-400">
-            <Clock size={16} /> {t('buddies.requested')}
-          </button>
-        ) : user.connectionStatus === 'pending_in' ? (
-          <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => accept.mutate()} className="btn-pill btn-primary flex min-h-[44px] flex-1 items-center justify-center gap-2">
-            <Zap size={16} /> {t('buddies.accept')}
-          </motion.button>
         ) : (
-          <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => connect.mutate()} className="btn-pill btn-primary flex min-h-[44px] flex-1 items-center justify-center gap-2">
-            <HeartHandshake size={16} /> {t('buddies.connect')}
-          </motion.button>
+          <>
+            {user.connectionStatus === 'pending_out' ? (
+              <button disabled className="btn-pill btn-ghost flex min-h-[44px] flex-1 items-center justify-center gap-2 text-gray-400">
+                <Clock size={16} /> {t('buddies.requested')}
+              </button>
+            ) : user.connectionStatus === 'pending_in' ? (
+              <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => accept.mutate()} className="btn-pill btn-primary flex min-h-[44px] flex-1 items-center justify-center gap-2">
+                <Zap size={16} /> {t('buddies.accept')}
+              </motion.button>
+            ) : (
+              <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => connect.mutate()} className="btn-pill btn-primary flex min-h-[44px] flex-1 items-center justify-center gap-2">
+                <HeartHandshake size={16} /> {t('buddies.connect')}
+              </motion.button>
+            )}
+            {/* Message is always visible; before you're buddies it explains the gate. */}
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              transition={tapSpring}
+              onClick={() => setGate(true)}
+              aria-label={t('buddies.message')}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm"
+            >
+              <MessageSquare size={18} />
+            </motion.button>
+          </>
         )}
       </div>
+
+      <Sheet open={gate} onClose={() => setGate(false)} label={t('buddies.chatGateTitle', { name: user.firstName })}>
+        <div className="px-5 pb-8 pt-2 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink">
+            <MessageSquare size={24} />
+          </div>
+          <h3 className="mt-3 text-lg font-bold">{t('buddies.chatGateTitle', { name: user.firstName })}</h3>
+          <p className="mt-2 text-sm text-gray-500">
+            {t(
+              user.connectionStatus === 'pending_out'
+                ? 'buddies.chatGateOut'
+                : user.connectionStatus === 'pending_in'
+                  ? 'buddies.chatGateIn'
+                  : 'buddies.chatGateNone',
+              { name: user.firstName },
+            )}
+          </p>
+          <div className="mt-5">
+            {user.connectionStatus === 'pending_out' ? (
+              <button disabled className="btn-pill btn-ghost flex min-h-[44px] w-full items-center justify-center gap-2 text-gray-400">
+                <Clock size={16} /> {t('buddies.requested')}
+              </button>
+            ) : user.connectionStatus === 'pending_in' ? (
+              <button onClick={() => { accept.mutate(); setGate(false); }} className="btn-pill btn-primary flex min-h-[44px] w-full items-center justify-center gap-2">
+                <Zap size={16} /> {t('buddies.accept')}
+              </button>
+            ) : (
+              <button onClick={() => { connect.mutate(); setGate(false); }} className="btn-pill btn-primary flex min-h-[44px] w-full items-center justify-center gap-2">
+                <HeartHandshake size={16} /> {t('buddies.connect')}
+              </button>
+            )}
+          </div>
+        </div>
+      </Sheet>
 
       {user.isCoach && <CoachSection userId={user.id} />}
 

@@ -240,7 +240,11 @@
     "requested": "Requested",
     "accept": "Accept",
     "empty": "No buddies yet",
-    "emptyHint": "Connect with people to train together."
+    "emptyHint": "Connect with people to train together.",
+    "chatGateTitle": "Chat with {{name}}",
+    "chatGateNone": "You need to be buddies to chat. Send a request — the moment {{name}} accepts, your chat opens.",
+    "chatGateOut": "Request sent! Your chat opens as soon as {{name}} accepts.",
+    "chatGateIn": "{{name}} already sent you a buddy request — accept it and start chatting."
   },
   "invite": {
     "title": "Invite friends 🎁",
