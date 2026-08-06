@@ -159,6 +159,15 @@ export default function Login() {
         <p className="text-center text-sm text-gray-500">
           <Link to="/register" className="font-semibold text-brand-teal underline">{t('auth.noAccount')}</Link> {t('auth.createOne')}
         </p>
+        {/* Look-before-you-commit: the biggest post-onboarding drop is people who
+            can't see inside. Guests browse content; actions still require an account. */}
+        <button
+          type="button"
+          onClick={() => { track('funnel-guest-browse', utmMeta()); navigate('/programs'); }}
+          className="mx-auto block text-center text-sm font-semibold text-brand-pink underline"
+        >
+          {t('auth.browseFirst')}
+        </button>
         {/* Escape hatch for people stuck at the door — goes to the admin inbox. */}
         <p className="pb-8 text-center text-xs text-gray-400">
           <Link to="/contact" className="underline">{t('auth.needHelp')}</Link>

@@ -1,32 +1,55 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Send, Trophy, MessageSquare, Sparkles } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Send, Trophy, MessageSquare, Users, Zap, CalendarDays, Info } from 'lucide-react';
 import { api } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import { MediaImage, Loader } from '../../components/ui';
 import TopBar from '../../components/TopBar';
+import { toast } from '../../lib/toast';
 
+/**
+ * Challenge room. Opens on OVERVIEW — what the challenge is, the goal, your
+ * progress, who's in — with chat and leaderboard one tap away. It used to open
+ * straight into a bare group chat, which read as "why am I in a chat screen?".
+ */
 export default function ChallengeRoom() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
-  const [tab, setTab] = useState<'chat' | 'board'>('chat');
+  const qc = useQueryClient();
+  const [tab, setTab] = useState<'about' | 'chat' | 'board'>('about');
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState('');
   const [meId, setMeId] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
 
-  const { data: challenge } = useQuery({ queryKey: ['challenge', id], queryFn: () => api.get(`/api/gamification/challenges/${id}/detail`) });
-  const { data: board } = useQuery({ queryKey: ['challenge-board', id], queryFn: () => api.get(`/api/gamification/challenges/${id}/leaderboard`), enabled: tab === 'board' });
-  const { isLoading } = useQuery({
+  const { data: challenge, isLoading } = useQuery({
+    queryKey: ['challenge', id],
+    queryFn: () => api.get(`/api/gamification/challenges/${id}/detail`),
+  });
+  const { data: board } = useQuery({
+    queryKey: ['challenge-board', id],
+    queryFn: () => api.get(`/api/gamification/challenges/${id}/leaderboard`),
+  });
+  useQuery({
     queryKey: ['challenge-msgs', id],
     queryFn: async () => {
       const [msgs, me] = await Promise.all([api.get(`/api/gamification/challenges/${id}/messages`), api.get('/api/me')]);
-      setMessages(msgs);
+      setMessages(Array.isArray(msgs) ? msgs : []);
       setMeId(me.id);
       return msgs;
     },
+  });
+
+  const join = useMutation({
+    mutationFn: () => api.post(`/api/gamification/challenges/${id}/join`),
+    onSuccess: () => {
+      toast(t('challenges.joined'), 'success');
+      qc.invalidateQueries({ queryKey: ['challenge', id] });
+      qc.invalidateQueries({ queryKey: ['challenge-board', id] });
+    },
+    onError: (e: any) => toast(e?.message || t('common.somethingWrong'), 'error'),
   });
 
   useEffect(() => {
@@ -34,34 +57,122 @@ export default function ChallengeRoom() {
     socket.emit('challenge:open', id);
     const onMsg = (m: any) => setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
     socket.on('challenge:msg', onMsg);
-    return () => { socket.emit('challenge:close', id); socket.off('challenge:msg', onMsg); };
+    return () => {
+      socket.emit('challenge:close', id);
+      socket.off('challenge:msg', onMsg);
+    };
   }, [id]);
 
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages, tab]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, tab]);
 
   const send = async () => {
-    const t = text.trim();
-    if (!t) return;
+    const body = text.trim();
+    if (!body) return;
     setText('');
-    const m = await api.post(`/api/gamification/challenges/${id}/messages`, { text: t });
-    setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+    try {
+      const m = await api.post(`/api/gamification/challenges/${id}/messages`, { text: body });
+      setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+    } catch (e: any) {
+      toast(e?.message || t('common.somethingWrong'), 'error');
+      setText(body);
+    }
   };
 
   if (isLoading) return <Loader />;
 
+  const rows: any[] = Array.isArray(board) ? board : [];
+  const isAr = i18n.language.startsWith('ar');
+  const title = (isAr && challenge?.titleAr) || challenge?.title || 'Challenge';
+  const description = (isAr && challenge?.descriptionAr) || challenge?.description;
+  const goalPct = challenge?.goalValue > 0 ? Math.min(100, Math.round(((challenge?.myProgress ?? 0) / challenge.goalValue) * 100)) : 0;
+  const daysLeft = challenge?.endsOn
+    ? Math.ceil((new Date(`${challenge.endsOn}T23:59:59`).getTime() - Date.now()) / 86_400_000)
+    : null;
+
   return (
     <div className="flex min-h-screen flex-col">
-      <TopBar title={challenge?.title ?? 'Challenge'} color="bg-gradient-to-b from-brand-blue to-blue-500" textColor="text-white" />
-      {challenge?.coverImage && <MediaImage path={challenge.coverImage} label={challenge.title} className="h-32 w-full" seed={2} />}
+      <TopBar title={title} color="bg-gradient-to-b from-brand-blue to-blue-500" textColor="text-white" />
+
       <div className="flex gap-2 px-4 py-2">
-        <Tab active={tab === 'chat'} onClick={() => setTab('chat')} icon={<MessageSquare size={15} />} label="Chat" />
-        <Tab active={tab === 'board'} onClick={() => setTab('board')} icon={<Trophy size={15} />} label="Leaderboard" />
+        <Tab active={tab === 'about'} onClick={() => setTab('about')} icon={<Info size={15} />} label={t('challenge.overview')} />
+        <Tab active={tab === 'chat'} onClick={() => setTab('chat')} icon={<MessageSquare size={15} />} label={t('challenge.chat')} />
+        <Tab active={tab === 'board'} onClick={() => setTab('board')} icon={<Trophy size={15} />} label={t('challenge.board')} />
       </div>
 
-      {tab === 'chat' ? (
+      {tab === 'about' && (
+        <div className="space-y-3 px-4 pb-10">
+          {challenge?.coverImage && <MediaImage path={challenge.coverImage} label={title} className="h-36 w-full rounded-2xl" />}
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            {description && <p className="text-sm leading-relaxed text-gray-600">{description}</p>}
+            <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+              <span className="flex items-center gap-1 rounded-full bg-brand-blue/10 px-3 py-1.5 text-brand-blue">
+                <Trophy size={13} /> {t('challenge.goal')}: {challenge?.goalValue}
+              </span>
+              <span className="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1.5 text-gray-600">
+                <Users size={13} /> {t('challenge.participants', { n: challenge?.participantCount ?? rows.length })}
+              </span>
+              {daysLeft !== null && (
+                <span className="flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1.5 text-amber-700">
+                  <CalendarDays size={13} />
+                  {daysLeft > 0 ? t('challenge.daysLeft', { n: daysLeft }) : daysLeft === 0 ? t('challenge.endsToday') : t('challenge.ended')}
+                </span>
+              )}
+              {challenge?.rewardXp > 0 && (
+                <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1.5 text-emerald-700">
+                  <Zap size={13} /> {t('challenge.reward', { n: challenge.rewardXp })}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {challenge?.joined ? (
+            <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="mb-1 flex items-center justify-between text-sm font-semibold">
+                <span>{t('challenge.yourProgress')}</span>
+                <span className="font-display font-extrabold text-brand-blue">
+                  {challenge.myProgress}/{challenge.goalValue}
+                </span>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
+                <div className="h-full rounded-full bg-gradient-to-r from-brand-blue to-blue-400" style={{ width: `${goalPct}%` }} />
+              </div>
+              <p className="mt-2 text-xs font-semibold text-emerald-600">
+                {challenge.completedAt ? t('challenge.completed') : t('challenge.joined')}
+              </p>
+            </div>
+          ) : (
+            <button
+              onClick={() => join.mutate()}
+              disabled={join.isPending}
+              className="btn-pill btn-primary flex min-h-[48px] w-full items-center justify-center gap-2 disabled:opacity-60"
+            >
+              <Zap size={16} /> {t('challenge.join')}
+            </button>
+          )}
+
+          {/* Top 3 teaser under the overview — the full list is one tap away */}
+          {rows.length > 0 && (
+            <button onClick={() => setTab('board')} className="w-full rounded-2xl bg-white p-4 text-start shadow-sm">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('challenge.board')}</p>
+              <div className="space-y-2">
+                {rows.slice(0, 3).map((r: any) => (
+                  <BoardRow key={r.rank} r={r} me={r.userId === meId} />
+                ))}
+              </div>
+            </button>
+          )}
+        </div>
+      )}
+
+      {tab === 'chat' && (
         <>
           <div className="flex-1 space-y-2 overflow-y-auto px-4 pb-24">
-            <p className="py-2 text-center text-[11px] text-gray-400">Tip: type <b>@coach</b> to ask the AI coach</p>
+            <p className="py-2 text-center text-[11px] text-gray-400">
+              Tip: type <b>@coach</b> to ask the AI coach
+            </p>
             {messages.map((m) => {
               const mine = m.userId === meId;
               return (
@@ -78,31 +189,50 @@ export default function ChallengeRoom() {
           </div>
           <div className="sticky bottom-0 border-t glass-nav p-3">
             <div className="flex items-center gap-2">
-              <input className="flex-1 rounded-full bg-gray-100 px-4 py-3 outline-none" placeholder={t('challenge.messagePh')} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} />
-              <button onClick={send} className="flex h-11 w-11 items-center justify-center rounded-full btn-blue"><Send size={18} /></button>
+              <input
+                className="flex-1 rounded-full bg-gray-100 px-4 py-3 outline-none"
+                placeholder={t('challenge.messagePh')}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && send()}
+              />
+              <button onClick={send} className="flex h-11 w-11 items-center justify-center rounded-full btn-blue">
+                <Send size={18} />
+              </button>
             </div>
           </div>
         </>
-      ) : (
+      )}
+
+      {tab === 'board' && (
         <div className="space-y-2 px-4 pb-10">
-          {(board ?? []).map((r: any) => (
-            <div key={r.rank} className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-sm">
-              <span className="w-7 text-center text-lg font-bold">{r.rank <= 3 ? ['🥇','🥈','🥉'][r.rank - 1] : r.rank}</span>
-              <MediaImage path={r.avatarUrl} label={r.name} className="h-9 w-9 rounded-full" seed={r.rank} />
-              <span className="flex-1 font-medium">{r.name}</span>
-              <span className="font-bold text-brand-blue">{r.progress}</span>
-            </div>
+          {rows.map((r: any) => (
+            <BoardRow key={r.rank} r={r} me={r.userId === meId} card />
           ))}
-          {!board?.length && <p className="py-10 text-center text-gray-400">{t('challenge.noParticipants')}</p>}
+          {rows.length === 0 && <p className="py-10 text-center text-gray-400">{t('challenge.noParticipants')}</p>}
         </div>
       )}
     </div>
   );
 }
 
+function BoardRow({ r, me, card = false }: { r: any; me: boolean; card?: boolean }) {
+  return (
+    <div className={`flex items-center gap-3 ${card ? `rounded-xl bg-white px-4 py-3 shadow-sm ${me ? 'ring-1 ring-brand-blue/40' : ''}` : ''}`}>
+      <span className="w-7 shrink-0 text-center text-lg font-bold">{r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}</span>
+      <MediaImage path={r.avatarUrl} label={r.name} className="h-9 w-9 shrink-0 rounded-full" seed={r.rank} />
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">{r.name}</span>
+      <span className="font-display shrink-0 font-bold text-brand-blue">{r.progress}</span>
+    </div>
+  );
+}
+
 function Tab({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
-    <button onClick={onClick} className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold ${active ? 'bg-brand-blue text-white' : 'bg-white text-gray-500 shadow-sm'}`}>
+    <button
+      onClick={onClick}
+      className={`flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold ${active ? 'bg-brand-blue text-white' : 'bg-white text-gray-500 shadow-sm'}`}
+    >
       {icon} {label}
     </button>
   );

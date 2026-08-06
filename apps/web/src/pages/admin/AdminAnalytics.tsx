@@ -17,6 +17,7 @@ interface CountRow {
 interface AnalyticsData {
   dau: DauPoint[];
   funnel?: Record<string, Record<string, number>>;
+  clientErrors?: { message: string; count: number }[];
   topScreens: { path: string; count: number }[];
   topEvents: { name: string; count: number }[];
   totals: {
@@ -128,6 +129,7 @@ function DauChart({ dau }: { dau: DauPoint[] | undefined }) {
 const FUNNEL_STEPS: { key: string; label: string }[] = [
   { key: 'funnel-landing', label: 'Landed' },
   { key: 'funnel-onboarding', label: 'Onboarding' },
+  { key: 'funnel-guest-browse', label: 'Browsed as guest' },
   { key: 'funnel-login-view', label: 'Saw login' },
   { key: 'funnel-register-view', label: 'Saw register' },
   { key: 'funnel-registered', label: 'Registered ✓' },
@@ -223,6 +225,21 @@ export default function AdminAnalytics() {
 
           <Card title="Ad funnel by source (30 days)">
             <FunnelCard funnel={data.funnel} />
+          </Card>
+
+          <Card title="Client errors on real devices (7 days)">
+            {data.clientErrors?.length ? (
+              <div className="space-y-2">
+                {data.clientErrors.map((e) => (
+                  <div key={e.message} className="flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2">
+                    <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-600">×{e.count}</span>
+                    <code dir="ltr" className="min-w-0 flex-1 break-words font-mono text-[11px] leading-relaxed text-red-700">{e.message}</code>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="py-4 text-center text-sm text-gray-400">No client errors reported 🎉</p>
+            )}
           </Card>
 
           <Card title="Top screens (7 days)">

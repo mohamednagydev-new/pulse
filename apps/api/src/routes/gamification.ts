@@ -160,6 +160,7 @@ gamificationRouter.get('/challenges/:id/leaderboard', async (req: AuthedRequest,
   res.json(
     rows.map((r, i) => ({
       rank: i + 1,
+      userId: r.userId,
       name: `${r.user.firstName} ${r.user.lastName}`,
       avatarUrl: r.user.avatarUrl,
       progress: r.progress,
@@ -172,7 +173,19 @@ gamificationRouter.get('/challenges/:id/detail', async (req: AuthedRequest, res)
   const challenge = await challengeForViewer(req.params.id, req.userId!);
   if (challenge === null) return res.status(404).json({ error: 'Not found' });
   if (challenge === false) return res.status(403).json({ error: 'This challenge is private' });
-  res.json(challenge);
+  // Joined-state + own progress ride along so the room can show an overview
+  // instead of dropping people straight into a bare chat.
+  const mine = await prisma.challengeParticipant.findUnique({
+    where: { challengeId_userId: { challengeId: req.params.id, userId: req.userId! } },
+  });
+  const { _count, ...c } = challenge as any;
+  res.json({
+    ...c,
+    joined: !!mine,
+    myProgress: mine?.progress ?? 0,
+    completedAt: mine?.completedAt ?? null,
+    participantCount: _count?.participants ?? 0,
+  });
 });
 
 gamificationRouter.get('/challenges/:id/messages', async (req: AuthedRequest, res) => {

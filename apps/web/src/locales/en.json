@@ -34,6 +34,10 @@
   "ads": {
     "sponsored": "Sponsored"
   },
+  "guest": {
+    "bar": "You're browsing as a guest — join free to train, track and compete",
+    "cta": "Join free"
+  },
   "onboarding": {
     "slide1Title": "Count Your Calories",
     "slide1Body": "Track the nutritional value of everything you eat.",
@@ -61,6 +65,7 @@
     "google": "Sign in with Google",
     "noAccount": "Don't have an account?",
     "needHelp": "Trouble signing in? Contact us",
+    "browseFirst": "Look around first — no account needed",
     "webviewGoogle": "Google sign-in doesn't work inside the Facebook/TikTok browser — sign up with email below, or open pulse.geddo.online in Chrome/Safari.",
     "createNew": "Create new one",
     "haveAccount": "Already have an account?",
@@ -877,7 +882,20 @@
   },
   "challenge": {
     "messagePh": "Message the group…",
-    "noParticipants": "No one has joined yet."
+    "noParticipants": "No one has joined yet.",
+    "overview": "Overview",
+    "chat": "Chat",
+    "board": "Leaderboard",
+    "goal": "Goal",
+    "yourProgress": "Your progress",
+    "daysLeft": "{{n}} days left",
+    "endsToday": "Ends today",
+    "ended": "Ended",
+    "participants": "{{n}} joined",
+    "reward": "+{{n}} XP on completion",
+    "join": "Join challenge",
+    "joined": "You're in! 💪",
+    "completed": "Completed ✅"
   },
   "community": {
     "addMedia": "Add media",

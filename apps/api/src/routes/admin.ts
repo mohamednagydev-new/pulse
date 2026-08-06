@@ -579,9 +579,20 @@ adminRouter.get('/analytics', async (_req, res) => {
     (funnel[source] ??= {})[row.name] = row._count;
   }
 
+  // Crash telemetry detail: WHICH errors real devices hit, not just the count.
+  // 18 anonymous "client-error" rows in top-events are useless without the meta.
+  const clientErrorsRaw = await prisma.event.groupBy({
+    by: ['meta'],
+    where: { name: 'client-error', createdAt: { gte: since7 }, meta: { not: null } },
+    _count: true,
+    orderBy: { _count: { meta: 'desc' } },
+    take: 20,
+  });
+
   res.json({
     dau: dau.map((d) => ({ day: d.day, users: Number(d.users) })),
     funnel,
+    clientErrors: clientErrorsRaw.map((e) => ({ message: e.meta, count: e._count })),
     topScreens: topScreensRaw.map((s) => ({ path: s.meta, count: s._count })),
     topEvents: topEventsRaw.map((e) => ({ name: e.name, count: e._count })),
     totals: {

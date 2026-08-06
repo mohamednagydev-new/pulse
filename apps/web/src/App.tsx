@@ -210,10 +210,32 @@ export default function App() {
           }
         >
           <Route path="/" element={<Home />} />
-          <Route path="/programs" element={<ProgramsHome />} />
           <Route path="/community" element={<Community />} />
-          <Route path="/wellness" element={<WellnessHome />} />
           <Route path="/profile" element={<Profile />} />
+        </Route>
+
+        {/* Content tabs guests may browse: authed users keep the tab layout,
+            guests get the page + a persistent signup bar. Browsing first and
+            committing second — the same principle as dropping the intake gate. */}
+        <Route element={<TabOrGuest />}>
+          <Route path="/programs" element={<ProgramsHome />} />
+          <Route path="/wellness" element={<WellnessHome />} />
+        </Route>
+
+        {/* Content depth open to guests (the APIs behind these are public). */}
+        <Route element={<GuestBrowse />}>
+          <Route path="/programs/coach/:id" element={<CoachPage />} />
+          <Route path="/programs/:id" element={<ProgramPage />} />
+          <Route path="/lesson/:id" element={<LessonPage />} />
+          <Route path="/exercises" element={<ExercisesPage />} />
+          <Route path="/exercises/:groupId" element={<MuscleGroupPage />} />
+          <Route path="/wellness/:kind" element={<WellnessSection />} />
+          <Route path="/category/:id" element={<CategoryPage />} />
+          <Route path="/recipe/:id" element={<RecipePage />} />
+          <Route path="/article/:id" element={<ArticlePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/gyms" element={<Venues />} />
+          <Route path="/help" element={<Help />} />
         </Route>
 
         <Route
@@ -228,19 +250,9 @@ export default function App() {
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/session/:groupId" element={<WorkoutSession />} />
           <Route path="/session/w/:workoutId" element={<WorkoutSession />} />
-          <Route path="/programs/coach/:id" element={<CoachPage />} />
-          <Route path="/programs/:id" element={<ProgramPage />} />
-          <Route path="/lesson/:id" element={<LessonPage />} />
-          <Route path="/exercises" element={<ExercisesPage />} />
-          <Route path="/exercises/:groupId" element={<MuscleGroupPage />} />
-          <Route path="/wellness/:kind" element={<WellnessSection />} />
-          <Route path="/category/:id" element={<CategoryPage />} />
-          <Route path="/recipe/:id" element={<RecipePage />} />
-          <Route path="/article/:id" element={<ArticlePage />} />
           <Route path="/info" element={<Info />} />
           <Route path="/tracker" element={<Tracker />} />
           <Route path="/meals" element={<MealPlan />} />
-          <Route path="/gyms" element={<Venues />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/achievements" element={<Achievements />} />
           {/* /leaderboard/:id removed — nothing ever linked to it; the weekly
@@ -250,7 +262,6 @@ export default function App() {
               cached bundles land on the thing that superseded it. */}
           <Route path="/plan" element={<Navigate to="/meals" replace />} />
           <Route path="/music" element={<MusicGallery />} />
-          <Route path="/search" element={<SearchPage />} />
           <Route path="/bookmarks" element={<Bookmarks />} />
           <Route path="/programs-done" element={<ProgramsDone />} />
           <Route path="/people" element={<People />} />
@@ -267,7 +278,6 @@ export default function App() {
           <Route path="/support" element={<Support />} />
           <Route path="/my-plan" element={<Assessment />} />
           <Route path="/partner/:id" element={<PartnerPage />} />
-          <Route path="/help" element={<Help />} />
           <Route path="/challenge/:id" element={<ChallengeRoom />} />
           <Route path="/coaches-community" element={<CoachesDirectory />} />
           <Route path="/coach-profile" element={<CoachProfileEdit />} />
@@ -363,8 +373,38 @@ function CelebrationListener() {
 
 // Detail pages render full-screen without the bottom tab bar.
 import { Outlet } from 'react-router-dom';
+import GuestBar from './components/GuestBar';
 function PlainOutlet() {
   return <Outlet />;
+}
+
+/** Guest-browsable content page: authed renders plainly; guests get the page
+ *  plus the persistent signup bar (and bottom space so it hides nothing). */
+function GuestBrowse() {
+  const status = useAuth((s) => s.status);
+  if (status === 'loading' || status === 'idle') return <Splash />;
+  if (status === 'authed') return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      <div className="h-20" aria-hidden />
+      <GuestBar />
+    </>
+  );
+}
+
+/** Content TAB guests may browse: authed users keep the tab-bar layout. */
+function TabOrGuest() {
+  const status = useAuth((s) => s.status);
+  if (status === 'loading' || status === 'idle') return <Splash />;
+  if (status === 'authed') return <AppLayout />;
+  return (
+    <>
+      <Outlet />
+      <div className="h-20" aria-hidden />
+      <GuestBar />
+    </>
+  );
 }
 
 /** Motivational branded surround shown around the phone frame on desktop. */
