@@ -218,35 +218,10 @@ export default function Achievements() {
         </motion.section>
       )}
 
+      {/* ── Challenges hub — ABOVE the badge wall. Challenges (and the marketing
+          join-code, e.g. PULSE14) are actionable; badges are a trophy case that
+          was burying them below the fold. ── */}
       <section className="px-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="min-w-0 truncate font-bold">Badges · <CountUp value={badges?.earnedCount ?? 0} /> earned</h2>
-          {(badges?.earnedCount ?? 0) > 0 && (
-            <ShareCardButton emoji="🏆" title={`${badges.earnedCount} badges earned`} subtitle="on my fitness journey" />
-          )}
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {(badges?.badges ?? []).map((b: any, i: number) => (
-            <motion.div
-              key={b.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '0px 0px -40px 0px' }}
-              transition={{ ...spring, delay: (i % 3) * 0.06 }}
-              whileTap={b.earned ? { scale: 0.94 } : undefined}
-              onClick={b.earned ? () => void shareMilestone({ kind: 'badge', title: t('share.badge'), value: b.title, subtitle: b.description, emoji: b.icon ?? '🏅', savedMsg: t('share.saved') }) : undefined}
-              className={`flex flex-col items-center gap-1 rounded-2xl bg-white p-4 text-center shadow-sm ${b.earned ? 'cursor-pointer' : 'opacity-45 grayscale'}`}
-            >
-              <span className="text-3xl">{b.icon ?? '🏅'}</span>
-              <span className="text-xs font-semibold leading-tight">{b.title}</span>
-              {b.description && <span className="text-[10px] text-gray-400">{b.description}</span>}
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Challenges hub ─────────────────────────────────────────── */}
-      <section className="mt-7 px-4">
         <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('battle.compete')}</p>
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="min-w-0 truncate font-bold">{t('challenges.title')}</h2>
@@ -453,6 +428,33 @@ export default function Achievements() {
               </motion.div>
             );
           })}
+        </div>
+      </section>
+
+      <section className="mt-7 px-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="min-w-0 truncate font-bold">Badges · <CountUp value={badges?.earnedCount ?? 0} /> earned</h2>
+          {(badges?.earnedCount ?? 0) > 0 && (
+            <ShareCardButton emoji="🏆" title={`${badges.earnedCount} badges earned`} subtitle="on my fitness journey" />
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {(badges?.badges ?? []).map((b: any, i: number) => (
+            <motion.div
+              key={b.id}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+              transition={{ ...spring, delay: (i % 3) * 0.06 }}
+              whileTap={b.earned ? { scale: 0.94 } : undefined}
+              onClick={b.earned ? () => void shareMilestone({ kind: 'badge', title: t('share.badge'), value: b.title, subtitle: b.description, emoji: b.icon ?? '🏅', savedMsg: t('share.saved') }) : undefined}
+              className={`flex flex-col items-center gap-1 rounded-2xl bg-white p-4 text-center shadow-sm ${b.earned ? 'cursor-pointer' : 'opacity-45 grayscale'}`}
+            >
+              <span className="text-3xl">{b.icon ?? '🏅'}</span>
+              <span className="text-xs font-semibold leading-tight">{b.title}</span>
+              {b.description && <span className="text-[10px] text-gray-400">{b.description}</span>}
+            </motion.div>
+          ))}
         </div>
       </section>
 

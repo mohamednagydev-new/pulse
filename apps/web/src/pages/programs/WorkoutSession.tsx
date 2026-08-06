@@ -577,14 +577,8 @@ export default function WorkoutSession() {
               </div>
             </div>
           )}
-          {current?.description && <p className="mt-3 text-sm text-white/70">{current.description}</p>}
-          {Array.isArray(current?.instructions) && current.instructions.length > 0 && (
-            <ol className="mt-3 list-decimal space-y-1 ps-5 text-sm text-white/70">
-              {current.instructions.slice(0, 6).map((s: string, k: number) => <li key={k}>{s}</li>)}
-            </ol>
-          )}
-
-          {/* Log your best set */}
+          {/* Log your best set — ABOVE the how-to text. It used to sit under six
+              instruction steps where no lifter mid-set would ever scroll. */}
           <div className="mt-4 rounded-2xl bg-white/5 p-3">
             <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-white/50">
               <Dumbbell size={12} /> {t('session.logSet')}
@@ -617,6 +611,22 @@ export default function WorkoutSession() {
               </button>
             </div>
           </div>
+
+          {/* How-to folded away: native <details> resets per exercise since the
+              slide remounts (key={i}) — the wall of text is opt-in, not default. */}
+          {(current?.description || (Array.isArray(current?.instructions) && current.instructions.length > 0)) && (
+            <details className="mt-3 rounded-2xl bg-white/5 p-3">
+              <summary className="cursor-pointer list-none text-[11px] font-bold uppercase tracking-wide text-white/50">
+                {isAr ? 'إزاي تعملها؟ ▾' : 'How to do it ▾'}
+              </summary>
+              {current?.description && <p className="mt-2 text-sm text-white/70">{current.description}</p>}
+              {Array.isArray(current?.instructions) && current.instructions.length > 0 && (
+                <ol className="mt-2 list-decimal space-y-1 ps-5 text-sm text-white/70">
+                  {current.instructions.slice(0, 6).map((s: string, k: number) => <li key={k}>{s}</li>)}
+                </ol>
+              )}
+            </details>
+          )}
         </motion.div>
         </AnimatePresence>
       )}

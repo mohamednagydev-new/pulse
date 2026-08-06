@@ -7,7 +7,7 @@ import { Users, MessageSquare, Send, ImagePlus, X, Award, Clapperboard } from 'l
 import { api, getAccessToken } from '../../lib/api';
 import { trackAd } from '../../lib/ads';
 import { getSocket } from '../../lib/socket';
-import { Loader, MediaImage } from '../../components/ui';
+import { MediaImage } from '../../components/ui';
 import MenuDrawer from '../../components/MenuDrawer';
 import ScreenHeader from '../../components/ScreenHeader';
 import PostCard from '../../components/PostCard';
@@ -145,7 +145,25 @@ export default function Community() {
       </motion.div>
 
       {isLoading ? (
-        <Loader />
+        /* Skeleton posts instead of a bare spinner: the screen keeps its shape
+           and feels a beat faster while the feed arrives. */
+        <div className="mx-4 mt-3 space-y-3">
+          {[0, 1, 2].map((k) => (
+            <div key={k} className="animate-pulse rounded-2xl bg-white p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-gray-200" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-28 rounded bg-gray-200" />
+                  <div className="h-2.5 w-16 rounded bg-gray-100" />
+                </div>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="h-3 w-full rounded bg-gray-100" />
+                <div className="h-3 w-3/4 rounded bg-gray-100" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="mt-4 space-y-3 px-4">
           {ad && (

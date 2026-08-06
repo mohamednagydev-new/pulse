@@ -4,7 +4,7 @@ import { notifyUser, pushEnabled } from '../routes/push';
 import { ensureCurrentSeason } from './seasons';
 import { settleStaleRooms, promotionCliffhangers } from './leagues';
 import { nextCheckDate } from './coach';
-import { dayString, daysAgoStr, localHour, localDow } from './time';
+import { dayString, daysAgoStr, localHour, localDow, startOfDayTz } from './time';
 
 /** Hourly reminder engine. In-app notifications always persist (via notifyUser);
  *  push delivery additionally requires VAPID. */
@@ -170,6 +170,17 @@ async function runCheck() {
     await postLeaguePromotions().catch((e) => console.warn('[fb-league]', e?.message));
   }
 
+  // Daily 09:00 — top up the recurring Coach PULSE group sessions for the next
+  // 7 days, so the Groups tab always shows real joinable live rooms. A social
+  // area with nothing scheduled reads as a dead app on day one. Also fires on
+  // any hour where NOTHING upcoming exists (first boot after deploy) — the
+  // function is idempotent, so the extra path cannot double-book.
+  if (hour === 9 && (await claimJob(`groupsessions:${day}`))) {
+    await ensureGroupSessions().catch((e) => console.warn('[groups]', e?.message));
+  } else if ((await prisma.groupSession.count({ where: { scheduledAt: { gte: now } } })) === 0) {
+    await ensureGroupSessions().catch((e) => console.warn('[groups]', e?.message));
+  }
+
   // Lapsed re-engagement — no activity for 3+ days (once, at 18:00).
   if (hour === 18 && (await claimJob(`lapsed:${day}`))) {
     const threeAgo = daysAgoStr(3);
@@ -198,6 +209,71 @@ async function runCheck() {
 /**
  * Nightly SQLite backup via VACUUM INTO — a consistent point-in-time copy that
  * works while the app is live (plain file copy of a WAL database is not safe).
+ * Recurring PULSE-team live rooms: three weekly slots (Cairo clock), hosted by
+ * the official Coach PULSE account. Idempotent — creates only slots missing in
+ * the next 7 days; admins can delete/edit any single occurrence freely.
+ */
+const GROUP_SLOTS = [
+  {
+    dow: 6, // Saturday
+    hour: 19,
+    title: 'Full-Body Kickoff · تمرين الجسم كله',
+    muscleFocus: 'Full body',
+    description:
+      'Open live session with Coach PULSE — all levels welcome. جلسة لايف مفتوحة مع كوتش PULSE، كل المستويات — انضم وشد حيلك مع الناس.',
+  },
+  {
+    dow: 2, // Tuesday
+    hour: 20,
+    title: 'HIIT Express · حرق سريع',
+    muscleFocus: 'Cardio',
+    description:
+      '25 minutes, maximum burn, shared timer. ٢٥ دقيقة حرق على الآخر، بتايمر مشترك — نبدأ مع بعض ونخلص مع بعض.',
+  },
+  {
+    dow: 4, // Thursday
+    hour: 20,
+    title: 'Yoga Wind-Down · يوجا آخر الأسبوع',
+    muscleFocus: 'Mobility',
+    description:
+      'Slow stretch & breathing to close the week. تمدد هادي وتنفس نقفل بيه الأسبوع — جسمك يستاهل.',
+  },
+];
+
+async function ensureGroupSessions() {
+  const coach = await prisma.user.findUnique({
+    where: { email: 'coach@pulse.geddo.online' },
+    select: { id: true },
+  });
+  if (!coach) return; // pre-launch DB without the official account — nothing to do
+  let created = 0;
+  for (let n = 0; n < 7; n++) {
+    const dayStr = daysAgoStr(-n);
+    for (const slot of GROUP_SLOTS) {
+      const scheduledAt = new Date(startOfDayTz(dayStr).getTime() + slot.hour * 3_600_000);
+      if (scheduledAt.getTime() < Date.now()) continue; // today's slot already passed
+      if (localDow(scheduledAt) !== slot.dow) continue;
+      const exists = await prisma.groupSession.findFirst({
+        where: { coachUserId: coach.id, scheduledAt },
+        select: { id: true },
+      });
+      if (exists) continue;
+      await prisma.groupSession.create({
+        data: {
+          coachUserId: coach.id,
+          title: slot.title,
+          description: slot.description,
+          muscleFocus: slot.muscleFocus,
+          scheduledAt,
+        },
+      });
+      created += 1;
+    }
+  }
+  if (created) console.log(`[groups] scheduled ${created} PULSE session(s)`);
+}
+
+/**
  * Lands in BACKUP_DIR (default <repo>/backups); keeps the newest 14. Point
  * BACKUP_DIR at a mounted/synced drive to make it off-site.
  */
