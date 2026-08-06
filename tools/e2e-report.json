@@ -1,6 +1,16 @@
 {
-  "email": "e2e_1785973635041@test.local",
+  "email": "e2e_1785974474781@test.local",
   "findings": [
+    {
+      "sev": "FAIL",
+      "step": "tabs",
+      "msg": "page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://pulse.geddo.online/programs\nCall log:\n\u001b[2m  - navigating to \"https://pulse.geddo.online/programs\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "sev": "FAIL",
+      "step": "quick session",
+      "msg": "page.evaluate: Execution context was destroyed, most likely because of a navigation"
+    },
     {
       "sev": "WARN",
       "step": "join-by-code",
@@ -8,7 +18,8 @@
     }
   ],
   "consoleErrors": [
-    "Failed to load resource: the server responded with a status of 401 ()"
+    "Failed to load resource: the server responded with a status of 401 ()",
+    "Failed to load resource: net::ERR_HTTP2_PROTOCOL_ERROR"
   ],
   "netFailures": [
     "401 POST /api/gamification/challenges/join-code"
