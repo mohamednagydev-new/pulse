@@ -67,9 +67,17 @@ After installing ARR, **enable proxy at the server level** (this is what lets re
 ```powershell
 Import-Module WebAdministration
 Set-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' -Filter 'system.webServer/proxy' -Name 'enabled' -Value 'True'
+Set-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' -Filter 'system.webServer/proxy' -Name 'reverseRewriteHostInResponseHeaders' -Value 'False'
 ```
 
-*(GUI equivalent: IIS Manager → server node → "Application Request Routing Cache" → "Server Proxy Settings…" → tick "Enable proxy".)*
+The second line is **required for Google/Facebook sign-in**. ARR turns "reverse rewrite host in
+response headers" on by default, which rewrites the host of every `Location` header coming back
+through the proxy — so the API's redirect to `https://accounts.google.com/...` reaches the browser
+as `https://pulse.geddo.online/o/oauth2/...` (a 404 on our own site) and OAuth dies before Google's
+consent screen. The API never emits a `localhost:4000` URL (all its redirects use `WEB_ORIGIN`), so
+nothing needs that rewriting.
+
+*(GUI equivalent: IIS Manager → server node → "Application Request Routing Cache" → "Server Proxy Settings…" → tick "Enable proxy", untick "Reverse rewrite host in response headers".)*
 
 ---
 
