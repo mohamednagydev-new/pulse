@@ -13,6 +13,12 @@ import dotenv from 'dotenv';
  *   node node_modules/tsx/dist/cli.mjs tools/fb-schedule.ts 2026-08-10          # DRY RUN — prints the plan
  *   node node_modules/tsx/dist/cli.mjs tools/fb-schedule.ts 2026-08-10 --go    # actually schedules
  *
+ * Engagement-calendar mode — schedules every "## Day N — ..." post from a pack
+ * (e.g. ENGAGEMENT-POSTS.md) at 20:00 Cairo, day 1 = the given date:
+ *   node node_modules/tsx/dist/cli.mjs tools/fb-schedule.ts 2026-08-10 --file=ENGAGEMENT-POSTS.md [--go]
+ * Days whose heading mentions "auto-post" are skipped (the API posts those
+ * itself on Saturdays). Facebook only accepts 10 minutes – 75 days out.
+ *
  * Env (gitignored .env): FB_PAGE_ID, FB_PAGE_TOKEN (page token with
  * pages_manage_posts). Facebook allows scheduling 10 minutes to 75 days out.
  */
@@ -43,29 +49,56 @@ function extractArabic(md: string, heading: RegExp): string | null {
   return m ? m[1].trim() : null;
 }
 
+/** Engagement pack: every "## Day N — ..." heading + its fenced caption. */
+function extractCalendar(md: string): { day: number; hourLocal: number; label: string; body: string | null }[] {
+  const out: { day: number; hourLocal: number; label: string; body: string | null }[] = [];
+  const re = /^## Day (\d+)\s*[—-]\s*(.+)$/gm;
+  let m: RegExpExecArray | null;
+  const marks: { day: number; label: string; idx: number }[] = [];
+  while ((m = re.exec(md))) marks.push({ day: Number(m[1]), label: m[2].trim(), idx: m.index });
+  for (let k = 0; k < marks.length; k++) {
+    const chunk = md.slice(marks[k].idx, marks[k + 1]?.idx ?? md.length);
+    const fence = chunk.match(/```\r?\n([\s\S]*?)```/);
+    out.push({ day: marks[k].day - 1, hourLocal: 20, label: marks[k].label, body: fence ? fence[1].trim() : null });
+  }
+  return out;
+}
+
 async function main() {
-  const [dateArg, goFlag] = process.argv.slice(2);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateArg || '')) {
-    console.error('Usage: fb-schedule.ts YYYY-MM-DD [--go]   (launch date)');
+  const args = process.argv.slice(2);
+  const fileArg = args.find((a) => a.startsWith('--file='))?.slice(7);
+  const dateArg = args.find((a) => /^\d{4}-\d{2}-\d{2}$/.test(a));
+  if (!dateArg) {
+    console.error('Usage: fb-schedule.ts YYYY-MM-DD [--file=ENGAGEMENT-POSTS.md] [--go]');
     process.exit(1);
   }
-  const go = goFlag === '--go';
+  const go = args.includes('--go');
   if (go && (!PAGE_ID || !TOKEN)) {
     console.error('FB_PAGE_ID / FB_PAGE_TOKEN missing from .env');
     process.exit(1);
   }
 
-  const md = fs.readFileSync(path.resolve(__dirname, '../MARKETING-POSTS.md'), 'utf8');
+  const md = fs.readFileSync(path.resolve(__dirname, `../${fileArg || 'MARKETING-POSTS.md'}`), 'utf8');
+  const plan = fileArg
+    ? extractCalendar(md).filter((p) => {
+        if (/auto-?post/i.test(p.label)) {
+          console.log(`  [skip] day ${p.day} — Saturday auto-post day (the API posts league results itself)`);
+          return false;
+        }
+        return true;
+      })
+    : PLAN.map((p) => ({ ...p, body: extractArabic(md, p.heading) }));
+
   const pageName = go || TOKEN
     ? await fetch(`https://graph.facebook.com/v21.0/${PAGE_ID}?fields=name&access_token=${TOKEN}`)
         .then((r) => r.json()).then((j: any) => j.name ?? '?').catch(() => '?')
     : '?';
-  console.log(`${go ? 'SCHEDULING' : 'DRY RUN'} → page: ${pageName} (${PAGE_ID}) · launch ${dateArg}\n`);
+  console.log(`${go ? 'SCHEDULING' : 'DRY RUN'} → page: ${pageName} (${PAGE_ID}) · day 1 = ${dateArg} · ${plan.length} post(s)\n`);
 
-  for (const p of PLAN) {
-    const body = extractArabic(md, p.heading);
+  for (const p of plan) {
+    const body = p.body;
     if (!body) {
-      console.log(`  [skip] day ${p.day} — heading not found: ${p.label}`);
+      console.log(`  [skip] day ${p.day} — no caption found: ${p.label}`);
       continue;
     }
     // Cairo evening = hourLocal; Cairo is UTC+3 in August (DST).

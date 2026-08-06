@@ -152,8 +152,8 @@ export default function Progress() {
                   <span className="shrink-0 text-lg">{i === 0 ? '🏆' : '🥇'}</span>
                   <span className="min-w-0 truncate text-sm font-semibold">{r.exercise}</span>
                 </div>
-                <p className="mt-1 text-2xl font-extrabold">
-                  {r.weightKg}<span className="text-sm font-bold text-gray-400"> {t('session.kg')}</span>
+                <p className="font-display mt-1 text-2xl font-extrabold">
+                  {r.weightKg}<span className="font-sans text-sm font-bold text-gray-400"> {t('session.kg')}</span>
                 </p>
                 <p className="text-[11px] text-gray-400">
                   {r.reps} {t('session.reps')} · {new Date(r.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}

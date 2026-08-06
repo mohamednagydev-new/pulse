@@ -460,7 +460,7 @@ export default function WorkoutSession() {
             </svg>
             <div className="flex flex-col items-center">
               <Timer size={18} className="text-brand-pink" />
-              <p className="text-4xl font-extrabold tabular-nums leading-tight">{rest}</p>
+              <p className="font-display text-4xl font-extrabold tabular-nums leading-tight">{rest}</p>
               <p className="text-[11px] uppercase tracking-widest text-white/40">{isAr ? 'ثانية' : 'sec'}</p>
             </div>
           </div>
