@@ -21,8 +21,11 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error) {
     console.error('[ErrorBoundary]', error);
+    // Screen path in the report: "n is not a function" alone is unactionable —
+    // "@/challenge/xyz" tells us WHERE real devices crashed.
+    const where = window.location.pathname.slice(0, 60);
     // Lazy import keeps this file dependency-free unless a crash actually happens.
-    import('../lib/track').then(({ track }) => track('client-error', `boundary: ${error.message}`.slice(0, 200))).catch(() => {});
+    import('../lib/track').then(({ track }) => track('client-error', `boundary@${where}: ${error.message}`.slice(0, 200))).catch(() => {});
   }
 
   render() {

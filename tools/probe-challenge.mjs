@@ -9,6 +9,11 @@ const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, is
 const page = await ctx.newPage();
 page.on('pageerror', (e) => errors.push(`PAGEERROR: ${(e && e.stack ? e.stack : String(e)).slice(0, 3000)}`));
 page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text().slice(0, 1500)}`));
+page.on('requestfailed', (r) => errors.push(`REQFAIL: ${r.failure()?.errorText} ${r.url().slice(-80)}`));
+page.on('response', (r) => {
+  if (r.status() >= 400) errors.push(`HTTP${r.status()}: ${r.url().slice(-90)}`);
+  if (/Challenge|challenge/.test(r.url())) console.log('  net:', r.status(), r.url().slice(-95));
+});
 
 // register
 await page.goto(`${BASE}/register`, { waitUntil: 'domcontentloaded' });
@@ -29,9 +34,10 @@ console.log('challenge links on home:', found);
 if (found) {
   await link.scrollIntoViewIfNeeded();
   await link.click();
-  await page.waitForTimeout(2500);
+  await page.waitForTimeout(7000);
   console.log('after open, url:', page.url());
   await page.screenshot({ path: 'tools/e2e-shots/probe-challenge-open.png' });
+  console.log('body text:', (await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 400));
 
   // click Leaderboard tab
   const lb = page.getByText(/leaderboard/i).first();

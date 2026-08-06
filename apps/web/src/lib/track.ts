@@ -32,7 +32,9 @@ if (typeof window !== 'undefined') {
   const report = (msg: string) => {
     if (reported >= 5) return;
     reported += 1;
-    track('client-error', msg);
+    // Screen path included — a minified "TypeError @ react-xyz.js:22" without
+    // the route is a mystery; with "@/challenge/abc" it's a bug report.
+    track('client-error', `${msg} [${window.location.pathname.slice(0, 50)}]`);
   };
   window.addEventListener('error', (e) => report(`${e.message} @ ${e.filename?.split('/').pop()}:${e.lineno}`));
   window.addEventListener('unhandledrejection', (e) => report(`unhandled: ${String(e.reason).slice(0, 150)}`));
