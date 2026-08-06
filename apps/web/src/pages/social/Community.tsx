@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Users, MessageSquare, Send, ImagePlus, X, Award, Clapperboard } from 'lucide-react';
 import { api, getAccessToken } from '../../lib/api';
-import { trackAd } from '../../lib/ads';
+import { trackAd, pickAd } from '../../lib/ads';
 import { getSocket } from '../../lib/socket';
 import { MediaImage } from '../../components/ui';
 import MenuDrawer from '../../components/MenuDrawer';
@@ -26,7 +26,7 @@ export default function Community() {
   const { data: feed, isLoading } = useQuery({ queryKey: FEED_KEY, queryFn: () => api.get('/api/social/feed') });
   const { data: unread } = useQuery({ queryKey: ['chat-unread'], queryFn: () => api.get('/api/chat/unread'), refetchInterval: 20000 });
   const { data: ads } = useQuery({ queryKey: ['feed-ad'], queryFn: () => api.get('/api/banners?section=feed_ad') });
-  const ad = ads?.[0];
+  const ad = pickAd<any>(ads);
 
   const post = useMutation({
     mutationFn: () => api.post('/api/social/posts', { text, ...(media ?? {}) }),
@@ -176,14 +176,15 @@ export default function Community() {
               target={ad.url ? '_blank' : undefined}
               rel="noreferrer sponsored"
               onClick={() => ad.url && trackAd(ad.id, 'click')}
-              className="card-hover block overflow-hidden rounded-2xl bg-gradient-to-r from-brand-blue to-cyan-500 text-white"
+              className="card-hover block overflow-hidden rounded-2xl bg-white shadow-sm"
             >
-              {/* The uploaded creative IS the ad — it was never rendered before. */}
-              {ad.image && <MediaImage path={ad.image} label={ad.title} className="h-36 w-full" />}
+              {/* White card like every post around it — the old blue gradient
+                  block looked like a foreign banner, not part of the feed. */}
+              {ad.image && <MediaImage path={ad.image} label={ad.title} className="h-40 w-full" />}
               <div className="p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wide opacity-70">{t('ads.sponsored')}</div>
-                <div className="truncate font-bold">{ad.title}</div>
-                {ad.subtitle && <div className="line-clamp-2 text-sm opacity-90">{ad.subtitle}</div>}
+                <div className="text-[10px] font-bold uppercase tracking-wide text-orange-500">{t('ads.sponsored')}</div>
+                <div className="mt-0.5 truncate font-bold">{ad.title}</div>
+                {ad.subtitle && <div className="line-clamp-2 text-sm text-gray-500">{ad.subtitle}</div>}
               </div>
             </motion.a>
           )}

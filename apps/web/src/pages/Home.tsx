@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { trackAd } from '../lib/ads';
+import { trackAd, pickAd } from '../lib/ads';
 import { Search, ChevronRight, Play, Clapperboard, X, Bell, Flame, HeartHandshake, ScanLine, Users } from 'lucide-react';
 import { api } from '../lib/api';
 import { Loader, ErrorMsg, MediaImage, HScroll, formatDuration } from '../components/ui';
@@ -42,7 +42,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const b = data?.banners?.[0];
+    const b = pickAd<any>(data?.banners);
     if (b) trackAd(b.id, 'impression');
   }, [data]);
 
@@ -50,6 +50,8 @@ export default function Home() {
   if (error) return <ErrorMsg error={error} />;
 
   const { banners = [], coaches = [], fitForLife = [], mealPrep = [], challenges = [] } = data ?? {};
+  // One sponsor slot, rotating daily among active home_sponsor banners.
+  const banner = pickAd<any>(banners);
 
   return (
     <div className="pb-6">
@@ -151,18 +153,18 @@ export default function Home() {
 
       <HallOfFame />
 
-      {banners[0] && (
+      {banner && (
         <a
-          href={banners[0].url ?? undefined}
-          target={banners[0].url ? '_blank' : undefined}
+          href={banner.url ?? undefined}
+          target={banner.url ? '_blank' : undefined}
           rel="noreferrer sponsored"
-          onClick={() => trackAd(banners[0].id, 'click')}
-          className="card-hover mx-4 mt-4 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-white"
+          onClick={() => banner.url && trackAd(banner.id, 'click')}
+          className="card-hover mx-4 mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm"
         >
-          {banners[0].image && <MediaImage path={banners[0].image} className="h-14 w-14 rounded-xl" />}
-          <div className="flex-1">
-            <div className="text-[10px] font-bold uppercase tracking-wide opacity-70">{t('ads.sponsored')} · {banners[0].subtitle ?? ''}</div>
-            <div className="text-lg font-bold">{banners[0].title}</div>
+          {banner.image && <MediaImage path={banner.image} label={banner.title} className="h-14 w-14 shrink-0 rounded-xl" />}
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[10px] font-bold uppercase tracking-wide text-orange-500">{t('ads.sponsored')}{banner.subtitle ? ` · ${banner.subtitle}` : ''}</div>
+            <div className="truncate text-base font-bold">{banner.title}</div>
           </div>
         </a>
       )}
