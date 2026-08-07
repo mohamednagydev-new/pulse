@@ -29,8 +29,13 @@ if (typeof window !== 'undefined') {
   // analytics (they show up under top events as "client-error"). Rate-limited
   // so an error loop cannot flood the events endpoint.
   let reported = 0;
+  // Known junk from scripts we don't own: in-app browsers (FB/TikTok Android
+  // webviews) inject their own instrumentation and its failures fire on OUR
+  // window. "Script error." is the anonymized cross-origin echo of the same.
+  // Reporting these buries real crashes under noise.
+  const NOISE = /Java object is gone|navigation_performance_logger|^Script error\b|ResizeObserver loop/i;
   const report = (msg: string) => {
-    if (reported >= 5) return;
+    if (reported >= 5 || NOISE.test(msg)) return;
     reported += 1;
     // Screen path included — a minified "TypeError @ react-xyz.js:22" without
     // the route is a mystery; with "@/challenge/abc" it's a bug report.
