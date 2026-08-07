@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Mic, ScanLine, Salad, Trophy, Users, Flame, ChevronRight, Check } from 'lucide-react';
+import { Mic, ScanLine, Salad, Trophy, Users, Flame, ChevronRight, Check, Dumbbell, UtensilsCrossed, MessagesSquare, Sparkles } from 'lucide-react';
 import LanguageToggle from '../components/LanguageToggle';
 import CountUp from '../components/CountUp';
 import { track } from '../lib/track';
@@ -105,6 +105,7 @@ export default function Landing() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-5" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}>
         <div className="flex items-center gap-2">
+          <img src="/pwa-192.png" alt="PULSE" className="h-9 w-9 rounded-xl shadow-lg" />
           <span className="text-2xl font-extrabold italic">PULSE</span>
           <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-extrabold tracking-wide backdrop-blur">
             {L('100% FREE', 'مجاني ١٠٠٪')}
@@ -184,6 +185,87 @@ export default function Landing() {
                 <p className="mt-1.5 text-[13px] leading-relaxed text-white/75">{body}</p>
               </div>
             </motion.section>
+          );
+        })}
+      </div>
+
+      {/* The FULL inventory — every feature, grouped and bordered, so nobody
+          leaves wondering "but does it have…?" */}
+      <motion.h2 {...reveal} className="mt-14 px-5 text-center text-xl font-extrabold">
+        {L('Everything inside — all of it free', 'كل اللي جوه — وكله ببلاش')}
+      </motion.h2>
+      <div className="mt-5 space-y-3 px-5">
+        {[
+          {
+            icon: Dumbbell,
+            tint: 'from-sky-500 to-blue-600',
+            title: L('Training', 'التمرين'),
+            items: [
+              L('Muscle map — tap a muscle, get a session', 'خريطة عضلات — دوس على العضلة وخد جلسة'),
+              L('Coach programs for every level, home & gym', 'برامج مدربين لكل مستوى — بيت وجيم'),
+              L('Week Zero: a gentle 7-day start for beginners', 'الأسبوع صفر: بداية هادية ٧ أيام للمبتدئين'),
+              L('Yoga & meditation classes', 'حصص يوجا وتأمل'),
+              L('Log your sets — PR celebrations 🎉', 'سجّل أوزانك — واحتفال لما تكسر رقمك 🎉'),
+              L('Rest-day recovery: stretch, walk, breathe', 'يوم الراحة له برنامجه: إطالة ومشي وتنفس'),
+            ],
+          },
+          {
+            icon: UtensilsCrossed,
+            tint: 'from-orange-500 to-amber-500',
+            title: L('Food & calories', 'الأكل والسعرات'),
+            items: [
+              L('Say what you ate — voice logging in Arabic 🎤', 'قول أكلت إيه — تسجيل بالصوت بالعربي 🎤'),
+              L('154 Egyptian foods with real calories', '١٥٤ أكلة مصرية بسعراتها الحقيقية'),
+              L('Meal plans that explain every choice', 'خطط وجبات بتشرح كل اختيار'),
+              L('Auto grocery list from your plan', 'قايمة مشتريات جاهزة من خطتك'),
+              L('90+ healthy recipes with videos', '٩٠+ وصفة صحية بالفيديو'),
+              L('Water tracking', 'عدّاد مياه'),
+            ],
+          },
+          {
+            icon: MessagesSquare,
+            tint: 'from-emerald-500 to-teal-600',
+            title: L('Community', 'المجتمع'),
+            items: [
+              L('Feed — post your progress, react, comment', 'منشورات — شارك تقدمك وتفاعل مع الناس'),
+              L('Chat with buddies — text & voice notes 🎙', 'شات مع أصحابك — كتابة ورسائل صوتية 🎙'),
+              L('1v1 duels: challenge a friend, winner takes XP', 'تحدي ١ ضد ١: اتحدى صاحبك والكسبان ياخد نقط'),
+              L('Live group sessions with a shared timer', 'جروبات لايف بتايمر مشترك — تتمرنوا مع بعض'),
+              L('Real coaches you can follow and rate', 'مدربين حقيقيين تتابعهم وتقيّمهم'),
+              L('Reels — quick workout clips', 'ريلز — مقاطع تمارين سريعة'),
+            ],
+          },
+          {
+            icon: Sparkles,
+            tint: 'from-violet-500 to-purple-600',
+            title: L('Motivation', 'التحفيز'),
+            items: [
+              L('Challenges with badges (join with a code!)', 'تحديات ببادجات — ادخل بكود زي PULSE14'),
+              L('Weekly XP league: promotion & relegation', 'دوري أسبوعي بالنقط — صعود وهبوط'),
+              L('Streaks, daily quests & a spin wheel', 'سلسلة أيام، مهام يومية، وعجلة حظ'),
+              L('Smart reminders at YOUR training hour', 'تذكيرات على معادك انت'),
+              L('Hall of Fame for the week’s top movers', 'لوحة أبطال الأسبوع'),
+              L('Progress charts & personal records', 'رسوم تقدمك وأرقامك القياسية'),
+            ],
+          },
+        ].map((g) => {
+          const GIcon = g.icon;
+          return (
+            <motion.div key={g.title} {...reveal} className="rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-2.5">
+                <span className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${g.tint} shadow-lg`}>
+                  <GIcon size={18} />
+                </span>
+                <h3 className="text-base font-extrabold">{g.title}</h3>
+              </div>
+              <ul className="mt-3 space-y-1.5 text-[13px] text-white/85">
+                {g.items.map((it) => (
+                  <li key={it} className="flex items-start gap-2">
+                    <Check size={14} className="mt-0.5 shrink-0 text-emerald-300" /> <span>{it}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
           );
         })}
       </div>
