@@ -12,6 +12,7 @@ import RelatedReels from '../../components/RelatedReels';
 import { toast } from '../../lib/toast';
 import { celebrateFeedback, tapFeedback } from '../../lib/haptics';
 import PlanPrompt from '../../components/PlanPrompt';
+import { useAuth } from '../../store/auth';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
@@ -21,12 +22,14 @@ export default function ProgramPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const isAr = i18n.language.startsWith('ar');
+  const authed = useAuth((s) => s.status === 'authed');
 
-  // /api/path/program/:id is the authed view: the same program plus which lessons
-  // this user has finished, whether they've started, and what comes next.
+  // Authed: /api/path/program/:id (program + this user's completions/status).
+  // Guest: the public /api/programs/:id — same program and lessons, no personal
+  // fields, so the page renders instead of a red "Unauthorized" box.
   const { data: program, isLoading, error } = useQuery<any>({
-    queryKey: ['path-program', id],
-    queryFn: () => api.get(`/api/path/program/${id}`),
+    queryKey: ['path-program', id, authed],
+    queryFn: () => api.get(authed ? `/api/path/program/${id}` : `/api/programs/${id}`),
   });
 
   const [askPlan, setAskPlan] = useState(false);
@@ -36,6 +39,7 @@ export default function ProgramPage() {
   const { data: plan } = useQuery<{ hasPlan: boolean }>({
     queryKey: ['assessment'],
     queryFn: () => api.get('/api/assessment'),
+    enabled: authed,
   });
   const needsPlan = plan?.hasPlan === false;
 
@@ -115,6 +119,8 @@ export default function ProgramPage() {
           <button
             onClick={() => {
               tapFeedback();
+              // Guests can look all they want — starting is the moment to join.
+              if (!authed) return navigate('/register');
               // The one moment the intake is worth asking for: they are committing to
               // a programme, so the answers would actually change what they get.
               if (needsPlan) setAskPlan(true);

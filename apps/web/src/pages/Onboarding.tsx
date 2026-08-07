@@ -9,11 +9,25 @@ import LanguageToggle from '../components/LanguageToggle';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
 
-const slides: { titleKey: string; textKey: string; g: string; Icon: LucideIcon }[] = [
-  { titleKey: 'onboarding.slide1Title', textKey: 'onboarding.slide1Body', g: 'from-orange-600 via-orange-700 to-slate-900', Icon: Flame },
-  { titleKey: 'onboarding.slide2Title', textKey: 'onboarding.slide2Body', g: 'from-blue-700 via-blue-800 to-slate-900', Icon: Dumbbell },
-  { titleKey: 'onboarding.slide3Title', textKey: 'onboarding.slide3Body', g: 'from-teal-700 via-teal-800 to-slate-900', Icon: Activity },
-  { titleKey: 'onboarding.slide4Title', textKey: 'onboarding.slide4Body', g: 'from-emerald-700 via-emerald-800 to-slate-900', Icon: Salad },
+// chips: three concrete features per slide, [en, ar] — shown as small pills in
+// the card so the pitch is specifics, not slogans.
+const slides: { titleKey: string; textKey: string; g: string; Icon: LucideIcon; chips: [string, string][] }[] = [
+  {
+    titleKey: 'onboarding.slide1Title', textKey: 'onboarding.slide1Body', g: 'from-orange-600 via-orange-700 to-slate-900', Icon: Flame,
+    chips: [['Log food by voice 🎤', 'سجّل أكلك بالصوت 🎤'], ['Egyptian foods + calories', 'أكل مصري بسعراته'], ['Water tracker', 'عدّاد مياه']],
+  },
+  {
+    titleKey: 'onboarding.slide2Title', textKey: 'onboarding.slide2Body', g: 'from-blue-700 via-blue-800 to-slate-900', Icon: Dumbbell,
+    chips: [['Muscle map', 'خريطة العضلات'], ['Home & gym plans', 'خطط بيت وجيم'], ['Video for every move', 'فيديو لكل تمرينة']],
+  },
+  {
+    titleKey: 'onboarding.slide3Title', textKey: 'onboarding.slide3Body', g: 'from-teal-700 via-teal-800 to-slate-900', Icon: Activity,
+    chips: [['Guided classes', 'حصص يوجا'], ['Breathing & calm', 'تنفس واسترخاء'], ['Rest-day stretches', 'إطالات يوم الراحة']],
+  },
+  {
+    titleKey: 'onboarding.slide4Title', textKey: 'onboarding.slide4Body', g: 'from-emerald-700 via-emerald-800 to-slate-900', Icon: Salad,
+    chips: [['90+ healthy recipes', '٩٠+ وصفة صحية'], ['Meal plans', 'خطط وجبات'], ['Grocery lists', 'قايمة مشتريات']],
+  },
 ];
 
 export default function Onboarding() {
@@ -72,7 +86,13 @@ export default function Onboarding() {
       )}
       <div className="relative z-10 flex min-h-screen flex-col">
         <div className="flex items-center justify-between px-6 pt-12" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}>
-          <div className="text-2xl font-extrabold italic">PULSE</div>
+          <div className="flex items-center gap-2">
+            <div className="text-2xl font-extrabold italic">PULSE</div>
+            {/* The strongest hook we have — say it before anything else. */}
+            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-extrabold tracking-wide backdrop-blur">
+              {rtl ? 'مجاني ١٠٠٪' : '100% FREE'}
+            </span>
+          </div>
           <div className="flex items-center gap-3">
             <LanguageToggle variant="compact" />
             <button onClick={finish} className="flex items-center gap-1 text-sm font-medium">
@@ -104,9 +124,17 @@ export default function Onboarding() {
               </button>
             </div>
 
-            <div className="mx-5 mb-4 rounded-3xl bg-white p-7 text-center text-ink shadow-xl">
+            <div className="mx-5 mb-4 rounded-3xl bg-white p-6 text-center text-ink shadow-xl">
               <h2 className="text-xl font-bold uppercase">{t(slide.titleKey)}</h2>
-              <p className="mt-3 text-gray-600">{t(slide.textKey)}</p>
+              <p className="mt-2 text-gray-600">{t(slide.textKey)}</p>
+              {/* Specifics beat slogans: three concrete things this tab does. */}
+              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                {slide.chips.map(([en, ar]) => (
+                  <span key={en} className="rounded-full bg-gray-100 px-3 py-1.5 text-[11px] font-semibold text-gray-600">
+                    ✓ {rtl ? ar : en}
+                  </span>
+                ))}
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -126,13 +154,41 @@ export default function Onboarding() {
         </div>
 
         <div className="px-5 pb-8 pt-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}>
-          <button
-            onClick={next}
-            className="flex min-h-12 w-full items-center justify-center gap-1.5 rounded-full bg-white text-base font-extrabold text-ink shadow-lg transition active:scale-[0.98]"
-          >
-            {last ? t('onboarding.getStarted') : t('common.next')}
-            <ChevronRight size={18} className="rtl:rotate-180" />
-          </button>
+          {last ? (
+            /* The conversion moment gets BOTH honest paths: join free, or look
+               inside first — a browse today converts better than a bounce. */
+            <div className="space-y-2.5">
+              <button
+                onClick={() => {
+                  localStorage.setItem('fitit_onboarded', '1');
+                  track('funnel-register-intent', utmMeta());
+                  navigate('/register');
+                }}
+                className="flex min-h-12 w-full items-center justify-center gap-1.5 rounded-full bg-white text-base font-extrabold text-ink shadow-lg transition active:scale-[0.98]"
+              >
+                {rtl ? 'اعمل حساب مجاني' : 'Create free account'}
+                <ChevronRight size={18} className="rtl:rotate-180" />
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem('fitit_onboarded', '1');
+                  track('funnel-guest-browse', utmMeta());
+                  navigate('/programs');
+                }}
+                className="flex min-h-11 w-full items-center justify-center rounded-full bg-white/15 text-sm font-bold text-white backdrop-blur transition active:scale-[0.98]"
+              >
+                {rtl ? 'اتفرج الأول من غير حساب' : 'Look around first — no account'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={next}
+              className="flex min-h-12 w-full items-center justify-center gap-1.5 rounded-full bg-white text-base font-extrabold text-ink shadow-lg transition active:scale-[0.98]"
+            >
+              {t('common.next')}
+              <ChevronRight size={18} className="rtl:rotate-180" />
+            </button>
+          )}
         </div>
       </div>
     </div>

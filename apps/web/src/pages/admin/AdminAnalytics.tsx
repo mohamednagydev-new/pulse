@@ -130,6 +130,7 @@ const FUNNEL_STEPS: { key: string; label: string }[] = [
   { key: 'funnel-landing', label: 'Landed' },
   { key: 'funnel-onboarding', label: 'Onboarding' },
   { key: 'funnel-guest-browse', label: 'Browsed as guest' },
+  { key: 'funnel-register-intent', label: 'Tapped join' },
   { key: 'funnel-login-view', label: 'Saw login' },
   { key: 'funnel-register-view', label: 'Saw register' },
   { key: 'funnel-registered', label: 'Registered ✓' },

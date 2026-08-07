@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { useSignedMedia } from '../lib/media';
 import { MediaImage } from './ui';
+import { useAuth } from '../store/auth';
 
 type Reel =
   | {
@@ -78,10 +79,13 @@ export default function RelatedReels({ keyword, className = '' }: { keyword?: st
   const { t } = useTranslation();
   const [active, setActive] = useState<Reel | null>(null);
 
+  // Reels are an authed API — guests browsing content pages skip the rail
+  // entirely instead of firing a guaranteed 401 on every page view.
+  const authed = useAuth((s) => s.status === 'authed');
   const { data } = useQuery({
     queryKey: ['related-reels', keyword],
     queryFn: () => api.get(`/api/reels/related?q=${encodeURIComponent(keyword!)}`),
-    enabled: !!keyword,
+    enabled: !!keyword && authed,
     staleTime: 5 * 60 * 1000,
     retry: false,
   });

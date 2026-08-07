@@ -8,6 +8,7 @@ import { MediaImage, HScroll, Loader, ErrorMsg } from '../../components/ui';
 import MenuDrawer from '../../components/MenuDrawer';
 import ScreenHeader from '../../components/ScreenHeader';
 import { sameMuscle } from '../../lib/muscleNames';
+import { useAuth } from '../../store/auth';
 import { CurlAnim, BreatheAnim, exerciseAnim } from '../../components/TrainingAnim';
 
 const rise = {
@@ -26,9 +27,12 @@ const DAY_INDEX = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 export default function ProgramsHome() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  // Guests browse this tab: personal queries stay off for them (they can only
+  // 401 — churn in the console and noise on flaky connections, never data).
+  const authed = useAuth((s) => s.status === 'authed');
 
-  const { data: sched } = useQuery({ queryKey: ['schedule'], queryFn: () => api.get('/api/me/schedule') });
-  const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
+  const { data: sched } = useQuery({ queryKey: ['schedule'], queryFn: () => api.get('/api/me/schedule'), enabled: authed });
+  const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress'), enabled: authed });
   const {
     data: groups,
     isLoading: groupsLoading,
@@ -42,12 +46,13 @@ export default function ProgramsHome() {
   } = useQuery({ queryKey: ['programs'], queryFn: () => api.get('/api/programs') });
   // Ranked by the goal and experience captured at onboarding, so a first-time user
   // is pointed somewhere sensible instead of choosing from eighteen cards blind.
-  const { data: rec } = useQuery({ queryKey: ['path-recommended'], queryFn: () => api.get('/api/path/recommended') });
+  const { data: rec } = useQuery({ queryKey: ['path-recommended'], queryFn: () => api.get('/api/path/recommended'), enabled: authed });
   const { data: reelsData } = useQuery({
     queryKey: ['reels', 'workout'],
     queryFn: () => api.get('/api/reels?topic=workout'),
     staleTime: 5 * 60 * 1000,
     retry: false,
+    enabled: authed,
   });
 
   // Today's plan from the saved schedule → one-tap start (same mapping as TodayStrip).
