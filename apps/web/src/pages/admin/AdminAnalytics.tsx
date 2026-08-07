@@ -128,6 +128,7 @@ function DauChart({ dau }: { dau: DauPoint[] | undefined }) {
  *  landings, so TikTok and Facebook campaigns are directly comparable. */
 const FUNNEL_STEPS: { key: string; label: string }[] = [
   { key: 'funnel-landing', label: 'Landed' },
+  { key: 'funnel-welcome-view', label: 'Saw landing page' },
   { key: 'funnel-onboarding', label: 'Onboarding' },
   { key: 'funnel-guest-browse', label: 'Browsed as guest' },
   { key: 'funnel-register-intent', label: 'Tapped join' },

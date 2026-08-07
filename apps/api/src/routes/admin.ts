@@ -9,6 +9,7 @@ import { env } from '../env';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { processVideo } from '../lib/video';
 import { buildTranslationPatch } from '../lib/translate';
+import { aiEnabled, chatComplete } from '../lib/openai';
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireAdmin);
@@ -604,6 +605,126 @@ adminRouter.get('/analytics', async (_req, res) => {
       connections: totals[5],
     },
   });
+});
+
+// ---- Facebook post studio ----
+// The daily posting loop, in-app: 3 suggested captions (AI when a key exists,
+// else a smart rotation over live content), admin edits, attaches an uploaded
+// image, and publishes straight to the Page with the server's page token.
+const GRAPH = 'https://graph.facebook.com/v21.0';
+const fbCreds = () => ({ pageId: process.env.FB_PAGE_ID, token: process.env.FB_PAGE_TOKEN });
+
+adminRouter.get('/fb/status', async (_req, res) => {
+  const { pageId, token } = fbCreds();
+  if (!pageId || !token) return res.json({ configured: false });
+  const name = await fetch(`${GRAPH}/${pageId}?fields=name&access_token=${token}`)
+    .then((r) => r.json())
+    .then((j: any) => j.name ?? null)
+    .catch(() => null);
+  res.json({ configured: true, pageName: name, aiEnabled: aiEnabled() });
+});
+
+adminRouter.get('/fb/suggestions', async (_req, res) => {
+  // Fresh content picks make every day's suggestions different even without AI.
+  const dayN = Math.floor(Date.now() / 86_400_000);
+  const [recipes, articles, challenge] = await Promise.all([
+    prisma.recipe.findMany({ select: { title: true, titleAr: true, calories: true }, take: 200 }),
+    prisma.article.findMany({ select: { title: true, titleAr: true }, take: 200 }),
+    prisma.challenge.findFirst({ where: { kind: 'global', endsOn: { gte: new Date().toISOString().slice(0, 10) } }, orderBy: { startsOn: 'desc' } }),
+  ]);
+  const recipe = recipes.length ? recipes[dayN % recipes.length] : null;
+  const article = articles.length ? articles[(dayN * 7) % articles.length] : null;
+
+  if (aiEnabled()) {
+    try {
+      const raw = await chatComplete(
+        [
+          {
+            role: 'system',
+            content:
+              'You write Facebook posts for PULSE (pulse.geddo.online), a 100% free Egyptian fitness app. Write in spoken Egyptian Arabic (عامية مصرية), 2-4 short lines each, warm and funny where fitting, with emoji and 2-3 Arabic hashtags plus #PULSE #نبض. Every post mentions the app is free (rotate: مجاني ١٠٠٪ / من غير اشتراكات / ببلاش). NEVER use these phrases: «خطة مخصصة», «مدعوم بالذكاء الاصطناعي», «حقق أهدافك», «كل حاجة في مكان واحد». Return STRICT JSON: {"posts":[{"label":"...","caption":"..."},...]} with exactly 3 posts: one engagement question, one feature/tip, one about today\'s content.',
+          },
+          {
+            role: 'user',
+            content: `Today's content to weave in where useful: recipe "${recipe?.titleAr || recipe?.title || '-'}" (${recipe?.calories ?? '?'} kcal), article "${article?.titleAr || article?.title || '-'}", live challenge "${challenge?.titleAr || challenge?.title || '-'}" (code ${challenge?.inviteCode || '-'}). App link: pulse.geddo.online`,
+          },
+        ],
+        { json: true, temperature: 0.9 },
+      );
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed?.posts) && parsed.posts.length) {
+        return res.json({ source: 'ai', posts: parsed.posts.slice(0, 3) });
+      }
+    } catch (e: any) {
+      console.warn('[fb-suggest] AI failed, using rotation:', e?.message);
+    }
+  }
+
+  // No AI: rotate hand-written templates with today's content injected.
+  const rTitle = recipe?.titleAr || recipe?.title || 'وصفة صحية';
+  const aTitle = article?.titleAr || article?.title || 'مقال جديد';
+  const cTitle = challenge?.titleAr || challenge?.title;
+  const pool = [
+    { label: 'سؤال تفاعلي', caption: 'سؤال النهارده: إيه أكتر تمرينة بتكرهها بس بتعملها غصب عنك؟ 😅\nاكتبها تحت 👇\n\n#PULSE #نبض #جيم #فتنس' },
+    { label: 'وصفة اليوم', caption: `وصفة النهارده من مطبخ PULSE: ${rTitle} 🍽\n${recipe?.calories ? `تقريباً ${recipe.calories} سعرة للحصة — ` : ''}الطريقة كاملة جوه التطبيق، ومجاني ١٠٠٪.\npulse.geddo.online\n\n#PULSE #نبض #اكل_صحي` },
+    { label: 'مقال اليوم', caption: `قريت النهارده؟ «${aTitle}» 📖\nمقالات صحية بالعربي — من غير اشتراكات ولا كلام كبير.\npulse.geddo.online\n\n#PULSE #نبض #صحة` },
+    { label: 'تسجيل بالصوت', caption: 'قول للموبايل أكلت إيه — بالصوت — وهو يحسب السعرات 🎤\nكشري، فول، طعمية... كله موجود بسعراته الحقيقية. وببلاش.\npulse.geddo.online\n\n#PULSE #نبض #سعرات' },
+    { label: 'تحدي الأصحاب', caption: 'اعمل منشن لصاحبك اللي دايماً بيقول "من بكرة" 😂\nادخلوا اتحدوا بعض ١ ضد ١ جوه PULSE — مجاني.\npulse.geddo.online\n\n#PULSE #نبض #تحدي' },
+    ...(cTitle
+      ? [{ label: 'التحدي الحالي', caption: `تحدي «${cTitle}» شغال دلوقتي 🔥\n${challenge?.inviteCode ? `ادخل بكود ${challenge.inviteCode} — ` : ''}مفيش فلوس، فيه بادج.\npulse.geddo.online\n\n#PULSE #نبض #تحدي` }]
+      : []),
+  ];
+  const posts = [pool[dayN % pool.length], pool[(dayN + 2) % pool.length], pool[(dayN + 4) % pool.length]]
+    .filter((p, i, arr) => arr.findIndex((x) => x.label === p.label) === i);
+  res.json({ source: 'rotation', posts });
+});
+
+adminRouter.post('/fb/post', async (req, res) => {
+  const { pageId, token } = fbCreds();
+  if (!pageId || !token) return res.status(400).json({ error: 'FB_PAGE_ID / FB_PAGE_TOKEN not configured on the server' });
+  const parsed = z
+    .object({
+      message: z.string().trim().min(5).max(5000),
+      imagePath: z.string().trim().max(300).optional(),
+      scheduleAt: z.string().datetime({ offset: true }).optional(),
+    })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Write a caption first' });
+  const { message, imagePath, scheduleAt } = parsed.data;
+
+  const when = scheduleAt ? Math.floor(new Date(scheduleAt).getTime() / 1000) : null;
+  if (when && when < Date.now() / 1000 + 660) {
+    return res.status(400).json({ error: 'Facebook needs schedules at least ~10 minutes ahead' });
+  }
+
+  const params: Record<string, string> = { access_token: token };
+  if (when) {
+    params.published = 'false';
+    params.scheduled_publish_time = String(when);
+  }
+
+  let url: string;
+  if (imagePath) {
+    // FB fetches the image itself — our content images are public.
+    params.url = `${env.WEB_ORIGIN}/media/image/${imagePath.replace(/^images\//, '')}`;
+    params.caption = message;
+    url = `${GRAPH}/${pageId}/photos`;
+  } else {
+    params.message = message;
+    params.link = env.WEB_ORIGIN;
+    url = `${GRAPH}/${pageId}/feed`;
+  }
+
+  const json: any = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(params),
+  })
+    .then((r) => r.json())
+    .catch((e) => ({ error: { message: String(e?.message || e) } }));
+
+  if (json.error) return res.status(502).json({ error: `Facebook: ${json.error.message ?? 'post failed'}` });
+  res.json({ ok: true, id: json.post_id ?? json.id, scheduled: !!when });
 });
 
 adminRouter.get('/users', async (req, res) => {

@@ -29,6 +29,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import GuestContact from './pages/GuestContact';
+import Landing from './pages/Landing';
 import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import ProgramsHome from './pages/programs/ProgramsHome';
@@ -77,6 +78,7 @@ const AdminReels = lazy(() => import('./pages/admin/AdminReels'));
 const AdminLeads = lazy(() => import('./pages/admin/AdminLeads'));
 const AdminVideoImport = lazy(() => import('./pages/admin/AdminVideoImport'));
 const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'));
+const AdminPosts = lazy(() => import('./pages/admin/AdminPosts'));
 const Support = lazy(() => import('./pages/Support'));
 const Assessment = lazy(() => import('./pages/Assessment'));
 const People = lazy(() => import('./pages/social/People'));
@@ -115,9 +117,13 @@ function RequireAuth({ children }: { children: ReactNode }) {
   }
 
   if (status === 'loading' || status === 'idle') return <Splash />;
-  // Pre-login only: the intro slides are a pitch, so per-device is the right scope.
+  // Root always pitches: any signed-out visit to pulse.geddo.online lands on
+  // the landing page (signed-in users never reach this — they render Home).
+  // Deep links to specific screens go to login instead, so a shared /recipe or
+  // /challenge link still lands where it pointed after signing in.
   const seenIntro = localStorage.getItem('fitit_onboarded');
-  return <Navigate to={seenIntro ? '/login' : '/onboarding'} replace state={{ from: location }} />;
+  const target = location.pathname === '/' ? '/welcome' : seenIntro ? '/login' : '/welcome';
+  return <Navigate to={target} replace state={{ from: location }} />;
 }
 
 function RequireAdmin({ children }: { children: ReactNode }) {
@@ -195,6 +201,7 @@ export default function App() {
       <ErrorBoundary>
       <Suspense fallback={<Splash />}>
       <Routes location={location}>
+        <Route path="/welcome" element={<Landing />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -306,6 +313,7 @@ export default function App() {
           <Route path="/admin/leads" element={<AdminLeads />} />
           <Route path="/admin/video-import" element={<AdminVideoImport />} />
           <Route path="/admin/support" element={<AdminSupport />} />
+          <Route path="/admin/posts" element={<AdminPosts />} />
           <Route path="/admin/:resource" element={<AdminResource />} />
         </Route>
 
