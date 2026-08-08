@@ -9,8 +9,12 @@ import { initTheme } from './lib/theme';
 import { toast } from './lib/toast';
 import { captureUtm } from './lib/utm';
 import { initOfflineQueue } from './lib/offlineQueue';
+import { initPixels } from './lib/pixels';
 
 initTheme();
+// Ad pixels (no-ops until VITE_FB_PIXEL_ID / VITE_TIKTOK_PIXEL_ID are set) —
+// they let campaigns optimize for REGISTRATIONS instead of cheap views.
+initPixels();
 // Before anything renders: remember which ad brought this visit (utm_*/ttclid/
 // fbclid) and log the funnel's first step.
 captureUtm();

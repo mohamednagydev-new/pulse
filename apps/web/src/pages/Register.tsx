@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../store/auth';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
+import { pixelRegistration } from '../lib/pixels';
 
 export default function Register() {
   const { t } = useTranslation();
@@ -30,6 +31,7 @@ export default function Register() {
       const payload = ref ? { ...form, ref } : form;
       await register(payload);
       track('funnel-registered', utmMeta());
+      pixelRegistration();
       /**
        * Land on Home, not on the intake.
        *

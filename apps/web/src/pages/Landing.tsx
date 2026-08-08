@@ -7,6 +7,7 @@ import LanguageToggle from '../components/LanguageToggle';
 import CountUp from '../components/CountUp';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
+import { pixelViewContent } from '../lib/pixels';
 
 /**
  * The pitch page — what a stranger from an ad sees first. Real screenshots,
@@ -60,7 +61,10 @@ export default function Landing() {
   const isAr = i18n.language.startsWith('ar');
   const L = (en: string, ar: string) => (isAr ? ar : en);
 
-  useEffect(() => track('funnel-welcome-view', utmMeta()), []);
+  useEffect(() => {
+    track('funnel-welcome-view', utmMeta());
+    pixelViewContent('landing');
+  }, []);
 
   const go = (to: string, event: string) => {
     localStorage.setItem('fitit_onboarded', '1');
