@@ -63,7 +63,7 @@ https://pulse.geddo.online
 
 ### The pitch in one line · الجملة الواحدة
 **🇬🇧** *"A coach in your pocket — asks what a coach would ask, builds the plan, remembers where you stopped, and checks in every four weeks. Free."*
-**🇪🇬** *"مدرب في جيبك — بيسألك اللي المدرب بيسأله، بيعملك الخطة، فاكر وقفت فين، وبيراجع معاك كل أربع أسابيع. ببلاش."*
+**🇪🇬** *"مدرب معاك في بيتك — بيسألك اللي المدرب بيسأله، بيعملك الخطة، فاكر وقفت فين، وبيراجع معاك كل أربع أسابيع. ببلاش."*
 
 ---
 

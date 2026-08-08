@@ -122,7 +122,7 @@ export default function Landing() {
       {/* Hero */}
       <div className="px-6 pt-8 text-center">
         <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="text-3xl font-extrabold leading-tight">
-          {L('Your Egyptian coach, in your pocket', 'كوتشك المصري في جيبك')} 🇪🇬
+          {L('Your Egyptian coach, right in your home', 'كوتشك المصري في بيتك')} 🇪🇬
         </motion.h1>
         <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.08 }} className="mx-auto mt-3 max-w-sm text-sm text-white/80">
           {L(
