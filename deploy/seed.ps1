@@ -54,6 +54,7 @@ $scripts = @(
   'prisma\seed-coaches-challenges.ts',   # content Coach rows (no user accounts) — MUST come before seed-coach-programs,
   'prisma\seed-coach-programs.ts',       #   which only fills coaches that exist and have no programs yet
   'prisma\seed-program-naming.ts',       # readable programme names, levels, and specialised-audience marks
+  'prisma\seed-program-covers.ts',       # bundled cover images for the 9 programs that shipped without one
   'prisma\seed-engagement.ts',
   'prisma\seed-onboarding.ts',
   'prisma\seed-reel-overrides.ts',
