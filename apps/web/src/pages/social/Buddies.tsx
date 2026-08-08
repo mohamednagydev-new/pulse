@@ -113,6 +113,14 @@ export function Buddies() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['duels'] }),
     onError: (e: any) => toast(e?.message || 'Could not decline duel', 'error'),
   });
+  const rematch = useMutation({
+    mutationFn: (id: string) => api.post(`/api/duels/${id}/rematch`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['duels'] });
+      toast(t('duels.sent'), 'success');
+    },
+    onError: (e: any) => toast(e?.message || 'Could not send rematch', 'error'),
+  });
   const createDuel = useMutation({
     mutationFn: () =>
       api.post('/api/duels', {
@@ -343,6 +351,14 @@ export function Buddies() {
                     <span className={`shrink-0 font-extrabold ${d.iWon === true ? 'text-brand-pink' : 'text-gray-400'}`}>
                       {d.myScore}–{d.theirScore}
                     </span>
+                    {/* Losers want revenge, winners want proof — one tap, same terms. */}
+                    <button
+                      onClick={() => rematch.mutate(d.id)}
+                      disabled={rematch.isPending}
+                      className="flex shrink-0 items-center gap-1 rounded-full bg-brand-pink/10 px-2.5 py-1 text-xs font-bold text-brand-pink transition active:scale-90 disabled:opacity-50"
+                    >
+                      <Swords size={12} /> {t('duels.rematch')}
+                    </button>
                   </div>
                 ))}
 

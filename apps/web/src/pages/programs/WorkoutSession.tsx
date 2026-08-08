@@ -7,6 +7,8 @@ import { Check, SkipForward, Music, Play, Pause, X, Timer, ChevronRight, Trophy,
 import { api } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { shareMilestone } from '../../lib/shareCard';
+import { WaIcon, waOpen } from '../../components/WaShare';
+import { enqueue, postResilient } from '../../lib/offlineQueue';
 import HrMonitor from '../../components/HrMonitor';
 import { useAuth } from '../../store/auth';
 import { Loader } from '../../components/ui';
@@ -114,6 +116,8 @@ export default function WorkoutSession() {
   });
   const group = source ? { name: source.name ?? source.title, exercises: source.exercises ?? [] } : undefined;
   const { data: tracks } = useQuery({ queryKey: ['music'], queryFn: () => api.get('/api/music') });
+  // For the done-screen WhatsApp CTA — invites carry the user's referral link.
+  const { data: referral } = useQuery({ queryKey: ['referral'], queryFn: () => api.get('/api/me/referral'), staleTime: Infinity });
 
   const queryClient = useQueryClient();
   const firstName = useAuth((s) => s.user?.firstName);
@@ -230,7 +234,15 @@ export default function WorkoutSession() {
         toast(t('session.logged'), 'success');
       }
     } catch (e: any) {
-      toast(e?.message || 'Could not log set', 'error');
+      // Real rejection (validation) → tell them. Network death mid-gym → queue
+      // it and move on; the set syncs when the signal comes back.
+      if (e?.status && e.status >= 400 && e.status < 500) {
+        toast(e?.message || 'Could not log set', 'error');
+      } else {
+        enqueue('/api/tracker/lifts', { exercise: current.name, weightKg, reps });
+        setEntry({ reps: '' });
+        toast(t('session.savedOffline'), 'info');
+      }
     } finally {
       setLogging(false);
     }
@@ -257,9 +269,11 @@ export default function WorkoutSession() {
     coach('done', i18n.language);
     setSessionSecs(Math.max(1, Math.round((Date.now() - startedAt) / 1000)));
     setPhase('done');
+    // The completion is the streak/XP — a dead connection must never eat it.
     try {
-      await api.post('/api/me/workout-done', { name: group?.name, exercises: exercises.length });
-    } catch { /* ignore */ }
+      const r = await postResilient('/api/me/workout-done', { name: group?.name, exercises: exercises.length });
+      if (r === 'queued') toast(t('session.savedOffline'), 'info');
+    } catch { /* rejected on the merits — nothing to retry */ }
     // Milestone auto-share: first-ever workout or a landmark streak (7/30/100).
     // Fetched fresh so the just-finished session counts; at most one per session.
     if (!autoShared.current) {
@@ -388,7 +402,18 @@ export default function WorkoutSession() {
             <div key={idx} className="flex items-center gap-2 text-sm text-white/80"><Check size={14} className="text-brand-green" /> {n}</div>
           ))}
         </div>
-        <div className="mt-8 flex items-center gap-3">
+        {/* Peak-pride moment = referral moment. One tap sends the brag + the
+            invite link to WhatsApp, where Egyptian invites actually travel. */}
+        <button
+          onClick={() => {
+            const link = referral?.link || window.location.origin;
+            waOpen(`لسه مخلص تمرين ${group?.name ? `«${group.name}» ` : ''}على PULSE 💪🔥\nتيجي نتمرن مع بعض؟ التطبيق مجاني ١٠٠٪:\n${link}`);
+          }}
+          className="mt-8 flex min-h-[48px] w-full max-w-xs items-center justify-center gap-2 rounded-full bg-[#25D366] font-bold text-white shadow-lg transition active:scale-[0.97]"
+        >
+          <WaIcon size={18} /> {isAr ? 'اتحدى صاحبك على واتساب' : 'Challenge a friend on WhatsApp'}
+        </button>
+        <div className="mt-3 flex items-center gap-3">
           <button
             onClick={() => void shareMilestone({ kind: 'workout', title: t('share.workoutDone'), value: `${doneList.length} ${t('today.workouts', { count: doneList.length }).toUpperCase()}`, subtitle: group?.name, userName: firstName, emoji: '💪', savedMsg: t('share.saved') })}
             className="btn-pill bg-white/15 px-8 text-white"
@@ -651,12 +676,20 @@ export default function WorkoutSession() {
             >
               <p className="text-3xl font-extrabold">{t('session.newPR')} 🏆</p>
               <p className="mt-1 text-xl font-bold">{prWeight} {t('session.kg')}</p>
-              <button
-                onClick={() => void shareMilestone({ kind: 'pr', title: t('share.pr'), value: `${prWeight} ${t('session.kg').toUpperCase()}`, subtitle: current?.name, userName: firstName, emoji: '🏆', savedMsg: t('share.saved') })}
-                className="pointer-events-auto mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/25 px-4 py-1.5 text-sm font-bold"
-              >
-                <Share2 size={14} /> {t('session.share')} 🎉
-              </button>
+              <div className="pointer-events-auto mt-3 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => waOpen(`كسرت رقمي القياسي النهارده 🏆 ${prWeight} كجم ${current?.name ? `في ${current.name}` : ''} على PULSE 💪\nتعالى اتحدى معايا — مجاني: ${window.location.origin}`)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-1.5 text-sm font-bold"
+                >
+                  <WaIcon size={14} /> WhatsApp
+                </button>
+                <button
+                  onClick={() => void shareMilestone({ kind: 'pr', title: t('share.pr'), value: `${prWeight} ${t('session.kg').toUpperCase()}`, subtitle: current?.name, userName: firstName, emoji: '🏆', savedMsg: t('share.saved') })}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/25 px-4 py-1.5 text-sm font-bold"
+                >
+                  <Share2 size={14} /> {t('session.share')} 🎉
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

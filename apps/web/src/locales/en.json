@@ -215,6 +215,7 @@
   "duels": {
     "title": "Duels",
     "duel": "Duel",
+    "rematch": "Rematch",
     "challengeTitle": "Challenge {{name}}",
     "metricWorkouts": "Most workouts",
     "metricXp": "Most XP",
@@ -286,6 +287,7 @@
     "reps": "reps",
     "log": "Log set",
     "logged": "Set logged 💪",
+    "savedOffline": "No signal — saved on your phone, will sync automatically 📶",
     "newPR": "NEW PR!",
     "share": "Share",
     "complete": "Workout complete!",

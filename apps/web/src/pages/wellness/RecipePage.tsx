@@ -8,6 +8,7 @@ import { api } from '../../lib/api';
 import { usePageMeta } from '../../lib/seo';
 import { Loader, ErrorMsg, MediaImage } from '../../components/ui';
 import TopBar from '../../components/TopBar';
+import { WaIcon, waOpen } from '../../components/WaShare';
 import BookmarkButton from '../../components/BookmarkButton';
 import ContentVideo from '../../components/ContentVideo';
 import RelatedReels from '../../components/RelatedReels';
@@ -71,7 +72,17 @@ export default function RecipePage() {
       <div className="px-4">
         <div className="relative">
           <MediaImage path={recipe.coverImage} label={recipe.title} className="h-52 w-full rounded-2xl" seed={2} />
-          <div className="absolute end-3 top-3"><BookmarkButton type="recipe" id={recipe.id} /></div>
+          <div className="absolute end-3 top-3 flex items-center gap-2">
+            {/* Guests can open this link — every share is a mini landing page. */}
+            <button
+              onClick={() => waOpen(`جرب الوصفة دي 😋 «${recipe.title}»${recipe.calories ? ` — ${recipe.calories} سعرة` : ''}\nمن مطبخ PULSE، ٩٠+ وصفة صحية ببلاش:\n${window.location.origin}/recipe/${recipe.id}`)}
+              aria-label="WhatsApp"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366] text-white shadow transition active:scale-90"
+            >
+              <WaIcon size={18} />
+            </button>
+            <BookmarkButton type="recipe" id={recipe.id} />
+          </div>
         </div>
 
         <h1 className="mt-4 break-words text-xl font-bold leading-tight text-brand-green sm:text-2xl">{recipe.title}</h1>

@@ -146,6 +146,46 @@ duelsRouter.post('/', async (req: AuthedRequest, res) => {
   res.status(201).json(duel);
 });
 
+// ---- Rematch a finished duel ----
+// Same opponent, same terms, one tap — losers want revenge and winners want to
+// prove it wasn't luck; both are retention.
+duelsRouter.post('/:id/rematch', async (req: AuthedRequest, res) => {
+  const old = await prisma.buddyChallenge.findUnique({ where: { id: req.params.id } });
+  if (!old || old.status !== 'finished' || (old.challengerId !== req.userId && old.opponentId !== req.userId)) {
+    return res.status(404).json({ error: 'No finished duel to rematch' });
+  }
+  const opponentId = old.challengerId === req.userId ? old.opponentId : old.challengerId;
+  if (!(await areConnected(req.userId!, opponentId))) return res.status(403).json({ error: 'Connect with this buddy first' });
+
+  const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true, xp: true } });
+  if (old.wagerXp > 0 && (me?.xp ?? 0) < old.wagerXp) {
+    return res.status(400).json({ error: `You need ${old.wagerXp} XP to stake` });
+  }
+  const existing = await prisma.buddyChallenge.findFirst({
+    where: {
+      status: { in: ['pending', 'active'] },
+      OR: [
+        { challengerId: req.userId!, opponentId },
+        { challengerId: opponentId, opponentId: req.userId! },
+      ],
+    },
+  });
+  if (existing) return res.status(409).json({ error: 'You already have a duel with this buddy' });
+
+  const duel = await prisma.buddyChallenge.create({
+    data: { challengerId: req.userId!, opponentId, metric: old.metric, durationDays: old.durationDays, wagerXp: old.wagerXp },
+  });
+  notifyUser(opponentId, {
+    title: 'Rematch! ⚔️',
+    titleAr: 'العودة! ⚔️',
+    body: `${me?.firstName ?? 'Your buddy'} wants a rematch — same terms. Accept?`,
+    bodyAr: `${me?.firstName ?? 'صاحبك'} عايز يعيدها — نفس الشروط. قابل؟`,
+    url: '/buddies',
+    type: 'general',
+  });
+  res.status(201).json(duel);
+});
+
 // ---- Accept / decline ----
 duelsRouter.post('/:id/accept', async (req: AuthedRequest, res) => {
   const duel = await prisma.buddyChallenge.findUnique({ where: { id: req.params.id } });

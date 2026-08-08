@@ -83,8 +83,38 @@ async function runCheck() {
         select: { id: true, firstName: true, currentStreak: true, reminderHour: true, preferredLang: true },
       })
     : [];
+
+  // Learned timing: users who never picked a reminder hour get nudged at the
+  // hour they actually train (modal completion hour over 3 weeks, ≥3 sessions
+  // of signal) instead of a one-size 19:00. Explicit settings always win.
+  const learned = new Map<string, number>();
+  const unset = candidates.filter((u) => u.reminderHour == null).map((u) => u.id);
+  if (unset.length) {
+    const rows = await prisma.lessonCompletion.findMany({
+      where: { userId: { in: unset }, completedAt: { gte: new Date(Date.now() - 21 * 86_400_000) } },
+      select: { userId: true, completedAt: true },
+    });
+    const tally = new Map<string, Map<number, number>>();
+    for (const r of rows) {
+      const h = localHour(r.completedAt);
+      const m = tally.get(r.userId) ?? new Map<number, number>();
+      m.set(h, (m.get(h) ?? 0) + 1);
+      tally.set(r.userId, m);
+    }
+    for (const [uid, m] of tally) {
+      let best = -1;
+      let bestN = 0;
+      let total = 0;
+      for (const [h, n] of m) {
+        total += n;
+        if (n > bestN) { best = h; bestN = n; }
+      }
+      if (total >= 3 && best >= 0) learned.set(uid, best);
+    }
+  }
+
   for (const u of candidates) {
-    if (hour !== (u.reminderHour ?? 19)) continue;
+    if (hour !== (u.reminderHour ?? learned.get(u.id) ?? 19)) continue;
     const ar = u.preferredLang === 'ar';
 
     // If they're partway through a program, name the actual session waiting for
@@ -179,6 +209,31 @@ async function runCheck() {
     await ensureGroupSessions().catch((e) => console.warn('[groups]', e?.message));
   } else if ((await prisma.groupSession.count({ where: { scheduledAt: { gte: now } } })) === 0) {
     await ensureGroupSessions().catch((e) => console.warn('[groups]', e?.message));
+  }
+
+  // Streak rescue — 20:00: trained yesterday, nothing today, streak worth
+  // saving. Streaks die silently at midnight; this is the save-point ping.
+  if (hour === 20 && (await claimJob(`streaksave:${day}`))) {
+    const atRisk = await prisma.user.findMany({
+      where: {
+        lastActiveOn: daysAgoStr(1),
+        currentStreak: { gte: 3 },
+        ...(pushEnabled() ? { pushSubs: { some: {} } } : {}),
+      },
+      select: { id: true, firstName: true, currentStreak: true, preferredLang: true },
+    });
+    for (const u of atRisk) {
+      const ar = u.preferredLang === 'ar';
+      notifyUser(u.id, {
+        title: ar ? `سلسلة الـ${u.currentStreak} يوم في خطر 🔥` : `Your ${u.currentStreak}-day streak is in danger 🔥`,
+        body: ar
+          ? `${u.firstName}، تمرين واحد قبل ما اليوم يخلص ينقذها — حتى ١٥ دقيقة كفاية.`
+          : `${u.firstName}, one workout before midnight saves it — even 15 minutes.`,
+        url: '/workout',
+        type: 'reminder',
+      });
+    }
+    if (atRisk.length) console.log(`[streak] rescued-pinged ${atRisk.length} user(s)`);
   }
 
   // Lapsed re-engagement — no activity for 3+ days (once, at 18:00).

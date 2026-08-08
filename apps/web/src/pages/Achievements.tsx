@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, MessageSquare, Swords, Plus, Trash2, Share2, KeyRound, ChevronRight } from 'lucide-react';
 import { api } from '../lib/api';
+import { WaIcon, waOpen } from '../components/WaShare';
 import { Loader, MediaImage } from '../components/ui';
 import Sheet from '../components/Sheet';
 import TopBar from '../components/TopBar';
@@ -150,6 +151,11 @@ export default function Achievements() {
     onSuccess: () => invalidate(),
     onError: (e: any) => toast(e?.message || 'Could not delete', 'error'),
   });
+
+  /** Prefilled Arabic invite for WhatsApp — the channel Egyptian invites
+   *  actually travel on. */
+  const waInviteText = (inviteCode: string) =>
+    `تعالى اتحدى معايا على PULSE 💪\nادخل بكود: ${inviteCode}\n${window.location.origin} — مجاني ١٠٠٪`;
 
   const shareInvite = async (inviteCode: string) => {
     const text = `Join my challenge on PULSE — code: ${inviteCode}`;
@@ -416,13 +422,21 @@ export default function Achievements() {
                   )}
 
                   {c.isMine && c.inviteCode && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); void shareInvite(c.inviteCode as string); }}
-                      className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-brand-blue"
-                    >
-                      <Share2 size={13} /> {t('challenges.invite')}: <span className="tracking-widest">{c.inviteCode}</span>
-                      <ChevronRight size={13} className="rtl:rotate-180" />
-                    </button>
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); void shareInvite(c.inviteCode as string); }}
+                        className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-brand-blue"
+                      >
+                        <Share2 size={13} /> {t('challenges.invite')}: <span className="tracking-widest">{c.inviteCode}</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); waOpen(waInviteText(c.inviteCode as string)); }}
+                        aria-label="WhatsApp"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white transition active:scale-90"
+                      >
+                        <WaIcon size={15} />
+                      </button>
+                    </div>
                   )}
                 </div>
               </motion.div>
@@ -467,11 +481,17 @@ export default function Achievements() {
                   <h2 className="mt-2 text-lg font-bold">{t('challenges.created')}</h2>
                   <p className="mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('challenges.invite')}</p>
                   <p className="mt-1 text-3xl font-extrabold tracking-[0.3em] text-brand-pink">{createdCode}</p>
+                  <button
+                    onClick={() => waOpen(waInviteText(createdCode))}
+                    className="mt-5 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-[#25D366] font-bold text-white transition active:scale-[0.97]"
+                  >
+                    <WaIcon size={18} /> WhatsApp
+                  </button>
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     transition={tapSpring}
                     onClick={() => void shareInvite(createdCode)}
-                    className="btn-pill btn-primary mt-5 flex w-full items-center justify-center gap-2 py-3 font-bold"
+                    className="btn-pill btn-primary mt-2 flex w-full items-center justify-center gap-2 py-3 font-bold"
                   >
                     <Share2 size={17} /> {t('challenges.shareInvite')}
                   </motion.button>

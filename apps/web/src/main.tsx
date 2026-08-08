@@ -8,11 +8,14 @@ import './index.css';
 import { initTheme } from './lib/theme';
 import { toast } from './lib/toast';
 import { captureUtm } from './lib/utm';
+import { initOfflineQueue } from './lib/offlineQueue';
 
 initTheme();
 // Before anything renders: remember which ad brought this visit (utm_*/ttclid/
 // fbclid) and log the funnel's first step.
 captureUtm();
+// Replay any workout completions / set logs that were made offline.
+initOfflineQueue();
 
 /**
  * Stale-deploy recovery. Pages are code-split, so after a deploy an installed

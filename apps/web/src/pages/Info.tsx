@@ -12,6 +12,7 @@ import LanguageToggle from '../components/LanguageToggle';
 import PushToggle from '../components/PushToggle';
 import MenuDrawer from '../components/MenuDrawer';
 import AmbientBg from '../components/AmbientBg';
+import { WaIcon, waOpen } from '../components/WaShare';
 import ScreenHeader from '../components/ScreenHeader';
 
 const tapSpring = { type: 'spring', stiffness: 500, damping: 30 } as const;
@@ -350,11 +351,18 @@ function InviteFriendsCard() {
         {data?.link ?? '…'}
       </div>
       <div className="flex gap-2">
+        <button
+          onClick={() => data?.link && waOpen(`تعالى نتمرن مع بعض على PULSE 💪 تمارين وسعرات بالأكل المصري وتحديات — مجاني ١٠٠٪:\n${data.link}`)}
+          disabled={!data?.link}
+          className="flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-full bg-[#25D366] py-2 text-sm font-bold text-white transition active:scale-95 disabled:opacity-60"
+        >
+          <WaIcon size={16} /> WhatsApp
+        </button>
         <motion.button whileTap={{ scale: 0.95 }} transition={tapSpring} onClick={share} disabled={!data?.link} className="btn-pill flex min-h-[40px] flex-1 items-center justify-center gap-2 bg-gray-900 py-2 text-sm text-white disabled:opacity-60">
           <Share2 size={16} /> {t('invite.share')}
         </motion.button>
-        <motion.button whileTap={{ scale: 0.95 }} transition={tapSpring} onClick={copyLink} disabled={!data?.link} className="btn-pill flex min-h-[40px] flex-1 items-center justify-center gap-2 border border-gray-200 bg-white py-2 text-sm font-semibold disabled:opacity-60">
-          <Copy size={16} /> {t('invite.copy')}
+        <motion.button whileTap={{ scale: 0.95 }} transition={tapSpring} onClick={copyLink} disabled={!data?.link} className="btn-pill flex min-h-[40px] w-11 items-center justify-center border border-gray-200 bg-white py-2 disabled:opacity-60" aria-label={t('invite.copy')}>
+          <Copy size={16} />
         </motion.button>
       </div>
       {toast && <p className="text-xs text-brand-green">{toast}</p>}
