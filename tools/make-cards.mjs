@@ -15,8 +15,12 @@ const OUT = path.join(__dirname, '..', 'marketing-cards');
 fs.mkdirSync(OUT, { recursive: true });
 
 const shot = (name) => {
-  const p = path.join(__dirname, '..', 'apps', 'web', 'public', 'landing', name);
-  return `data:image/jpeg;base64,${fs.readFileSync(p).toString('base64')}`;
+  // landing/*.jpg first, else a walkthrough screenshot from tools/e2e-shots/*.png
+  const landing = path.join(__dirname, '..', 'apps', 'web', 'public', 'landing', name);
+  const e2e = path.join(__dirname, 'e2e-shots', name);
+  const p = fs.existsSync(landing) ? landing : e2e;
+  const mime = p.endsWith('.png') ? 'image/png' : 'image/jpeg';
+  return `data:${mime};base64,${fs.readFileSync(p).toString('base64')}`;
 };
 const logo = () => {
   const p = path.join(__dirname, '..', 'apps', 'web', 'public', 'pwa-192.png');
@@ -50,6 +54,23 @@ const CARDS = [
   { file: '12-men-bokra', kind: 'big', bg: G.ink, emoji: '😂', title: '«هبدأ من بكرة»', sub: 'اعمل منشن لصاحبك اللي بيقولها كل أسبوع 👇', badge: 'تاج لصاحبك' },
   { file: '13-squat-dare', kind: 'big', bg: G.violet, emoji: '🔥', title: 'تقدر على ٢٠ سكوات؟', sub: 'صورها وحطها ستوري ومنشن صاحبك يكملها — يلا نشوف مين جد', badge: 'تحدي' },
   { file: '14-guest', kind: 'big', bg: G.green, emoji: '👀', title: 'مش مصدق؟ اتفرج بنفسك', sub: 'ادخل شوف كل حاجة من غير ما تعمل حساب أصلاً — pulse.geddo.online', badge: 'من غير حساب' },
+  // ---- Wave 2: more screens, more features ----
+  { file: '15-meal-plan', kind: 'feature', bg: G.green, img: '16-mealplan.png', emoji: '🥗', title: 'خطة أكل بتشرح نفسها', sub: 'مش بس بتقولك تاكل إيه — بتقولك ليه، ومبنية على هدفك وسعراتك' },
+  { file: '16-grocery', kind: 'feature', bg: G.orange, img: '17-grocery.png', emoji: '🛒', title: 'قايمة المشتريات جاهزة', sub: 'من خطة أكلك على طول — تروح السوبر ماركت وإنت عارف هتجيب إيه' },
+  { file: '17-leagues', kind: 'feature', bg: G.violet, img: '37-leagues.png', emoji: '🏅', title: 'دوري كل أسبوع', sub: 'اجمع نقط، اصعد للدرجة الأعلى، أو اهبط 😅 — المنافسة بتخليك تكمّل' },
+  { file: '18-group-live', kind: 'feature', bg: G.blue, img: '33-group-sessions.png', emoji: '🔴', title: 'حصص لايف جماعية', sub: 'السبت جسم كامل ٧م · الثلاثاء حرق ٨م · الخميس يوجا ٨م — بتايمر مشترك مع الناس' },
+  { file: '19-progress', kind: 'feature', bg: G.ink, img: '36-progress.png', emoji: '📈', title: 'شوف تقدمك بالأرقام', sub: 'أسابيعك، أوزانك، أرقامك القياسية — كله متسجل ومرسوم قدامك' },
+  { file: '20-muscle-map', kind: 'feature', bg: G.blue, img: '45-muscle-map.png', emoji: '🎯', title: 'اختار العضلة من الخريطة', sub: 'صدر؟ ضهر؟ رجل؟ — دوس عليها وخد جلسة كاملة بالفيديو' },
+  { file: '21-badges', kind: 'feature', bg: G.violet, img: '18-achievements.png', emoji: '🎖', title: 'بادجات وإنجازات', sub: 'كل تحدي بتخلصه بادج بيفضل معاك — وريهم إنت عملت إيه' },
+  { file: '22-reels', kind: 'feature', bg: G.orange, img: '35-reels.png', emoji: '🎬', title: 'ريلز تمارين سريعة', sub: 'مقاطع قصيرة تتحمس بيها وتتعلم منها — جوه التطبيق' },
+  { file: '23-arabic-first', kind: 'feature', bg: G.green, img: '50-AR-home.png', emoji: '🇪🇬', title: 'بالعربي… وبالمصري', sub: 'مش ترجمة آلية — التطبيق كله مكتوب بالمصري عشان يبقى ليك' },
+  { file: '24-recipes', kind: 'feature', bg: G.orange, img: '25-recipe-detail.png', emoji: '👨‍🍳', title: 'وصفات بالفيديو والسعرات', sub: 'المقادير والخطوات والماكروز — وفيديو الطريقة كمان' },
+  { file: '25-articles', kind: 'feature', bg: G.blue, img: '26-article-detail.png', emoji: '📖', title: '١٢٠+ مقال صحي بالعربي', sub: 'نوم، ضغط، سكر، مفاصل — معلومة تثق فيها من غير كلام كبير' },
+  { file: '26-week-zero', kind: 'feature', bg: G.green, img: '19-weekzero.png', emoji: '🌱', title: 'مبتدئ خالص؟ عادي', sub: 'الأسبوع صفر: ٧ أيام هادية تدخلك التمرين من غير ما تكره حياتك 😄' },
+  { file: '27-streak', kind: 'big', bg: G.orange, emoji: '🔥', title: 'السلسلة بتاعتك كام يوم؟', sub: 'سلسلة أيام + مهام يومية + عجلة حظ — التطبيق بيحارب عشان متقطعش', badge: 'اكتب رقمك تحت 👇' },
+  { file: '28-chat-voice', kind: 'big', bg: G.blue, emoji: '🎙', title: 'شات ورسائل صوتية', sub: 'إنت وأصحابك جوه التطبيق — شجعوا بعض، اتحدوا بعض، وابعتوا فويسات', badge: 'مع أصحابك' },
+  { file: '29-water', kind: 'big', bg: G.green, emoji: '💧', title: 'شربت مية النهارده؟', sub: 'عدّاد المية جوه التطبيق بيفكرك — جسمك محتاج أكتر مما فاكر', badge: 'اشرب دلوقتي 😄' },
+  { file: '30-hall-of-fame', kind: 'big', bg: G.violet, emoji: '👑', title: 'لوحة الأبطال', sub: 'كل أسبوع أعلى ناس في النقط والسلاسل بيتعرضوا قدام الكل — اسمك ممكن يبقى هناك', badge: 'مين أبطال الأسبوع؟' },
 ];
 
 const html = (c) => `<!doctype html><html><head><meta charset="utf-8">

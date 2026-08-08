@@ -1,0 +1,8 @@
+file 'F:/FIT_IT/marketing-video/clips/00.mp4'
+file 'F:/FIT_IT/marketing-video/clips/01.mp4'
+file 'F:/FIT_IT/marketing-video/clips/02.mp4'
+file 'F:/FIT_IT/marketing-video/clips/03.mp4'
+file 'F:/FIT_IT/marketing-video/clips/04.mp4'
+file 'F:/FIT_IT/marketing-video/clips/05.mp4'
+file 'F:/FIT_IT/marketing-video/clips/06.mp4'
+file 'F:/FIT_IT/marketing-video/clips/07.mp4'
