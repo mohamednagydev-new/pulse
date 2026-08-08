@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Loader } from '../../components/ui';
@@ -177,6 +177,31 @@ function FunnelCard({ funnel }: { funnel?: Record<string, Record<string, number>
   );
 }
 
+/** Two-tap clear (confirm on second tap) — wipes triaged crash reports so the
+ *  card starts clean instead of waiting out the 7-day window. */
+function ClearErrorsButton() {
+  const qc = useQueryClient();
+  const [arm, setArm] = useState(false);
+  const clear = useMutation({
+    mutationFn: () => api.del('/api/admin/analytics/client-errors'),
+    onSuccess: () => {
+      setArm(false);
+      qc.invalidateQueries({ queryKey: ['admin', 'analytics'] });
+    },
+  });
+  return (
+    <button
+      onClick={() => (arm ? clear.mutate() : setArm(true))}
+      disabled={clear.isPending}
+      className={`mt-3 w-full rounded-full py-2 text-xs font-bold transition disabled:opacity-50 ${
+        arm ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-500'
+      }`}
+    >
+      {clear.isPending ? 'Clearing…' : arm ? 'Tap again to clear all error reports' : 'Clear list'}
+    </button>
+  );
+}
+
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm">
@@ -231,14 +256,17 @@ export default function AdminAnalytics() {
 
           <Card title="Client errors on real devices (7 days)">
             {data.clientErrors?.length ? (
-              <div className="space-y-2">
-                {data.clientErrors.map((e) => (
-                  <div key={e.message} className="flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2">
-                    <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-600">×{e.count}</span>
-                    <code dir="ltr" className="min-w-0 flex-1 break-words font-mono text-[11px] leading-relaxed text-red-700">{e.message}</code>
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className="space-y-2">
+                  {data.clientErrors.map((e) => (
+                    <div key={e.message} className="flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2">
+                      <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-600">×{e.count}</span>
+                      <code dir="ltr" className="min-w-0 flex-1 break-words font-mono text-[11px] leading-relaxed text-red-700">{e.message}</code>
+                    </div>
+                  ))}
+                </div>
+                <ClearErrorsButton />
+              </>
             ) : (
               <p className="py-4 text-center text-sm text-gray-400">No client errors reported 🎉</p>
             )}

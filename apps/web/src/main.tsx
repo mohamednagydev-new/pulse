@@ -21,6 +21,14 @@ captureUtm();
 // Replay any workout completions / set logs that were made offline.
 initOfflineQueue();
 
+// Service worker, registered manually (vite.config injectRegister:false) so
+// environmental failures are SWALLOWED: in-app browsers abort/time-out SW
+// installs routinely, the app works fine without one, and unhandled aborts
+// were flooding the crash telemetry.
+import('virtual:pwa-register')
+  .then(({ registerSW }) => registerSW({ onRegisterError() {} }))
+  .catch(() => {});
+
 /**
  * Stale-deploy recovery. Pages are code-split, so after a deploy an installed
  * app (worst on iOS, which aggressively kills/restarts PWAs) can hold an old

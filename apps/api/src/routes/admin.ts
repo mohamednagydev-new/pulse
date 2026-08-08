@@ -594,6 +594,7 @@ adminRouter.get('/analytics', async (_req, res) => {
     dau: dau.map((d) => ({ day: d.day, users: Number(d.users) })),
     funnel,
     clientErrors: clientErrorsRaw.map((e) => ({ message: e.meta, count: e._count })),
+    // (clear with DELETE /analytics/client-errors)
     topScreens: topScreensRaw.map((s) => ({ path: s.meta, count: s._count })),
     topEvents: topEventsRaw.map((e) => ({ name: e.name, count: e._count })),
     totals: {
@@ -605,6 +606,13 @@ adminRouter.get('/analytics', async (_req, res) => {
       connections: totals[5],
     },
   });
+});
+
+// Wipe the crash-report list — for after a batch has been triaged and fixed,
+// so the card starts clean instead of waiting out the 7-day window.
+adminRouter.delete('/analytics/client-errors', async (_req, res) => {
+  const r = await prisma.event.deleteMany({ where: { name: 'client-error' } });
+  res.json({ ok: true, deleted: r.count });
 });
 
 // ---- Facebook post studio ----

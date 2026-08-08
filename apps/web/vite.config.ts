@@ -7,6 +7,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registration moved to main.tsx (virtual:pwa-register) so failures are
+      // CAUGHT: in-app browsers (FB/TikTok Android) abort/time-out SW installs
+      // routinely, and the auto-injected script let those escape as unhandled
+      // rejections — 17 junk rows in the crash telemetry from one ad campaign.
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'logo.svg', 'pwa-192.png', 'pwa-512.png', 'apple-touch-icon.png', 'pwa-maskable-512.png'],
       manifest: {
         // Stable id: the TWA wrapper (.well-known/assetlinks.json) and installed
