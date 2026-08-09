@@ -4,7 +4,9 @@ import en from './locales/en.json';
 import ar from './locales/ar.json';
 import { setApiLang } from './lib/api';
 
-const saved = localStorage.getItem('fitit_lang') || 'en';
+// Arabic-first: the audience is Egyptian — a new device opens in Arabic and
+// the toggle switches to English for those who prefer it.
+const saved = localStorage.getItem('fitit_lang') || 'ar';
 
 i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, ar: { translation: ar } },

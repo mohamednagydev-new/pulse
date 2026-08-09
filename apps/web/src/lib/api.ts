@@ -1,5 +1,5 @@
 let accessToken: string | null = null;
-let lang: string = localStorage.getItem('fitit_lang') || 'en';
+let lang: string = localStorage.getItem('fitit_lang') || 'ar';
 
 export function setAccessToken(t: string | null) {
   accessToken = t;

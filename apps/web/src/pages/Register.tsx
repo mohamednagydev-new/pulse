@@ -7,6 +7,7 @@ import { useAuth } from '../store/auth';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
 import { pixelRegistration } from '../lib/pixels';
+import LanguageToggle from '../components/LanguageToggle';
 
 export default function Register() {
   const { t } = useTranslation();
@@ -58,56 +59,80 @@ export default function Register() {
   ];
 
   return (
-    <div className="min-h-screen">
-      <div className="relative rounded-b-[40%] fitness-hero pb-12 pt-14 text-center text-white" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3.5rem)' }}>
-        <div className="text-4xl font-extrabold italic">PULSE</div>
-        <div className="mt-1 text-[11px] uppercase tracking-[0.25em] opacity-90">{t('auth.tagline')}</div>
-      </div>
+    <div className="relative min-h-screen overflow-hidden text-white">
+      {/* Real training photo behind a dark grade — the form floats over the
+          life you're signing up for, not over a blank page. */}
+      <img src="/landing/scene-coach.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" aria-hidden />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-[#14100c]" aria-hidden />
 
-      {ref && (
-        <div className="mx-7 mt-6 rounded-2xl border border-brand-teal/30 bg-brand-teal/10 p-3 text-center text-sm font-semibold text-brand-teal">
-          {t('auth.invitedBonus')}
-        </div>
-      )}
-
-      <form onSubmit={onSubmit} className={`space-y-3.5 px-7 ${ref ? 'pt-4' : 'pt-7'}`}>
-        {fields.map(({ k, ph, icon: Icon, type, ac }) => (
-          <div key={k} className="relative">
-            <Icon size={18} className="pointer-events-none absolute start-5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              className="input-field ps-12"
-              type={type}
-              autoComplete={ac}
-              placeholder={ph}
-              value={form[k]}
-              onChange={set(k)}
-              required={k !== 'mobile' && k !== 'zip'}
-            />
+      <div className="relative flex min-h-screen flex-col px-5 pb-8" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src="/pwa-192.png" alt="" className="h-9 w-9 rounded-xl shadow-lg" />
+            <span className="text-2xl font-extrabold italic">PULSE</span>
+            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-extrabold tracking-wide backdrop-blur">
+              {t('guest.cta')}
+            </span>
           </div>
-        ))}
+          <LanguageToggle variant="compact" />
+        </div>
 
-        {error && <p className="text-center text-sm text-red-500">{error}</p>}
-
-        <motion.button
-          type="submit"
-          disabled={busy}
-          whileTap={{ scale: 0.97 }}
-          className="btn-pill btn-primary w-full gap-2 text-lg disabled:opacity-60"
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+          className="mx-auto mt-6 w-full max-w-md rounded-3xl border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur-xl"
         >
-          {busy ? t('auth.creating') : t('auth.signUp')}
-          <motion.span
-            aria-hidden
-            animate={{ x: [0, 4, 0] }}
-            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-            className="inline-flex"
-          >
-            <ChevronRight size={20} className="rtl:rotate-180" />
-          </motion.span>
-        </motion.button>
-        <p className="pb-8 text-center text-sm text-gray-500">
-          <Link to="/login" className="font-semibold text-brand-teal underline">{t('auth.haveAccount')}</Link> {t('auth.signIn')}
+          <h1 className="text-2xl font-extrabold">{t('auth.startJourney')}</h1>
+          <p className="mt-1 text-sm text-white/70">{t('auth.startJourneySub')}</p>
+
+          {ref && (
+            <div className="mt-4 rounded-2xl border border-emerald-300/30 bg-emerald-400/15 p-3 text-center text-sm font-semibold text-emerald-200">
+              {t('auth.invitedBonus')}
+            </div>
+          )}
+
+          <form onSubmit={onSubmit} className="mt-5 space-y-3">
+            {fields.map(({ k, ph, icon: Icon, type, ac }) => (
+              <div key={k} className="relative">
+                <Icon size={17} className="pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 text-white/50" />
+                <input
+                  className="w-full rounded-2xl border border-white/15 bg-white/10 py-3.5 pe-4 ps-11 text-[15px] text-white outline-none transition placeholder:text-white/45 focus:border-orange-400/70 focus:bg-white/15"
+                  type={type}
+                  autoComplete={ac}
+                  placeholder={ph}
+                  value={form[k]}
+                  onChange={set(k)}
+                  required={k !== 'mobile' && k !== 'zip'}
+                />
+              </div>
+            ))}
+
+            {error && <p className="rounded-xl bg-red-500/20 px-3 py-2 text-center text-sm font-semibold text-red-200">{error}</p>}
+
+            <motion.button
+              type="submit"
+              disabled={busy}
+              whileTap={{ scale: 0.97 }}
+              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 text-lg font-extrabold shadow-lg shadow-orange-500/30 transition disabled:opacity-60"
+            >
+              {busy ? t('auth.creating') : t('auth.signUp')}
+              <motion.span
+                aria-hidden
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                className="inline-flex"
+              >
+                <ChevronRight size={20} className="rtl:rotate-180" />
+              </motion.span>
+            </motion.button>
+          </form>
+        </motion.div>
+
+        <p className="mt-5 text-center text-sm text-white/70">
+          <Link to="/login" className="font-bold text-white underline">{t('auth.haveAccount')}</Link> {t('auth.signIn')}
         </p>
-      </form>
+      </div>
     </div>
   );
 }
