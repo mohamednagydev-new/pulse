@@ -158,6 +158,22 @@ export default function WorkoutSession() {
     return String(raw).replace(/\d+/, (n) => String(Math.max(1, Math.ceil(Number(n) / 2))));
   };
 
+  /** The sets/reps/level chips come as English DB strings ("3 sets", "8-12
+   *  reps", "Intermediate") — translate the units in place for Arabic users. */
+  const meta = (raw?: string | null) => {
+    if (!raw || !isAr) return raw ?? '';
+    return String(raw)
+      .replace(/sets?/i, 'مجموعات')
+      .replace(/reps?/i, 'عدة')
+      .replace(/each side/i, 'لكل جانب')
+      .replace(/sec(ond)?s?/i, 'ثانية')
+      .replace(/min(ute)?s?/i, 'دقيقة')
+      .replace(/hold/i, 'ثبات')
+      .replace(/beginner/i, 'مبتدئ')
+      .replace(/intermediate/i, 'متوسط')
+      .replace(/advanced/i, 'متقدم');
+  };
+
   const allExercises: any[] = group?.exercises ?? [];
   const exercises: any[] = shortMode ? allExercises.slice(0, 4) : allExercises;
   const current = exercises[i];
@@ -168,6 +184,19 @@ export default function WorkoutSession() {
   const trackList: any[] = Array.isArray(tracks) ? tracks : [];
   const track = trackIdx !== null ? trackList[trackIdx] : undefined;
   const hype = HYPE[i % HYPE.length];
+
+  // Their own history for THIS exercise — "last time: 40kg × 10" next to the
+  // log inputs is the single most motivating number in a session.
+  const { data: liftHistory } = useQuery({
+    queryKey: ['lifts', current?.name],
+    queryFn: () => api.get(`/api/tracker/lifts?exercise=${encodeURIComponent(current!.name)}`),
+    enabled: !!current?.name,
+    staleTime: 60_000,
+  });
+  const lastLift = Array.isArray(liftHistory) && liftHistory.length ? liftHistory[0] : null;
+  const bestLift = Array.isArray(liftHistory) && liftHistory.length
+    ? liftHistory.reduce((a: any, b: any) => (b.weightKg > a.weightKg ? b : a))
+    : null;
 
   // Rest countdown — with spoken cues when the voice coach is on.
   useEffect(() => {
@@ -427,7 +456,7 @@ export default function WorkoutSession() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-ink text-white">
+    <div className="relative flex min-h-screen flex-col bg-ink/85 text-white">
       {/* Ambient pulse — breathes only while the music plays */}
       <AmbientGlow active={musicOn} />
 
@@ -515,7 +544,7 @@ export default function WorkoutSession() {
                 <p className="text-[11px] font-bold uppercase tracking-wide text-white/40">{t('session.rest')}</p>
                 <p className="truncate text-lg font-extrabold">{next.name}</p>
                 {(next.sets || next.reps) && (
-                  <p className="truncate text-xs text-white/50">{[easedSets(next.sets), next.reps].filter(Boolean).join(' · ')}</p>
+                  <p className="truncate text-xs text-white/50">{[meta(easedSets(next.sets)), meta(next.reps)].filter(Boolean).join(' · ')}</p>
                 )}
               </div>
             </motion.div>
@@ -569,11 +598,11 @@ export default function WorkoutSession() {
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
             {current?.sets && (
               <span className={`rounded-full px-3 py-1 ${deloading ? 'bg-sky-500/30 text-sky-100' : 'bg-white/10'}`}>
-                {easedSets(current.sets)}{deloading ? ` · ${t('adapt.eased')}` : ''}
+                {meta(easedSets(current.sets))}{deloading ? ` · ${t('adapt.eased')}` : ''}
               </span>
             )}
-            {current?.reps && <span className="rounded-full bg-white/10 px-3 py-1">{current.reps}</span>}
-            {current?.level && <span className="rounded-full bg-white/10 px-3 py-1">{current.level}</span>}
+            {current?.reps && <span className="rounded-full bg-white/10 px-3 py-1">{meta(current.reps)}</span>}
+            {current?.level && <span className="rounded-full bg-white/10 px-3 py-1">{meta(current.level)}</span>}
           </div>
 
           {/* Progression ladder — muscle-group sessions only (coach workouts don't carry these) */}
@@ -608,6 +637,14 @@ export default function WorkoutSession() {
             <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-white/50">
               <Dumbbell size={12} /> {t('session.logSet')}
             </p>
+            {lastLift && (
+              <p className="mt-1 text-xs text-white/50">
+                {isAr ? 'آخر مرة' : 'Last time'}: <span className="font-bold text-white/80">{lastLift.weightKg} {t('session.kg')} × {lastLift.reps}</span>
+                {bestLift && bestLift.weightKg > lastLift.weightKg && (
+                  <> · {isAr ? 'رقمك القياسي' : 'your best'}: <span className="font-bold text-orange-300">{bestLift.weightKg} {t('session.kg')}</span></>
+                )}
+              </p>
+            )}
             <div className="mt-2 flex items-center gap-2">
               <input
                 type="text"

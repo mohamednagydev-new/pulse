@@ -110,7 +110,7 @@ export default function Sheet({
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 380, damping: 38 }}
             onKeyDown={trapTab}
-            className={`fixed inset-x-0 bottom-0 z-[80] mx-auto w-full max-w-[480px] overflow-y-auto rounded-t-[28px] bg-white outline-none ${maxH}`}
+            className={`sheet-panel fixed inset-x-0 bottom-0 z-[80] mx-auto w-full max-w-[480px] overflow-y-auto rounded-t-[28px] bg-white outline-none ${maxH}`}
             style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
           >
             <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-gray-300" aria-hidden />
