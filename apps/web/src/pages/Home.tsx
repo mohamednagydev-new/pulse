@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { trackAd, pickAd } from '../lib/ads';
-import { Search, ChevronRight, Play, Clapperboard, X, Bell, Flame, HeartHandshake, ScanLine, Users, HelpCircle } from 'lucide-react';
+import { Search, ChevronRight, Play, Clapperboard, X, Bell, Flame, HeartHandshake, ScanLine, Users, HelpCircle, Sun, Moon } from 'lucide-react';
+import { currentTheme, toggleTheme } from '../lib/theme';
 import { api } from '../lib/api';
 import { Loader, ErrorMsg, MediaImage, HScroll, formatDuration } from '../components/ui';
 import TodayStrip from '../components/TodayStrip';
@@ -56,10 +57,16 @@ export default function Home() {
   return (
     <div className="pb-6">
       <ScreenHeader tone="hero" padBottom="pb-6" className="animate-fade-up shadow-lg">
-        <div className="flex items-center justify-between">
+        <div className="relative flex items-center justify-between">
           <MenuDrawer />
-          <span className="text-2xl font-extrabold italic tracking-tight">PULSE</span>
-          <div className="flex items-center gap-4">
+          {/* Brand truly centered (logo + wordmark), independent of the uneven
+              icon counts on either side. */}
+          <span className="pointer-events-none absolute inset-x-0 flex items-center justify-center gap-2">
+            <img src="/pwa-192.png" alt="" className="h-8 w-8 rounded-lg shadow" />
+            <span className="text-2xl font-extrabold italic tracking-tight">PULSE</span>
+          </span>
+          <div className="relative flex items-center gap-3.5">
+            <ThemeToggle />
             {/* The guide, visible from day one — "what is all this?" has a home. */}
             <button onClick={() => navigate('/help')} aria-label={t('nav.help', { defaultValue: 'Help' })}>
               <HelpCircle size={23} />
@@ -337,6 +344,21 @@ function WeekActivityCard() {
         })}
       </div>
     </motion.section>
+  );
+}
+
+/** Sun/moon switch right in the header — dark is the default and the glassy
+ *  look is the brand, but daylight readers flip to light in one tap. */
+function ThemeToggle() {
+  const [theme, setTheme] = useState(currentTheme());
+  return (
+    <button
+      onClick={() => setTheme(toggleTheme())}
+      aria-label="Theme"
+      className="transition active:scale-90"
+    >
+      {theme === 'dark' ? <Sun size={22} /> : <Moon size={22} />}
+    </button>
   );
 }
 

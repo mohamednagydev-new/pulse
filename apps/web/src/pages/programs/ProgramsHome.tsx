@@ -76,15 +76,16 @@ export default function ProgramsHome() {
   return (
     <div className="min-h-screen overflow-x-hidden pb-8">
       {/* Section tone: Programs owns blue (per the original per-section design). */}
-      <ScreenHeader tone="blue" padBottom="pb-8">
-        {/* Drawer on every tab, not just Home — 19 destinations were unreachable
-            from here without a round-trip through the home screen. */}
-        <MenuDrawer className="mb-2" />
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
-          <p className="text-sm opacity-80">{t('programs.welcome')}</p>
-          <h1 className="text-3xl font-extrabold">{t('programs.title')}</h1>
-          <p className="mt-2 text-white/80">{t('programs.motto')}</p>
-        </motion.div>
+      <ScreenHeader tone="blue" padBottom="pb-6">
+        {/* Burger INLINE with the title — the stacked version wasted a full row
+            and pushed content below the fold. */}
+        <div className="flex items-center gap-3">
+          <MenuDrawer />
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="min-w-0">
+            <h1 className="truncate text-2xl font-extrabold">{t('programs.title')}</h1>
+            <p className="truncate text-xs text-white/75">{t('programs.motto')}</p>
+          </motion.div>
+        </div>
       </ScreenHeader>
 
       {/* Today — pulled from the user's schedule, one-tap start */}

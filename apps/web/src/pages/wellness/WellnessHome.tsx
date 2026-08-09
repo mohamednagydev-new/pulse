@@ -60,13 +60,18 @@ export default function WellnessHome() {
 
       {/* Section tone: Wellness owns green. */}
       <ScreenHeader tone="green" padBottom="pb-8">
-        {/* Drawer on every tab, not just Home — 19 destinations were unreachable
-            from here without a round-trip through the home screen. */}
-        <MenuDrawer className="mb-2" />
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
-          <p className="text-sm opacity-80">{t('wellness.welcome')}</p>
-          <h1 className="text-3xl font-extrabold">{t('wellness.title')}</h1>
-        </motion.div>
+        {/* Burger INLINE with the title — the stacked version wasted a full row. */}
+        <div className="flex items-center gap-3">
+          <MenuDrawer />
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="min-w-0 truncate text-2xl font-extrabold"
+          >
+            {t('wellness.title')}
+          </motion.h1>
+        </div>
       </ScreenHeader>
 
       {/* Search pill */}
