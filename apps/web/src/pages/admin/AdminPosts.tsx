@@ -70,6 +70,16 @@ export default function AdminPosts() {
   );
 }
 
+/** Ready-made attractive broadcasts — tap ✨ to cycle and fill all fields. */
+const BROADCAST_IDEAS = [
+  { title: 'Your streak misses you 🔥', titleAr: 'سلسلتك واحشاها 🔥', body: 'One 15-minute workout today keeps it alive. Tap a muscle and go.', bodyAr: 'تمرين ١٥ دقيقة النهارده يكفي عشان تفضل مكمّل. دوس على العضلة ويلا.', url: '/workout' },
+  { title: "Today's plan is waiting 💪", titleAr: 'خطتك النهارده مستنياك 💪', body: "Your session is ready — finish it before the day finishes you.", bodyAr: 'جلستك جاهزة — خلّصها قبل ما اليوم يخلص عليك 😄', url: '/' },
+  { title: 'Challenge your friend ⚔️', titleAr: 'اتحدى صاحبك ⚔️', body: 'A 7-day duel: whoever trains more takes the XP. Pick your victim.', bodyAr: 'تحدي ٧ أيام: اللي يتمرن أكتر ياخد النقط. اختار ضحيتك 😏', url: '/buddies' },
+  { title: 'The league settles Saturday 🏅', titleAr: 'الدوري بيتحسم السبت 🏅', body: 'Top 5 promote. Every workout this week counts double for your pride.', bodyAr: 'أول ٥ بيصعدوا. كل تمرينة الأسبوع ده بتفرق — فين مركزك دلوقتي؟', url: '/leagues' },
+  { title: "Tonight's healthy recipe 😋", titleAr: 'وصفة النهارده 😋', body: 'Quick, Egyptian, with real calorie counts. Dinner is solved.', bodyAr: 'سريعة ومصرية وبسعراتها الحقيقية. العشا اتحل.', url: '/wellness/kitchen' },
+  { title: 'Weekend ≠ day off 😄', titleAr: 'الويك اند مش إجازة من جسمك 😄', body: '20 minutes today and you own the weekend instead of it owning you.', bodyAr: '٢٠ دقيقة النهارده وتبقى كسبان الويك اند بدل ما هو كسبك.', url: '/workout' },
+];
+
 /** Push + in-app notification to all users (or a segment), straight from admin.
  *  Two-tap send; per-user language pick when both AR and EN are filled. */
 function BroadcastCard() {
@@ -81,6 +91,14 @@ function BroadcastCard() {
   const [audience, setAudience] = useState<'all' | 'active7' | 'lapsed7'>('all');
   const [arm, setArm] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
+  const [ideaIdx, setIdeaIdx] = useState(0);
+
+  const suggest = () => {
+    const s = BROADCAST_IDEAS[ideaIdx % BROADCAST_IDEAS.length];
+    setTitle(s.title); setTitleAr(s.titleAr); setBody(s.body); setBodyAr(s.bodyAr); setUrl(s.url);
+    setIdeaIdx((i) => i + 1);
+    setSent(null);
+  };
 
   const send = useMutation({
     mutationFn: () =>
@@ -106,8 +124,15 @@ function BroadcastCard() {
 
   return (
     <div className="mx-4 mt-4 rounded-2xl bg-white p-4 shadow-sm">
-      <p className="flex items-center gap-1.5 text-sm font-bold text-gray-600">📣 Broadcast to users</p>
-      <p className="mt-0.5 text-xs text-gray-400">Push on subscribed devices + in-app notification for everyone. Fill AR fields too and each user gets their own language.</p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="flex items-center gap-1.5 text-sm font-bold text-gray-600">📣 Broadcast to users</p>
+          <p className="mt-0.5 text-xs text-gray-400">Push on subscribed devices + in-app notification for everyone. Fill AR fields too and each user gets their own language.</p>
+        </div>
+        <button onClick={suggest} className="flex shrink-0 items-center gap-1 rounded-full bg-brand-pink/10 px-3 py-1.5 text-xs font-bold text-brand-pink transition active:scale-95">
+          <Sparkles size={13} /> Suggest
+        </button>
+      </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <input className={FIELD} placeholder="Title (EN or single)" value={title} onChange={(e) => setTitle(e.target.value)} />
         <input className={FIELD} dir="rtl" placeholder="العنوان (عربي، اختياري)" value={titleAr} onChange={(e) => setTitleAr(e.target.value)} />
