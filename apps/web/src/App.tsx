@@ -15,6 +15,7 @@ import OfflineBanner from './components/OfflineBanner';
 import PullToRefresh from './components/PullToRefresh';
 import { getSocket } from './lib/socket';
 import { celebrateFeedback } from './lib/haptics';
+import { pulseChime } from './lib/chime';
 import { track } from './lib/track';
 
 const TAB_ROUTES = ['/', '/programs', '/community', '/wellness', '/profile'];
@@ -350,11 +351,16 @@ function CelebrationListener() {
     };
     // Server-side events (buddy accepted, cheer, DM…) refresh the bell badge and
     // lists instantly while the app is open — no more waiting for the 60s poll.
+    // Each arrival plays the PULSE heartbeat chime: the app's sound identity.
     const onNotify = () => {
+      pulseChime();
       qc.invalidateQueries({ queryKey: ['notifications'] });
       qc.invalidateQueries({ queryKey: ['notifications', 'unread'] });
     };
-    const onInbox = () => qc.invalidateQueries({ queryKey: ['chat-unread'] });
+    const onInbox = () => {
+      pulseChime(0.7);
+      qc.invalidateQueries({ queryKey: ['chat-unread'] });
+    };
     socket.on('levelup', onLevel);
     socket.on('notify', onNotify);
     socket.on('dm:inbox', onInbox);
