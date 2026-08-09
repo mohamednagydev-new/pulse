@@ -1010,3 +1010,27 @@ calorie tracking and friend challenges. In Arabic. Always free.
 
 *📄 Strategy, launch plan, growth loops & metrics → see `MARKETING.md`*
 *📄 الخطة الكاملة والنمو والقياس → شوف ملف `MARKETING.md`*
+
+---
+
+## HOW-TO POST — ابدأ رحلتك في ٣ دقايق (post + pin during onboarding pushes)
+
+Visual: screen recording following the 5 steps (open link → register → plan questions → first workout → voice food log), or the ready card `marketing-cards/31-how-to-start.png`.
+
+```
+إزاي تبدأ رحلتك مع PULSE في ٣ دقايق؟ 🚀
+
+1️⃣ افتح pulse.geddo.online من أي موبايل — مفيش تحميل ولا ستور
+2️⃣ دوس «اعمل حساب مجاني» — اسم وإيميل وباسورد وخلاص (نص دقيقة)
+3️⃣ دوس «اعمل خطتي» — ٩ أسئلة سريعة عن هدفك ومستواك، والتطبيق يبنيلك خطتك على قدك
+4️⃣ ابدأ أول تمرين النهارده — ولو مبتدئ خالص، «الأسبوع صفر» هيدخلك جو بهدوء 🌱
+5️⃣ سجّل أكلك بالصوت 🎤 وادخل تحدي PULSE14 وخد بادج المؤسسين
+
+وكل ده ببلاش — من غير فيزا ولا اشتراك.
+لسه مش متأكد؟ ادخل اتفرج الأول من غير حساب 😉
+pulse.geddo.online
+
+#PULSE #نبض #ابدأ_دلوقتي #فتنس #تمرين_في_البيت
+```
+
+Story version (3 frames, one line each): ١) افتح اللينك ٢) اعمل حساب مجاني واعمل خطتك ٣) أول تمرين النهارده — ببلاش 🚀

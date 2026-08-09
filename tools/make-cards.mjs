@@ -71,6 +71,13 @@ const CARDS = [
   { file: '28-chat-voice', kind: 'big', bg: G.blue, emoji: '🎙', title: 'شات ورسائل صوتية', sub: 'إنت وأصحابك جوه التطبيق — شجعوا بعض، اتحدوا بعض، وابعتوا فويسات', badge: 'مع أصحابك' },
   { file: '29-water', kind: 'big', bg: G.green, emoji: '💧', title: 'شربت مية النهارده؟', sub: 'عدّاد المية جوه التطبيق بيفكرك — جسمك محتاج أكتر مما فاكر', badge: 'اشرب دلوقتي 😄' },
   { file: '30-hall-of-fame', kind: 'big', bg: G.violet, emoji: '👑', title: 'لوحة الأبطال', sub: 'كل أسبوع أعلى ناس في النقط والسلاسل بيتعرضوا قدام الكل — اسمك ممكن يبقى هناك', badge: 'مين أبطال الأسبوع؟' },
+  { file: '31-how-to-start', kind: 'qa', bg: G.ink, title: 'ابدأ رحلتك في ٣ دقايق 🚀', rows: [
+    '1️⃣ افتح pulse.geddo.online — مفيش تحميل',
+    '2️⃣ اعمل حساب مجاني (نص دقيقة)',
+    '3️⃣ جاوب ٩ أسئلة وخد خطتك على قدك',
+    '4️⃣ ابدأ أول تمرين النهارده 💪',
+    '5️⃣ سجّل أكلك بالصوت 🎤 وادخل تحدي PULSE14',
+  ] },
 ];
 
 const html = (c) => `<!doctype html><html><head><meta charset="utf-8">
