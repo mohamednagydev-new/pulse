@@ -12,6 +12,7 @@ export function publicUser(u: {
   role: string;
   isCoach?: boolean;
   coachVerified?: boolean;
+  preferredLang?: string;
 }) {
   return {
     id: u.id,
@@ -22,6 +23,7 @@ export function publicUser(u: {
     role: u.role,
     isCoach: u.isCoach ?? false,
     coachVerified: u.coachVerified ?? false,
+    preferredLang: u.preferredLang ?? 'ar',
   };
 }
 

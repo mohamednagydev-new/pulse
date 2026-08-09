@@ -40,6 +40,8 @@ authRouter.post('/register', async (req, res) => {
     data: {
       email,
       passwordHash: await hashPassword(password),
+      // The UI language the device signed up in — pushes and reminders follow it.
+      preferredLang: req.headers['x-lang'] === 'en' ? 'en' : 'ar',
       ...rest,
       ...(referrer ? { referredById: referrer.id, streakFreezes: 2 } : {}), // invited users start with an extra freeze
     },

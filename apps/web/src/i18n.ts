@@ -2,7 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
 import ar from './locales/ar.json';
-import { setApiLang } from './lib/api';
+import { api, setApiLang, getAccessToken } from './lib/api';
 
 // Arabic-first: the audience is Egyptian — a new device opens in Arabic and
 // the toggle switches to English for those who prefer it.
@@ -26,8 +26,14 @@ export function changeLanguage(lang: string) {
   setApiLang(lang);
   i18n.changeLanguage(lang);
   applyDir(lang);
-  // Reload so all cached content re-fetches in the new locale.
-  window.location.reload();
+  // Persist to the account first — pushes and reminders are sent in this
+  // language — then reload so all cached content re-fetches in the new locale.
+  const reload = () => window.location.reload();
+  if (getAccessToken()) {
+    api.patch('/api/me', { preferredLang: lang }).catch(() => {}).then(reload, reload);
+  } else {
+    reload();
+  }
 }
 
 // Apply direction on first load.

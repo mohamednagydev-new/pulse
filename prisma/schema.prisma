@@ -25,7 +25,7 @@ model User {
   role          String   @default("USER") // USER | ADMIN
   provider      String?
   providerId    String?
-  preferredLang String   @default("en") // en | ar
+  preferredLang String   @default("ar") // en | ar — the app is Arabic-first; the client syncs the real choice on login
   createdAt     DateTime @default(now())
 
   // Fitness profile (for AI personalization)

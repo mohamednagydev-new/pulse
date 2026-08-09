@@ -35,6 +35,16 @@ interface AuthState {
   refreshUser: () => Promise<void>;
 }
 
+/** The account's preferredLang drives push/reminder language server-side. Older
+ *  accounts predate the sync (everyone was "en"), so heal any drift from the
+ *  device's actual UI language on every app open. Fire-and-forget. */
+function syncLangToAccount(user: { preferredLang?: string } | null) {
+  const lang = localStorage.getItem('fitit_lang') || 'ar';
+  if (user?.preferredLang && user.preferredLang !== lang) {
+    api.patch('/api/me', { preferredLang: lang }).catch(() => {});
+  }
+}
+
 export const useAuth = create<AuthState>((set) => ({
   user: null,
   status: 'idle',
@@ -46,6 +56,7 @@ export const useAuth = create<AuthState>((set) => ({
       try {
         const user = await api.get('/api/me');
         set({ user, status: 'authed' });
+        syncLangToAccount(user);
         refreshSocketAuth(); // the socket may have tried (and failed) before the token existed
         return;
       } catch {
@@ -59,6 +70,7 @@ export const useAuth = create<AuthState>((set) => ({
     const { accessToken, user } = await api.post('/api/auth/login', { email, password, remember });
     setAccessToken(accessToken);
     set({ user, status: 'authed' });
+    syncLangToAccount(user);
     refreshSocketAuth();
   },
 

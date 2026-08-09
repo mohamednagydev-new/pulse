@@ -56,6 +56,9 @@ meRouter.patch('/', async (req: AuthedRequest, res) => {
     /** ISO-3166 alpha-2. Scopes gyms, deals, store and events — never the training
      *  library, which is the same wherever you are. */
     country: z.string().regex(/^[A-Za-z]{2}$/).transform((c) => c.toUpperCase()).optional(),
+    // Pushes, reminders and gamification copy follow this — synced by the client
+    // whenever the UI language toggles or drifts from the account.
+    preferredLang: z.enum(['en', 'ar']).optional(),
   });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
