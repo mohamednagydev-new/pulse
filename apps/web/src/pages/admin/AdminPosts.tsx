@@ -41,6 +41,8 @@ export default function AdminPosts() {
         </p>
       )}
 
+      <BroadcastCard />
+
       <div className="flex items-center justify-between px-4 pt-4">
         <p className="flex items-center gap-1.5 text-sm font-bold text-gray-500">
           <Sparkles size={15} className="text-brand-pink" />
@@ -64,6 +66,72 @@ export default function AdminPosts() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Push + in-app notification to all users (or a segment), straight from admin.
+ *  Two-tap send; per-user language pick when both AR and EN are filled. */
+function BroadcastCard() {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [titleAr, setTitleAr] = useState('');
+  const [bodyAr, setBodyAr] = useState('');
+  const [url, setUrl] = useState('');
+  const [audience, setAudience] = useState<'all' | 'active7' | 'lapsed7'>('all');
+  const [arm, setArm] = useState(false);
+  const [sent, setSent] = useState<string | null>(null);
+
+  const send = useMutation({
+    mutationFn: () =>
+      api.post('/api/admin/broadcast', {
+        title: title.trim(),
+        body: body.trim(),
+        ...(titleAr.trim() ? { titleAr: titleAr.trim() } : {}),
+        ...(bodyAr.trim() ? { bodyAr: bodyAr.trim() } : {}),
+        ...(url.trim() ? { url: url.trim() } : {}),
+        audience,
+      }),
+    onSuccess: (r: any) => {
+      setSent(`Sent to ${r.queued} user(s) ✓`);
+      setArm(false);
+      setTitle(''); setBody(''); setTitleAr(''); setBodyAr(''); setUrl('');
+      toast(`Broadcast queued for ${r.queued} user(s)`, 'success');
+    },
+    onError: (e: any) => { setArm(false); toast(e?.message ?? 'Broadcast failed', 'error'); },
+  });
+
+  const FIELD = 'w-full rounded-xl bg-gray-50 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-pink/40';
+  const ready = title.trim().length >= 2 && body.trim().length >= 2;
+
+  return (
+    <div className="mx-4 mt-4 rounded-2xl bg-white p-4 shadow-sm">
+      <p className="flex items-center gap-1.5 text-sm font-bold text-gray-600">📣 Broadcast to users</p>
+      <p className="mt-0.5 text-xs text-gray-400">Push on subscribed devices + in-app notification for everyone. Fill AR fields too and each user gets their own language.</p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <input className={FIELD} placeholder="Title (EN or single)" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input className={FIELD} dir="rtl" placeholder="العنوان (عربي، اختياري)" value={titleAr} onChange={(e) => setTitleAr(e.target.value)} />
+        <textarea className={`${FIELD} min-h-20 resize-y`} placeholder="Message" value={body} onChange={(e) => setBody(e.target.value)} />
+        <textarea className={`${FIELD} min-h-20 resize-y`} dir="rtl" placeholder="الرسالة (عربي، اختياري)" value={bodyAr} onChange={(e) => setBodyAr(e.target.value)} />
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <input className={`${FIELD} min-w-0 flex-1`} dir="ltr" placeholder="/challenge/abc or /  (where a tap lands)" value={url} onChange={(e) => setUrl(e.target.value)} />
+        <select value={audience} onChange={(e) => setAudience(e.target.value as any)} className="shrink-0 rounded-xl bg-gray-50 px-3 py-2.5 text-sm outline-none">
+          <option value="all">All users</option>
+          <option value="active7">Active last 7d</option>
+          <option value="lapsed7">Lapsed 7d+</option>
+        </select>
+      </div>
+      <button
+        onClick={() => (arm ? send.mutate() : setArm(true))}
+        disabled={!ready || send.isPending}
+        className={`mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full text-sm font-extrabold transition disabled:opacity-50 ${
+          arm ? 'bg-red-500 text-white' : 'btn-pill btn-primary'
+        }`}
+      >
+        <Send size={15} /> {send.isPending ? 'Sending…' : arm ? `Tap again to notify ${audience === 'all' ? 'ALL users' : audience}` : 'Send broadcast'}
+      </button>
+      {sent && <p className="mt-2 text-center text-xs font-semibold text-emerald-600">{sent}</p>}
     </div>
   );
 }

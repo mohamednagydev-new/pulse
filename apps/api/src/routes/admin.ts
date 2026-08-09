@@ -10,6 +10,8 @@ import { requireAuth, requireAdmin } from '../middleware/auth';
 import { processVideo } from '../lib/video';
 import { buildTranslationPatch } from '../lib/translate';
 import { aiEnabled, chatComplete } from '../lib/openai';
+import { notifyUser } from './push';
+import { daysAgoStr } from '../lib/time';
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireAdmin);
@@ -613,6 +615,44 @@ adminRouter.get('/analytics', async (_req, res) => {
 adminRouter.delete('/analytics/client-errors', async (_req, res) => {
   const r = await prisma.event.deleteMany({ where: { name: 'client-error' } });
   res.json({ ok: true, deleted: r.count });
+});
+
+// ---- Broadcast notifications ----
+// Admin-composed message to every user (or a segment): lands as a web push on
+// subscribed devices AND as an in-app notification for everyone else, with
+// per-user language pick when both AR/EN are provided.
+adminRouter.post('/broadcast', async (req, res) => {
+  const parsed = z
+    .object({
+      title: z.string().trim().min(2).max(80),
+      body: z.string().trim().min(2).max(300),
+      titleAr: z.string().trim().max(80).optional(),
+      bodyAr: z.string().trim().max(300).optional(),
+      url: z.string().trim().max(200).optional(),
+      audience: z.enum(['all', 'active7', 'lapsed7']).default('all'),
+    })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Write a title and a message' });
+  const { title, body, titleAr, bodyAr, url, audience } = parsed.data;
+
+  const weekAgo = daysAgoStr(7);
+  const where =
+    audience === 'active7'
+      ? { lastActiveOn: { gte: weekAgo } }
+      : audience === 'lapsed7'
+        ? { OR: [{ lastActiveOn: { lt: weekAgo } }, { lastActiveOn: null }] }
+        : {};
+  const users = await prisma.user.findMany({ where, select: { id: true } });
+
+  // Deliver in the background — a big audience must not time the request out.
+  void (async () => {
+    for (const u of users) {
+      await notifyUser(u.id, { title, body, titleAr, bodyAr, url: url || '/', type: 'general' }).catch(() => {});
+    }
+    console.log(`[broadcast] delivered to ${users.length} user(s) (${audience})`);
+  })();
+
+  res.json({ ok: true, queued: users.length, audience });
 });
 
 // ---- Facebook post studio ----
