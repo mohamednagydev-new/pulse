@@ -529,6 +529,11 @@ textarea:focus-visible {
 .dark .glass-nav {
   background: rgba(16, 15, 20, 0.72);
 }
+/* Empty water glasses: gray-200 maps to a near-invisible dark border — the
+   outline must stay clearly visible so "how many left" reads at a glance. */
+.dark .water-glass-empty {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
 
 /* Pastel tint chips/tiles (bg-*-50/100 + text-*-600) — these stayed light-pastel
    on dark cards before. Translucent brand-hue washes read correctly on #1b1a21

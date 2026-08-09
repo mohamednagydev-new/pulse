@@ -114,7 +114,7 @@ export default function WaterCard() {
                       ? reached
                         ? 'border-sky-500 bg-sky-500'
                         : 'border-orange-500 bg-orange-500'
-                      : 'border-gray-200 bg-transparent'
+                      : 'water-glass-empty border-gray-200 bg-transparent'
                   }`}
                 />
               </motion.button>
