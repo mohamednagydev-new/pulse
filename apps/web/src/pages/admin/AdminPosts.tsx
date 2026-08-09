@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, RefreshCw, Send, CalendarClock, ImagePlus, Sparkles } from 'lucide-react';
-import { api } from '../../lib/api';
+import { api, getAccessToken } from '../../lib/api';
 import { Loader, MediaImage } from '../../components/ui';
 import { toast } from '../../lib/toast';
 
@@ -73,7 +73,32 @@ function PostCardEditor({ suggestion, canPost }: { suggestion: Suggestion; canPo
   const [imagePath, setImagePath] = useState('');
   const [scheduleAt, setScheduleAt] = useState('');
   const [posted, setPosted] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   useEffect(() => setCaption(suggestion.caption), [suggestion.caption]);
+
+  const uploadImage = async (f: File) => {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', f);
+      const res = await fetch('/api/admin/upload/image', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getAccessToken()}` },
+        credentials: 'include',
+        body: fd,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.path) throw new Error(json.error || 'Upload failed');
+      setImagePath(json.path);
+      toast('Image attached', 'success');
+    } catch (e: any) {
+      toast(e?.message || 'Upload failed', 'error');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
 
   const post = useMutation({
     mutationFn: () =>
@@ -100,15 +125,28 @@ function PostCardEditor({ suggestion, canPost }: { suggestion: Suggestion; canPo
       />
 
       <div className="mt-2 flex items-center gap-2">
-        <ImagePlus size={15} className="shrink-0 text-gray-400" />
         <input
           dir="ltr"
           value={imagePath}
           onChange={(e) => setImagePath(e.target.value)}
-          placeholder="images/xxxx.jpg — optional, from Admin → Upload"
+          placeholder="Attach an image (optional) — pick or paste a path"
           className="min-w-0 flex-1 rounded-xl bg-gray-50 px-3 py-2 font-mono text-xs outline-none"
         />
-        <Link to="/admin/upload" className="shrink-0 text-xs font-semibold text-brand-blue underline">Upload</Link>
+        {/* Inline upload — no round-trip through the Upload screen. */}
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="flex shrink-0 items-center gap-1.5 rounded-full bg-gray-100 px-3.5 py-2 text-xs font-bold text-gray-600 disabled:opacity-50"
+        >
+          <ImagePlus size={14} /> {uploading ? 'Uploading…' : 'Pick image'}
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])}
+        />
       </div>
       {imagePath.trim() && <MediaImage path={imagePath.trim()} className="mt-2 h-32 w-full rounded-xl" />}
 

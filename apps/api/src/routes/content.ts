@@ -221,6 +221,11 @@ contentRouter.get('/recipes/:id', async (req, res) => {
     ingredients: parseArray(recipe.ingredients),
     steps: parseArray(recipe.steps),
     tags: parseArray(recipe.tags),
+    // The Ar columns MUST be parsed too: the global localizeResponse overlays
+    // them onto the base fields for Arabic clients, and an unparsed JSON string
+    // replacing a parsed array crashed every translated recipe page in Arabic.
+    ingredientsAr: recipe.ingredientsAr ? parseArray(recipe.ingredientsAr) : null,
+    stepsAr: recipe.stepsAr ? parseArray(recipe.stepsAr) : null,
   });
 });
 

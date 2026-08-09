@@ -635,11 +635,19 @@ adminRouter.get('/fb/status', async (_req, res) => {
 adminRouter.get('/fb/suggestions', async (_req, res) => {
   // Fresh content picks make every day's suggestions different even without AI.
   const dayN = Math.floor(Date.now() / 86_400_000);
-  const [recipes, articles, challenge] = await Promise.all([
+  const [recipesAll, articlesAll, challenge] = await Promise.all([
     prisma.recipe.findMany({ select: { title: true, titleAr: true, calories: true }, take: 200 }),
-    prisma.article.findMany({ select: { title: true, titleAr: true }, take: 200 }),
+    prisma.article.findMany({ select: { title: true, titleAr: true }, take: 300 }),
     prisma.challenge.findFirst({ where: { kind: 'global', endsOn: { gte: new Date().toISOString().slice(0, 10) } }, orderBy: { startsOn: 'desc' } }),
   ]);
+  // Seasonal content stays out of the daily rotation off-season: the Ramadan
+  // pack is big, so unfiltered day-math kept landing on it months early.
+  const seasonal = /ramadan|رمضان|صيام|عيد/i;
+  const inSeason = [1, 2].includes(new Date().getMonth()); // Feb–Mar 2027 window
+  const notSeasonal = (x: { title: string | null; titleAr?: string | null }) =>
+    inSeason || !(seasonal.test(x.title ?? '') || seasonal.test(x.titleAr ?? ''));
+  const recipes = recipesAll.filter(notSeasonal);
+  const articles = articlesAll.filter(notSeasonal);
   const recipe = recipes.length ? recipes[dayN % recipes.length] : null;
   const article = articles.length ? articles[(dayN * 7) % articles.length] : null;
 
@@ -650,7 +658,7 @@ adminRouter.get('/fb/suggestions', async (_req, res) => {
           {
             role: 'system',
             content:
-              'You write Facebook posts for PULSE (pulse.geddo.online), a 100% free Egyptian fitness app. Write in spoken Egyptian Arabic (عامية مصرية), 2-4 short lines each, warm and funny where fitting, with emoji and 2-3 Arabic hashtags plus #PULSE #نبض. Every post mentions the app is free (rotate: مجاني ١٠٠٪ / من غير اشتراكات / ببلاش). NEVER use these phrases: «خطة مخصصة», «مدعوم بالذكاء الاصطناعي», «حقق أهدافك», «كل حاجة في مكان واحد». Return STRICT JSON: {"posts":[{"label":"...","caption":"..."},...]} with exactly 3 posts: one engagement question, one feature/tip, one about today\'s content.',
+              'You write Facebook posts for PULSE (pulse.geddo.online), a 100% free Egyptian fitness app. Write in spoken Egyptian Arabic (عامية مصرية), 2-4 short lines each, warm and funny where fitting, with emoji and 2-3 Arabic hashtags plus #PULSE #نبض. Every post mentions the app is free (rotate: مجاني ١٠٠٪ / من غير اشتراكات / ببلاش). NEVER use these phrases: «خطة مخصصة», «مدعوم بالذكاء الاصطناعي», «حقق أهدافك», «كل حاجة في مكان واحد». NEVER write seasonal content (Ramadan/رمضان, Eid/عيد, صيام) unless the provided content explicitly is seasonal AND the season is near. Vary the angle day to day — questions, myths, dares, features, humor. Return STRICT JSON: {"posts":[{"label":"...","caption":"..."},...]} with exactly 3 posts: one engagement question, one feature/tip, one about today\'s content.',
           },
           {
             role: 'user',

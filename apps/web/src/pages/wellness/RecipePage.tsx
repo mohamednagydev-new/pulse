@@ -63,7 +63,7 @@ export default function RecipePage() {
     recipe.difficulty && { icon: ChefHat, value: recipe.difficulty, label: 'level' },
   ].filter(Boolean) as { icon: any; value: string | number; label: string }[];
 
-  const ingredients: string[] = recipe.ingredients ?? [];
+  const ingredients: string[] = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
   const steps: string[] = Array.isArray(recipe.steps) ? recipe.steps : [];
 
   return (
