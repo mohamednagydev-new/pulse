@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { trackAd, pickAd } from '../lib/ads';
-import { Search, ChevronRight, Play, Clapperboard, X, Bell, Flame, HeartHandshake, ScanLine, Users } from 'lucide-react';
+import { Search, ChevronRight, Play, Clapperboard, X, Bell, Flame, HeartHandshake, ScanLine, Users, HelpCircle } from 'lucide-react';
 import { api } from '../lib/api';
 import { Loader, ErrorMsg, MediaImage, HScroll, formatDuration } from '../components/ui';
 import TodayStrip from '../components/TodayStrip';
+import GettingStarted from '../components/GettingStarted';
 import ComebackCard from '../components/ComebackCard';
 import DailyReset from '../components/DailyReset';
 import DailyQuests from '../components/DailyQuests';
@@ -59,6 +60,10 @@ export default function Home() {
           <MenuDrawer />
           <span className="text-2xl font-extrabold italic tracking-tight">PULSE</span>
           <div className="flex items-center gap-4">
+            {/* The guide, visible from day one — "what is all this?" has a home. */}
+            <button onClick={() => navigate('/help')} aria-label={t('nav.help', { defaultValue: 'Help' })}>
+              <HelpCircle size={23} />
+            </button>
             <NotifBell />
             <button onClick={() => navigate('/search')} aria-label={t('common.search')}><Search size={24} /></button>
           </div>
@@ -71,6 +76,10 @@ export default function Home() {
       <ComebackCard />
 
       <TodayStrip />
+
+      {/* First-session orientation — users said they log in and don't know
+          what's here or where to start. Gone once the four steps are done. */}
+      <GettingStarted />
 
       {/* WeekZeroEntryCard and the "Start training" slab are gone: Week Zero
           lives as a chip inside the Today strip, and Start/Muscle Map are both

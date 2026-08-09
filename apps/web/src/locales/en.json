@@ -34,6 +34,15 @@
   "ads": {
     "sponsored": "Sponsored"
   },
+  "gs": {
+    "title": "Start right 🚀",
+    "sub": "Four steps and the app makes sense",
+    "plan": "Build your plan (9 quick questions)",
+    "workout": "Finish your first workout",
+    "challenge": "Join a challenge",
+    "buddy": "Add a training buddy",
+    "whatIsThis": "What is all this? The 2-minute guide"
+  },
   "guest": {
     "bar": "You're browsing as a guest — join free to train, track and compete",
     "cta": "Join free"
