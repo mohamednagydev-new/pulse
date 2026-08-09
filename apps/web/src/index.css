@@ -444,6 +444,17 @@ textarea:focus-visible {
 .dark body {
   background: radial-gradient(120% 85% at 12% 0%, #241a12 0%, #131118 45%, #08070a 100%);
 }
+/* The auth screens' photo-glass language, app-wide in dark: a whisper of the
+   coaching photo behind everything (fixed, 6% — texture, not wallpaper). */
+.dark body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: url('/landing/scene-coach.jpg') center / cover no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+}
 .dark .app-frame {
   background:
     radial-gradient(26% 20% at 94% 3%, rgba(249, 115, 22, 0.14), transparent 60%),
@@ -451,18 +462,22 @@ textarea:focus-visible {
     radial-gradient(30% 24% at 88% 97%, rgba(16, 163, 74, 0.1), transparent 60%),
     linear-gradient(180deg, #141218 0%, #0d0c11 100%);
 }
+/* Cards become GLASS: translucent over the ambient gradient + photo texture,
+   with a hairline light border — the login-card look on every surface, without
+   backdrop-blur cost on low-end phones. */
 .dark .bg-white,
 .dark .bg-white\/95,
 .dark .bg-white\/90,
 .dark .bg-white\/80,
 .dark .bg-white\/70,
 .dark .bg-white\/60 {
-  background-color: #1b1a21 !important;
+  background-color: rgba(255, 255, 255, 0.065) !important;
   color: #ececf0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 .dark .bg-gray-50,
 .dark .bg-gray-100 {
-  background-color: #17161c !important;
+  background-color: rgba(255, 255, 255, 0.045) !important;
 }
 .dark .bg-gray-900,
 .dark .bg-ink {
@@ -478,18 +493,21 @@ textarea:focus-visible {
 .dark .border-gray-200 { border-color: #2b2a33 !important; }
 .dark .border-gray-100 { border-color: #232229 !important; }
 .dark .input-field {
-  background-color: #1b1a21;
-  border-color: #2b2a33;
+  background-color: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
   color: #ececf0;
 }
 .dark .card,
 .dark .shadow-sm,
 .dark .elevate {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 8px 20px rgba(0, 0, 0, 0.35);
 }
 .dark .btn-ghost {
-  background-color: #1b1a21;
-  border-color: #2b2a33;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
   color: #ececf0;
 }
 .dark .glass {
