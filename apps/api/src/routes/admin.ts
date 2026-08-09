@@ -651,6 +651,50 @@ adminRouter.get('/fb/suggestions', async (_req, res) => {
   const recipe = recipes.length ? recipes[dayN % recipes.length] : null;
   const article = articles.length ? articles[(dayN * 7) % articles.length] : null;
 
+  // ---- Three fixed roles per day: feature-sell / long knowledge / join CTA ----
+  const FEATURES_POOL = [
+    'تسجيل الأكل بالصوت 🎤 — بتقول أكلت إيه، والسعرات بتتحسب لوحدها. كشري، فول، طعمية — بأرقامها الحقيقية.',
+    'خريطة العضلات 🎯 — بتدوس على العضلة اللي عايز تمرنها، بياخدك على جلسة كاملة بالفيديو خطوة بخطوة.',
+    'حصص لايف جماعية 🔴 — السبت ٧م جسم كامل، الثلاثاء ٨م حرق، الخميس ٨م يوجا. بتايمر مشترك، كأنكم جنب بعض.',
+    'الدوري الأسبوعي 🏅 — بتجمع نقط من تمارينك وبتنافس ٢٠ واحد زيك. أول ٥ بيصعدوا كل سبت.',
+    'تحدي ١ ضد ١ ⚔️ — بتتحدى صاحبك على أسبوع تمارين، واللي يكسب ياخد نقط التاني. الخسارة بتوجع 😄',
+    'خطة الوجبات 🥗 — مش بس بتقولك تاكل إيه، بتقولك ليه. ومعاها قايمة مشتريات جاهزة.',
+    'سلسلة الأيام 🔥 — كل يوم بتتمرن فيه السلسلة بتكبر، والتطبيق بيحارب معاك عشان متقطعش. فيه حتى تجميدة لو ظرف حصل.',
+    'أرقامك القياسية 🏆 — سجّل أوزانك، ولما تكسر رقمك القديم التطبيق بيحتفل بيك احتفال حقيقي.',
+    'الأسبوع صفر 🌱 — لو عمرك ما اتمرنت: ٧ أيام هادية جداً بتدخلك عالم التمرين من غير ما تكره حياتك.',
+    'ريلز تمارين 🎬 — مقاطع قصيرة جوه التطبيق، تتحمس بيها وتتعلم منها حركات جديدة.',
+    'مقالات بالعربي 📖 — ١٢٠+ مقال عن النوم والضغط والسكر والمفاصل، مكتوبين ببساطة ومن غير كلام كبير.',
+    'شات ورسائل صوتية 🎙 — إنت وأصحابك جوه التطبيق: شجعوا بعض، اتريقوا على بعض، والمهم كمّلوا.',
+  ];
+
+  const KNOWLEDGE_POOL = [
+    'حقيقة عن البروتين 🥚\n\nجسمك محتاج حوالي ١.٦ جرام بروتين لكل كيلو من وزنك لو بتتمرن — يعني واحد وزنه ٨٠ كيلو محتاج ~١٢٨ جرام في اليوم.\n\nمصادر رخيصة وموجودة في كل بيت مصري:\n• بيضة = ٦ جرام\n• علبة فول = ١٥ جرام\n• صدر فراخ = ٣٠ جرام\n• كوب عدس مطبوخ = ١٨ جرام\n• علبة زبادي = ١٠ جرام\n\nمش لازم مكملات ولا بودرات — لازم بس تعرف بتاكل كام. وده بالظبط اللي التطبيق بيحسبهولك ببلاش.\npulse.geddo.online\n\n#PULSE #نبض #بروتين #تغذية',
+    'ليه مش بتخس مع إنك "بتاكل كويس"؟ 🤔\n\nالسبب رقم واحد: السعرات السايلة.\nكوباية عصير مانجو = ~٢٠٠ سعرة\nلاتيه بالسكر = ~٢٥٠ سعرة\nمشروب غازي = ~١٥٠ سعرة\n\nلو بتشرب الثلاثة دول يومياً، ده ٦٠٠ سعرة زيادة — يعني كيلو دهون كل ١٢ يوم تقريباً، من غير ما تحس إنك أكلت حاجة.\n\nأول خطوة حقيقية للتخسيس: اعرف بتشرب كام قبل ما تفكر تاكل كام.\nسجّل يومك في PULSE وشوف بنفسك — مجاني.\npulse.geddo.online\n\n#PULSE #نبض #تخسيس #سعرات',
+    'قاعدة التقدم التدريجي 📈\n\nالعضلات مش بتكبر من التعب — بتكبر من التحدي المتزايد.\n\nيعني إيه؟ لو بتشيل نفس الوزن بنفس العدات كل أسبوع، جسمك اتعود وخلاص — مفيش سبب يتغير.\n\nالحل بسيط: كل أسبوع زوّد حاجة واحدة صغيرة:\n• عدّة زيادة على نفس الوزن، أو\n• كيلو زيادة على نفس العدات، أو\n• ثانية أبطأ في النزول\n\nعشان كده بنقولك سجّل أوزانك — اللي مش متسجل مش هتعرف تزوّده.\npulse.geddo.online — التسجيل جوه التطبيق ببلاش.\n\n#PULSE #نبض #كمال_اجسام #تمرين',
+    'النوم هو المكمل الغذائي الحقيقي 😴\n\nأقل من ٧ ساعات نوم بشكل مستمر بيعمل الآتي:\n• بيقلل هرمون الشبع وبيزود هرمون الجوع — بتصحى جعان أكتر\n• بيقلل قدرة العضلات على التعافي بعد التمرين\n• بيخلي جسمك يخزن دهون أسهل\n\nيعني ممكن تكون بتتمرن صح وبتاكل صح، والنوم هو اللي مضيّع مجهودك.\n\nجرب أسبوع واحد: نام ٧-٨ ساعات وشوف الفرق في طاقتك وتمرينك.\n\n#PULSE #نبض #نوم #صحة',
+    'المشي مُقدَّر بأقل من حقه 🚶\n\n٣٠ دقيقة مشي يومياً:\n• بتحرق ~١٥٠ سعرة\n• بتحسن المزاج والتركيز\n• بتقلل خطر أمراض القلب والسكر\n• ومش محتاجة جيم ولا معدات ولا فلوس\n\nلو التمرين تقيل عليك دلوقتي، ابدأ بالمشي بس. أهم حاجة في اللياقة مش الشدة — الاستمرارية.\n\nولما تكون جاهز للخطوة الجاية، إحنا موجودين — ببلاش.\npulse.geddo.online\n\n#PULSE #نبض #مشي #لياقة',
+    'يوم الراحة مش يوم كسل 🛋\n\nالعضلة بتكبر وإنت مرتاح، مش وإنت بتتمرن. التمرين بيعمل الجرح، والراحة بتبني.\n\nعلامات إنك محتاج راحة:\n• نايم كويس ولسه تعبان\n• الأوزان اللي كانت سهلة بقت تقيلة\n• عصبية ومزاج وحش من غير سبب\n\nيوم راحة ذكي: مشي خفيف + إطالات + مية كتير + نوم بدري.\nوجوه التطبيق فيه برنامج يوم راحة كامل — إطالة وتنفس ومشي.\n\n#PULSE #نبض #راحة #تعافي',
+    'إزاي تعرف إنك بتتقدم من غير ميزان؟ 📏\n\nالميزان بيكدب: ممكن تخس دهون وتكسب عضل فيثبت الرقم — وإنت فعلياً اتحسنت جداً.\n\nعلامات تقدم حقيقية:\n• الهدوم بقت أوسع\n• بتطلع السلم من غير نهجان\n• الأوزان اللي كانت تقيلة بقت عادية\n• نومك أعمق ومزاجك أحسن\n\nقيس تقدمك بحاجات كتير مش برقم واحد. التطبيق بيسجللك التمارين والأوزان والصور — وبتشوف الرحلة كلها قدامك.\npulse.geddo.online\n\n#PULSE #نبض #تقدم',
+    'الإحماء مش رفاهية ⚡\n\n٥ دقايق إحماء قبل التمرين بتعمل فرق ضخم:\n• بترفع حرارة العضلات فبتقل فرصة الإصابة\n• بتحسن أداءك في التمرين نفسه\n• بتجهز مفاصلك للأحمال\n\nإحماء بسيط: دقيقتين مشي سريع أو حبل + دورانات مفاصل + عدات خفيفة من نفس تمرينك الأول.\n\nكل جلسة في PULSE فيها الفيديو بيوريك الحركة الصح من الأول — ببلاش.\npulse.geddo.online\n\n#PULSE #نبض #احماء #تمرين',
+  ];
+
+  const JOIN_POOL = [
+    'جرب تفتكر آخر مرة حسيت فيها إنك أقوى من الأسبوع اللي فاته 💪\n\nلو مش فاكر — يبقى ده وقتك.\nتمارين بالفيديو، سعرات بالأكل المصري، وأصحاب بيشدوا بعض.\nمن غير فيزا، من غير اشتراك، من غير أعذار.\n\npulse.geddo.online — ادخل حتى من غير حساب واتفرج بنفسك 👀\n\n#PULSE #نبض #ابدأ_دلوقتي',
+    'التطبيقات التانية: "جرب ٧ أيام مجاناً وبعدين ادفع" 💸\nإحنا: مجاني. خلاص. مفيش وبعدين.\n\nتمارين، تغذية، تحديات، دوري أسبوعي — كله ببلاش لأننا مصريين عارفين إن الاشتراكات دي عائق مش خدمة.\n\npulse.geddo.online\n\n#PULSE #نبض #ببلاش',
+    'محتاج ٣ حاجات بس عشان تبدأ النهارده:\n١. موبايلك 📱\n٢. ٣ دقايق ⏱\n٣. قرار ✅\n\nافتح اللينك، جاوب ٩ أسئلة، وخد خطتك وابدأ أول تمرين — قبل ما القهوة تبرد.\npulse.geddo.online — مجاني ١٠٠٪\n\n#PULSE #نبض #ابدأ_دلوقتي',
+    'لصاحبك اللي بيقول "من بكرة" من ٢٠١٩ 😂\n\nابعتله البوست ده. خليه يدخل يشوف إن التمرين ممكن يكون: في البيت، من غير أجهزة، ومجاني.\nومفيش حجة تانية.\n\npulse.geddo.online\n\n#PULSE #نبض #من_بكرة',
+    'إنت مش محتاج مدرب بـ٢٠٠٠ جنيه في الشهر.\nمحتاج خطة واضحة، فيديو يوريك الحركة الصح، وحد يسأل عليك لو غبت.\n\nالثلاثة موجودين في PULSE — وبلاش.\nجرب بنفسك من غير ما تعمل حساب حتى: pulse.geddo.online\n\n#PULSE #نبض #كوتش',
+  ];
+
+  const seasonalScrub = (p: { label: string; caption: string }, fallback: { label: string; caption: string }) =>
+    seasonal.test(p.caption) ? fallback : p;
+
+  const fallbackTrio = [
+    { label: 'ميزة النهارده', caption: `${FEATURES_POOL[dayN % FEATURES_POOL.length]}\n\nوده واحدة بس من اللي جوه — كله مجاني ١٠٠٪.\npulse.geddo.online\n\n#PULSE #نبض #فتنس` },
+    { label: 'معلومة تفيدك', caption: KNOWLEDGE_POOL[dayN % KNOWLEDGE_POOL.length] },
+    { label: 'انضم لينا', caption: JOIN_POOL[dayN % JOIN_POOL.length] },
+  ];
+
   if (aiEnabled()) {
     try {
       const raw = await chatComplete(
@@ -658,41 +702,27 @@ adminRouter.get('/fb/suggestions', async (_req, res) => {
           {
             role: 'system',
             content:
-              'You write Facebook posts for PULSE (pulse.geddo.online), a 100% free Egyptian fitness app. Write in spoken Egyptian Arabic (عامية مصرية), 2-4 short lines each, warm and funny where fitting, with emoji and 2-3 Arabic hashtags plus #PULSE #نبض. Every post mentions the app is free (rotate: مجاني ١٠٠٪ / من غير اشتراكات / ببلاش). NEVER use these phrases: «خطة مخصصة», «مدعوم بالذكاء الاصطناعي», «حقق أهدافك», «كل حاجة في مكان واحد». NEVER write seasonal content (Ramadan/رمضان, Eid/عيد, صيام) unless the provided content explicitly is seasonal AND the season is near. Vary the angle day to day — questions, myths, dares, features, humor. Return STRICT JSON: {"posts":[{"label":"...","caption":"..."},...]} with exactly 3 posts: one engagement question, one feature/tip, one about today\'s content.',
+              'You write Facebook posts for PULSE (pulse.geddo.online), a 100% free Egyptian fitness app. Spoken Egyptian Arabic (عامية مصرية) only. Return STRICT JSON {"posts":[{"label":"...","caption":"..."},{"label":"...","caption":"..."},{"label":"...","caption":"..."}]} with EXACTLY these three roles in order: (1) label "ميزة النهارده" — sell ONE app feature attractively in 3-5 lines (pick from: voice food logging with Egyptian foods, muscle map with video sessions, live group sessions Sat/Tue/Thu, weekly XP league, 1v1 friend duels, meal plans + grocery list, streaks, PR celebrations, Week Zero for beginners, Arabic articles, reels, chat with voice notes). (2) label "معلومة تفيدك" — a LONG genuinely useful knowledge post (8-14 lines) teaching something concrete about training, nutrition, sleep, or health, with real numbers and Egyptian food examples, ending with a soft mention of the app. (3) label "انضم لينا" — a punchy conversion post that makes people want to join NOW, mentioning it is completely free and that they can browse without an account. Every caption ends with pulse.geddo.online and 2-3 Arabic hashtags + #PULSE #نبض. NEVER use: «خطة مخصصة», «مدعوم بالذكاء الاصطناعي», «حقق أهدافك», «كل حاجة في مكان واحد». ABSOLUTELY NO seasonal content: no Ramadan/رمضان, صيام, عيد, Eid — reject the temptation even if source material mentions it.',
           },
           {
             role: 'user',
-            content: `Today's content to weave in where useful: recipe "${recipe?.titleAr || recipe?.title || '-'}" (${recipe?.calories ?? '?'} kcal), article "${article?.titleAr || article?.title || '-'}", live challenge "${challenge?.titleAr || challenge?.title || '-'}" (code ${challenge?.inviteCode || '-'}). App link: pulse.geddo.online`,
+            content: `Optional non-seasonal seeds you may use: recipe "${recipe?.titleAr || recipe?.title || '-'}" (${recipe?.calories ?? '?'} kcal), article topic "${article?.titleAr || article?.title || '-'}", live challenge "${challenge?.titleAr || challenge?.title || '-'}" (code ${challenge?.inviteCode || '-'}). Day number ${dayN} — vary style from previous days.`,
           },
         ],
         { json: true, temperature: 0.9 },
       );
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed?.posts) && parsed.posts.length) {
-        return res.json({ source: 'ai', posts: parsed.posts.slice(0, 3) });
+      if (Array.isArray(parsed?.posts) && parsed.posts.length >= 3) {
+        // Belt over braces: any seasonal slip in AI output swaps for the curated fallback of the same role.
+        const posts = parsed.posts.slice(0, 3).map((p: any, i: number) => seasonalScrub(p, fallbackTrio[i]));
+        return res.json({ source: 'ai', posts });
       }
     } catch (e: any) {
       console.warn('[fb-suggest] AI failed, using rotation:', e?.message);
     }
   }
 
-  // No AI: rotate hand-written templates with today's content injected.
-  const rTitle = recipe?.titleAr || recipe?.title || 'وصفة صحية';
-  const aTitle = article?.titleAr || article?.title || 'مقال جديد';
-  const cTitle = challenge?.titleAr || challenge?.title;
-  const pool = [
-    { label: 'سؤال تفاعلي', caption: 'سؤال النهارده: إيه أكتر تمرينة بتكرهها بس بتعملها غصب عنك؟ 😅\nاكتبها تحت 👇\n\n#PULSE #نبض #جيم #فتنس' },
-    { label: 'وصفة اليوم', caption: `وصفة النهارده من مطبخ PULSE: ${rTitle} 🍽\n${recipe?.calories ? `تقريباً ${recipe.calories} سعرة للحصة — ` : ''}الطريقة كاملة جوه التطبيق، ومجاني ١٠٠٪.\npulse.geddo.online\n\n#PULSE #نبض #اكل_صحي` },
-    { label: 'مقال اليوم', caption: `قريت النهارده؟ «${aTitle}» 📖\nمقالات صحية بالعربي — من غير اشتراكات ولا كلام كبير.\npulse.geddo.online\n\n#PULSE #نبض #صحة` },
-    { label: 'تسجيل بالصوت', caption: 'قول للموبايل أكلت إيه — بالصوت — وهو يحسب السعرات 🎤\nكشري، فول، طعمية... كله موجود بسعراته الحقيقية. وببلاش.\npulse.geddo.online\n\n#PULSE #نبض #سعرات' },
-    { label: 'تحدي الأصحاب', caption: 'اعمل منشن لصاحبك اللي دايماً بيقول "من بكرة" 😂\nادخلوا اتحدوا بعض ١ ضد ١ جوه PULSE — مجاني.\npulse.geddo.online\n\n#PULSE #نبض #تحدي' },
-    ...(cTitle
-      ? [{ label: 'التحدي الحالي', caption: `تحدي «${cTitle}» شغال دلوقتي 🔥\n${challenge?.inviteCode ? `ادخل بكود ${challenge.inviteCode} — ` : ''}مفيش فلوس، فيه بادج.\npulse.geddo.online\n\n#PULSE #نبض #تحدي` }]
-      : []),
-  ];
-  const posts = [pool[dayN % pool.length], pool[(dayN + 2) % pool.length], pool[(dayN + 4) % pool.length]]
-    .filter((p, i, arr) => arr.findIndex((x) => x.label === p.label) === i);
-  res.json({ source: 'rotation', posts });
+  res.json({ source: 'rotation', posts: fallbackTrio });
 });
 
 adminRouter.post('/fb/post', async (req, res) => {
