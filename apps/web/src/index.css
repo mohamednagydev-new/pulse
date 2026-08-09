@@ -444,16 +444,28 @@ textarea:focus-visible {
 .dark body {
   background: radial-gradient(120% 85% at 12% 0%, #241a12 0%, #131118 45%, #08070a 100%);
 }
-/* The auth screens' photo-glass language, app-wide in dark: a whisper of the
-   coaching photo behind everything (fixed, 6% — texture, not wallpaper). */
-.dark body::before {
+/* The auth screens' photo-glass language, app-wide: a whisper of the coaching
+   photo behind every screen — texture, not wallpaper. Lives INSIDE .app-frame
+   (the frame's gradient would cover a body-level layer), pinned to the
+   viewport so it doesn't stretch with tall pages, clipped to the app width.
+   Whisper-quiet in light, a touch stronger in dark where glass cards float
+   over it. */
+.app-frame::before {
   content: '';
   position: fixed;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
   z-index: -1;
   background: url('/landing/scene-coach.jpg') center / cover no-repeat;
-  opacity: 0.06;
+  opacity: 0.05;
   pointer-events: none;
+}
+.dark .app-frame::before {
+  opacity: 0.09;
 }
 .dark .app-frame {
   background:

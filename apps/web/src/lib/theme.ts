@@ -7,16 +7,12 @@ export function applyTheme(theme: Theme) {
 export function currentTheme(): Theme {
   const stored = localStorage.getItem('pulse_theme') as Theme | null;
   if (stored === 'light' || stored === 'dark') return stored;
-  // No explicit choice yet — follow the device. The toggle still wins once used.
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  // Dark by default — the glass look is the brand. The toggle wins once used.
+  return 'dark';
 }
 
 export function initTheme() {
   applyTheme(currentTheme());
-  // Track OS theme changes live, but only while the user hasn't chosen manually.
-  window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', (e) => {
-    if (!localStorage.getItem('pulse_theme')) applyTheme(e.matches ? 'dark' : 'light');
-  });
 }
 
 export function toggleTheme(): Theme {
