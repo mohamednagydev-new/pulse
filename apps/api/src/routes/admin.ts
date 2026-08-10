@@ -643,16 +643,21 @@ adminRouter.post('/broadcast', async (req, res) => {
         ? { OR: [{ lastActiveOn: { lt: weekAgo } }, { lastActiveOn: null }] }
         : {};
   const users = await prisma.user.findMany({ where, select: { id: true } });
+  // How many of them can actually receive a push banner (≥1 subscribed device) —
+  // shown to the admin so reachability is visible, not guessed.
+  const pushSubscribed = (
+    await prisma.pushSubscription.findMany({ where: { user: where }, select: { userId: true }, distinct: ['userId'] })
+  ).length;
 
   // Deliver in the background — a big audience must not time the request out.
   void (async () => {
     for (const u of users) {
       await notifyUser(u.id, { title, body, titleAr, bodyAr, url: url || '/', type: 'general' }).catch(() => {});
     }
-    console.log(`[broadcast] delivered to ${users.length} user(s) (${audience})`);
+    console.log(`[broadcast] delivered to ${users.length} user(s) (${audience}), ${pushSubscribed} push-subscribed`);
   })();
 
-  res.json({ ok: true, queued: users.length, audience });
+  res.json({ ok: true, queued: users.length, pushSubscribed, audience });
 });
 
 // ---- Facebook post studio ----

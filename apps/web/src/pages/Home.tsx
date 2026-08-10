@@ -10,6 +10,7 @@ import { api } from '../lib/api';
 import { Loader, ErrorMsg, MediaImage, HScroll, formatDuration } from '../components/ui';
 import TodayStrip from '../components/TodayStrip';
 import GettingStarted from '../components/GettingStarted';
+import PushNudge from '../components/PushNudge';
 import ComebackCard from '../components/ComebackCard';
 import DailyReset from '../components/DailyReset';
 import DailyQuests from '../components/DailyQuests';
@@ -87,6 +88,7 @@ export default function Home() {
       {/* First-session orientation — users said they log in and don't know
           what's here or where to start. Gone once the four steps are done. */}
       <GettingStarted />
+      <PushNudge />
 
       {/* WeekZeroEntryCard and the "Start training" slab are gone: Week Zero
           lives as a chip inside the Today strip, and Start/Muscle Map are both

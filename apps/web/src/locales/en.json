@@ -34,6 +34,16 @@
   "ads": {
     "sponsored": "Sponsored"
   },
+  "pushNudge": {
+    "title": "Don't lose your streak 🔔",
+    "body": "Want a nudge on workout days and a ping when a buddy messages you? Turn on notifications — we only send what matters.",
+    "cta": "Turn on notifications",
+    "enabling": "Turning on…",
+    "done": "Done! You'll hear from us at the right moments 💪",
+    "failed": "Couldn't turn on notifications — try again from Settings",
+    "iosTitle": "Get PULSE on your Home Screen 📲",
+    "iosBody": "On iPhone: tap the Share button below, then \"Add to Home Screen\". You get the full app + workout reminders and messages."
+  },
   "gs": {
     "title": "Start right 🚀",
     "sub": "Four steps and the app makes sense",

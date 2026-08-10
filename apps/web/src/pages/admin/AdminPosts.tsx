@@ -111,10 +111,10 @@ function BroadcastCard() {
         audience,
       }),
     onSuccess: (r: any) => {
-      setSent(`Sent to ${r.queued} user(s) ✓`);
+      setSent(`Sent to ${r.queued} user(s) ✓ — ${r.pushSubscribed ?? 0} can get a push banner, the rest see it in the app bell`);
       setArm(false);
       setTitle(''); setBody(''); setTitleAr(''); setBodyAr(''); setUrl('');
-      toast(`Broadcast queued for ${r.queued} user(s)`, 'success');
+      toast(`Queued for ${r.queued} user(s) · ${r.pushSubscribed ?? 0} push-subscribed`, 'success');
     },
     onError: (e: any) => { setArm(false); toast(e?.message ?? 'Broadcast failed', 'error'); },
   });
