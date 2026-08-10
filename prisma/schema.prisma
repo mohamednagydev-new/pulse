@@ -643,6 +643,9 @@ model FeedPost {
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   kind      String         // text | completion | badge | levelup | challenge
   text      String?
+  /** Arabic copy for system-generated posts (completions, level-ups, badges) —
+   *  the client picks text/textAr by UI language. User-written posts leave it null. */
+  textAr    String?
   mediaType String?        // image | video
   mediaUrl  String?        // image path or video id
   refType   String?

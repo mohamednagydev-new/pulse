@@ -2,19 +2,23 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { MessageCircle, Send } from 'lucide-react';
 import { api } from '../lib/api';
 import { useSignedMedia } from '../lib/media';
 import { MediaImage } from './ui';
 import CoachBadge from './CoachBadge';
 
-const EMOJIS = ['💪', '🔥', '❤️'];
+// 👏 first — the cheer. One tap on a buddy's workout sends them a named
+// "X cheered you" notification, which is the loop that brings people back.
+const EMOJIS = ['👏', '💪', '🔥', '❤️'];
 
-const KIND_STYLE: Record<string, string> = {
-  completion: 'text-brand-green',
-  badge: 'text-amber-500',
-  levelup: 'text-brand-pink',
-  challenge: 'text-brand-blue',
+/** System milestones render as celebration banners, not plain text rows. */
+const KIND_BANNER: Record<string, { grad: string; emoji: string }> = {
+  completion: { grad: 'from-emerald-500 to-teal-600', emoji: '💪' },
+  badge: { grad: 'from-amber-400 to-orange-500', emoji: '🏅' },
+  levelup: { grad: 'from-pink-500 to-orange-500', emoji: '🎉' },
+  challenge: { grad: 'from-blue-500 to-indigo-600', emoji: '🏆' },
 };
 
 export function timeAgo(iso: string): string {
@@ -31,7 +35,7 @@ function PostVideo({ id }: { id: string }) {
 }
 
 export default function PostCard({ post, queryKey }: { post: any; queryKey: any[] }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [showComments, setShowComments] = useState(false);
   const [comment, setComment] = useState('');
@@ -64,7 +68,26 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
         </div>
       </div>
 
-      {post.text && <p className={`mt-3 ${KIND_STYLE[post.kind] ?? 'text-ink'} ${post.kind === 'text' ? '' : 'font-semibold'}`}>{post.text}</p>}
+      {(() => {
+        // System posts carry both languages — show the reader's own.
+        const text = i18n.language === 'ar' && post.textAr ? post.textAr : post.text;
+        if (!text) return null;
+        const banner = KIND_BANNER[post.kind];
+        if (!banner) return <p className="mt-3 text-ink">{text}</p>;
+        return (
+          <div className={`mt-3 flex items-center gap-3 rounded-xl bg-gradient-to-r ${banner.grad} p-3 text-white shadow-sm`}>
+            <motion.span
+              initial={{ scale: 0, rotate: -30 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 12 }}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/20 text-2xl"
+            >
+              {banner.emoji}
+            </motion.span>
+            <p className="min-w-0 flex-1 text-sm font-bold leading-snug">{text}</p>
+          </div>
+        );
+      })()}
 
       {post.mediaType === 'image' && (
         <MediaImage path={post.mediaUrl} className="mt-3 max-h-96 w-full rounded-xl object-cover" seed={post.id.length} />

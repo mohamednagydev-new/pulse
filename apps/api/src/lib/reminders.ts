@@ -2,6 +2,7 @@ import { prisma } from './prisma';
 import { env } from '../env';
 import { notifyUser, pushEnabled } from '../routes/push';
 import { ensureCurrentSeason } from './seasons';
+import { ensureWeeklyChallenge, postDailyChallengePrompts } from './weekly';
 import { settleStaleRooms, promotionCliffhangers } from './leagues';
 import { nextCheckDate } from './coach';
 import { dayString, daysAgoStr, localHour, localDow, startOfDayTz } from './time';
@@ -69,6 +70,15 @@ async function runCheck() {
 
   // Monthly season rotation — idempotent, cheap (one indexed query when already created).
   await ensureCurrentSeason().catch((e) => console.warn('[seasons]', e?.message));
+
+  // Weekly challenge rotation (Saturdays, self-healing any day) + last week's podium.
+  await ensureWeeklyChallenge().catch((e) => console.warn('[weekly]', e?.message));
+
+  // Daily 10:00 — a coach conversation-starter in every open official challenge
+  // room, so the shared spaces never read as abandoned.
+  if (hour === 10 && (await claimJob(`chalprompt:${day}`))) {
+    await postDailyChallengePrompts().catch((e) => console.warn('[weekly-prompt]', e?.message));
+  }
 
   // Close out last week's league rooms so podium XP lands even for people who
   // haven't opened the app since.

@@ -137,7 +137,9 @@ export async function checkBadges(userId: string, streak: number, level = 1) {
       continue;
     }
     await awardXp(userId, XP_PER_BADGE);
-    await createFeedPost(userId, 'badge', `Earned the "${badge.title}" badge ${badge.icon ?? '🏅'}`, 'badge', badge.id);
+    await createFeedPost(userId, 'badge', `Earned the "${badge.title}" badge ${badge.icon ?? '🏅'}`, 'badge', badge.id, {
+      textAr: `فتح وسام "${badge.titleAr ?? badge.title}" ${badge.icon ?? '🏅'}`,
+    });
     await prisma.notification.create({
       data: {
         userId,

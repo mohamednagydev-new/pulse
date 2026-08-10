@@ -78,6 +78,23 @@ const BROADCAST_IDEAS = [
   { title: 'The league settles Saturday 🏅', titleAr: 'الدوري بيتحسم السبت 🏅', body: 'Top 5 promote. Every workout this week counts double for your pride.', bodyAr: 'أول ٥ بيصعدوا. كل تمرينة الأسبوع ده بتفرق — فين مركزك دلوقتي؟', url: '/leagues' },
   { title: "Tonight's healthy recipe 😋", titleAr: 'وصفة النهارده 😋', body: 'Quick, Egyptian, with real calorie counts. Dinner is solved.', bodyAr: 'سريعة ومصرية وبسعراتها الحقيقية. العشا اتحل.', url: '/wellness/kitchen' },
   { title: 'Weekend ≠ day off 😄', titleAr: 'الويك اند مش إجازة من جسمك 😄', body: '20 minutes today and you own the weekend instead of it owning you.', bodyAr: '٢٠ دقيقة النهارده وتبقى كسبان الويك اند بدل ما هو كسبك.', url: '/workout' },
+  { title: 'New weekly challenge 🏆', titleAr: 'تحدي الأسبوع نزل 🏆', body: 'The whole app is competing this week. Your name belongs on that podium.', bodyAr: 'كل التطبيق بيلعب الأسبوع ده. اسمك ناقص على البوديوم.', url: '/achievements' },
+  { title: 'Drink up 💧', titleAr: 'اشرب مية 💧', body: 'Two glasses now. Your focus, skin and workout will thank you.', bodyAr: 'كوبايتين دلوقتي حالاً. تركيزك وبشرتك وتمرينك هيشكروك.', url: '/' },
+  { title: '5 minutes. That’s it ⏱️', titleAr: '٥ دقايق بس ⏱️', body: 'Too tired for a full workout? Do 5 minutes. Momentum beats motivation.', bodyAr: 'تعبان؟ اعمل ٥ دقايق بس. البداية أهم من الحماس.', url: '/workout' },
+  { title: 'Your buddy is waiting 👊', titleAr: 'صاحبك مستنيك 👊', body: 'Training with a friend doubles your consistency. Invite one from your profile.', bodyAr: 'التمرين مع صاحب بيخليك تكمّل ضعف المدة. اعزم واحد من البروفايل.', url: '/buddies' },
+  { title: 'Sleep is a workout 😴', titleAr: 'النوم تمرين برضه 😴', body: 'Muscles grow at night. 7+ hours tonight = a stronger session tomorrow.', bodyAr: 'العضلات بتكبر بالليل. نام ٧ ساعات النهارده وبكرة هتحس بالفرق.', url: '/wellness' },
+  { title: 'Protein check 🍗', titleAr: 'كشف البروتين 🍗', body: 'Palm-sized protein at every meal — the one rule that changes everything.', bodyAr: 'بروتين قد كفة إيدك في كل وجبة — القاعدة الواحدة اللي بتغير كل حاجة.', url: '/wellness/kitchen' },
+  { title: 'Progress ≠ the scale 📈', titleAr: 'التقدم مش بس الميزان 📈', body: 'Clothes fitting better? Climbing stairs easier? That counts. Log today and see.', bodyAr: 'الهدوم بقت أوسع؟ السلم بقى أسهل؟ ده تقدم. سجّل النهارده وشوف.', url: '/progress' },
+  { title: 'The comeback starts now 🚀', titleAr: 'الرجعة بتبدأ دلوقتي 🚀', body: 'Missed a few days? Perfect — the best workout of your life is the next one.', bodyAr: 'غبت كام يوم؟ ولا يهمك — أحسن تمرين في حياتك هو الجاي.', url: '/workout' },
+  { title: 'Cheer someone today 👏', titleAr: 'شجّع حد النهارده 👏', body: 'Someone in the community just finished a workout. One tap makes their day.', bodyAr: 'حد في المجتمع لسه مخلص تمرين. دوسة واحدة تعمله يومه.', url: '/community' },
+  { title: 'Rest day done right 😌', titleAr: 'يوم الراحة الصح 😌', body: 'Rest is part of the plan, not a break from it. Stretch 10 minutes and recover.', bodyAr: 'الراحة جزء من الخطة مش هروب منها. اعمل استرتش ١٠ دقايق وارتاح بضمير.', url: '/wellness' },
+  { title: 'Log your lifts 🏋️', titleAr: 'سجّل أوزانك 🏋️', body: "Can't beat a number you never wrote down. Track today's sets and beat them next week.", bodyAr: 'مش هتكسر رقم عمرك ما سجلته. اكتب مجموعات النهارده واكسرها الأسبوع الجاي.', url: '/workout' },
+  { title: 'Morning move ☀️', titleAr: 'حركة الصبح ☀️', body: 'Train before your day starts and nothing can cancel it. Tomorrow, 20 minutes.', bodyAr: 'اتمرن قبل ما يومك يبدأ ومحدش هيقدر يلغيه. بكرة الصبح، ٢٠ دقيقة.', url: '/workout' },
+  { title: 'Your streak is your story 📖', titleAr: 'سلسلتك حكايتك 📖', body: 'Every day you show up writes another page. Don’t leave today blank.', bodyAr: 'كل يوم بتيجي فيه بتكتب صفحة. متسيبش النهارده فاضي.', url: '/' },
+  { title: 'Recipe of the day 🍽️', titleAr: 'أكلة اليوم 🍽️', body: 'Healthy, Egyptian, and actually tasty. Counted calories included.', bodyAr: 'صحية ومصرية وطعمها حلو بجد. وسعراتها محسوبة جاهزة.', url: '/wellness/kitchen' },
+  { title: 'Free reminder: it’s free 🎁', titleAr: 'تذكير: التطبيق ببلاش 🎁', body: 'Programs, recipes, challenges, community — all of it, zero pounds. Tell a friend.', bodyAr: 'برامج ووصفات وتحديات ومجتمع — كله بصفر جنيه. قول لصاحبك.', url: '/' },
+  { title: 'Water before hunger 💡', titleAr: 'مية قبل الجوع 💡', body: 'Feeling snacky? Drink a glass first — half the time it was thirst.', bodyAr: 'حاسس إنك عايز تقرمش؟ اشرب كوباية الأول — نص المرات بيكون عطش.', url: '/' },
+  { title: 'Level up night 🎮', titleAr: 'ليلة الليفل أب 🎮', body: 'You’re closer to the next level than you think. One workout might do it.', bodyAr: 'انت أقرب للمستوى الجاي مما متخيل. ممكن تمرينة واحدة تكفي.', url: '/profile' },
 ];
 
 /** Push + in-app notification to all users (or a segment), straight from admin.
@@ -93,8 +110,12 @@ function BroadcastCard() {
   const [sent, setSent] = useState<string | null>(null);
   const [ideaIdx, setIdeaIdx] = useState(0);
 
+  // Shuffled once per mount so ✨ doesn't replay the same order every session.
+  const [order] = useState(() =>
+    BROADCAST_IDEAS.map((_, i) => i).sort(() => Math.random() - 0.5),
+  );
   const suggest = () => {
-    const s = BROADCAST_IDEAS[ideaIdx % BROADCAST_IDEAS.length];
+    const s = BROADCAST_IDEAS[order[ideaIdx % BROADCAST_IDEAS.length]];
     setTitle(s.title); setTitleAr(s.titleAr); setBody(s.body); setBodyAr(s.bodyAr); setUrl(s.url);
     setIdeaIdx((i) => i + 1);
     setSent(null);

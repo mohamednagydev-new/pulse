@@ -154,7 +154,9 @@ export async function importActivity(userId: string, a: StravaActivity): Promise
     await bumpChallenges(userId, 'workout').catch(() => {});
     const km = a.distance ? ` · ${(a.distance / 1000).toFixed(1)}km` : '';
     const mins = Math.round(durationSec / 60);
-    await createFeedPost(userId, 'completion', `⌚ ${a.sport_type ?? a.type ?? 'Workout'} — ${mins} min${km}`).catch(() => {});
+    await createFeedPost(userId, 'completion', `⌚ ${a.sport_type ?? a.type ?? 'Workout'} — ${mins} min${km}`, undefined, undefined, {
+      textAr: `⌚ ${a.sport_type ?? a.type ?? 'نشاط'} — ${mins} دقيقة${km}`,
+    }).catch(() => {});
   }
   return true;
 }

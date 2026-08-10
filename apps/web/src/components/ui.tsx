@@ -114,8 +114,15 @@ export function MediaImage({
   label?: string;
 }) {
   if (path) {
-    const src = path.startsWith('http') || path.startsWith('/media') ? path : `/media/image/${path.replace(/^images\//, '')}`;
+    const src = path.startsWith('http') || path.startsWith('/') ? path : `/media/image/${path.replace(/^images\//, '')}`;
     return <img src={src} alt={label ?? ''} className={`object-cover ${className}`} loading="lazy" />;
+  }
+  // Round images are people: no photo → a deterministic fitness avatar (stable
+  // per name), so nobody in the feed or Hall of Fame is a blank initial.
+  if (className.includes('rounded-full')) {
+    let h = 0;
+    for (const ch of label ?? '') h = (h * 31 + ch.charCodeAt(0)) % 997;
+    return <img src={`/avatars/a${(h % 12) + 1}.svg`} alt={label ?? ''} className={`object-cover ${className}`} loading="lazy" />;
   }
   // No uploaded image → auto-generated, topic-themed animated cover art (no uploads needed).
   return <CoverArt label={label} className={className} />;

@@ -39,10 +39,10 @@ export async function createFeedPost(
   text?: string,
   refType?: string,
   refId?: string,
-  media?: { mediaType?: string; mediaUrl?: string },
+  media?: { mediaType?: string; mediaUrl?: string; textAr?: string },
 ) {
   const post = await prisma.feedPost.create({
-    data: { userId, kind, text, refType, refId, mediaType: media?.mediaType, mediaUrl: media?.mediaUrl },
+    data: { userId, kind, text, textAr: media?.textAr, refType, refId, mediaType: media?.mediaType, mediaUrl: media?.mediaUrl },
     include: { user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true } } },
   });
   await emitFeed(userId, 'feed:new', post);
@@ -65,7 +65,9 @@ export async function awardXp(userId: string, amount: number, reason?: string) {
   await prisma.xpEvent.create({ data: { userId, amount, reason } });
   if (newLevel > prevLevel) {
     emitToUser(userId, 'levelup', { level: newLevel });
-    await createFeedPost(userId, 'levelup', `Reached level ${newLevel}! 🎉`);
+    await createFeedPost(userId, 'levelup', `Reached level ${newLevel}! 🎉`, undefined, undefined, {
+      textAr: `وصل للمستوى ${newLevel}! 🎉`,
+    });
     notifyUser(userId, { title: 'Level up! 🎉', titleAr: 'مستوى جديد! 🎉', body: `You reached level ${newLevel}`, bodyAr: `وصلت للمستوى ${newLevel}`, url: '/profile' });
   }
 }
@@ -127,7 +129,9 @@ export async function bumpChallenges(userId: string, trigger: 'workout' | 'calor
     });
     if (!justFinished) continue;
 
-    await createFeedPost(userId, 'challenge', `Completed the "${p.challenge.title}" challenge! 🏆`, 'challenge', p.challengeId);
+    await createFeedPost(userId, 'challenge', `Completed the "${p.challenge.title}" challenge! 🏆`, 'challenge', p.challengeId, {
+      textAr: `خلّص تحدي "${p.challenge.titleAr ?? p.challenge.title}"! 🏆`,
+    });
     if (p.challenge.rewardXp > 0) await awardXp(userId, p.challenge.rewardXp, 'challenge_complete').catch(() => {});
     if (p.challenge.seasonKey) {
       const { awardSeasonBadge } = await import('./seasons');

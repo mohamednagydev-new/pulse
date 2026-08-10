@@ -47,7 +47,7 @@ meRouter.patch('/', async (req: AuthedRequest, res) => {
     zip: z.string().optional(),
     // Only same-origin media paths or https images — never javascript:/data: URIs,
     // which would be rendered into <img src> for every viewer of the profile.
-    avatarUrl: z.string().max(500).regex(/^(\/media\/|images\/|https:\/\/)/, 'Invalid avatar URL').optional(),
+    avatarUrl: z.string().max(500).regex(/^(\/media\/|\/avatars\/a\d{1,2}\.svg$|images\/|https:\/\/)/, 'Invalid avatar URL').optional(),
     bio: z.string().max(300).optional(),
     gender: z.enum(['male', 'female']).optional(),
     birthYear: z.number().int().min(1930).max(new Date().getFullYear() - 5).optional(),
@@ -231,6 +231,7 @@ meRouter.post('/completions', async (req: AuthedRequest, res) => {
       `Completed "${lesson?.title ?? 'a workout'}"${lesson?.program ? ` — ${lesson.program.title}` : ''} ✅`,
       'lesson',
       parsed.data.lessonId,
+      { textAr: `خلّص "${lesson?.titleAr ?? lesson?.title ?? 'تمرين'}"${lesson?.program ? ` — ${lesson.program.titleAr ?? lesson.program.title}` : ''} ✅` },
     );
   }
   await touchStreak(req.userId!);
@@ -249,7 +250,9 @@ meRouter.post('/workout-done', async (req: AuthedRequest, res) => {
   });
   if (recent) return res.json({ ok: true, throttled: true });
   await awardXp(req.userId!, 60, 'workout-session');
-  await createFeedPost(req.userId!, 'completion', `Crushed a workout${name ? ` — ${name}` : ''} 💪`, 'workout');
+  await createFeedPost(req.userId!, 'completion', `Crushed a workout${name ? ` — ${name}` : ''} 💪`, 'workout', undefined, {
+    textAr: `كسّر تمرين${name ? ` — ${name}` : ''} 💪`,
+  });
   await touchStreak(req.userId!);
   await bumpChallenges(req.userId!);
   res.json({ ok: true });

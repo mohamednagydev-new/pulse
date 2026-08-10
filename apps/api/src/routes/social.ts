@@ -76,6 +76,7 @@ function shapePost(p: any, me: string) {
     id: p.id,
     kind: p.kind,
     text: p.text,
+    textAr: p.textAr,
     mediaType: p.mediaType,
     mediaUrl: p.mediaUrl,
     refType: p.refType,
@@ -206,7 +207,19 @@ socialRouter.post('/posts/:id/react', async (req: AuthedRequest, res) => {
     await prisma.postReaction.create({ data: { postId: req.params.id, userId: req.userId!, emoji } });
     if (post.userId !== req.userId) {
       emitToUser(post.userId, 'notify', { type: 'reaction', emoji });
-      notifyUser(post.userId, { title: 'New reaction', titleAr: 'تفاعل جديد', body: `Someone reacted ${emoji}`, bodyAr: `حد تفاعل ${emoji}`, url: '/community', type: 'reaction' });
+      // Named, not anonymous — "Ahmed cheered you" pulls people back into the
+      // app far harder than "someone reacted". The cheer emoji gets its own copy.
+      const reactor = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } }).catch(() => null);
+      const who = reactor?.firstName || 'Someone';
+      const cheer = emoji === '👏';
+      notifyUser(post.userId, {
+        title: cheer ? `${who} cheered you 👏` : `${who} reacted ${emoji}`,
+        titleAr: cheer ? `${who} شجّعك 👏` : `${who} تفاعل ${emoji}`,
+        body: cheer ? 'Your workout got some love — keep it rolling' : 'On your post in the community',
+        bodyAr: cheer ? 'تمرينك عجب الناس — كمّل بنفس الروح' : 'على منشورك في المجتمع',
+        url: '/community',
+        type: 'reaction',
+      });
     }
   }
   res.json({ ok: true, emoji });

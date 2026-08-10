@@ -222,6 +222,19 @@ export default function Profile() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
+
+  const pickAvatar = async (n: number) => {
+    try {
+      await api.patch('/api/me', { avatarUrl: `/avatars/a${n}.svg` });
+      qc.invalidateQueries({ queryKey: ME_KEY });
+      await refreshUser();
+      setAvatarOpen(false);
+      toast(t('profile.avatarSet'), 'success');
+    } catch {
+      toast(t('profile.photoFailed'), 'error');
+    }
+  };
 
   const onAvatarFile = async (file: File) => {
     setUploading(true);
@@ -277,7 +290,7 @@ export default function Profile() {
             seed={1}
           />
           <button
-            onClick={() => fileRef.current?.click()}
+            onClick={() => setAvatarOpen(true)}
             disabled={uploading}
             aria-label="Change photo"
             className="absolute bottom-0 end-0 flex h-9 w-9 items-center justify-center rounded-full bg-brand-pink text-white shadow-md ring-2 ring-white transition active:scale-90"
@@ -285,6 +298,30 @@ export default function Profile() {
             {uploading ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
           </button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && onAvatarFile(e.target.files[0])} />
+          {/* Photo or fitness avatar — a real choice, not an upload-only door. */}
+          <Sheet open={avatarOpen} onClose={() => setAvatarOpen(false)} label={t('profile.avatarTitle')}>
+            <div className="p-4 pb-6">
+              <h3 className="text-base font-bold">{t('profile.avatarTitle')}</h3>
+              <p className="mt-0.5 text-xs text-gray-400">{t('profile.avatarSub')}</p>
+              <div className="mt-4 grid grid-cols-4 gap-3">
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => pickAvatar(n)}
+                    className={`overflow-hidden rounded-full ring-offset-2 transition active:scale-90 ${user?.avatarUrl === `/avatars/a${n}.svg` ? 'ring-2 ring-brand-pink' : ''}`}
+                  >
+                    <img src={`/avatars/a${n}.svg`} alt="" className="aspect-square w-full" />
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => { setAvatarOpen(false); fileRef.current?.click(); }}
+                className="mt-5 flex min-h-[46px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 font-bold text-white"
+              >
+                <Camera size={16} /> {t('profile.uploadPhoto')}
+              </button>
+            </div>
+          </Sheet>
         </motion.div>
         <motion.p
           initial={{ opacity: 0, y: 8 }}

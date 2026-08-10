@@ -456,7 +456,14 @@ export default function WorkoutSession() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-ink/85 text-white">
+    <div className="relative flex min-h-screen flex-col bg-ink text-white">
+      {/* The auth screens' photo-glass look, full strength: the coach scene with a
+          dark gradient ON TOP of the page bg — the app-frame texture alone is a
+          5–9% whisper and reads as a plain color under bg-ink/85. */}
+      <div className="pointer-events-none fixed inset-0 mx-auto max-w-[480px]" aria-hidden>
+        <img src="/landing/scene-coach.jpg" alt="" className="h-full w-full object-cover opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-ink/80 via-ink/70 to-ink/90" />
+      </div>
       {/* Ambient pulse — breathes only while the music plays */}
       <AmbientGlow active={musicOn} />
 
