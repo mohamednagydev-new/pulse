@@ -491,6 +491,29 @@ textarea:focus-visible {
 .dark .bg-gray-100 {
   background-color: rgba(255, 255, 255, 0.045) !important;
 }
+/* Light gradient washes (from/to *-50 / white card tints) — the solid-bg
+   overrides above don't reach Tailwind's gradient custom properties, so these
+   cards kept a light wash under light text in dark mode (invisible names in
+   Hall of Fame, Workout/Yoga hubs, Progress, Tracker, Buddies). Exact class
+   list on purpose: saturated -500 gradients must stay untouched. */
+.dark .from-white,
+.dark .from-gray-50,
+.dark .from-amber-50,
+.dark .from-amber-50\/80,
+.dark .from-amber-100\/80,
+.dark .from-orange-50,
+.dark .from-orange-50\/70,
+.dark .from-orange-50\/80 {
+  --tw-gradient-from: rgba(255, 255, 255, 0.06) !important;
+}
+.dark .to-white,
+.dark .to-gray-50,
+.dark .to-emerald-50\/50 {
+  --tw-gradient-to: rgba(255, 255, 255, 0.015) !important;
+}
+.dark .via-amber-50 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(255, 255, 255, 0.04), var(--tw-gradient-to) !important;
+}
 .dark .bg-gray-900,
 .dark .bg-ink {
   background-color: #0c0b0f !important;
