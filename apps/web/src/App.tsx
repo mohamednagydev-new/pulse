@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -38,62 +38,86 @@ import WellnessHome from './pages/wellness/WellnessHome';
 import Profile from './pages/Profile';
 import Community from './pages/social/Community';
 
-const WorkoutHub = lazy(() => import('./pages/programs/WorkoutHub'));
-const YogaHub = lazy(() => import('./pages/programs/YogaHub'));
-const Schedule = lazy(() => import('./pages/programs/Schedule'));
-const WorkoutSession = lazy(() => import('./pages/programs/WorkoutSession'));
-const CoachPage = lazy(() => import('./pages/programs/CoachPage'));
-const ProgramPage = lazy(() => import('./pages/programs/ProgramPage'));
-const LessonPage = lazy(() => import('./pages/programs/LessonPage'));
-const ExercisesPage = lazy(() => import('./pages/programs/ExercisesPage'));
-const MuscleGroupPage = lazy(() => import('./pages/programs/MuscleGroupPage'));
-const WellnessSection = lazy(() => import('./pages/wellness/WellnessSection'));
-const CategoryPage = lazy(() => import('./pages/wellness/CategoryPage'));
-const RecipePage = lazy(() => import('./pages/wellness/RecipePage'));
-const ArticlePage = lazy(() => import('./pages/wellness/ArticlePage'));
-const Info = lazy(() => import('./pages/Info'));
-const SearchPage = lazy(() => import('./pages/SearchPage'));
-const Bookmarks = lazy(() => import('./pages/Bookmarks'));
-const ProgramsDone = lazy(() => import('./pages/ProgramsDone'));
-const Buddies = lazy(() => import('./pages/social/Buddies'));
-const Reels = lazy(() => import('./pages/Reels'));
-const Notifications = lazy(() => import('./pages/Notifications'));
-const Store = lazy(() => import('./pages/Store'));
-const Deals = lazy(() => import('./pages/Deals'));
-const Events = lazy(() => import('./pages/Events'));
-const Leagues = lazy(() => import('./pages/Leagues'));
-const PartnerPage = lazy(() => import('./pages/PartnerPage'));
-const Help = lazy(() => import('./pages/Help'));
-const Tracker = lazy(() => import('./pages/Tracker'));
-const MealPlan = lazy(() => import('./pages/MealPlan'));
-const Venues = lazy(() => import('./pages/Venues'));
-const Progress = lazy(() => import('./pages/Progress'));
-const Achievements = lazy(() => import('./pages/Achievements'));
-const MusicGallery = lazy(() => import('./pages/MusicGallery'));
-const AdminHome = lazy(() => import('./pages/admin/AdminHome'));
-const AdminResource = lazy(() => import('./pages/admin/AdminResource'));
-const AdminUpload = lazy(() => import('./pages/admin/AdminUpload'));
-const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
-const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
-const AdminReels = lazy(() => import('./pages/admin/AdminReels'));
-const AdminLeads = lazy(() => import('./pages/admin/AdminLeads'));
-const AdminVideoImport = lazy(() => import('./pages/admin/AdminVideoImport'));
-const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'));
-const AdminPosts = lazy(() => import('./pages/admin/AdminPosts'));
-const Support = lazy(() => import('./pages/Support'));
-const Assessment = lazy(() => import('./pages/Assessment'));
-const People = lazy(() => import('./pages/social/People'));
-const UserProfile = lazy(() => import('./pages/social/UserProfile'));
-const ChatList = lazy(() => import('./pages/social/ChatList'));
-const ChatRoom = lazy(() => import('./pages/social/ChatRoom'));
-const ChallengeRoom = lazy(() => import('./pages/social/ChallengeRoom'));
-const CoachesDirectory = lazy(() => import('./pages/social/CoachesDirectory'));
-const CoachProfileEdit = lazy(() => import('./pages/social/CoachProfileEdit'));
-const CoachDashboard = lazy(() => import('./pages/social/CoachDashboard'));
-const CoachProgramDetail = lazy(() => import('./pages/social/CoachProgramDetail'));
-const GroupSessions = lazy(() => import('./pages/social/GroupSessions'));
-const GroupSessionDetail = lazy(() => import('./pages/social/GroupSessionDetail'));
-const WeekZero = lazy(() => import('./pages/WeekZero'));
+/** lazy() that survives redeploys. A client whose open app requests a chunk
+ *  from a previous build gets a broken module ("reading 'default'" crashes at
+ *  the route boundary — seen live on /lesson and /exercises). One transparent
+ *  reload picks up the new build; the sessionStorage guard prevents loops, and
+ *  clears on any successful load so the NEXT deploy can heal too. */
+function lazyRoute<T extends ComponentType<any>>(load: () => Promise<{ default: T }>) {
+  return lazy(() =>
+    load()
+      .then((m) => {
+        if (!m || !m.default) throw new Error('empty chunk');
+        sessionStorage.removeItem('pulse_chunk_reload');
+        return m;
+      })
+      .catch((e) => {
+        if (!sessionStorage.getItem('pulse_chunk_reload')) {
+          sessionStorage.setItem('pulse_chunk_reload', '1');
+          window.location.reload();
+          return new Promise<{ default: T }>(() => {}); // page is reloading — never settles
+        }
+        throw e; // second failure: real problem, let the boundary report it
+      }),
+  );
+}
+
+const WorkoutHub = lazyRoute(() => import('./pages/programs/WorkoutHub'));
+const YogaHub = lazyRoute(() => import('./pages/programs/YogaHub'));
+const Schedule = lazyRoute(() => import('./pages/programs/Schedule'));
+const WorkoutSession = lazyRoute(() => import('./pages/programs/WorkoutSession'));
+const CoachPage = lazyRoute(() => import('./pages/programs/CoachPage'));
+const ProgramPage = lazyRoute(() => import('./pages/programs/ProgramPage'));
+const LessonPage = lazyRoute(() => import('./pages/programs/LessonPage'));
+const ExercisesPage = lazyRoute(() => import('./pages/programs/ExercisesPage'));
+const MuscleGroupPage = lazyRoute(() => import('./pages/programs/MuscleGroupPage'));
+const WellnessSection = lazyRoute(() => import('./pages/wellness/WellnessSection'));
+const CategoryPage = lazyRoute(() => import('./pages/wellness/CategoryPage'));
+const RecipePage = lazyRoute(() => import('./pages/wellness/RecipePage'));
+const ArticlePage = lazyRoute(() => import('./pages/wellness/ArticlePage'));
+const Info = lazyRoute(() => import('./pages/Info'));
+const SearchPage = lazyRoute(() => import('./pages/SearchPage'));
+const Bookmarks = lazyRoute(() => import('./pages/Bookmarks'));
+const ProgramsDone = lazyRoute(() => import('./pages/ProgramsDone'));
+const Buddies = lazyRoute(() => import('./pages/social/Buddies'));
+const Reels = lazyRoute(() => import('./pages/Reels'));
+const Notifications = lazyRoute(() => import('./pages/Notifications'));
+const Store = lazyRoute(() => import('./pages/Store'));
+const Deals = lazyRoute(() => import('./pages/Deals'));
+const Events = lazyRoute(() => import('./pages/Events'));
+const Leagues = lazyRoute(() => import('./pages/Leagues'));
+const PartnerPage = lazyRoute(() => import('./pages/PartnerPage'));
+const Help = lazyRoute(() => import('./pages/Help'));
+const Tracker = lazyRoute(() => import('./pages/Tracker'));
+const MealPlan = lazyRoute(() => import('./pages/MealPlan'));
+const Venues = lazyRoute(() => import('./pages/Venues'));
+const Progress = lazyRoute(() => import('./pages/Progress'));
+const Achievements = lazyRoute(() => import('./pages/Achievements'));
+const MusicGallery = lazyRoute(() => import('./pages/MusicGallery'));
+const AdminHome = lazyRoute(() => import('./pages/admin/AdminHome'));
+const AdminResource = lazyRoute(() => import('./pages/admin/AdminResource'));
+const AdminUpload = lazyRoute(() => import('./pages/admin/AdminUpload'));
+const AdminUsers = lazyRoute(() => import('./pages/admin/AdminUsers'));
+const AdminAnalytics = lazyRoute(() => import('./pages/admin/AdminAnalytics'));
+const AdminReels = lazyRoute(() => import('./pages/admin/AdminReels'));
+const AdminLeads = lazyRoute(() => import('./pages/admin/AdminLeads'));
+const AdminVideoImport = lazyRoute(() => import('./pages/admin/AdminVideoImport'));
+const AdminSupport = lazyRoute(() => import('./pages/admin/AdminSupport'));
+const AdminPosts = lazyRoute(() => import('./pages/admin/AdminPosts'));
+const Support = lazyRoute(() => import('./pages/Support'));
+const Assessment = lazyRoute(() => import('./pages/Assessment'));
+const People = lazyRoute(() => import('./pages/social/People'));
+const UserProfile = lazyRoute(() => import('./pages/social/UserProfile'));
+const ChatList = lazyRoute(() => import('./pages/social/ChatList'));
+const ChatRoom = lazyRoute(() => import('./pages/social/ChatRoom'));
+const ChallengeRoom = lazyRoute(() => import('./pages/social/ChallengeRoom'));
+const CoachesDirectory = lazyRoute(() => import('./pages/social/CoachesDirectory'));
+const CoachProfileEdit = lazyRoute(() => import('./pages/social/CoachProfileEdit'));
+const CoachDashboard = lazyRoute(() => import('./pages/social/CoachDashboard'));
+const CoachProgramDetail = lazyRoute(() => import('./pages/social/CoachProgramDetail'));
+const GroupSessions = lazyRoute(() => import('./pages/social/GroupSessions'));
+const GroupSessionDetail = lazyRoute(() => import('./pages/social/GroupSessionDetail'));
+const WeekZero = lazyRoute(() => import('./pages/WeekZero'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const status = useAuth((s) => s.status);

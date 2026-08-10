@@ -79,6 +79,10 @@ export default defineConfig({
     }),
   ],
   build: {
+    // Keep previous builds' hashed chunks alongside new ones: an app that was
+    // open during a redeploy can still fetch the chunks its index.html names.
+    // install.ps1 prunes assets older than 14 days so dist doesn't grow forever.
+    emptyOutDir: false,
     rollupOptions: {
       output: {
         // Stable vendor chunks: the framework code changes far less often than

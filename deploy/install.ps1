@@ -95,6 +95,14 @@ try {
   if (-not (Test-Path $dist)) { Die ("Build output missing: " + $dist) }
   Copy-Item (Join-Path $Root 'deploy\iis\web.config') (Join-Path $dist 'web.config') -Force
   Ok 'web.config in place.'
+
+  # Old builds' hashed chunks stay servable (emptyOutDir:false) so apps that
+  # were open during the deploy keep working; prune leftovers after 14 days.
+  $assets = Join-Path $dist 'assets'
+  if (Test-Path $assets) {
+    $old = Get-ChildItem $assets -File | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-14) }
+    if ($old) { $old | Remove-Item -Force; Ok ("Pruned " + $old.Count + " stale asset(s) older than 14 days.") }
+  }
 }
 finally { Pop-Location }
 
