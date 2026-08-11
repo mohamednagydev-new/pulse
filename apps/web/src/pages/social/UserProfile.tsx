@@ -85,33 +85,34 @@ export default function UserProfile() {
         <Stat n={stats.completions} label={t('programs.workout')} />
       </div>
 
-      <div className="mx-6 mt-3 flex gap-3">
+      {/* Compact action row — chips, not full-width slabs. */}
+      <div className="mx-6 mt-3 flex flex-wrap justify-center gap-2">
         <motion.button
           whileTap={{ scale: 0.92 }}
           transition={tapSpring}
           onClick={() => follow.mutate(!isFollowing)}
-          className={`btn-pill flex min-h-[44px] flex-1 items-center justify-center gap-2 ${isFollowing ? 'btn-ghost text-gray-600' : 'btn-primary'}`}
+          className={`btn-pill flex min-h-[34px] items-center justify-center gap-1.5 px-4 text-[13px] ${isFollowing ? 'btn-ghost text-gray-600' : 'btn-primary'}`}
         >
-          {isFollowing ? <Check size={16} className="text-brand-green" /> : <UserPlus size={16} />}
+          {isFollowing ? <Check size={14} className="text-brand-green" /> : <UserPlus size={14} />}
           {isFollowing ? t('social2.following') : t('social2.follow')}
         </motion.button>
         {user.connectionStatus === 'connected' ? (
-          <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => message.mutate()} className="btn-pill btn-ghost flex min-h-[44px] flex-1 items-center justify-center gap-2">
-            <MessageSquare size={16} /> {t('buddies.message')}
+          <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => message.mutate()} className="btn-pill btn-ghost flex min-h-[34px] items-center justify-center gap-1.5 px-4 text-[13px]">
+            <MessageSquare size={14} /> {t('buddies.message')}
           </motion.button>
         ) : (
           <>
             {user.connectionStatus === 'pending_out' ? (
-              <button disabled className="btn-pill btn-ghost flex min-h-[44px] flex-1 items-center justify-center gap-2 text-gray-400">
-                <Clock size={16} /> {t('buddies.requested')}
+              <button disabled className="btn-pill btn-ghost flex min-h-[34px] items-center justify-center gap-1.5 px-4 text-[13px] text-gray-400">
+                <Clock size={14} /> {t('buddies.requested')}
               </button>
             ) : user.connectionStatus === 'pending_in' ? (
-              <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => accept.mutate()} className="btn-pill btn-primary flex min-h-[44px] flex-1 items-center justify-center gap-2">
-                <Zap size={16} /> {t('buddies.accept')}
+              <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => accept.mutate()} className="btn-pill btn-primary flex min-h-[34px] items-center justify-center gap-1.5 px-4 text-[13px]">
+                <Zap size={14} /> {t('buddies.accept')}
               </motion.button>
             ) : (
-              <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => connect.mutate()} className="btn-pill btn-primary flex min-h-[44px] flex-1 items-center justify-center gap-2">
-                <HeartHandshake size={16} /> {t('buddies.connect')}
+              <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => connect.mutate()} className="btn-pill btn-primary flex min-h-[34px] items-center justify-center gap-1.5 px-4 text-[13px]">
+                <HeartHandshake size={14} /> {t('buddies.connect')}
               </motion.button>
             )}
             {/* Message is always visible; before you're buddies it explains the gate. */}
@@ -120,9 +121,9 @@ export default function UserProfile() {
               transition={tapSpring}
               onClick={() => setGate(true)}
               aria-label={t('buddies.message')}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm"
+              className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm"
             >
-              <MessageSquare size={18} />
+              <MessageSquare size={15} />
             </motion.button>
           </>
         )}

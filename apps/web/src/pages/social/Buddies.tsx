@@ -248,7 +248,7 @@ export function Buddies() {
                         transition={tapSpring}
                         onClick={() => { tapFeedback(); acceptDuel.mutate(d.id); }}
                         disabled={acceptDuel.isPending}
-                        className="btn-pill btn-primary flex min-h-[40px] flex-1 items-center justify-center gap-1.5 py-1.5 text-sm disabled:opacity-60"
+                        className="btn-pill btn-primary flex min-h-[32px] flex-1 items-center justify-center gap-1.5 py-1 text-xs disabled:opacity-60"
                       >
                         <Swords size={15} /> {t('duels.accept')}
                       </motion.button>
@@ -257,7 +257,7 @@ export function Buddies() {
                         transition={tapSpring}
                         onClick={() => declineDuel.mutate(d.id)}
                         disabled={declineDuel.isPending}
-                        className="btn-pill btn-ghost flex min-h-[40px] flex-1 items-center justify-center py-1.5 text-sm disabled:opacity-60"
+                        className="btn-pill btn-ghost flex min-h-[32px] flex-1 items-center justify-center py-1 text-xs disabled:opacity-60"
                       >
                         {t('duels.decline')}
                       </motion.button>
@@ -391,7 +391,7 @@ export function Buddies() {
                       whileTap={{ scale: 0.92 }}
                       transition={tapSpring}
                       onClick={() => accept.mutate(r.user.id)}
-                      className="btn-pill btn-primary flex min-h-[40px] items-center gap-1.5 px-5 py-1.5 text-sm"
+                      className="btn-pill btn-primary flex min-h-[32px] items-center gap-1.5 px-3 py-1 text-xs"
                     >
                       <Zap size={14} /> {t('buddies.accept')}
                     </motion.button>
@@ -427,7 +427,7 @@ export function Buddies() {
                     whileTap={{ scale: 0.92, rotate: -6 }}
                     transition={tapSpring}
                     onClick={() => cheer.mutate(b.id)}
-                    className="btn-pill btn-ghost flex min-h-[40px] flex-1 items-center justify-center gap-1.5 py-1.5 text-sm"
+                    className="btn-pill btn-ghost flex min-h-[32px] flex-1 items-center justify-center gap-1.5 py-1 text-xs"
                   >
                     <Megaphone size={15} /> {t('buddies.cheer')}
                   </motion.button>
@@ -435,7 +435,7 @@ export function Buddies() {
                     whileTap={{ scale: 0.92 }}
                     transition={tapSpring}
                     onClick={() => message.mutate(b.id)}
-                    className="btn-pill btn-primary flex min-h-[40px] flex-1 items-center justify-center gap-1.5 py-1.5 text-sm"
+                    className="btn-pill btn-primary flex min-h-[32px] flex-1 items-center justify-center gap-1.5 py-1 text-xs"
                   >
                     <MessageSquare size={15} /> {t('buddies.message')}
                   </motion.button>

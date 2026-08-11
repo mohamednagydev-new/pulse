@@ -113,7 +113,7 @@ export function FollowButton({ isFollowing, onToggle }: { isFollowing: boolean; 
       whileTap={{ scale: 0.92 }}
       transition={tapSpring}
       onClick={onToggle}
-      className={`btn-pill flex min-h-[40px] items-center gap-1.5 px-4 py-1.5 text-sm ${
+      className={`btn-pill flex min-h-[32px] items-center gap-1.5 px-3 py-1 text-xs ${
         isFollowing ? 'btn-ghost text-gray-500' : 'btn-primary'
       }`}
     >
@@ -137,24 +137,24 @@ export function ConnectButton({
   const { t } = useTranslation();
   if (status === 'connected')
     return (
-      <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={onMessage} className="btn-pill btn-ghost flex min-h-[40px] items-center gap-1.5 px-4 py-1.5 text-sm text-brand-pink">
+      <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={onMessage} className="btn-pill btn-ghost flex min-h-[32px] items-center gap-1.5 px-3 py-1 text-xs text-brand-pink">
         <MessageSquare size={14} /> {t('buddies.message')}
       </motion.button>
     );
   if (status === 'pending_out')
     return (
-      <button disabled className="btn-pill btn-ghost flex min-h-[40px] items-center gap-1.5 px-4 py-1.5 text-sm text-gray-400">
+      <button disabled className="btn-pill btn-ghost flex min-h-[32px] items-center gap-1.5 px-3 py-1 text-xs text-gray-400">
         <Clock size={14} /> {t('buddies.requested')}
       </button>
     );
   if (status === 'pending_in')
     return (
-      <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={onAccept} className="btn-pill btn-primary flex min-h-[40px] items-center gap-1.5 px-4 py-1.5 text-sm">
+      <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={onAccept} className="btn-pill btn-primary flex min-h-[32px] items-center gap-1.5 px-3 py-1 text-xs">
         <Zap size={14} /> {t('buddies.accept')}
       </motion.button>
     );
   return (
-    <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={onConnect} className="btn-pill btn-primary flex min-h-[40px] items-center gap-1.5 px-4 py-1.5 text-sm">
+    <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={onConnect} className="btn-pill btn-primary flex min-h-[32px] items-center gap-1.5 px-3 py-1 text-xs">
       <HeartHandshake size={14} /> {t('buddies.connect')}
     </motion.button>
   );

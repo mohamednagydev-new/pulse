@@ -468,12 +468,24 @@ textarea:focus-visible {
   opacity: 0.09;
 }
 .dark .app-frame {
+  /* One notch darker than the first pass — glass cards and light text pop
+     harder without the scene reading as pitch black. */
   background:
-    radial-gradient(26% 20% at 94% 3%, rgba(249, 115, 22, 0.14), transparent 60%),
-    radial-gradient(24% 18% at 3% 20%, rgba(37, 99, 235, 0.12), transparent 60%),
-    radial-gradient(30% 24% at 88% 97%, rgba(16, 163, 74, 0.1), transparent 60%),
-    linear-gradient(180deg, #141218 0%, #0d0c11 100%);
+    radial-gradient(26% 20% at 94% 3%, rgba(249, 115, 22, 0.11), transparent 60%),
+    radial-gradient(24% 18% at 3% 20%, rgba(37, 99, 235, 0.09), transparent 60%),
+    radial-gradient(30% 24% at 88% 97%, rgba(16, 163, 74, 0.08), transparent 60%),
+    linear-gradient(180deg, #0f0e12 0%, #09080c 100%);
 }
+/* Saturated 600/700-level text colors were tuned for white cards — on dark
+   glass they sink into the background (the blue was the worst). Remap each to
+   its 400-level sibling; buttons/gradients with their own solid fills keep
+   their white text and are unaffected. */
+.dark .text-brand-blue, .dark .text-blue-600 { color: #60a5fa !important; }
+.dark .text-brand-green, .dark .text-green-700 { color: #4ade80 !important; }
+.dark .text-emerald-600, .dark .text-emerald-700 { color: #34d399 !important; }
+.dark .text-brand-teal, .dark .text-teal-600, .dark .text-teal-700 { color: #2dd4bf !important; }
+.dark .text-brand-red, .dark .text-red-600, .dark .text-rose-600 { color: #fb7185 !important; }
+.dark .text-amber-700 { color: #fbbf24 !important; }
 /* Cards become GLASS: translucent over the ambient gradient + photo texture,
    with a hairline light border — the login-card look on every surface, without
    backdrop-blur cost on low-end phones. */

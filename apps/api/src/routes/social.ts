@@ -124,7 +124,27 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
   ]);
 
   // Drop it from the ordinary list so a follower never sees it twice.
-  const rest = posts.filter((p) => p.id !== pinned?.id);
+  let rest = posts.filter((p) => p.id !== pinned?.id);
+
+  // Discovery top-up: a follower-only feed is a dead screen for anyone new
+  // (no connections yet → nothing at all). Blend in recent public activity
+  // from the rest of the community — Facebook-style — until the page feels
+  // alive; people you follow still dominate because their posts come first
+  // in the merge when dates tie.
+  if (rest.length < 30) {
+    const discover = await prisma.feedPost.findMany({
+      where: {
+        userId: { notIn: ids },
+        pinned: false,
+        createdAt: { gte: new Date(Date.now() - 7 * 86400000) },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 30 - rest.length,
+      include,
+    });
+    rest = [...rest, ...discover].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
   const shaped = rest.map((p) => shapePost(p, req.userId!));
   res.json(pinned ? [{ ...shapePost(pinned, req.userId!), pinned: true, pinnedUntil: pinned.pinnedUntil }, ...shaped] : shaped);
 });

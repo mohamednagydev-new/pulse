@@ -74,7 +74,7 @@ export default function CoachesDirectory() {
                 whileTap={{ scale: 0.92 }}
                 transition={tapSpring}
                 onClick={() => follow.mutate({ id: c.id, on: !c.isFollowing })}
-                className={`btn-pill flex min-h-[40px] shrink-0 items-center gap-1.5 px-4 py-2 text-sm ${c.isFollowing ? 'btn-ghost text-gray-500' : 'btn-primary'}`}
+                className={`btn-pill flex min-h-[32px] shrink-0 items-center gap-1.5 px-3 py-1 text-xs ${c.isFollowing ? 'btn-ghost text-gray-500' : 'btn-primary'}`}
               >
                 {c.isFollowing ? <Check size={14} className="text-brand-green" /> : <UserPlus size={14} />}
                 {c.isFollowing ? t('social2.following') : t('social2.follow')}
