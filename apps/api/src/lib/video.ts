@@ -84,6 +84,12 @@ async function processVideoNow(inputPath: string): Promise<{
 
   if (transcode.code !== 0) {
     // ffmpeg unavailable — fall back to storing the original as-is.
+    // LOUD on purpose: an original iPhone HEVC/.mov "plays on my laptop" but
+    // not on most Android phones. If this line shows in the logs, install
+    // ffmpeg (winget install Gyan.FFmpeg) and run prisma/retranscode-videos.ts.
+    console.error(
+      `[video] TRANSCODE FAILED (${env.FFMPEG_PATH}): storing original as-is — mobile playback NOT guaranteed. ${transcode.stderr.slice(0, 160)}`,
+    );
     const fallback = path.join(VIDEO_DIR, path.basename(inputPath));
     if (inputPath !== fallback) fs.copyFileSync(inputPath, fallback);
     const durationSec = await probeDuration(fallback);
