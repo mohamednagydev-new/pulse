@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Play, Check, X, Dumbbell, UserPlus } from 'lucide-react';
-import { api } from '../../lib/api';
+import { Plus, Trash2, Play, Check, X, Dumbbell, UserPlus, ImagePlus, Video as VideoIcon } from 'lucide-react';
+import { api, getAccessToken } from '../../lib/api';
 import { useAuth } from '../../store/auth';
 import { Loader, MediaImage, EmptyState, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -27,13 +27,49 @@ export default function CoachDashboard() {
   const [title, setTitle] = useState('');
   const [focus, setFocus] = useState('');
   const [exercises, setExercises] = useState<Ex[]>([{ name: '', sets: '3 sets', reps: '10-12 reps' }]);
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<'image' | 'video' | null>(null);
+
+  // Same upload pipe as community posts — images stored as-is, videos
+  // transcoded to mobile-safe H.264 with a poster on the server.
+  const uploadMedia = async (file: File, kind: 'image' | 'video') => {
+    setUploading(kind);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/social/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${getAccessToken()}` },
+        credentials: 'include',
+        body: fd,
+      });
+      if (!res.ok) throw new Error('upload failed');
+      const j = await res.json();
+      if (kind === 'image') setCoverImage(j.mediaUrl);
+      else setVideoId(j.mediaUrl);
+      toast(t('coach.mediaReady'), 'success');
+    } catch {
+      toast(t('profile.photoFailed'), 'error');
+    } finally {
+      setUploading(null);
+    }
+  };
   const [pTitle, setPTitle] = useState('');
   const [pDays, setPDays] = useState<{ label: string; workoutId: string }[]>([{ label: 'Day 1', workoutId: '' }]);
 
   const create = useMutation({
-    mutationFn: () => api.post('/api/coach/workouts', { title, muscleFocus: focus, exercises: exercises.filter((e) => e.name.trim()) }),
+    mutationFn: () =>
+      api.post('/api/coach/workouts', {
+        title,
+        muscleFocus: focus,
+        exercises: exercises.filter((e) => e.name.trim()),
+        ...(coverImage ? { coverImage } : {}),
+        ...(videoId ? { videoId } : {}),
+      }),
     onSuccess: () => {
       setTitle(''); setFocus(''); setExercises([{ name: '', sets: '3 sets', reps: '10-12 reps' }]);
+      setCoverImage(null); setVideoId(null);
       qc.invalidateQueries({ queryKey: ['coach-workouts', meId] });
       toast(t('coach.workoutPublished'), 'success');
     },
@@ -123,6 +159,17 @@ export default function CoachDashboard() {
         <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
           <input className="input-field" placeholder={t('coach.titlePh')} value={title} onChange={(e) => setTitle(e.target.value)} />
           <input className="input-field" placeholder={t('coach.focusPh')} value={focus} onChange={(e) => setFocus(e.target.value)} />
+          {/* Cover + intro video — the media that makes a workout look bought, not typed. */}
+          <div className="flex gap-2">
+            <label className={`flex min-h-[42px] flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl text-xs font-bold ${coverImage ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-500'}`}>
+              <ImagePlus size={14} /> {uploading === 'image' ? '…' : coverImage ? t('coach.coverReady') : t('coach.addCover')}
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadMedia(e.target.files[0], 'image')} />
+            </label>
+            <label className={`flex min-h-[42px] flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl text-xs font-bold ${videoId ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-500'}`}>
+              <VideoIcon size={14} /> {uploading === 'video' ? t('coach.uploadingVideo') : videoId ? t('coach.videoReady') : t('coach.addVideo')}
+              <input type="file" accept="video/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadMedia(e.target.files[0], 'video')} />
+            </label>
+          </div>
           <div className="space-y-2">
             {exercises.map((ex, idx) => (
               <div key={idx} className="flex gap-2">

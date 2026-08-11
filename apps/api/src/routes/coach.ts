@@ -24,7 +24,9 @@ coachRouter.post('/workouts', async (req: AuthedRequest, res) => {
     title: z.string().min(1),
     description: z.string().optional(),
     muscleFocus: z.string().optional(),
-    coverImage: z.string().optional(),
+    // Path shapes from our own upload endpoints only — never a free string.
+    coverImage: z.string().regex(/^images\/[A-Za-z0-9_-]+\.(jpe?g|png|webp|gif)$/i).optional(),
+    videoId: z.string().optional(),
     exercises: z.array(z.object({
       name: z.string().min(1),
       sets: z.string().optional(),
@@ -34,6 +36,10 @@ coachRouter.post('/workouts', async (req: AuthedRequest, res) => {
   });
   const p = schema.safeParse(req.body);
   if (!p.success) return res.status(400).json({ error: 'Add a title and at least one exercise' });
+  if (p.data.videoId) {
+    const vid = await prisma.video.findUnique({ where: { id: p.data.videoId }, select: { id: true } });
+    if (!vid) return res.status(400).json({ error: 'Invalid video' });
+  }
   const w = await prisma.coachWorkout.create({
     data: {
       coachUserId: req.userId!,
@@ -41,6 +47,7 @@ coachRouter.post('/workouts', async (req: AuthedRequest, res) => {
       description: p.data.description,
       muscleFocus: p.data.muscleFocus,
       coverImage: p.data.coverImage,
+      videoId: p.data.videoId,
       exercises: JSON.stringify(p.data.exercises),
     },
   });
@@ -142,13 +149,30 @@ coachRouter.post('/requests/:id/:action', async (req: AuthedRequest, res) => {
   const row = await prisma.coachRequest.findFirst({ where: { id: req.params.id, coachUserId: req.userId! } });
   if (!row) return res.status(404).json({ error: 'Not found' });
   await prisma.coachRequest.update({ where: { id: row.id }, data: { status } });
+  if (status === 'accepted') {
+    // Coaching without a channel is a brochure: acceptance auto-connects the
+    // pair so DMs (and voice notes) open immediately for both sides.
+    const existing = await prisma.connection.findFirst({
+      where: { OR: [
+        { requesterId: req.userId!, addresseeId: row.clientId },
+        { requesterId: row.clientId, addresseeId: req.userId! },
+      ] },
+    });
+    if (existing) {
+      if (existing.status !== 'accepted') {
+        await prisma.connection.update({ where: { id: existing.id }, data: { status: 'accepted' } });
+      }
+    } else {
+      await prisma.connection.create({ data: { requesterId: req.userId!, addresseeId: row.clientId, status: 'accepted' } });
+    }
+  }
   emitToUser(row.clientId, 'notify', { type: `coach-${status}` });
   notifyUser(row.clientId, {
     title: `Coaching ${status}`,
-    titleAr: status === 'accepted' ? 'طلب التدريب اتقبل' : 'طلب التدريب اترفض',
-    body: status === 'accepted' ? 'Your coach accepted you!' : 'Request declined',
-    bodyAr: status === 'accepted' ? 'الكوتش وافق عليك!' : 'الطلب اترفض',
-    url: '/community',
+    titleAr: status === 'accepted' ? 'طلب التدريب اتقبل 🎉' : 'طلب التدريب اترفض',
+    body: status === 'accepted' ? 'Your coach accepted you — you can chat now!' : 'Request declined',
+    bodyAr: status === 'accepted' ? 'الكوتش وافق عليك — تقدروا تتكلموا في الشات دلوقتي!' : 'الطلب اترفض',
+    url: status === 'accepted' ? '/chat' : '/community',
   });
   res.json({ ok: true });
 });

@@ -311,8 +311,9 @@ function CoachSection({ userId }: { userId: string }) {
           <div className="space-y-2">
             {workouts.map((w: any) => (
               <div key={w.id} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm">
-                <div className="flex-1">
-                  <p className="font-semibold">{w.title}</p>
+                {w.coverImage && <MediaImage path={w.coverImage} label={w.title} className="h-12 w-12 shrink-0 rounded-xl" />}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{w.title}{w.videoId ? ' 🎥' : ''}</p>
                   <p className="text-xs text-gray-400">{w.muscleFocus} · {w.exercises.length}</p>
                 </div>
                 <motion.button whileTap={{ scale: 0.9 }} transition={tapSpring} onClick={() => navigate(`/session/w/${w.id}`)} className="flex h-10 w-10 items-center justify-center rounded-full btn-primary"><Play size={16} /></motion.button>

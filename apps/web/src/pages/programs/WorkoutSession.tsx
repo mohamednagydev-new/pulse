@@ -497,6 +497,16 @@ export default function WorkoutSession() {
         <HrMonitor className="ms-auto" />
       </div>
 
+      {/* Coach-recorded intro video (coach workouts only) — on demand, never autoplay. */}
+      {source?.videoId && (
+        <details className="relative z-10 mx-4 mt-2 rounded-xl bg-white/10 px-3 py-2">
+          <summary className="cursor-pointer text-xs font-bold text-white/80">🎥 {t('session.coachVideo', { defaultValue: isAr ? 'فيديو من الكوتش' : 'Video from your coach' })}</summary>
+          <div className="mt-2">
+            <ContentVideo videoId={source.videoId} label={source.title} />
+          </div>
+        </details>
+      )}
+
       {phase === 'rest' ? (
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-5 px-6">
           {/* Circular countdown ring */}

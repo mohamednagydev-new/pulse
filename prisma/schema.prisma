@@ -123,6 +123,8 @@ model CoachWorkout {
   title       String
   description String?
   coverImage  String?
+  /** Optional coach-recorded intro/form video (Video.id, transcoded upload). */
+  videoId     String?
   muscleFocus String?
   exercises   String   // JSON: [{ name, sets, reps, instructions[] }]
   createdAt   DateTime @default(now())
