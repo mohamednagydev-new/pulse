@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, Star, Play, Dumbbell, CalendarDays, UserPlus, Check, Clock, Zap, HeartHandshake } from 'lucide-react';
+import { MessageSquare, Star, Play, Dumbbell, CalendarDays, UserPlus, Check, Clock, Zap, HeartHandshake, ArrowLeft, Users, Activity } from 'lucide-react';
 import { api } from '../../lib/api';
 import { MediaImage, Loader, ErrorMsg } from '../../components/ui';
 import Sheet from '../../components/Sheet';
@@ -57,36 +57,61 @@ export default function UserProfile() {
 
   return (
     <div className="min-h-screen pb-8">
-      <TopBar title={`${user.firstName} ${user.lastName}`} color="fitness-hero" textColor="text-white" curved />
-      <div className="-mt-6 flex flex-col items-center">
-        <MediaImage path={user.avatarUrl} label={user.firstName} className="h-24 w-24 rounded-full ring-4 ring-white" seed={user.id.length} />
-        <p className="mt-2 flex items-center gap-1.5 text-lg font-bold">{user.firstName} {user.lastName} {user.isCoach && <CoachBadge verified={user.coachVerified} />}</p>
-        <span className="rounded-full bg-brand-pink/10 px-3 py-0.5 text-xs font-bold text-brand-pink">{t('common.lv', { n: user.level })}</span>
-        {user.isCoach && user.coachHeadline && <p className="mt-1 text-sm font-semibold text-brand-blue">{user.coachHeadline}</p>}
-        {user.bio && <p className="mt-2 px-8 text-center text-sm text-gray-500">{user.bio}</p>}
-        {user.isCoach && (user.coachBio || user.coachSpecialties) && (
-          <div className="mx-6 mt-3 w-full max-w-full px-0">
-            <div className="rounded-2xl bg-white p-4 text-sm text-gray-600 shadow-sm">
-              <p className="mb-1 font-bold text-ink">{t('home.coaches')}</p>
-              {user.coachBio && <p>{user.coachBio}</p>}
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {parseSpecialties(user.coachSpecialties).map((s: string, i: number) => (
-                  <span key={i} className="rounded-full bg-brand-blue/10 px-2.5 py-1 text-xs font-medium text-brand-blue">{s}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Hero: photo-glass gradient with the avatar breaking out of its bottom
+          edge. The old layout pulled the avatar up under the curved TopBar with
+          no stacking context — half the photo vanished behind the header. */}
+      <div className="relative overflow-hidden rounded-b-[28px] bg-gradient-to-br from-orange-500/95 via-pink-600/85 to-indigo-900/80 pb-16 text-white">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-luminosity"
+          style={{ backgroundImage: 'url(/landing/scene-coach.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+          aria-hidden
+        />
+        <div className="relative flex items-center gap-2 px-3" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.9rem)' }}>
+          <button onClick={() => navigate(-1)} aria-label={t('common.back', { defaultValue: 'Back' })} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+            <ArrowLeft size={19} className="rtl:rotate-180" />
+          </button>
+          <p className="min-w-0 flex-1 truncate text-center text-sm font-bold uppercase tracking-wide text-white/80">
+            {user.firstName} {user.lastName}
+          </p>
+          <span className="h-10 w-10" aria-hidden />
+        </div>
       </div>
 
-      <div className="mx-6 mt-4 grid grid-cols-3 rounded-2xl bg-white py-3 text-center shadow-sm">
-        <Stat n={stats.followers} label="Followers" />
-        <Stat n={stats.following} label={t('social2.following')} />
-        <Stat n={stats.completions} label={t('programs.workout')} />
+      {/* Identity block — explicit z-10 so nothing ever swallows the photo again. */}
+      <div className="relative z-10 -mt-12 flex flex-col items-center">
+        <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={tapSpring} className="relative">
+          <MediaImage path={user.avatarUrl} label={user.firstName} className="h-28 w-28 rounded-full shadow-lg ring-4 ring-white dark:ring-[#191821]" seed={user.id.length} />
+          <span className="absolute -bottom-1.5 start-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-orange-500 to-pink-600 px-3 py-0.5 text-[11px] font-extrabold text-white shadow rtl:translate-x-1/2">
+            {t('common.lv', { n: user.level })}
+          </span>
+        </motion.div>
+        <p className="mt-3.5 flex items-center gap-1.5 px-6 text-center text-xl font-extrabold">
+          {user.firstName} {user.lastName} {user.isCoach && <CoachBadge verified={user.coachVerified} />}
+        </p>
+        {user.isCoach && user.coachHeadline && <p className="mt-0.5 px-8 text-center text-sm font-semibold text-brand-blue">{user.coachHeadline}</p>}
+        {user.bio && <p className="mt-1.5 max-w-xs px-8 text-center text-sm leading-relaxed text-gray-500">{user.bio}</p>}
       </div>
+
+      <div className="mx-5 mt-4 grid grid-cols-3 divide-x divide-gray-100 rounded-2xl bg-white py-3.5 text-center shadow-sm rtl:divide-x-reverse">
+        <Stat icon={<Users size={14} className="text-brand-blue" />} n={stats.followers} label={t('social2.followers', { defaultValue: 'Followers' })} />
+        <Stat icon={<HeartHandshake size={14} className="text-brand-pink" />} n={stats.following} label={t('social2.following')} />
+        <Stat icon={<Activity size={14} className="text-brand-green" />} n={stats.completions} label={t('programs.workout')} />
+      </div>
+
+      {user.isCoach && (user.coachBio || user.coachSpecialties) && (
+        <div className="mx-5 mt-3 rounded-2xl bg-white p-4 text-sm text-gray-600 shadow-sm">
+          <p className="mb-1 font-bold text-ink">{t('home.coaches')}</p>
+          {user.coachBio && <p className="leading-relaxed">{user.coachBio}</p>}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {parseSpecialties(user.coachSpecialties).map((s: string, i: number) => (
+              <span key={i} className="rounded-full bg-brand-blue/10 px-2.5 py-1 text-xs font-medium text-brand-blue">{s}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Compact action row — chips, not full-width slabs. */}
-      <div className="mx-6 mt-3 flex flex-wrap justify-center gap-2">
+      <div className="mx-5 mt-3.5 flex flex-wrap justify-center gap-2">
         <motion.button
           whileTap={{ scale: 0.92 }}
           transition={tapSpring}
@@ -165,9 +190,14 @@ export default function UserProfile() {
 
       {user.isCoach && <CoachSection userId={user.id} />}
 
-      <div className="mt-5 space-y-3 px-4">
-        {posts.map((p: any) => <PostCard key={p.id} post={p} queryKey={key} />)}
-        {!posts.length && <p className="py-10 text-center text-gray-400">{t('community.noActivity')}</p>}
+      <div className="mt-6 px-4">
+        <h3 className="mb-2.5 flex items-center gap-1.5 px-1 text-base font-extrabold">
+          <Activity size={16} className="text-brand-pink" /> {t('social2.activity', { defaultValue: 'Activity' })}
+        </h3>
+        <div className="space-y-3">
+          {posts.map((p: any) => <PostCard key={p.id} post={p} queryKey={key} />)}
+          {!posts.length && <p className="py-10 text-center text-sm text-gray-400">{t('community.noActivity')}</p>}
+        </div>
       </div>
     </div>
   );
@@ -188,7 +218,7 @@ function CoachSection({ userId }: { userId: string }) {
   const avg = rating?.avg ? Math.round(rating.avg * 10) / 10 : null;
 
   return (
-    <div className="mx-6 mt-4 space-y-3">
+    <div className="mx-5 mt-4 space-y-3">
       <div className="rounded-2xl bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-0.5">
@@ -272,10 +302,10 @@ function parseSpecialties(json?: string): string[] {
   }
 }
 
-function Stat({ n, label }: { n: number; label: string }) {
+function Stat({ icon, n, label }: { icon: ReactNode; n: number; label: string }) {
   return (
-    <div>
-      <p className="font-display text-lg font-extrabold">{n}</p>
+    <div className="flex flex-col items-center gap-0.5">
+      <p className="font-display flex items-center gap-1 text-lg font-extrabold">{icon} {n}</p>
       <p className="text-[11px] text-gray-400">{label}</p>
     </div>
   );
