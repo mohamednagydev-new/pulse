@@ -37,7 +37,7 @@ export default function ScreenHeader({
 }) {
   return (
     <header
-      className={`relative ${TONE_CLASS[tone]} rounded-b-[28px] border-b border-white/10 px-5 backdrop-blur-sm ${padBottom} text-white ${className}`}
+      className={`scene-tex ${TONE_CLASS[tone]} rounded-b-[28px] border-b border-white/10 px-5 backdrop-blur-sm ${padBottom} text-white ${className}`}
       style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 2.25rem)' }}
     >
       {children}

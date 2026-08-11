@@ -467,6 +467,27 @@ textarea:focus-visible {
 .dark .app-frame::before {
   opacity: 0.09;
 }
+/* The profile-hero recipe, reusable: the owner supplies a gradient background,
+   this blends the coach scene into it (luminosity keeps the tone's color).
+   Direct children auto-lift above the overlay so text never gets washed. */
+/* :where() keeps specificity at zero so position utilities (sticky TopBar,
+   absolute header buttons) always beat these defaults. */
+:where(.scene-tex) {
+  position: relative;
+}
+.scene-tex::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: url('/landing/scene-coach.jpg') center / cover no-repeat;
+  opacity: 0.16;
+  mix-blend-mode: luminosity;
+  pointer-events: none;
+}
+:where(.scene-tex > *) {
+  position: relative;
+}
 .dark .app-frame {
   /* One notch darker than the first pass — glass cards and light text pop
      harder without the scene reading as pitch black. */

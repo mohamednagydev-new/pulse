@@ -38,7 +38,7 @@ export default function TopBar({
 
   return (
     <header
-      className={`${color} ${textColor} sticky top-0 z-30 flex items-center px-4 py-4 ${
+      className={`${color} ${textColor} ${color !== 'bg-white' ? 'scene-tex' : ''} sticky top-0 z-30 flex items-center px-4 py-4 ${
         curved ? 'rounded-b-[32px] pb-8' : 'mb-4'
       }`}
       style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}

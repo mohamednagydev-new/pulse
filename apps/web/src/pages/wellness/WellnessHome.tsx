@@ -46,11 +46,13 @@ export default function WellnessHome() {
   const nothing =
     !loading && recipeCats.length === 0 && articleCats.length === 0 && initiativeCats.length === 0;
 
+  // Each tile wears its tone as a gradient with the scene texture blended in —
+  // the same photo-glass language as the headers, per the owner's request.
   const tiles = [
-    { to: '/wellness/kitchen', label: t('wellness.kitchen'), icon: <Salad size={22} />, tint: 'bg-emerald-100 text-emerald-600' },
-    { to: '/wellness/articles', label: t('wellness.articles'), icon: <BookOpen size={22} />, tint: 'bg-sky-100 text-sky-600' },
-    { to: '/wellness/initiatives', label: t('wellness.initiatives'), icon: <HeartPulse size={22} />, tint: 'bg-rose-100 text-rose-600' },
-    { to: '/tracker', label: L('Calories', 'السعرات'), icon: <Flame size={22} />, tint: 'bg-orange-100 text-orange-600' },
+    { to: '/wellness/kitchen', label: t('wellness.kitchen'), icon: <Salad size={22} />, grad: 'from-emerald-500/90 to-teal-700/80' },
+    { to: '/wellness/articles', label: t('wellness.articles'), icon: <BookOpen size={22} />, grad: 'from-sky-500/90 to-blue-700/80' },
+    { to: '/wellness/initiatives', label: t('wellness.initiatives'), icon: <HeartPulse size={22} />, grad: 'from-rose-500/90 to-pink-700/80' },
+    { to: '/tracker', label: L('Calories', 'السعرات'), icon: <Flame size={22} />, grad: 'from-orange-500/90 to-amber-600/80' },
   ];
 
   return (
@@ -74,15 +76,15 @@ export default function WellnessHome() {
         </div>
       </ScreenHeader>
 
-      {/* Search pill */}
-      <div className="px-4">
+      {/* Search pill — breathing room from the header instead of hugging it. */}
+      <div className="px-4 pt-4">
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...spring, delay: 0.05 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/search')}
-          className="-mt-5 flex min-h-[46px] w-full items-center gap-3 rounded-full bg-white px-5 py-3 text-start shadow-md"
+          className="flex min-h-[46px] w-full items-center gap-3 rounded-full bg-white px-5 py-3 text-start shadow-md"
         >
           <Search size={18} className="shrink-0 text-gray-400" />
           <span className="min-w-0 flex-1 truncate text-sm text-gray-400">
@@ -102,10 +104,10 @@ export default function WellnessHome() {
             viewport={{ once: true }}
             transition={{ ...spring, delay: i * 0.05 }}
             whileTap={{ scale: 0.92 }}
-            className="flex min-w-0 flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm"
+            className={`scene-tex flex min-w-0 flex-col items-center gap-1.5 rounded-2xl bg-gradient-to-br ${tile.grad} py-3 text-white shadow-md`}
           >
-            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tile.tint}`}>{tile.icon}</span>
-            <span className="w-full truncate px-1 text-center text-[11px] font-semibold text-gray-600">{tile.label}</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">{tile.icon}</span>
+            <span className="w-full truncate px-1 text-center text-[11px] font-bold">{tile.label}</span>
           </MotionLink>
         ))}
       </div>
