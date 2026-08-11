@@ -10,7 +10,7 @@ import { requireAuth, requireAdmin } from '../middleware/auth';
 import { processVideo } from '../lib/video';
 import { buildTranslationPatch } from '../lib/translate';
 import { aiEnabled, chatComplete } from '../lib/openai';
-import { onlineCount } from '../lib/realtime';
+import { onlineCount, onlineIds } from '../lib/realtime';
 import { notifyUser } from './push';
 import { daysAgoStr } from '../lib/time';
 
@@ -731,6 +731,44 @@ adminRouter.delete('/moderation/comments/:id', async (req, res) => {
   await prisma.postComment.delete({ where: { id: req.params.id } }).catch(() => {});
   res.json({ ok: true });
 });
+// Who is connected right now (live sockets), newest-seen first.
+adminRouter.get('/moderation/online', async (_req, res) => {
+  const ids = onlineIds();
+  const users = ids.length
+    ? await prisma.user.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true, level: true, lastSeenAt: true },
+      })
+    : [];
+  res.json({ count: ids.length, users });
+});
+
+// DM oversight: METADATA ONLY by design — who talks to whom, how much, when.
+// Message content stays private; investigations should go through a report
+// flow, not silent reading (users who suspect admins read DMs stop using chat).
+adminRouter.get('/moderation/dm-threads', async (_req, res) => {
+  const threads = await prisma.dMThread.findMany({
+    orderBy: { lastMessageAt: 'desc' },
+    take: 60,
+    include: { _count: { select: { messages: true } } },
+  });
+  const userIds = Array.from(new Set(threads.flatMap((t) => [t.userAId, t.userBId])));
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, firstName: true, lastName: true, email: true },
+  });
+  const byId = new Map(users.map((u) => [u.id, u]));
+  res.json(
+    threads.map((t) => ({
+      id: t.id,
+      a: byId.get(t.userAId) ?? { firstName: '?', lastName: '' },
+      b: byId.get(t.userBId) ?? { firstName: '?', lastName: '' },
+      messages: t._count.messages,
+      lastMessageAt: t.lastMessageAt,
+    })),
+  );
+});
+
 adminRouter.get('/moderation/challenge-messages', async (_req, res) => {
   const msgs = await prisma.challengeMessage.findMany({
     orderBy: { createdAt: 'desc' },

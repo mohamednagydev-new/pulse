@@ -1,19 +1,27 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, MessageCircle, Trophy, RefreshCw } from 'lucide-react';
+import { Trash2, MessageCircle, Trophy, RefreshCw, Wifi, Lock } from 'lucide-react';
 import { api } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import TopBar from '../../components/TopBar';
+import { MediaImage } from '../../components/ui';
 import { timeAgo } from '../../components/PostCard';
 
 /** Everything the community can see, in one list, with a delete on every row.
  *  DMs are deliberately absent — private messages aren't moderation surface. */
 export default function AdminModeration() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'feed' | 'rooms'>('feed');
+  const [tab, setTab] = useState<'online' | 'feed' | 'rooms' | 'dms'>('online');
 
   const feed = useQuery({ queryKey: ['mod-feed'], queryFn: () => api.get('/api/admin/moderation/feed'), enabled: tab === 'feed' });
   const rooms = useQuery({ queryKey: ['mod-rooms'], queryFn: () => api.get('/api/admin/moderation/challenge-messages'), enabled: tab === 'rooms' });
+  const online = useQuery({
+    queryKey: ['mod-online'],
+    queryFn: () => api.get('/api/admin/moderation/online'),
+    enabled: tab === 'online',
+    refetchInterval: 20000, // live-ish without sockets in the admin page
+  });
+  const dms = useQuery({ queryKey: ['mod-dms'], queryFn: () => api.get('/api/admin/moderation/dm-threads'), enabled: tab === 'dms' });
 
   const del = useMutation({
     mutationFn: ({ type, id }: { type: string; id: string }) => api.del(`/api/admin/moderation/${type}/${id}`),
@@ -35,8 +43,10 @@ export default function AdminModeration() {
 
       <div className="flex gap-1 p-4 pb-2">
         {([
-          { key: 'feed' as const, icon: MessageCircle, label: 'Feed posts' },
-          { key: 'rooms' as const, icon: Trophy, label: 'Challenge rooms' },
+          { key: 'online' as const, icon: Wifi, label: `Online${online.data ? ` (${online.data.count})` : ''}` },
+          { key: 'feed' as const, icon: MessageCircle, label: 'Feed' },
+          { key: 'rooms' as const, icon: Trophy, label: 'Rooms' },
+          { key: 'dms' as const, icon: Lock, label: 'DMs' },
         ]).map(({ key, icon: Icon, label }) => (
           <button
             key={key}
@@ -56,6 +66,58 @@ export default function AdminModeration() {
           <RefreshCw size={13} />
         </button>
       </div>
+
+      {tab === 'online' && (
+        <div className="px-4">
+          <p className="mb-3 rounded-xl bg-emerald-500/10 p-3 text-sm font-bold text-emerald-600">
+            🟢 {online.data?.count ?? 0} online right now
+            <span className="ms-2 font-normal text-gray-400">(auto-refreshes every 20s)</span>
+          </p>
+          <div className="space-y-1.5">
+            {(online.data?.users ?? []).map((u: any) => (
+              <div key={u.id} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm">
+                <span className="relative shrink-0">
+                  <MediaImage path={u.avatarUrl} label={u.firstName} className="h-9 w-9 rounded-full" seed={1} />
+                  <span className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold">{u.firstName} {u.lastName}</p>
+                  <p className="truncate text-[11px] text-gray-400">{u.email} · Lv {u.level ?? 1}</p>
+                </div>
+              </div>
+            ))}
+            {online.data?.count === 0 && <p className="py-10 text-center text-sm text-gray-400">Nobody connected at this moment.</p>}
+          </div>
+        </div>
+      )}
+
+      {tab === 'dms' && (
+        <div className="px-4">
+          <p className="mb-3 rounded-xl bg-blue-500/10 p-3 text-xs leading-relaxed text-gray-500">
+            <Lock size={12} className="mb-0.5 me-1 inline text-blue-500" />
+            <b>Metadata only, by design.</b> You see who talks to whom, how much, and when — never the content.
+            Private messages users can't trust are private messages users stop sending; investigations should
+            come through user reports, not silent reading.
+          </p>
+          <div className="space-y-1.5">
+            {(dms.data ?? []).map((th: any) => (
+              <div key={th.id} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold">
+                    {th.a.firstName} {th.a.lastName} <span className="text-gray-400">↔</span> {th.b.firstName} {th.b.lastName}
+                  </p>
+                  <p className="truncate text-[11px] text-gray-400">{th.a.email} · {th.b.email}</p>
+                </div>
+                <div className="shrink-0 text-end">
+                  <p className="text-sm font-bold">{th.messages}</p>
+                  <p className="text-[10px] text-gray-400">{timeAgo(th.lastMessageAt)}</p>
+                </div>
+              </div>
+            ))}
+            {dms.data?.length === 0 && <p className="py-10 text-center text-sm text-gray-400">No conversations yet.</p>}
+          </div>
+        </div>
+      )}
 
       {tab === 'feed' && (
         <div className="space-y-2 px-4">

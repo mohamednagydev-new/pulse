@@ -103,8 +103,13 @@ function summarizeReactions(reactions: any[]) {
 
 // ---- Feed (me + people I follow) ----
 socialRouter.get('/feed', async (req: AuthedRequest, res) => {
-  const following = await prisma.follow.findMany({ where: { followerId: req.userId! }, select: { followingId: true } });
-  const ids = [req.userId!, ...following.map((f) => f.followingId)];
+  const [following, admins] = await Promise.all([
+    prisma.follow.findMany({ where: { followerId: req.userId! }, select: { followingId: true } }),
+    // Admin posts are announcements by nature — they reach every feed without
+    // needing a follow (pinning is still available for the top slot).
+    prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } }),
+  ]);
+  const ids = Array.from(new Set([req.userId!, ...following.map((f) => f.followingId), ...admins.map((a) => a.id)]));
 
   const include = {
     user: { select: userSelect },

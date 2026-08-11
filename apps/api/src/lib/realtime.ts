@@ -115,6 +115,10 @@ export function onlineCount() {
 export function isOnline(userId: string) {
   return online.has(userId);
 }
+/** Everyone with a live socket right now — for the admin presence panel. */
+export function onlineIds(): string[] {
+  return Array.from(online.keys());
+}
 
 export function emitToChallenge(id: string, event: string, data: unknown) {
   io?.to(`challenge:${id}`).emit(event, data);
