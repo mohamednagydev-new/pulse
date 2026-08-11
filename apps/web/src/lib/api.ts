@@ -18,7 +18,13 @@ type RefreshResult = 'ok' | 'denied' | 'offline';
 
 async function tryRefreshEx(): Promise<RefreshResult> {
   try {
-    const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+    // 10s cap: a cold server or dead network must degrade to 'offline', not
+    // hold the installed app on its splash screen indefinitely.
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+      signal: typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(10000) : undefined,
+    });
     if (res.status === 401 || res.status === 403) return 'denied';
     if (!res.ok) return 'offline';
     const data = await res.json();

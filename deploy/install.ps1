@@ -138,6 +138,12 @@ if (-not (Test-Path ("IIS:\AppPools\" + $SiteName))) {
   New-WebAppPool -Name $SiteName | Out-Null
 }
 Set-ItemProperty ("IIS:\AppPools\" + $SiteName) -Name managedRuntimeVersion -Value ''   # No Managed Code
+# Always-on: the default 20-minute idle timeout put the pool to sleep, so the
+# first visit after a quiet stretch paid a multi-second spin-up (installed-app
+# users saw a long black splash). Zero idle timeout + AlwaysRunning kills that.
+Set-ItemProperty ("IIS:\AppPools\" + $SiteName) -Name processModel.idleTimeout -Value ([TimeSpan]::Zero)
+Set-ItemProperty ("IIS:\AppPools\" + $SiteName) -Name startMode -Value 'AlwaysRunning'
+Set-ItemProperty ("IIS:\AppPools\" + $SiteName) -Name autoStart -Value $true
 
 $dist = Join-Path $Root 'apps\web\dist'
 if (Test-Path ("IIS:\Sites\" + $SiteName)) {
