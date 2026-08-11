@@ -42,6 +42,12 @@ $nodeDir = Split-Path $NodeExe
 $npm     = Join-Path $nodeDir 'npm.cmd'
 if (-not (Test-Path $npm)) { Die ("npm.cmd not found next to node (" + $nodeDir + ").") }
 
+# Self-healing PATH: npm's child scripts (prisma preinstall etc.) spawn plain
+# `node`/`cmd` from PATH — a server whose PATH lost the standard entries fails
+# deep inside npm ci with "'node' is not recognized" (seen live, Aug 2026).
+# Prepending here makes this script immune to a broken machine PATH.
+$env:Path = $nodeDir + ';C:\Windows\System32;C:\Windows;C:\Windows\System32\WindowsPowerShell\v1.0;' + $env:Path
+
 # Locate nssm.exe if not supplied
 if (-not $Nssm) {
   $cmd = Get-Command nssm -ErrorAction SilentlyContinue
