@@ -53,6 +53,11 @@ export default function WaterCard() {
   const goal = Math.max(1, data?.goal ?? 8);
   const reached = glasses >= goal;
 
+  // Personal ml target (35ml × bodyweight, clamped) — the flat 8-glass goal
+  // told a 55kg and a 100kg user the same thing. Display-only guidance.
+  const { data: me } = useQuery<any>({ queryKey: ['me'], queryFn: () => api.get('/api/me'), staleTime: 5 * 60_000 });
+  const mlTarget = me?.weightKg ? Math.min(4000, Math.max(1500, Math.round((me.weightKg * 35) / 100) * 100)) : null;
+
   // Celebrate only on the transition into "goal reached".
   const wasReached = useRef<boolean | null>(null);
   useEffect(() => {
@@ -92,6 +97,11 @@ export default function WaterCard() {
           {t('daily.glasses', { n: glasses, goal })}
         </span>
       </div>
+      {mlTarget && (
+        <p className="mt-0.5 text-[11px] text-gray-400">
+          {t('daily.mlTarget', { liters: (mlTarget / 1000).toFixed(1) })}
+        </p>
+      )}
 
       <div className="mt-3 flex items-center gap-2">
         <div className="flex min-w-0 flex-1 items-center justify-between gap-1">

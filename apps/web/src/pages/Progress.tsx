@@ -101,22 +101,28 @@ export default function Progress() {
         </div>
       </motion.section>
 
-      {weights.length > 1 && (
-        <motion.section
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '0px 0px -40px 0px' }}
-          transition={spring}
-          className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm"
-        >
-          <h2 className="mb-3 flex items-center gap-2 font-bold"><TrendingDown size={16} /> Weight trend</h2>
-          <Sparkline points={weights.map((w) => w.weightKg)} />
-          <div className="mt-2 flex justify-between text-xs text-gray-400">
-            <span>{weights[0].weightKg} {t('session.kg')}</span>
-            <span>{weights[weights.length - 1].weightKg} {t('session.kg')}</span>
+      {/* Weight: quick-log + trend. The chart could NEVER render before — no UI
+          ever wrote a WeightLog row, so weights was empty for every user. */}
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+        transition={spring}
+        className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm"
+      >
+        <h2 className="mb-3 flex items-center gap-2 font-bold"><TrendingDown size={16} /> {t('progress2.weightTrend')}</h2>
+        <WeightQuickLog />
+        {weights.length > 1 && (
+          <div className="mt-4">
+            <Sparkline points={weights.map((w) => w.weightKg)} />
+            <div className="mt-2 flex justify-between text-xs text-gray-400">
+              <span>{weights[0].weightKg} {t('session.kg')}</span>
+              <span>{weights[weights.length - 1].weightKg} {t('session.kg')}</span>
+            </div>
           </div>
-        </motion.section>
-      )}
+        )}
+        {weights.length <= 1 && <p className="mt-2 text-xs text-gray-400">{t('progress2.weightHint')}</p>}
+      </motion.section>
 
       <BodySection />
 
@@ -504,5 +510,43 @@ function Sparkline({ points }: { points: number[] }) {
         transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
       />
     </svg>
+  );
+}
+
+/** One number, one tap: the writer the weight-trend chart was starving for. */
+function WeightQuickLog() {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [kg, setKg] = useState('');
+  const save = useMutation({
+    mutationFn: () => api.post('/api/tracker/weight', { weightKg: Number(kg) }),
+    onSuccess: () => {
+      setKg('');
+      qc.invalidateQueries({ queryKey: ['progress'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
+      qc.invalidateQueries({ queryKey: ['me'] });
+      toast(t('progress2.weightSaved'), 'success');
+    },
+    onError: (e: any) => toast(e?.message ?? 'Failed', 'error'),
+  });
+  const n = Number(kg);
+  const valid = Number.isFinite(n) && n >= 20 && n <= 400;
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        inputMode="decimal"
+        className="input-field min-w-0 flex-1"
+        placeholder={t('progress2.weightPh')}
+        value={kg}
+        onChange={(e) => setKg(e.target.value.replace(/[^\d.]/g, ''))}
+      />
+      <button
+        onClick={() => valid && save.mutate()}
+        disabled={!valid || save.isPending}
+        className="btn-pill btn-primary min-h-[42px] shrink-0 px-5 text-sm disabled:opacity-50"
+      >
+        {t('common.save')}
+      </button>
+    </div>
   );
 }

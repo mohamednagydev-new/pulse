@@ -222,7 +222,13 @@
     "noFood": "No food logged today.",
     "describePh": "e.g. \"2 eggs, toast and orange juice\"",
     "describeHint": "Describe what you ate and we estimate the calories and macros.",
-    "kcalToday": "kcal today"
+    "kcalToday": "kcal today",
+    "editGoals": "Edit goals",
+    "goalsSaved": "Goals updated — your meal plan follows them",
+    "goalsHint": "Daily calorie & macro targets. The meal plan rebuilds itself around them.",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat"
   },
   "reels": {
     "forYou": "For You",
@@ -408,7 +414,11 @@
   },
   "progress2": {
     "prs": "Personal Records",
-    "prsEmpty": "Log sets during workouts to start tracking PRs."
+    "prsEmpty": "Log sets during workouts to start tracking PRs.",
+    "weightTrend": "Weight trend",
+    "weightHint": "Log your weight regularly and a trend line appears here",
+    "weightSaved": "Weight logged ✓",
+    "weightPh": "Your weight today (kg)"
   },
   "social2": {
     "follow": "Follow",
@@ -555,7 +565,8 @@
     "cm": "cm",
     "saved": "Saved ✓",
     "noBody": "No measurements yet — add your first.",
-    "voice": "Voice coach"
+    "voice": "Voice coach",
+    "mlTarget": "Your target ≈ {{liters}} L/day (35ml × your weight)"
   },
   "fun": {
     "spinTitle": "Daily spin",

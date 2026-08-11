@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Mic, Plus, Search, Trash2, Sparkles, UtensilsCrossed } from 'lucide-react';
+import { Camera, Mic, Plus, Search, Trash2, Sparkles, UtensilsCrossed, Pencil } from 'lucide-react';
+import Sheet from '../components/Sheet';
 import { listenOnce, voiceSupported } from '../lib/voiceInput';
 import { toast } from '../lib/toast';
 import { Link } from 'react-router-dom';
@@ -23,6 +24,7 @@ export default function Tracker() {
   const [busy, setBusy] = useState(false);
   const [picking, setPicking] = useState(false);
   const [photo, setPhoto] = useState(false);
+  const [goalsOpen, setGoalsOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const voice = useRef<{ cancel: () => void } | null>(null);
 
@@ -82,7 +84,13 @@ export default function Tracker() {
         transition={spring}
         className="mx-4 rounded-2xl bg-gradient-to-b from-white to-emerald-50/50 p-5 shadow-sm"
       >
-        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('tracker.today')}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('tracker.today')}</p>
+          {/* The meal plan literally says "change your targets in Tracker" — now true. */}
+          <button onClick={() => setGoalsOpen(true)} aria-label={t('tracker.editGoals')} className="flex items-center gap-1 text-[11px] font-bold text-brand-blue">
+            <Pencil size={11} /> {t('tracker.editGoals')}
+          </button>
+        </div>
         <div className="mt-1 flex items-end justify-between gap-3">
           <div className="min-w-0">
             <CountUp value={totals.calories} className="text-3xl font-extrabold" />
@@ -217,6 +225,7 @@ export default function Tracker() {
       )}
 
       <AnimatePresence>{picking && <FoodPicker onClose={() => setPicking(false)} />}</AnimatePresence>
+      <GoalsSheet open={goalsOpen} onClose={() => setGoalsOpen(false)} current={goals} />
       <AnimatePresence>{photo && <MealPhoto onClose={() => setPhoto(false)} />}</AnimatePresence>
 
       <div className="mt-4 space-y-2 px-4">
@@ -240,5 +249,75 @@ export default function Tracker() {
         {!data?.entries?.length && <p className="py-10 text-center text-sm text-gray-400">{t('tracker.noFood')}</p>}
       </div>
     </div>
+  );
+}
+
+/** Calorie/macro targets editor — PATCH /api/tracker/goals existed for months
+ *  with no UI while two bilingual strings told users to "change them in Tracker". */
+function GoalsSheet({ open, onClose, current }: { open: boolean; onClose: () => void; current: any }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [v, setV] = useState({ calories: '', protein: '', carbs: '', fat: '' });
+  useEffect(() => {
+    if (open) setV({
+      calories: String(current?.calories ?? ''),
+      protein: String(current?.protein ?? ''),
+      carbs: String(current?.carbs ?? ''),
+      fat: String(current?.fat ?? ''),
+    });
+  }, [open, current]);
+
+  const save = useMutation({
+    mutationFn: () =>
+      api.patch('/api/tracker/goals', {
+        ...(Number(v.calories) > 0 ? { goalCalories: Math.round(Number(v.calories)) } : {}),
+        ...(Number(v.protein) > 0 ? { goalProtein: Math.round(Number(v.protein)) } : {}),
+        ...(Number(v.carbs) > 0 ? { goalCarbs: Math.round(Number(v.carbs)) } : {}),
+        ...(Number(v.fat) > 0 ? { goalFat: Math.round(Number(v.fat)) } : {}),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tracker-day'] });
+      qc.invalidateQueries({ queryKey: ['meal-plan'] });
+      qc.invalidateQueries({ queryKey: ['me'] });
+      toast(t('tracker.goalsSaved'), 'success');
+      onClose();
+    },
+    onError: (e: any) => toast(e?.message ?? 'Failed', 'error'),
+  });
+
+  const FIELDS: { key: keyof typeof v; label: string }[] = [
+    { key: 'calories', label: 'kcal' },
+    { key: 'protein', label: `${t('tracker.protein')} (g)` },
+    { key: 'carbs', label: `${t('tracker.carbs')} (g)` },
+    { key: 'fat', label: `${t('tracker.fat')} (g)` },
+  ];
+
+  return (
+    <Sheet open={open} onClose={onClose} label={t('tracker.editGoals')}>
+      <div className="p-4 pb-6">
+        <h3 className="text-base font-bold">{t('tracker.editGoals')}</h3>
+        <p className="mt-0.5 text-xs text-gray-400">{t('tracker.goalsHint')}</p>
+        <div className="mt-4 grid grid-cols-2 gap-2.5">
+          {FIELDS.map(({ key, label }) => (
+            <label key={key} className="block">
+              <span className="text-[11px] font-bold text-gray-400">{label}</span>
+              <input
+                inputMode="numeric"
+                className="input-field mt-1"
+                value={v[key]}
+                onChange={(e) => setV({ ...v, [key]: e.target.value.replace(/\D/g, '') })}
+              />
+            </label>
+          ))}
+        </div>
+        <button
+          onClick={() => save.mutate()}
+          disabled={save.isPending || !(Number(v.calories) > 0)}
+          className="btn-pill btn-primary mt-4 min-h-[46px] w-full disabled:opacity-50"
+        >
+          {t('common.save')}
+        </button>
+      </div>
+    </Sheet>
   );
 }
