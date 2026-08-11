@@ -412,7 +412,11 @@
   },
   "social2": {
     "follow": "تابع",
-    "following": "بتتابعه"
+    "following": "بتتابعه",
+    "followers": "متابعين",
+    "activity": "النشاط",
+    "activeNow": "متصل دلوقتي 🟢",
+    "lastSeen": "آخر ظهور من {{ago}}"
   },
   "store": {
     "title": "المتجر والعروض",

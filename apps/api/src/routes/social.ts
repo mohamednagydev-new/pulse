@@ -8,7 +8,7 @@ import { env } from '../env';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { createFeedPost, areConnected } from '../lib/social';
 import { processVideo } from '../lib/video';
-import { emitToUser, onlineCount } from '../lib/realtime';
+import { emitToUser, onlineCount, isOnline } from '../lib/realtime';
 import { notifyUser } from './push';
 
 export const socialRouter = Router();
@@ -339,7 +339,7 @@ socialRouter.get('/users', async (req: AuthedRequest, res) => {
 socialRouter.get('/users/:id', async (req: AuthedRequest, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.params.id },
-    select: { ...userSelect, bio: true, xp: true, currentStreak: true, longestStreak: true, coachHeadline: true, coachBio: true, coachSpecialties: true },
+    select: { ...userSelect, bio: true, xp: true, currentStreak: true, longestStreak: true, coachHeadline: true, coachBio: true, coachSpecialties: true, lastSeenAt: true },
   });
   if (!user) return res.status(404).json({ error: 'Not found' });
   const [followers, followingCount, completions, isFollowing, posts] = await Promise.all([
@@ -356,7 +356,7 @@ socialRouter.get('/users/:id', async (req: AuthedRequest, res) => {
   ]);
   const statuses = await connectionStatusMap(req.userId!, [req.params.id]);
   res.json({
-    user: { ...user, connectionStatus: statuses.get(req.params.id) ?? 'none' },
+    user: { ...user, connectionStatus: statuses.get(req.params.id) ?? 'none', online: isOnline(req.params.id) },
     stats: { followers, following: followingCount, completions },
     isFollowing: Boolean(isFollowing),
     posts: posts.map((p) => shapePost(p, req.userId!)),
@@ -501,7 +501,7 @@ socialRouter.get('/buddies', async (req: AuthedRequest, res) => {
   const [users, xp, completions] = await Promise.all([
     prisma.user.findMany({
       where: { id: { in: ids } },
-      select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true, currentStreak: true, longestStreak: true, lastActiveOn: true },
+      select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true, currentStreak: true, longestStreak: true, lastActiveOn: true, lastSeenAt: true },
     }),
     prisma.xpEvent.groupBy({ by: ['userId'], where: { userId: { in: ids }, createdAt: { gte: since } }, _sum: { amount: true } }),
     prisma.lessonCompletion.groupBy({ by: ['userId'], where: { userId: { in: ids } }, _count: { _all: true } }),
@@ -520,6 +520,8 @@ socialRouter.get('/buddies', async (req: AuthedRequest, res) => {
       weeklyXp: xpMap.get(u.id) ?? 0,
       completions: compMap.get(u.id) ?? 0,
       lastActiveOn: u.lastActiveOn,
+      lastSeenAt: u.lastSeenAt,
+      online: isOnline(u.id),
     })),
   );
 });

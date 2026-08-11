@@ -53,6 +53,9 @@ model User {
   currentStreak Int      @default(0)
   longestStreak Int      @default(0)
   lastActiveOn  String?  // YYYY-MM-DD
+  /** Finer than lastActiveOn: touched (throttled) on any authenticated request,
+   *  so "last seen 2h ago" is real. Presence-now comes from live sockets. */
+  lastSeenAt    DateTime?
   streakFreezes Int      @default(1) // mercy tokens: one missed day consumes a freeze instead of resetting
   reminderHour  Int?     // preferred daily reminder hour (0-23), local
   onboarded     Boolean  @default(false)

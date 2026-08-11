@@ -408,7 +408,11 @@
   },
   "social2": {
     "follow": "Follow",
-    "following": "Following"
+    "following": "Following",
+    "followers": "Followers",
+    "activity": "Activity",
+    "activeNow": "Active now 🟢",
+    "lastSeen": "Last seen {{ago}}"
   },
   "store": {
     "title": "Store & Offers",

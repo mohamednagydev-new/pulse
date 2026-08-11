@@ -8,7 +8,7 @@ import { api } from '../../lib/api';
 import { MediaImage, Loader, ErrorMsg } from '../../components/ui';
 import Sheet from '../../components/Sheet';
 import TopBar from '../../components/TopBar';
-import PostCard from '../../components/PostCard';
+import PostCard, { timeAgo } from '../../components/PostCard';
 import CoachBadge from '../../components/CoachBadge';
 import { toast } from '../../lib/toast';
 
@@ -81,12 +81,22 @@ export default function UserProfile() {
       <div className="relative z-10 -mt-12 flex flex-col items-center">
         <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={tapSpring} className="relative">
           <MediaImage path={user.avatarUrl} label={user.firstName} className="h-28 w-28 rounded-full shadow-lg ring-4 ring-white dark:ring-[#191821]" seed={user.id.length} />
+          {user.online && (
+            <span className="absolute end-1.5 top-1.5 h-4 w-4 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#191821]" aria-hidden />
+          )}
           <span className="absolute -bottom-1.5 start-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-orange-500 to-pink-600 px-3 py-0.5 text-[11px] font-extrabold text-white shadow rtl:translate-x-1/2">
             {t('common.lv', { n: user.level })}
           </span>
         </motion.div>
         <p className="mt-3.5 flex items-center gap-1.5 px-6 text-center text-xl font-extrabold">
           {user.firstName} {user.lastName} {user.isCoach && <CoachBadge verified={user.coachVerified} />}
+        </p>
+        <p className={`mt-0.5 text-[11px] font-semibold ${user.online ? 'text-emerald-500' : 'text-gray-400'}`}>
+          {user.online
+            ? t('social2.activeNow', { defaultValue: 'Active now' })
+            : user.lastSeenAt
+              ? t('social2.lastSeen', { defaultValue: 'Last seen {{ago}}', ago: timeAgo(user.lastSeenAt) })
+              : ''}
         </p>
         {user.isCoach && user.coachHeadline && <p className="mt-0.5 px-8 text-center text-sm font-semibold text-brand-blue">{user.coachHeadline}</p>}
         {user.bio && <p className="mt-1.5 max-w-xs px-8 text-center text-sm leading-relaxed text-gray-500">{user.bio}</p>}

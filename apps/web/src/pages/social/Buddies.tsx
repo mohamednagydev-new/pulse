@@ -194,12 +194,16 @@ export function Buddies() {
                         <span className="text-sm font-extrabold text-gray-400">{idx + 1}</span>
                       )}
                     </span>
-                    <MediaImage
-                      path={row.avatarUrl}
-                      label={row.firstName}
-                      className="h-10 w-10 shrink-0 rounded-full"
-                      seed={row.id?.length}
-                    />
+                    <span className="relative shrink-0">
+                      <MediaImage
+                        path={row.avatarUrl}
+                        label={row.firstName}
+                        className="h-10 w-10 rounded-full"
+                        seed={row.id?.length}
+                      />
+                      {/* Live presence dot — sockets, not polling. */}
+                      {row.online && <span className="absolute -end-0.5 -top-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" aria-hidden />}
+                    </span>
                     <p className="min-w-0 flex-1 truncate font-semibold">
                       {row.isMe ? t('battle.you') : `${row.firstName} ${row.lastName}`}
                       {idx === 0 ? ' 👑' : ''}

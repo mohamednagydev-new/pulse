@@ -15,6 +15,7 @@ interface CountRow {
   count: number;
 }
 interface AnalyticsData {
+  onlineNow?: number;
   dau: DauPoint[];
   funnel?: Record<string, Record<string, number>>;
   clientErrors?: { message: string; count: number }[];
@@ -219,6 +220,7 @@ export default function AdminAnalytics() {
 
   const totals = data?.totals;
   const tiles: { label: string; value: number }[] = [
+    { label: '🟢 Online now', value: data?.onlineNow ?? 0 },
     { label: 'Users', value: totals?.users ?? 0 },
     { label: 'Workouts', value: totals?.workouts ?? 0 },
     { label: 'Reel views', value: totals?.reelWatches ?? 0 },

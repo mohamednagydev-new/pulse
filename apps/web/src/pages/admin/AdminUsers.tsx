@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, BadgeCheck, Star, Search, KeyRound, Trash2, Copy, Shield } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Loader } from '../../components/ui';
+import { timeAgo } from '../../components/PostCard';
 import Avatar from '../../components/Avatar';
 import Sheet from '../../components/Sheet';
 import { toast } from '../../lib/toast';
@@ -113,7 +114,7 @@ function UserSheet({ user, onClose, onChanged }: { user: any | null; onClose: ()
             <Avatar path={u.avatarUrl} name={`${u.firstName} ${u.lastName}`} className="h-12 w-12" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-extrabold">{u.firstName} {u.lastName}</p>
-              <p className="truncate text-xs text-gray-400">Lv {u.level ?? 1} · {u.xp ?? 0} XP · 🔥{u.currentStreak ?? 0} · last active {u.lastActiveOn ?? '—'}</p>
+              <p className="truncate text-xs text-gray-400">Lv {u.level ?? 1} · {u.xp ?? 0} XP · 🔥{u.currentStreak ?? 0} · seen {u.lastSeenAt ? timeAgo(u.lastSeenAt) : (u.lastActiveOn ?? '—')}</p>
             </div>
           </div>
 

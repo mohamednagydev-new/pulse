@@ -10,6 +10,7 @@ import { requireAuth, requireAdmin } from '../middleware/auth';
 import { processVideo } from '../lib/video';
 import { buildTranslationPatch } from '../lib/translate';
 import { aiEnabled, chatComplete } from '../lib/openai';
+import { onlineCount } from '../lib/realtime';
 import { notifyUser } from './push';
 import { daysAgoStr } from '../lib/time';
 
@@ -593,6 +594,7 @@ adminRouter.get('/analytics', async (_req, res) => {
   });
 
   res.json({
+    onlineNow: onlineCount(),
     dau: dau.map((d) => ({ day: d.day, users: Number(d.users) })),
     funnel,
     clientErrors: clientErrorsRaw.map((e) => ({ message: e.meta, count: e._count })),
@@ -924,7 +926,7 @@ adminRouter.get('/users', async (req, res) => {
     where: q
       ? { OR: [{ email: { contains: q } }, { firstName: { contains: q } }, { lastName: { contains: q } }] }
       : {},
-    select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true, isCoach: true, coachVerified: true, coachFeatured: true, avatarUrl: true, xp: true, level: true, currentStreak: true, lastActiveOn: true },
+    select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true, isCoach: true, coachVerified: true, coachFeatured: true, avatarUrl: true, xp: true, level: true, currentStreak: true, lastActiveOn: true, lastSeenAt: true },
     orderBy: { createdAt: 'desc' },
     take,
   });
