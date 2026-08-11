@@ -469,10 +469,12 @@ adminRouter.patch('/tickets/:id', async (req, res) => {
   // an email, the reply actually reaches them (it used to save-and-vanish).
   if (sendingReply && !ticket.userId && ticket.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ticket.contact)) {
     const { sendMail } = await import('../lib/mailer');
+    const replyText = String(reply).trim();
     sendMail({
       to: ticket.contact,
       subject: `PULSE — Reply to: ${ticket.subject}`,
-      text: `${String(reply).trim()}\n\n— PULSE team · pulse.geddo.online`,
+      text: `${replyText}\n\n— PULSE team · pulse.geddo.online`,
+      html: `<p>${replyText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</p><p>— PULSE team · <a href="https://pulse.geddo.online">pulse.geddo.online</a></p>`,
     }).catch((e: any) => console.warn('[support] guest reply mail failed:', e?.message));
   }
   if (sendingReply && ticket.userId) {
