@@ -89,7 +89,7 @@ async function runCheck() {
   const nudgeSlot = await claimJob(`nudge:${day}:${hour}`);
   const candidates = nudgeSlot
     ? await prisma.user.findMany({
-        where: { NOT: { lastActiveOn: day }, ...(pushEnabled() ? { pushSubs: { some: {} } } : {}) },
+        where: { NOT: { lastActiveOn: day } }, // no pushSubs filter: in-app rows must reach EVERY user, not only push-subscribed ones
         select: { id: true, firstName: true, currentStreak: true, reminderHour: true, preferredLang: true },
       })
     : [];
@@ -228,7 +228,7 @@ async function runCheck() {
       where: {
         lastActiveOn: daysAgoStr(1),
         currentStreak: { gte: 3 },
-        ...(pushEnabled() ? { pushSubs: { some: {} } } : {}),
+
       },
       select: { id: true, firstName: true, currentStreak: true, preferredLang: true },
     });
@@ -255,7 +255,7 @@ async function runCheck() {
       where: {
         OR: [{ lastActiveOn: { lt: threeAgo } }, { lastActiveOn: null }],
         createdAt: { lt: new Date(Date.now() - 3 * 86_400_000) },
-        ...(pushEnabled() ? { pushSubs: { some: {} } } : {}),
+
       },
       select: { id: true, firstName: true, preferredLang: true },
     });

@@ -130,6 +130,13 @@ gamificationRouter.delete('/challenges/:id', async (req: AuthedRequest, res) => 
   res.json({ ok: true });
 });
 
+// Leave a challenge — joining was permanent before; a mistaken join dragged a
+// dead 0/N progress bar in "Mine" forever.
+gamificationRouter.post('/challenges/:id/leave', async (req: AuthedRequest, res) => {
+  await prisma.challengeParticipant.deleteMany({ where: { challengeId: req.params.id, userId: req.userId! } });
+  res.json({ ok: true });
+});
+
 gamificationRouter.post('/challenges/:id/join', async (req: AuthedRequest, res) => {
   const challenge = await prisma.challenge.findUnique({ where: { id: req.params.id } });
   if (!challenge) return res.status(404).json({ error: 'Not found' });

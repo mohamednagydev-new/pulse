@@ -1,8 +1,10 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 import { api } from '../../lib/api';
+import { toast } from '../../lib/toast';
+import { useAuth } from '../../store/auth';
 import { Loader, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import { useState } from 'react';
@@ -16,6 +18,8 @@ export default function LessonPage() {
   const { id } = useParams();
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const guest = useAuth((s) => s.status !== 'authed');
   const [celebrate, setCelebrate] = useState(false);
   const { data: lesson, isLoading, error } = useQuery({
     queryKey: ['lesson', id],
@@ -26,8 +30,13 @@ export default function LessonPage() {
     mutationFn: () => api.post('/api/me/completions', { lessonId: id }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['completions'] });
+      // The program page owns the progress bar + the "program finished →
+      // what's next" handoff; stale caches hid both after a completion.
+      qc.invalidateQueries({ queryKey: ['path-program'] });
+      qc.invalidateQueries({ queryKey: ['path-current'] });
       setCelebrate(true);
     },
+    onError: (e: any) => toast(e?.message || t('common.error', { defaultValue: 'Something went wrong' }), 'error'),
   });
 
   // Loading/error keep the section shell + a back affordance — no bare screen, never stranded.
@@ -71,12 +80,23 @@ export default function LessonPage() {
         {lesson.description && <p className="mt-3 text-gray-600">{lesson.description}</p>}
 
         <button
-          onClick={() => complete.mutate()}
+          onClick={() => (guest ? navigate('/register') : complete.mutate())}
           disabled={complete.isPending || complete.isSuccess}
           className="btn-pill btn-green mt-6 w-full gap-2 disabled:opacity-70"
         >
           <Check size={18} /> {complete.isSuccess ? t('programs.markedDone') : t('programs.markComplete')}
         </button>
+
+        {/* The completion handoff: back to the program for the next day (or the
+            "you finished it!" celebration) — confetti into a dead screen before. */}
+        {complete.isSuccess && lesson.program?.id && (
+          <button
+            onClick={() => navigate(`/programs/${lesson.program.id}`)}
+            className="btn-pill btn-primary mt-3 w-full gap-2"
+          >
+            {t('programs.continueProgram')} <ArrowRight size={16} className="rtl:rotate-180" />
+          </button>
+        )}
 
         <RelatedReels keyword={reelKeyword} className="mt-8" />
       </div>

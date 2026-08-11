@@ -222,6 +222,44 @@ socialRouter.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 // ---- Create a post (text and/or media) ----
+// Own-content control: delete my post / my comment (admins have their own
+// moderation routes; users shouldn't need an admin for their own typo).
+socialRouter.delete('/posts/:id', async (req: AuthedRequest, res) => {
+  const r = await prisma.feedPost.deleteMany({ where: { id: req.params.id, userId: req.userId! } });
+  if (!r.count) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+});
+socialRouter.delete('/comments/:id', async (req: AuthedRequest, res) => {
+  const r = await prisma.postComment.deleteMany({ where: { id: req.params.id, userId: req.userId! } });
+  if (!r.count) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+});
+
+// Report a feed post — the public-feed sibling of the chat report. Admins get
+// pinged with a deep link; the post itself is one tap from deletion in
+// Moderation → Feed.
+socialRouter.post('/posts/:id/report', async (req: AuthedRequest, res) => {
+  const post = await prisma.feedPost.findUnique({
+    where: { id: req.params.id },
+    include: { user: { select: { firstName: true, lastName: true } } },
+  });
+  if (!post) return res.status(404).json({ error: 'Not found' });
+  const reporter = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } });
+  const excerpt = (post.text ?? post.textAr ?? (post.mediaType ? `[${post.mediaType}]` : '')).slice(0, 80);
+  const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+  for (const a of admins) {
+    notifyUser(a.id, {
+      title: 'Post reported 🚩',
+      titleAr: 'منشور اتبلغ عنه 🚩',
+      body: `${reporter?.firstName ?? 'A user'} reported a post by ${post.user.firstName}: "${excerpt}"`,
+      bodyAr: `${reporter?.firstName ?? 'مستخدم'} بلّغ عن منشور من ${post.user.firstName}: "${excerpt}"`,
+      url: '/admin/moderation',
+      type: 'general',
+    }).catch(() => {});
+  }
+  res.status(201).json({ ok: true });
+});
+
 socialRouter.post('/posts', async (req: AuthedRequest, res) => {
   const parsed = z
     .object({
@@ -329,7 +367,8 @@ socialRouter.post('/users/:id/follow', async (req: AuthedRequest, res) => {
   });
   const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } });
   emitToUser(req.params.id, 'notify', { type: 'follow' });
-  notifyUser(req.params.id, { title: 'New follower', titleAr: 'متابع جديد', body: `${me?.firstName ?? 'Someone'} started following you`, bodyAr: `${me?.firstName ?? 'حد'} بدأ يتابعك`, url: '/community' });
+  // Deep-link to the follower's own profile — /community told you nothing about who.
+  notifyUser(req.params.id, { title: 'New follower', titleAr: 'متابع جديد', body: `${me?.firstName ?? 'Someone'} started following you`, bodyAr: `${me?.firstName ?? 'حد'} بدأ يتابعك`, url: `/u/${req.userId}`, type: 'follow' });
   res.json({ ok: true });
 });
 
@@ -453,7 +492,7 @@ socialRouter.post('/connections/:userId', async (req: AuthedRequest, res) => {
       await prisma.connection.deleteMany({ where: { requesterId: me, addresseeId: other } });
       const meUser = await prisma.user.findUnique({ where: { id: me }, select: { firstName: true } });
       emitToUser(other, 'notify', { type: 'connect' });
-      notifyUser(other, { title: 'New buddy', titleAr: 'صاحب جديد', body: `${meUser?.firstName ?? 'Someone'} is now your buddy`, bodyAr: `${meUser?.firstName ?? 'حد'} بقى صاحبك دلوقتي`, url: '/buddies' });
+      notifyUser(other, { title: 'New buddy', titleAr: 'صاحب جديد', body: `${meUser?.firstName ?? 'Someone'} is now your buddy`, bodyAr: `${meUser?.firstName ?? 'حد'} بقى صاحبك دلوقتي`, url: '/buddies', type: 'follow' });
       return res.json({ ok: true, status: 'accepted' });
     }
     return res.json({ ok: true, status: existing.status });
@@ -467,7 +506,7 @@ socialRouter.post('/connections/:userId', async (req: AuthedRequest, res) => {
   });
   const meUser = await prisma.user.findUnique({ where: { id: me }, select: { firstName: true } });
   emitToUser(other, 'notify', { type: 'connect' });
-  notifyUser(other, { title: 'Buddy request', titleAr: 'طلب صداقة', body: `${meUser?.firstName ?? 'Someone'} wants to connect`, bodyAr: `${meUser?.firstName ?? 'حد'} عايز يكون صاحبك`, url: '/buddies' });
+  notifyUser(other, { title: 'Buddy request', titleAr: 'طلب صداقة', body: `${meUser?.firstName ?? 'Someone'} wants to connect`, bodyAr: `${meUser?.firstName ?? 'حد'} عايز يكون صاحبك`, url: '/buddies', type: 'follow' });
   res.json({ ok: true, status: 'pending' });
 });
 
@@ -487,7 +526,7 @@ socialRouter.post('/connections/:userId/accept', async (req: AuthedRequest, res)
   await prisma.connection.deleteMany({ where: { requesterId: me, addresseeId: other } });
   const meUser = await prisma.user.findUnique({ where: { id: me }, select: { firstName: true } });
   emitToUser(other, 'notify', { type: 'connect' });
-  notifyUser(other, { title: 'Buddy request accepted', titleAr: 'طلب الصداقة اتقبل', body: `${meUser?.firstName ?? 'Someone'} accepted your request`, bodyAr: `${meUser?.firstName ?? 'حد'} قبل طلبك`, url: '/buddies' });
+  notifyUser(other, { title: 'Buddy request accepted', titleAr: 'طلب الصداقة اتقبل', body: `${meUser?.firstName ?? 'Someone'} accepted your request`, bodyAr: `${meUser?.firstName ?? 'حد'} قبل طلبك`, url: '/buddies', type: 'follow' });
   res.json({ ok: true });
 });
 
@@ -592,6 +631,6 @@ socialRouter.post('/buddies/:userId/cheer', async (req: AuthedRequest, res) => {
   if (cheerCooldown.size > 5000) cheerCooldown.clear(); // bounded memory
   const meUser = await prisma.user.findUnique({ where: { id: me }, select: { firstName: true } });
   emitToUser(other, 'notify', { type: 'cheer' });
-  notifyUser(other, { title: 'Cheer', titleAr: 'تشجيع', body: `${meUser?.firstName ?? 'Someone'} is cheering you on! 💪`, bodyAr: `${meUser?.firstName ?? 'حد'} بيشجعك! 💪`, url: '/community', type: 'cheer' });
+  notifyUser(other, { title: 'Cheer', titleAr: 'تشجيع', body: `${meUser?.firstName ?? 'Someone'} is cheering you on! 💪`, bodyAr: `${meUser?.firstName ?? 'حد'} بيشجعك! 💪`, url: '/buddies', type: 'cheer' });
   res.json({ ok: true });
 });

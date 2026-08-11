@@ -313,6 +313,9 @@ export default function App() {
           <Route path="/u/:id" element={<UserProfile />} />
           <Route path="/chat" element={<ChatList />} />
           <Route path="/chat/:id" element={<ChatRoom />} />
+          {/* NOT admin-gated — this sat inside RequireAdmin for a day and every
+              normal user tapping "AI Coach" was silently bounced to Home. */}
+          <Route path="/coach-chat" element={<CoachChat />} />
           <Route path="/buddies" element={<Buddies />} />
           <Route path="/reels" element={<Reels />} />
           <Route path="/notifications" element={<Notifications />} />
@@ -353,7 +356,6 @@ export default function App() {
           <Route path="/admin/support" element={<AdminSupport />} />
           <Route path="/admin/posts" element={<AdminPosts />} />
           <Route path="/admin/moderation" element={<AdminModeration />} />
-          <Route path="/coach-chat" element={<CoachChat />} />
           <Route path="/admin/:resource" element={<AdminResource />} />
         </Route>
 

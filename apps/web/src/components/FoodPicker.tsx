@@ -81,6 +81,7 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
       api.post('/api/meals/foods/log', { foodId: picked!.id, portions, mealType: slot, ...(date ? { date } : {}) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tracker-day'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
       onClose();
     },
   });

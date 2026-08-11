@@ -59,6 +59,7 @@ export default function MealPlan() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meal-plan'] });
       qc.invalidateQueries({ queryKey: ['tracker-day'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
     },
   });
 
@@ -496,6 +497,7 @@ function SwapSheet({ slot, currentId, onClose }: { slot: string; currentId: stri
     mutationFn: (recipeId: string) => api.post('/api/meals/log', { recipeId, slot, servings: 1 }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tracker-day'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
       qc.invalidateQueries({ queryKey: ['meal-plan'] });
       onClose();
     },

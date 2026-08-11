@@ -144,7 +144,8 @@
     "coaches": "Coaches",
     "workoutSub": "Strength · Sessions",
     "yogaSub": "Flow · Mobility",
-    "group": "Group"
+    "group": "Group",
+    "continueProgram": "Continue the program"
   },
   "exercises": {
     "title": "Exercises",
@@ -279,7 +280,10 @@
     "chatGateTitle": "Chat with {{name}}",
     "chatGateNone": "You need to be buddies to chat. Send a request — the moment {{name}} accepts, your chat opens.",
     "chatGateOut": "Request sent! Your chat opens as soon as {{name}} accepts.",
-    "chatGateIn": "{{name}} already sent you a buddy request — accept it and start chatting."
+    "chatGateIn": "{{name}} already sent you a buddy request — accept it and start chatting.",
+    "cheerCooldown": "Already cheered them recently — try again in a few hours",
+    "decline": "Decline",
+    "cancelRequest": "Withdraw this buddy request?"
   },
   "invite": {
     "title": "Invite friends 🎁",
@@ -942,7 +946,9 @@
     "reward": "+{{n}} XP on completion",
     "join": "Join challenge",
     "joined": "You're in! 💪",
-    "completed": "Completed ✅"
+    "completed": "Completed ✅",
+    "leave": "Leave challenge",
+    "leaveConfirm": "Leave this challenge? Your progress in it is discarded."
   },
   "community": {
     "addMedia": "Add media",
@@ -950,7 +956,14 @@
     "noActivity": "No activity yet.",
     "sharePh": "Share your progress…",
     "quiet": "Your feed is quiet.",
-    "commentPh": "Add a comment…"
+    "commentPh": "Add a comment…",
+    "pinned": "Pinned",
+    "report": "Report",
+    "reported": "Reported — the team will review it",
+    "reportConfirm": "Report this post to the PULSE team?",
+    "deleteConfirm": "Delete this post?",
+    "postDeleted": "Post deleted",
+    "commentFailed": "Comment not sent"
   },
   "bookmarks": {
     "empty": "No bookmarks yet."

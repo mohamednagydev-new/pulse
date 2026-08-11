@@ -43,6 +43,10 @@ export default function UserProfile() {
     mutationFn: () => api.post(`/api/social/connections/${id}/accept`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast(`${t('buddies.connect')} ✓`, 'success'); },
   });
+  const cancelConn = useMutation({
+    mutationFn: () => api.del(`/api/social/connections/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+  });
   const block = useMutation({
     mutationFn: () => api.post(`/api/social/users/${id}/block`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast(t('social2.blockDone'), 'success'); },
@@ -146,8 +150,12 @@ export default function UserProfile() {
         ) : (
           <>
             {user.connectionStatus === 'pending_out' ? (
-              <button disabled className="btn-pill btn-ghost flex min-h-[34px] items-center justify-center gap-1.5 px-4 text-[13px] text-gray-400">
-                <Clock size={14} /> {t('buddies.requested')}
+              // Tappable: a sent request can now be withdrawn (same DELETE as unfriend).
+              <button
+                onClick={() => window.confirm(t('buddies.cancelRequest')) && cancelConn.mutate()}
+                className="btn-pill btn-ghost flex min-h-[34px] items-center justify-center gap-1.5 px-4 text-[13px] text-gray-400"
+              >
+                <Clock size={14} /> {t('buddies.requested')} ✕
               </button>
             ) : user.connectionStatus === 'pending_in' ? (
               <motion.button whileTap={{ scale: 0.92 }} transition={tapSpring} onClick={() => accept.mutate()} className="btn-pill btn-primary flex min-h-[34px] items-center justify-center gap-1.5 px-4 text-[13px]">
@@ -273,13 +281,17 @@ function CoachSection({ userId }: { userId: string }) {
             )}
           </motion.button>
         </div>
-        <div className="mt-3 flex items-center gap-1.5">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <motion.button key={s} whileTap={{ scale: 0.8 }} transition={tapSpring} onClick={() => rate.mutate(s)} className="flex h-10 w-8 items-center justify-center">
-              <Star size={18} className={rating?.mine && s <= rating.mine ? 'fill-brand-pink text-brand-pink' : 'text-gray-300'} />
-            </motion.button>
-          ))}
-        </div>
+        {/* Only accepted clients may rate (the server 403s everyone else) — a
+            tappable star row for the general public was a guaranteed-fail button. */}
+        {status === 'accepted' && (
+          <div className="mt-3 flex items-center gap-1.5">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <motion.button key={s} whileTap={{ scale: 0.8 }} transition={tapSpring} onClick={() => rate.mutate(s)} className="flex h-10 w-8 items-center justify-center">
+                <Star size={18} className={rating?.mine && s <= rating.mine ? 'fill-brand-pink text-brand-pink' : 'text-gray-300'} />
+              </motion.button>
+            ))}
+          </div>
+        )}
       </div>
 
       {!!programs?.length && (

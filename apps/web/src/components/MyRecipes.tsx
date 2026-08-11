@@ -32,6 +32,7 @@ export default function MyRecipes({ onClose, date }: { onClose: () => void; date
       api.post(`/api/meals/my-recipes/${id}/log`, { servings: 1, mealType: slot, ...(date ? { date } : {}) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tracker-day'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
       toast(t('myrec.logged'), 'success');
       onClose();
     },

@@ -78,17 +78,13 @@ export async function awardSeasonBadge(userId: string, seasonKey: string) {
   const already = await prisma.userBadge.findUnique({ where: { userId_badgeId: { userId, badgeId: badge.id } } });
   if (already) return;
   await prisma.userBadge.create({ data: { userId, badgeId: badge.id } });
-  const u = await prisma.user
-    .findUnique({ where: { id: userId }, select: { preferredLang: true } })
-    .catch(() => null);
-  const ar = u?.preferredLang === 'ar';
-  await prisma.notification.create({
-    data: {
-      userId,
-      type: 'general',
-      title: ar ? `فتحت وسام الموسم ${badge.icon ?? '🏅'}` : `Seasonal badge unlocked ${badge.icon ?? '🏅'}`,
-      body: ar ? badge.titleAr ?? badge.title : badge.title,
-      url: '/achievements',
-    },
+  const { notifyUser } = await import('../routes/push');
+  await notifyUser(userId, {
+    type: 'general',
+    title: `Seasonal badge unlocked ${badge.icon ?? '🏅'}`,
+    titleAr: `فتحت وسام الموسم ${badge.icon ?? '🏅'}`,
+    body: badge.title,
+    bodyAr: badge.titleAr ?? badge.title,
+    url: '/achievements',
   }).catch(() => {});
 }

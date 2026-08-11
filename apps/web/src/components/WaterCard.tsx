@@ -45,6 +45,7 @@ export default function WaterCard() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['water'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
     },
   });
 

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { emitToUser } from '../lib/realtime';
+import { notifyUser } from './push';
 
 export const groupRouter = Router();
 groupRouter.use(requireAuth);
@@ -103,6 +104,16 @@ groupRouter.post('/:id/join', async (req: AuthedRequest, res) => {
     update: {},
   });
   emitToUser(session.coachUserId, 'notify', { type: 'group-join' });
+  // Persistent too — a socket emit alone evaporates if the coach is offline.
+  const joiner = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } });
+  notifyUser(session.coachUserId, {
+    title: 'New participant 🙌',
+    titleAr: 'مشارك جديد 🙌',
+    body: `${joiner?.firstName ?? 'Someone'} joined "${session.title}"`,
+    bodyAr: `${joiner?.firstName ?? 'حد'} انضم لـ"${session.title}"`,
+    url: `/group/${session.id}`,
+    type: 'general',
+  }).catch(() => {});
   res.json(row);
 });
 

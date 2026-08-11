@@ -4,6 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { prisma } from '../lib/prisma';
+import { bumpChallenges } from '../lib/social';
 import { env } from '../env';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { awardXp } from '../lib/social';
@@ -44,6 +45,7 @@ dailyRouter.post('/water', async (req: AuthedRequest, res) => {
       create: { userId: req.userId!, date, glasses: parsed.data.set },
       update: { glasses: parsed.data.set },
     });
+    await bumpChallenges(req.userId!, 'calorie').catch(() => {}); // water challenges advance on the tap itself
     return res.json({ glasses: row.glasses, goal: WATER_GOAL });
   }
 
@@ -61,6 +63,7 @@ dailyRouter.post('/water', async (req: AuthedRequest, res) => {
       data: { glasses: Math.max(0, Math.min(30, row.glasses)) },
     });
   }
+  await bumpChallenges(req.userId!, 'calorie').catch(() => {});
   res.json({ glasses: row.glasses, goal: WATER_GOAL });
 });
 
@@ -108,7 +111,7 @@ const QUESTS: Quest[] = [
   {
     key: 'workout', en: 'Complete a workout', ar: 'خلّص تمرينة', icon: '💪', target: 1,
     progress: (userId, day) =>
-      prisma.xpEvent.count({ where: { userId, reason: 'workout-session', createdAt: { gte: startOfDay(day), lte: endOfDay(day) } } }),
+      prisma.xpEvent.count({ where: { userId, reason: { in: ['workout-session', 'workout-lesson'] }, createdAt: { gte: startOfDay(day), lte: endOfDay(day) } } }),
   },
   {
     key: 'water', en: 'Drink 8 glasses of water', ar: 'اشرب ٨ أكواب مياه', icon: '💧', target: WATER_GOAL,

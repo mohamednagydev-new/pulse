@@ -304,7 +304,7 @@ export default function Profile() {
               <h3 className="text-base font-bold">{t('profile.avatarTitle')}</h3>
               <p className="mt-0.5 text-xs text-gray-400">{t('profile.avatarSub')}</p>
               <div className="mt-4 grid grid-cols-4 gap-3">
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                {Array.from({ length: 24 }, (_, i) => i + 1).map((n) => (
                   <button
                     key={n}
                     onClick={() => pickAvatar(n)}

@@ -115,6 +115,7 @@ export default function BarcodeScan({ onClose, date }: { onClose: () => void; da
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tracker-day'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
       toast(t('barcode.logged'), 'success');
       onClose();
     },

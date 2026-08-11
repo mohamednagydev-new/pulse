@@ -122,7 +122,7 @@ export function MediaImage({
   if (className.includes('rounded-full')) {
     let h = 0;
     for (const ch of label ?? '') h = (h * 31 + ch.charCodeAt(0)) % 997;
-    return <img src={`/avatars/a${(h % 12) + 1}.svg`} alt={label ?? ''} className={`object-cover ${className}`} loading="lazy" />;
+    return <img src={`/avatars/a${(h % 24) + 1}.svg`} alt={label ?? ''} className={`object-cover ${className}`} loading="lazy" />;
   }
   // No uploaded image → auto-generated, topic-themed animated cover art (no uploads needed).
   return <CoverArt label={label} className={className} />;

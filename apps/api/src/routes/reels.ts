@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
-import { createFeedPost } from '../lib/social';
+import { createFeedPost, bumpChallenges } from '../lib/social';
 import { pickLang } from '../lib/localize';
 import { embedUrl } from '../lib/embed';
 
@@ -255,6 +255,7 @@ reelsRouter.post('/watch', async (req: AuthedRequest, res) => {
       completed: parsed.data.completed ?? false,
     },
   });
+  await bumpChallenges(req.userId!, 'calorie').catch(() => {}); // reels challenges advance on the watch
   res.json({ ok: true });
 });
 

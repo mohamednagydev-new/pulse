@@ -104,6 +104,7 @@ export default function MealPhoto({ onClose }: { onClose: () => void }) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tracker-day'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
       onClose();
     },
   });

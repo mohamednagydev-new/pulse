@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen, ChevronRight, Clock, Dumbbell, Salad, ScanLine, Search, Sparkles, X } from 'lucide-react';
 import { api } from '../lib/api';
+import { useAuth } from '../store/auth';
 import { Loader, ErrorMsg, MediaImage } from '../components/ui';
 import TopBar from '../components/TopBar';
 
@@ -64,13 +65,16 @@ export default function SearchPage() {
   });
 
   // Semantic "smart" results — gracefully empty when AI/embeddings aren't configured.
+  // Guests skip it entirely: the endpoint is auth-only, and each guest keystroke
+  // was burning a doomed 401 + refresh round-trip.
+  const authed = useAuth((s) => s.status === 'authed');
   const { data: smart } = useQuery({
     queryKey: ['search-ai', debounced],
     queryFn: async () => {
       try { return await api.get(`/api/ai/search?q=${encodeURIComponent(debounced)}`); }
       catch { return { results: [] }; }
     },
-    enabled,
+    enabled: enabled && authed,
   });
 
   // A search that produced something is worth remembering.

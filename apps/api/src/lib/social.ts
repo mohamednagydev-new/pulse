@@ -93,7 +93,14 @@ export async function bumpChallenges(userId: string, trigger: 'workout' | 'calor
     if (goal === 'lessons' && trigger === 'workout') progress = p.progress + 1;
     else if (goal === 'streak') progress = user?.currentStreak ?? p.progress;
     else if (goal === 'calories') {
-      const sum = await prisma.calorieEntry.aggregate({ where: { userId, date: dayString() }, _sum: { calories: true } });
+      // Since the challenge opened, like every other cumulative goal — the old
+      // today-only sum made any multi-day calorie challenge mathematically
+      // unwinnable (progress RESET at midnight; the monthly 20k could only
+      // complete via a 20k-kcal day).
+      const sum = await prisma.calorieEntry.aggregate({
+        where: { userId, date: { gte: p.challenge.startsOn } },
+        _sum: { calories: true },
+      });
       progress = sum._sum.calories ?? p.progress;
     } else if (goal === 'water') {
       // Total glasses logged since the challenge opened.
@@ -132,6 +139,18 @@ export async function bumpChallenges(userId: string, trigger: 'workout' | 'calor
     await createFeedPost(userId, 'challenge', `Completed the "${p.challenge.title}" challenge! 🏆`, 'challenge', p.challengeId, {
       textAr: `خلّص تحدي "${p.challenge.titleAr ?? p.challenge.title}"! 🏆`,
     });
+    // Winning was completely silent — a 250 XP reward deserves at least what a
+    // buddy cheer gets. Live event + persistent row + push.
+    emitToUser(userId, 'notify', { type: 'challenge' });
+    const { notifyUser } = await import('../routes/push');
+    notifyUser(userId, {
+      title: 'Challenge complete! 🏆',
+      titleAr: 'خلصت التحدي! 🏆',
+      body: `"${p.challenge.title}" done${p.challenge.rewardXp > 0 ? ` — +${p.challenge.rewardXp} XP` : ''}`,
+      bodyAr: `"${p.challenge.titleAr ?? p.challenge.title}" خلص${p.challenge.rewardXp > 0 ? ` — كسبت ${p.challenge.rewardXp} نقطة` : ''}`,
+      url: `/challenge/${p.challengeId}`,
+      type: 'challenge',
+    }).catch(() => {});
     if (p.challenge.rewardXp > 0) await awardXp(userId, p.challenge.rewardXp, 'challenge_complete').catch(() => {});
     if (p.challenge.seasonKey) {
       const { awardSeasonBadge } = await import('./seasons');

@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { MessageCircle, Send } from 'lucide-react';
+import { MessageCircle, Send, Trash2, Flag } from 'lucide-react';
 import { api } from '../lib/api';
+import { toast } from '../lib/toast';
+import { useAuth } from '../store/auth';
 import { useSignedMedia } from '../lib/media';
 import { MediaImage } from './ui';
 import CoachBadge from './CoachBadge';
@@ -37,6 +39,7 @@ function PostVideo({ id }: { id: string }) {
 export default function PostCard({ post, queryKey }: { post: any; queryKey: any[] }) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const meId = useAuth((s) => s.user?.id);
   const [showComments, setShowComments] = useState(false);
   const [comment, setComment] = useState('');
 
@@ -50,8 +53,23 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
       setComment('');
       qc.invalidateQueries({ queryKey });
     },
+    // A closed announcement returns 410 — silence here left users typing into the void.
+    onError: (e: any) => toast(e?.message || t('community.commentFailed'), 'error'),
+  });
+  const delPost = useMutation({
+    mutationFn: () => api.del(`/api/social/posts/${post.id}`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey }); toast(t('community.postDeleted'), 'success'); },
+  });
+  const delComment = useMutation({
+    mutationFn: (cid: string) => api.del(`/api/social/comments/${cid}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey }),
+  });
+  const report = useMutation({
+    mutationFn: () => api.post(`/api/social/posts/${post.id}/report`, {}),
+    onSuccess: () => toast(t('community.reported'), 'success'),
   });
 
+  const mine = meId && post.user.id === meId;
   const name = `${post.user.firstName} ${post.user.lastName}`.trim();
 
   return (
@@ -64,8 +82,29 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
           <Link to={`/u/${post.user.id}`} className="font-semibold">{name}</Link>
           {post.user.isCoach && <span className="ms-1"><CoachBadge verified={post.user.coachVerified} /></span>}
           <span className="ms-2 rounded-full bg-brand-pink/10 px-2 py-0.5 text-[10px] font-bold text-brand-pink">{t('common.lv', { n: post.user.level })}</span>
-          <p className="text-[11px] text-gray-400">{timeAgo(post.createdAt)}</p>
+          <p className="text-[11px] text-gray-400">
+            {post.pinned && <span className="me-1.5 rounded bg-amber-100 px-1.5 py-px text-[9px] font-bold text-amber-600">📌 {t('community.pinned')}</span>}
+            {timeAgo(post.createdAt)}
+          </p>
         </div>
+        {/* Own post → delete; someone else's → report. Users shouldn't need an admin for either. */}
+        {mine ? (
+          <button
+            onClick={() => window.confirm(t('community.deleteConfirm')) && delPost.mutate()}
+            aria-label={t('common.delete', { defaultValue: 'Delete' })}
+            className="shrink-0 p-1.5 text-gray-300 hover:text-red-500"
+          >
+            <Trash2 size={15} />
+          </button>
+        ) : (
+          <button
+            onClick={() => window.confirm(t('community.reportConfirm')) && report.mutate()}
+            aria-label={t('community.report')}
+            className="shrink-0 p-1.5 text-gray-300 hover:text-amber-500"
+          >
+            <Flag size={14} />
+          </button>
+        )}
       </div>
 
       {(() => {
@@ -74,7 +113,7 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
         if (!text) return null;
         const banner = KIND_BANNER[post.kind];
         if (!banner) return <p className="mt-3 text-ink">{text}</p>;
-        return (
+        const inner = (
           <div className={`mt-3 flex items-center gap-3 rounded-xl bg-gradient-to-r ${banner.grad} p-3 text-white shadow-sm`}>
             <motion.span
               initial={{ scale: 0, rotate: -30 }}
@@ -87,6 +126,8 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
             <p className="min-w-0 flex-1 text-sm font-bold leading-snug">{text}</p>
           </div>
         );
+        // Challenge banners deep-link into the room — the feed's highest-intent tap.
+        return post.kind === 'challenge' && post.refId ? <Link to={`/challenge/${post.refId}`}>{inner}</Link> : inner;
       })()}
 
       {post.mediaType === 'image' && (
@@ -117,9 +158,14 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
       {showComments && (
         <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
           {(post.comments ?? []).map((c: any) => (
-            <div key={c.id} className="flex gap-2 text-sm">
+            <div key={c.id} className="flex items-start gap-2 text-sm">
               <span className="font-semibold">{c.user.firstName}</span>
-              <span className="flex-1 text-gray-600">{c.text}</span>
+              <span className="min-w-0 flex-1 text-gray-600">{c.text}</span>
+              {meId && c.user.id === meId && (
+                <button onClick={() => delComment.mutate(c.id)} aria-label={t('common.delete', { defaultValue: 'Delete' })} className="shrink-0 text-gray-300">
+                  <Trash2 size={12} />
+                </button>
+              )}
             </div>
           ))}
           <div className="flex items-center gap-2">

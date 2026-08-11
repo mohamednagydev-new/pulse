@@ -462,18 +462,17 @@ adminRouter.patch('/tickets/:id', async (req, res) => {
     },
   });
 
-  // Tell them they have an answer — a reply nobody sees is not a reply.
+  // Tell them they have an answer — a reply nobody sees is not a reply. Via
+  // notifyUser so it ALSO pushes: this is the one notification a user is
+  // actively waiting for, and it was the only one arriving without a banner.
   if (sendingReply && ticket.userId) {
-    const u = await prisma.user.findUnique({ where: { id: ticket.userId }, select: { preferredLang: true } }).catch(() => null);
-    const ar = u?.preferredLang === 'ar';
-    await prisma.notification.create({
-      data: {
-        userId: ticket.userId,
-        type: 'general',
-        title: ar ? 'رد على رسالتك' : 'Reply to your message',
-        body: ticket.subject,
-        url: '/support',
-      },
+    await notifyUser(ticket.userId, {
+      type: 'general',
+      title: 'Reply to your message 💬',
+      titleAr: 'رد على رسالتك 💬',
+      body: ticket.subject,
+      bodyAr: ticket.subject,
+      url: '/support',
     }).catch(() => {});
   }
 

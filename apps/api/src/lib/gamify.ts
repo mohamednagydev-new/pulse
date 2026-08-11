@@ -41,17 +41,15 @@ export async function touchStreak(userId: string) {
     data: { lastActiveOn: t, currentStreak: current, longestStreak: longest, streakFreezes: freezes },
   });
   if (usedFreeze) {
-    const ar = user.preferredLang === 'ar';
-    await prisma.notification.create({
-      data: {
-        userId,
-        type: 'reminder',
-        title: ar ? 'الفريز أنقذ سلسلتك 🧊' : 'Streak freeze used 🧊',
-        body: ar
-          ? `سلسلتك بتاعة ${current} يوم عدّت من اليوم اللي فاتك. فاضلك ${freezes} فريز.`
-          : `Your ${current}-day streak survived a missed day. ${freezes} freeze${freezes === 1 ? '' : 's'} left.`,
-        url: '/progress',
-      },
+    // notifyUser, not a bare row: this deserves the push banner + live bell too.
+    const { notifyUser } = await import('../routes/push');
+    await notifyUser(userId, {
+      type: 'reminder',
+      title: 'Streak freeze used 🧊',
+      titleAr: 'الفريز أنقذ سلسلتك 🧊',
+      body: `Your ${current}-day streak survived a missed day. ${freezes} freeze${freezes === 1 ? '' : 's'} left.`,
+      bodyAr: `سلسلتك بتاعة ${current} يوم عدّت من اليوم اللي فاتك. فاضلك ${freezes} فريز.`,
+      url: '/progress',
     }).catch(() => {});
   }
   await awardXp(userId, XP_PER_STREAK_DAY);
@@ -59,10 +57,6 @@ export async function touchStreak(userId: string) {
 }
 
 export async function checkBadges(userId: string, streak: number, level = 1) {
-  const langRow = await prisma.user
-    .findUnique({ where: { id: userId }, select: { preferredLang: true } })
-    .catch(() => null);
-  const ar = langRow?.preferredLang === 'ar';
   const [completions, lifts, buddies, reels, foods, challenges, referrals,
          challengesWon, water, duelWins, spins, league] = await Promise.all([
     prisma.lessonCompletion.count({ where: { userId } }),
@@ -140,14 +134,18 @@ export async function checkBadges(userId: string, streak: number, level = 1) {
     await createFeedPost(userId, 'badge', `Earned the "${badge.title}" badge ${badge.icon ?? '🏅'}`, 'badge', badge.id, {
       textAr: `فتح وسام "${badge.titleAr ?? badge.title}" ${badge.icon ?? '🏅'}`,
     });
-    await prisma.notification.create({
-      data: {
-        userId,
-        type: 'general',
-        title: ar ? `كسبت وسام جديد ${badge.icon ?? '🏅'}` : `Badge earned ${badge.icon ?? '🏅'}`,
-        body: ar ? badge.titleAr ?? badge.title : badge.title,
-        url: '/achievements',
-      },
+    // A milestone badge got LESS fanfare than a buddy cheer: no push, no live
+    // bell. notifyUser + socket emit fix both.
+    const { notifyUser } = await import('../routes/push');
+    const { emitToUser } = await import('./realtime');
+    emitToUser(userId, 'notify', { type: 'badge' });
+    await notifyUser(userId, {
+      type: 'general',
+      title: `Badge earned ${badge.icon ?? '🏅'}`,
+      titleAr: `كسبت وسام جديد ${badge.icon ?? '🏅'}`,
+      body: badge.title,
+      bodyAr: badge.titleAr ?? badge.title,
+      url: '/achievements',
     }).catch(() => {});
   }
 }
@@ -157,7 +155,7 @@ export async function checkBadges(userId: string, streak: number, level = 1) {
 async function countByHour(userId: string, from: number, to: number): Promise<number> {
   const { localHour } = await import('./time');
   const rows = await prisma.xpEvent.findMany({
-    where: { userId, reason: 'workout-session' },
+    where: { userId, reason: { in: ['workout-session', 'workout-lesson'] } },
     select: { createdAt: true },
     take: 500,
   });

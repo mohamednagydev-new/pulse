@@ -42,6 +42,20 @@ const CHARACTERS = [
   ['young woman boxing with pink gloves, confident smile', '#f97316,#f59e0b'],
   ['young man dribbling a basketball, magenta jersey', '#d946ef,#ec4899'],
   ['young woman jumping joyfully with a skipping rope, yellow outfit', '#eab308,#f97316'],
+  // Second wave: more sports, more representation (football is Egypt's game;
+  // hijabi athletes so more of the audience sees themselves).
+  ['young man kicking a football soccer ball, red and white kit', '#ef4444,#f97316'],
+  ['young woman footballer dribbling a soccer ball, green kit', '#22c55e,#0d9488'],
+  ['young man swimming with goggles, splashing water, blue', '#0ea5e9,#2563eb'],
+  ['young woman in a karate gi mid high-kick, orange belt', '#f97316,#dc2626'],
+  ['young hijabi woman running mid-stride, modest purple sportswear with hijab', '#8b5cf6,#6366f1'],
+  ['young hijabi woman lifting a dumbbell, modest teal sportswear with hijab', '#14b8a6,#0891b2'],
+  ['young man doing a plank exercise, focused, grey and lime outfit', '#84cc16,#16a34a'],
+  ['young woman dancing zumba joyfully, colorful outfit', '#ec4899,#f43f5e'],
+  ['young man hiking with a backpack and walking stick, khaki outfit', '#a16207,#ca8a04'],
+  ['young woman doing a stretching pose on a mat, calm, mint outfit', '#34d399,#14b8a6'],
+  ['young man walking fast with headphones on, casual sporty navy look', '#3b82f6,#1d4ed8'],
+  ['young woman celebrating with both arms raised holding a small trophy, gold outfit', '#f59e0b,#eab308'],
 ];
 
 async function generate(prompt) {

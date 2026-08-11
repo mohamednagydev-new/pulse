@@ -80,6 +80,19 @@ supportRouter.post('/', async (req: AuthedRequest, res) => {
     data: { ...parsed.data, userId: req.userId! },
     select: { id: true, kind: true, subject: true, status: true, createdAt: true },
   });
+  // Pull-only inboxes rot: tell the admins a human is waiting.
+  const { notifyUser } = await import('./push');
+  const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+  for (const a of admins) {
+    notifyUser(a.id, {
+      title: 'New support ticket 📩',
+      titleAr: 'تذكرة دعم جديدة 📩',
+      body: ticket.subject,
+      bodyAr: ticket.subject,
+      url: '/admin/support',
+      type: 'general',
+    }).catch(() => {});
+  }
   res.status(201).json(ticket);
 });
 

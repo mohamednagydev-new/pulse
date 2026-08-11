@@ -42,6 +42,13 @@ export default function ChallengeRoom() {
     },
   });
 
+  const leave = useMutation({
+    mutationFn: () => api.post(`/api/gamification/challenges/${id}/leave`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['challenge', id] });
+      qc.invalidateQueries({ queryKey: ['challenges'] });
+    },
+  });
   const join = useMutation({
     mutationFn: () => api.post(`/api/gamification/challenges/${id}/join`),
     onSuccess: () => {
@@ -139,11 +146,21 @@ export default function ChallengeRoom() {
               <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
                 <div className="h-full rounded-full bg-gradient-to-r from-brand-blue to-blue-400" style={{ width: `${goalPct}%` }} />
               </div>
-              <p className="mt-2 text-xs font-semibold text-emerald-600">
-                {challenge.completedAt ? t('challenge.completed') : t('challenge.joined')}
-              </p>
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-xs font-semibold text-emerald-600">
+                  {challenge.completedAt ? t('challenge.completed') : t('challenge.joined')}
+                </p>
+                {!challenge.completedAt && (
+                  <button
+                    onClick={() => window.confirm(t('challenge.leaveConfirm')) && leave.mutate()}
+                    className="text-[11px] font-bold text-gray-400"
+                  >
+                    {t('challenge.leave')}
+                  </button>
+                )}
+              </div>
             </div>
-          ) : (
+          ) : (daysLeft ?? 1) > 0 ? (
             <button
               onClick={() => join.mutate()}
               disabled={join.isPending}
@@ -151,6 +168,9 @@ export default function ChallengeRoom() {
             >
               <Zap size={16} /> {t('challenge.join')}
             </button>
+          ) : (
+            // Ended → the server would 410 the join anyway; don't offer it.
+            <p className="rounded-xl bg-gray-100 py-3 text-center text-xs font-bold text-gray-400">{t('challenge.ended')}</p>
           )}
 
           {/* Top 3 teaser under the overview — the full list is one tap away */}

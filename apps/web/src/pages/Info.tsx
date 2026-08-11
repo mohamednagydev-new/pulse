@@ -451,14 +451,20 @@ function Accordion({ id, title, subtitle, icon: Icon, tint, open, setOpen, child
 
 function SettingsForms() {
   const { t } = useTranslation();
+  const qc = useQueryClient();
   const [email, setEmail] = useState('');
+  const [emailPw, setEmailPw] = useState('');
   const [msg, setMsg] = useState('');
   const [pw, setPw] = useState({ currentPassword: '', newPassword: '' });
 
   const changeEmail = async (e: FormEvent) => {
     e.preventDefault();
-    try { await api.patch('/api/me/email', { email }); setMsg(`${t('info.changeEmail')} ✓`); }
-    catch (err) { setMsg(err instanceof Error ? err.message : 'Failed'); }
+    try {
+      await api.patch('/api/me/email', { email, currentPassword: emailPw });
+      setMsg(`${t('info.changeEmail')} ✓`);
+      setEmailPw('');
+      qc.invalidateQueries({ queryKey: ['me'] }); // the settings screen must not keep showing the old address
+    } catch (err) { setMsg(err instanceof Error ? err.message : 'Failed'); }
   };
   const changePw = async (e: FormEvent) => {
     e.preventDefault();
@@ -470,6 +476,8 @@ function SettingsForms() {
     <div className="space-y-4">
       <form onSubmit={changeEmail} className="space-y-2">
         <input className="input-field" placeholder={t('info.changeEmail')} value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
+        {/* The email is the recovery anchor — the server now demands the password. */}
+        <input className="input-field" placeholder={t('auth.password')} type="password" value={emailPw} onChange={(e) => setEmailPw(e.target.value)} />
         <motion.button whileTap={{ scale: 0.97 }} transition={tapSpring} className="btn-pill flex min-h-[40px] w-full items-center justify-center gap-2 bg-gray-900 py-2 text-sm text-white">
           <Check size={15} /> {t('common.save')}
         </motion.button>

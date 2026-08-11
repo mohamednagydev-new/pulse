@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { areConnected, awardXp, levelForXp } from '../lib/social';
 import { notifyUser } from './push';
+import { emitToUser } from '../lib/realtime';
 
 export const duelsRouter = Router();
 duelsRouter.use(requireAuth);
@@ -72,6 +73,7 @@ async function settleIfDue(duel: BuddyChallenge): Promise<BuddyChallenge> {
       }
     }
     const score = a > b ? `${a}–${b}` : `${b}–${a}`;
+    emitToUser(winnerId, 'notify', { type: 'duel' });
     notifyUser(winnerId, {
       title: 'Duel won! 🏆',
       titleAr: 'كسبت التحدي! 🏆',
@@ -80,6 +82,7 @@ async function settleIfDue(duel: BuddyChallenge): Promise<BuddyChallenge> {
       url: '/buddies',
       type: 'general',
     });
+    emitToUser(loserId, 'notify', { type: 'duel' });
     notifyUser(loserId, {
       title: 'Duel finished',
       titleAr: 'التحدي خلص',
@@ -90,6 +93,7 @@ async function settleIfDue(duel: BuddyChallenge): Promise<BuddyChallenge> {
     });
   } else {
     for (const uid of [duel.challengerId, duel.opponentId]) {
+      emitToUser(uid, 'notify', { type: 'duel' });
       notifyUser(uid, {
         title: "It's a draw 🤝",
         titleAr: 'تعادل 🤝',
@@ -135,6 +139,7 @@ duelsRouter.post('/', async (req: AuthedRequest, res) => {
   const duel = await prisma.buddyChallenge.create({
     data: { challengerId: req.userId!, opponentId, metric, durationDays, wagerXp },
   });
+  emitToUser(opponentId, 'notify', { type: 'duel' });
   notifyUser(opponentId, {
     title: 'Duel challenge! ⚔️',
     titleAr: 'تحدي جديد! ⚔️',
@@ -175,6 +180,7 @@ duelsRouter.post('/:id/rematch', async (req: AuthedRequest, res) => {
   const duel = await prisma.buddyChallenge.create({
     data: { challengerId: req.userId!, opponentId, metric: old.metric, durationDays: old.durationDays, wagerXp: old.wagerXp },
   });
+  emitToUser(opponentId, 'notify', { type: 'duel' });
   notifyUser(opponentId, {
     title: 'Rematch! ⚔️',
     titleAr: 'العودة! ⚔️',
@@ -199,6 +205,7 @@ duelsRouter.post('/:id/accept', async (req: AuthedRequest, res) => {
   const startsAt = new Date();
   const endsAt = new Date(Date.now() + duel.durationDays * 86400000);
   const updated = await prisma.buddyChallenge.update({ where: { id: duel.id }, data: { status: 'active', startsAt, endsAt } });
+  emitToUser(duel.challengerId, 'notify', { type: 'duel' });
   notifyUser(duel.challengerId, {
     title: 'Duel accepted! ⚔️',
     titleAr: 'التحدي اتقبل! ⚔️',

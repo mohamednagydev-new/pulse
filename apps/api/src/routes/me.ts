@@ -130,9 +130,18 @@ meRouter.patch('/schedule', async (req: AuthedRequest, res) => {
 });
 
 meRouter.patch('/email', async (req: AuthedRequest, res) => {
-  const schema = z.object({ email: z.string().email() });
+  const schema = z.object({ email: z.string().email(), currentPassword: z.string().optional() });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid email' });
+  // The email IS the account-recovery anchor: repointing it silently with only
+  // a bearer token was an account-takeover primitive. Password holders must
+  // re-prove themselves (OAuth-only accounts have no password to check).
+  const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { passwordHash: true } });
+  if (me?.passwordHash) {
+    if (!parsed.data.currentPassword || !(await verifyPassword(parsed.data.currentPassword, me.passwordHash))) {
+      return res.status(401).json({ error: 'Current password is wrong' });
+    }
+  }
   const taken = await prisma.user.findUnique({ where: { email: parsed.data.email } });
   if (taken && taken.id !== req.userId) return res.status(409).json({ error: 'Email in use' });
   await prisma.user.update({ where: { id: req.userId! }, data: { email: parsed.data.email } });
@@ -225,7 +234,7 @@ meRouter.post('/completions', async (req: AuthedRequest, res) => {
       where: { id: parsed.data.lessonId },
       include: { program: true },
     });
-    await awardXp(req.userId!, XP_PER_LESSON);
+    await awardXp(req.userId!, XP_PER_LESSON, 'workout-lesson'); // named so quests/badges see it
     await createFeedPost(
       req.userId!,
       'completion',

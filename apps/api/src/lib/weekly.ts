@@ -72,8 +72,12 @@ export async function ensureWeeklyChallenge() {
 
   await announceWinners(addDays(start, -7)).catch((e) => console.warn('[weekly] winners:', e?.message));
 
-  // Tell everyone there's a fresh shared goal — deep link straight into the room.
-  const users = await prisma.user.findMany({ select: { id: true } });
+  // Tell the LIVING audience there's a fresh shared goal — accounts dead for
+  // 30+ days get the lapsed-user flow instead of a weekly ping forever.
+  const users = await prisma.user.findMany({
+    where: { lastActiveOn: { gte: addDays(start, -30) } },
+    select: { id: true },
+  });
   void (async () => {
     for (const u of users) {
       await notifyUser(u.id, {

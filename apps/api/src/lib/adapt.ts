@@ -56,12 +56,12 @@ export async function adherenceFor(userId: string, daysPerWeek: number, weeks = 
       select: { completedAt: true },
     }),
     prisma.xpEvent.findMany({
-      where: { userId, reason: 'workout-session', createdAt: { gte: since } },
+      where: { userId, reason: { in: ['workout-session', 'wearable_import'] }, createdAt: { gte: since } },
       select: { createdAt: true },
     }),
     prisma.lessonCompletion.findFirst({ where: { userId }, orderBy: { completedAt: 'desc' }, select: { completedAt: true } }),
     prisma.xpEvent.findFirst({
-      where: { userId, reason: 'workout-session' },
+      where: { userId, reason: { in: ['workout-session', 'wearable_import'] } },
       orderBy: { createdAt: 'desc' },
       select: { createdAt: true },
     }),

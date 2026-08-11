@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Flame, Zap, Dumbbell, Crown, Swords, Megaphone, MessageSquare } from 'lucide-react';
+import { Flame, Zap, Dumbbell, Crown, Swords, Megaphone, MessageSquare, X } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../store/auth';
 import { MediaImage, Loader } from '../../components/ui';
@@ -88,11 +88,21 @@ export function Buddies() {
   });
   const cheer = useMutation({
     mutationFn: (id: string) => api.post(`/api/social/buddies/${id}/cheer`),
-    onSuccess: () => {
+    onSuccess: (r: any) => {
       tapFeedback();
-      toast(t('buddies.cheered'), 'success');
+      // The 4h cooldown returns 200 {cooldown:true} — claiming success there
+      // meant the buddy got nothing while the user believed they nudged them.
+      if (r?.cooldown) toast(t('buddies.cheerCooldown'), 'info');
+      else toast(t('buddies.cheered'), 'success');
     },
     onError: (e: any) => toast(e?.message || 'Could not cheer', 'error'),
+  });
+  const decline = useMutation({
+    mutationFn: (userId: string) => api.del(`/api/social/connections/${userId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['connections'] });
+      qc.invalidateQueries({ queryKey: ['buddies'] });
+    },
   });
   const message = useMutation({
     mutationFn: (id: string) => api.post('/api/chat/threads', { userId: id }),
@@ -100,6 +110,10 @@ export function Buddies() {
     onError: (e: any) => toast(e?.message || 'Could not open chat', 'error'),
   });
 
+  const cancelDuel = useMutation({
+    mutationFn: (id: string) => api.del(`/api/duels/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['duels'] }),
+  });
   const acceptDuel = useMutation({
     mutationFn: (id: string) => api.post(`/api/duels/${id}/accept`),
     onSuccess: () => {
@@ -333,6 +347,13 @@ export function Buddies() {
 
                 {duelOutgoing.map((d) => (
                   <div key={d.id} className="flex items-center gap-3 rounded-2xl bg-white/60 p-3 text-sm text-gray-400 shadow-sm">
+                    <button
+                      onClick={() => cancelDuel.mutate(d.id)}
+                      aria-label={t('common.cancel')}
+                      className="order-last flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400"
+                    >
+                      <X size={14} />
+                    </button>
                     <MediaImage
                       path={d.other.avatarUrl}
                       label={d.other.firstName}
@@ -391,6 +412,16 @@ export function Buddies() {
                         <span className="flex items-center gap-0.5"><Flame size={11} /> {r.user.currentStreak}</span>
                       </p>
                     </Link>
+                    {/* Decline existed server-side all along; only Accept was drawn. */}
+                    <motion.button
+                      whileTap={{ scale: 0.92 }}
+                      transition={tapSpring}
+                      onClick={() => decline.mutate(r.user.id)}
+                      aria-label={t('buddies.decline')}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400"
+                    >
+                      <X size={14} />
+                    </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.92 }}
                       transition={tapSpring}

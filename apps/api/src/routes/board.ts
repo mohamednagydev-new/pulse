@@ -171,5 +171,19 @@ boardRouter.post('/lead-forms/:id/submit', requireAuth, async (req: AuthedReques
       note: parsed.data.note,
     },
   });
+  // A lead is the billable artefact — the admins should hear about it the
+  // second it lands, not whenever they next open the dashboard.
+  const { notifyUser } = await import('./push');
+  const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+  for (const a of admins) {
+    notifyUser(a.id, {
+      title: 'New partner lead 💰',
+      titleAr: 'عميل جديد للشريك 💰',
+      body: `${parsed.data.name} (${parsed.data.city ?? '—'}) → ${form.id}`,
+      bodyAr: `${parsed.data.name} (${parsed.data.city ?? '—'})`,
+      url: '/admin/leads',
+      type: 'general',
+    }).catch(() => {});
+  }
   res.status(201).json({ ok: true });
 });

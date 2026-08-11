@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { localizeResponse } from '../lib/localize';
+import { touchStreak } from '../lib/gamify';
+import { bumpChallenges } from '../lib/social';
 import { dayString, weekStart } from '../lib/time';
 import { computeTargets, type Targets } from '../lib/nutrition';
 import { buildMealPlan, swapsFor, slotLabel, type DietPref, type PlanRecipe, type Slot } from '../lib/mealplan';
@@ -182,6 +184,10 @@ mealsRouter.post('/log', async (req: AuthedRequest, res) => {
       fat: r.fat ? Math.round(r.fat * servings) : null,
     },
   });
+  // Same credit as /api/tracker/calories: logging food is logging food,
+  // whichever tab it came through.
+  await touchStreak(req.userId!);
+  await bumpChallenges(req.userId!, 'calorie');
   res.status(201).json(entry);
 });
 
@@ -254,6 +260,10 @@ mealsRouter.post('/foods/log', async (req: AuthedRequest, res) => {
       fat: Math.round(f.fat * portions),
     },
   });
+  // Same credit as /api/tracker/calories: logging food is logging food,
+  // whichever tab it came through.
+  await touchStreak(req.userId!);
+  await bumpChallenges(req.userId!, 'calorie');
   res.status(201).json(entry);
 });
 
@@ -336,6 +346,10 @@ mealsRouter.post('/my-recipes/:id/log', async (req: AuthedRequest, res) => {
       fat: Math.round(r.fat * per),
     },
   });
+  // Same credit as /api/tracker/calories: logging food is logging food,
+  // whichever tab it came through.
+  await touchStreak(req.userId!);
+  await bumpChallenges(req.userId!, 'calorie');
   res.status(201).json(entry);
 });
 
