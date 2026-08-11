@@ -90,6 +90,10 @@ export default function SearchPage() {
     { key: 'recipes', label: L('Recipes', 'الوصفات'), icon: <Salad size={16} />, tint: 'bg-emerald-100 text-emerald-600', to: (x: any) => `/recipe/${x.id}` },
     { key: 'articles', label: L('Articles', 'المقالات'), icon: <BookOpen size={16} />, tint: 'bg-sky-100 text-sky-600', to: (x: any) => `/article/${x.id}` },
     { key: 'exercises', label: L('Exercises', 'التمارين'), icon: <ScanLine size={16} />, tint: 'bg-orange-100 text-orange-600', to: (x: any) => (x.muscleGroupId ? `/exercises/${x.muscleGroupId}` : '/exercises') },
+    // The three types users searched for and got an empty screen:
+    { key: 'lessons', label: L('Workout days', 'أيام التمرين'), icon: <Dumbbell size={16} />, tint: 'bg-violet-100 text-violet-600', to: (x: any) => `/lesson/${x.id}` },
+    { key: 'coaches', label: L('Coaches', 'المدربين'), icon: <Dumbbell size={16} />, tint: 'bg-pink-100 text-brand-pink', to: (x: any) => `/u/${x.id}` },
+    { key: 'venues', label: L('Gyms & clinics', 'جيمات وعيادات'), icon: <Dumbbell size={16} />, tint: 'bg-teal-100 text-teal-600', to: () => '/gyms' },
   ];
 
   const smartResults: any[] = (smart?.results ?? []).filter((r: any) => ROUTE[r.contentType]);
@@ -200,12 +204,12 @@ export default function SearchPage() {
                     className="flex items-center gap-3 rounded-xl bg-white p-2.5 shadow-sm transition active:scale-[0.99]"
                   >
                     <MediaImage
-                      path={x.coverImage ?? x.svgAsset ?? null}
-                      label={x.title || x.name}
+                      path={x.coverImage ?? x.svgAsset ?? x.avatarUrl ?? null}
+                      label={x.title || x.name || x.firstName}
                       className="h-12 w-12 shrink-0 rounded-lg"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="line-clamp-1 text-sm font-bold">{x.title || x.name}</span>
+                      <span className="line-clamp-1 text-sm font-bold">{x.title || x.name || `${x.firstName ?? ""} ${x.lastName ?? ""}`.trim()}</span>
                       {(x.coach?.name || x.level) && (
                         <span className="mt-0.5 line-clamp-1 block text-[11px] text-gray-400">
                           {[x.coach?.name, x.level].filter(Boolean).join(' · ')}

@@ -21,6 +21,12 @@ export default function UserProfile() {
   const { t } = useTranslation();
   // "Connect to chat" explainer, opened by the message button when not yet buddies.
   const [gate, setGate] = useState(false);
+  const [followsTab, setFollowsTab] = useState<'followers' | 'following' | null>(null);
+  const follows = useQuery({
+    queryKey: ['follows', id],
+    queryFn: () => api.get(`/api/social/users/${id}/follows`),
+    enabled: !!followsTab,
+  });
   const key = ['user-profile', id];
   const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: key, queryFn: () => api.get(`/api/social/users/${id}`) });
 
@@ -115,10 +121,47 @@ export default function UserProfile() {
       </div>
 
       <div className="mx-5 mt-4 grid grid-cols-3 divide-x divide-gray-100 rounded-2xl bg-white py-3.5 text-center shadow-sm rtl:divide-x-reverse">
-        <Stat icon={<Users size={14} className="text-brand-blue" />} n={stats.followers} label={t('social2.followers', { defaultValue: 'Followers' })} />
-        <Stat icon={<HeartHandshake size={14} className="text-brand-pink" />} n={stats.following} label={t('social2.following')} />
+        {/* Followers/following are tappable lists now, not dead-end counts. */}
+        <button onClick={() => setFollowsTab('followers')}>
+          <Stat icon={<Users size={14} className="text-brand-blue" />} n={stats.followers} label={t('social2.followers', { defaultValue: 'Followers' })} />
+        </button>
+        <button onClick={() => setFollowsTab('following')}>
+          <Stat icon={<HeartHandshake size={14} className="text-brand-pink" />} n={stats.following} label={t('social2.following')} />
+        </button>
         <Stat icon={<Activity size={14} className="text-brand-green" />} n={stats.completions} label={t('programs.workout')} />
       </div>
+
+      <Sheet open={!!followsTab} onClose={() => setFollowsTab(null)} label={t('social2.followers', { defaultValue: 'Followers' })}>
+        <div className="max-h-[70dvh] overflow-y-auto p-4 pb-8">
+          <div className="mb-3 flex gap-1.5">
+            {(['followers', 'following'] as const).map((k) => (
+              <button
+                key={k}
+                onClick={() => setFollowsTab(k)}
+                className={`min-h-[34px] flex-1 rounded-full text-xs font-bold ${followsTab === k ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'}`}
+              >
+                {k === 'followers' ? t('social2.followers', { defaultValue: 'Followers' }) : t('social2.following')}
+              </button>
+            ))}
+          </div>
+          <div className="space-y-1.5">
+            {(followsTab ? follows.data?.[followsTab] ?? [] : []).map((u: any) => (
+              <button
+                key={u.id}
+                onClick={() => { setFollowsTab(null); navigate(`/u/${u.id}`); }}
+                className="flex w-full items-center gap-3 rounded-xl bg-gray-50 p-2.5 text-start"
+              >
+                <MediaImage path={u.avatarUrl} label={u.firstName} className="h-9 w-9 rounded-full" seed={1} />
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{u.firstName} {u.lastName}</span>
+                {u.isCoach && <CoachBadge verified={u.coachVerified} />}
+              </button>
+            ))}
+            {followsTab && (follows.data?.[followsTab] ?? []).length === 0 && (
+              <p className="py-8 text-center text-sm text-gray-400">—</p>
+            )}
+          </div>
+        </div>
+      </Sheet>
 
       {user.isCoach && (user.coachBio || user.coachSpecialties) && (
         <div className="mx-5 mt-3 rounded-2xl bg-white p-4 text-sm text-gray-600 shadow-sm">

@@ -306,7 +306,8 @@
   "notif": {
     "title": "Notifications",
     "markAll": "Mark all read",
-    "caughtUp": "You're all caught up 🎉"
+    "caughtUp": "You're all caught up 🎉",
+    "exploreCta": "Explore the community"
   },
   "reminders": {
     "title": "Daily reminders",

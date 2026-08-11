@@ -7,7 +7,7 @@ import {
   Menu, X, CalendarDays, Dumbbell, Music, TrendingUp, Flame, Medal,
   Settings, Shield, LogOut, Moon, Sun, MessagesSquare, ClipboardList, ChevronDown,
   Award, Trophy, UserPlus, Users, HeartHandshake, ShoppingBag, HelpCircle, Ticket,
-  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, type LucideIcon,
+  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, Bell, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
@@ -47,6 +47,7 @@ const GROUPS: Group[] = [
     en: 'Community', ar: 'المجتمع',
     items: [
       { to: '/buddies', en: 'Buddies', ar: 'أصحابي', icon: HeartHandshake },
+      { to: '/notifications', en: 'Notifications', ar: 'الإشعارات', icon: Bell },
       { to: '/coaches-community', en: 'Coaches', ar: 'المدربين', icon: Award },
       { to: '/group', en: 'Group live', ar: 'تمرين جماعي', icon: Users },
       { to: '/reels', en: 'Reels', ar: 'ريلز', icon: Clapperboard },

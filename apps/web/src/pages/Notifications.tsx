@@ -123,6 +123,10 @@ export function Notifications() {
             <div className="py-16 text-center text-gray-400">
               <Bell size={40} className="mx-auto mb-3 text-gray-300" />
               <p className="font-semibold">{t('notif.caughtUp')}</p>
+              {/* A terminal screen for new users before — hand them somewhere alive. */}
+              <button onClick={() => navigate('/community')} className="btn-pill btn-primary mx-auto mt-4 px-6 text-sm">
+                {t('notif.exploreCta')}
+              </button>
             </div>
           ) : (
             <div className="space-y-2">

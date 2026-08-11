@@ -44,6 +44,7 @@ import {
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 import { openInstall } from '../lib/install';
+import { useAuth } from '../store/auth';
 
 /* ------------------------------------------------------------------ *
  * Partner contact details — CHANGE THESE IN ONE PLACE.
@@ -285,7 +286,12 @@ type TabId = 'you' | 'howto' | 'coaches' | 'partners';
 
 export default function Help() {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
+  const rawNavigate = useNavigate();
+  const guest = useAuth((s) => s.status !== 'authed');
+  // Guests may READ everything here, but every deep link targets an auth-only
+  // screen — bouncing them to a login wall unexplained converted nobody.
+  // Route them to /register instead: the page just sold them the feature.
+  const navigate = (to: string) => rawNavigate(guest ? '/register' : to);
   const [tab, setTab] = useState<TabId>('you');
 
   const isAr = i18n.language.startsWith('ar');

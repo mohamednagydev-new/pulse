@@ -267,11 +267,23 @@ contentRouter.get('/search', async (req, res) => {
   const contains = { contains: q };
   // Arabic columns included — most of the audience types Arabic, and a search
   // that only reads the English columns silently returns nothing for them.
-  const [programs, recipes, articles, exercises] = await Promise.all([
+  const [programs, recipes, articles, exercises, lessons, coaches, venues] = await Promise.all([
     prisma.program.findMany({ where: { OR: [{ title: contains }, { titleAr: contains }] }, take: 10, include: { coach: true } }),
     prisma.recipe.findMany({ where: { OR: [{ title: contains }, { titleAr: contains }, { about: contains }, { aboutAr: contains }] }, take: 10 }),
     prisma.article.findMany({ where: { OR: [{ title: contains }, { titleAr: contains }, { body: contains }, { bodyAr: contains }] }, take: 10 }),
     prisma.exercise.findMany({ where: { OR: [{ name: contains }, { nameAr: contains }] }, take: 10 }),
+    // The three types users actually searched for and got empty screens:
+    prisma.lesson.findMany({ where: { OR: [{ title: contains }, { titleAr: contains }] }, take: 10, select: { id: true, title: true, titleAr: true } }),
+    prisma.user.findMany({
+      where: { isCoach: true, coachVerified: true, OR: [{ firstName: contains }, { lastName: contains }, { coachHeadline: contains }] },
+      take: 10,
+      select: { id: true, firstName: true, lastName: true, avatarUrl: true, coachHeadline: true },
+    }),
+    prisma.partner.findMany({
+      where: { type: { in: ['gym', 'clinic'] }, OR: [{ name: contains }, { nameAr: contains }, { city: contains }] },
+      take: 10,
+      select: { id: true, name: true, nameAr: true, city: true },
+    }).catch(() => [] as any[]),
   ]);
-  res.json({ programs, recipes, articles, exercises });
+  res.json({ programs, recipes, articles, exercises, lessons, coaches, venues });
 });

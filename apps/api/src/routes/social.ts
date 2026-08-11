@@ -25,6 +25,22 @@ export async function isBlockedEither(a: string, b: string): Promise<boolean> {
   return Boolean(row);
 }
 
+// Who follows / is followed by a user — the Stat tiles were dead-end counts
+// with no list behind them (you couldn't even find someone to unfollow).
+socialRouter.get('/users/:id/follows', async (req: AuthedRequest, res) => {
+  const [followerRows, followingRows] = await Promise.all([
+    prisma.follow.findMany({ where: { followingId: req.params.id }, select: { followerId: true }, take: 200, orderBy: { createdAt: 'desc' } }),
+    prisma.follow.findMany({ where: { followerId: req.params.id }, select: { followingId: true }, take: 200, orderBy: { createdAt: 'desc' } }),
+  ]);
+  const ids = Array.from(new Set([...followerRows.map((r) => r.followerId), ...followingRows.map((r) => r.followingId)]));
+  const users = await prisma.user.findMany({ where: { id: { in: ids } }, select: userSelect });
+  const byId = new Map(users.map((u) => [u.id, u]));
+  res.json({
+    followers: followerRows.map((r) => byId.get(r.followerId)).filter(Boolean),
+    following: followingRows.map((r) => byId.get(r.followingId)).filter(Boolean),
+  });
+});
+
 // ---- Blocking ----
 socialRouter.post('/users/:id/block', async (req: AuthedRequest, res) => {
   const other = req.params.id;
