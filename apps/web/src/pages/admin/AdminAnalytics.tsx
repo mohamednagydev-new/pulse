@@ -254,10 +254,8 @@ export default function AdminAnalytics() {
             <DauChart dau={data.dau} />
           </Card>
 
-          <Card title="Ad funnel by source (30 days)">
-            <FunnelCard funnel={data.funnel} />
-          </Card>
-
+          {/* Ad-funnel card removed at owner request (Aug 2026) — the events
+              still record, so it can return if ad debugging is ever needed. */}
           <Card title="Client errors on real devices (7 days)">
             {data.clientErrors?.length ? (
               <>

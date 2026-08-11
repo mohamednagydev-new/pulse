@@ -52,9 +52,18 @@ function lazyRoute<T extends ComponentType<any>>(load: () => Promise<{ default: 
         sessionStorage.removeItem('pulse_chunk_reload');
         return m;
       })
-      .catch((e) => {
+      .catch(async (e) => {
         if (!sessionStorage.getItem('pulse_chunk_reload')) {
           sessionStorage.setItem('pulse_chunk_reload', '1');
+          // Nudge the service worker first: right after a deploy the cached
+          // index.html still names old chunks — updating the SW makes the
+          // reload fetch the NEW build instead of failing a second time.
+          try {
+            const reg = await navigator.serviceWorker?.getRegistration();
+            await reg?.update();
+          } catch {
+            /* no SW (dev) — plain reload is still right */
+          }
           window.location.reload();
           return new Promise<{ default: T }>(() => {}); // page is reloading — never settles
         }

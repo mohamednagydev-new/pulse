@@ -39,7 +39,8 @@ if (typeof window !== 'undefined') {
   // webviews) inject their own instrumentation and its failures fire on OUR
   // window. "Script error." is the anonymized cross-origin echo of the same.
   // Reporting these buries real crashes under noise.
-  const NOISE = /Java object is gone|navigation_performance_logger|^Script error\b|ResizeObserver loop|Failed to register a ServiceWorker|iframeBridge/i;
+  // browser_declutter etc.: browser-extension scripts crashing in OUR telemetry.
+  const NOISE = /Java object is gone|navigation_performance_logger|^Script error\b|ResizeObserver loop|Failed to register a ServiceWorker|iframeBridge|browser_declutter|extension:\/\//i;
   const report = (msg: string) => {
     if (reported >= 5 || NOISE.test(msg)) return;
     reported += 1;
