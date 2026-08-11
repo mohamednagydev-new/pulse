@@ -205,7 +205,11 @@
     "changePassword": "Change Password",
     "freeTitle": "Free — everything unlocked",
     "freeDesc": "Every workout, coach, plan and live session is free. There is no paid version to upgrade to.",
-    "supportDesc": "Something broken, confusing, or missing? Tell us and we'll read it — we reply within 24 hours."
+    "supportDesc": "Something broken, confusing, or missing? Tell us and we'll read it — we reply within 24 hours.",
+    "deleteAccount": "Delete my account",
+    "deleteConfirm1": "Delete your PULSE account? All your data — workouts, streaks, chats, photos — will be permanently erased.",
+    "deletePw": "Enter your password to confirm (leave empty if you signed up with Google):",
+    "deleteConfirm2": "Last check: this CANNOT be undone. Delete forever?"
   },
   "ai": {
     "coach": "AI Coach",

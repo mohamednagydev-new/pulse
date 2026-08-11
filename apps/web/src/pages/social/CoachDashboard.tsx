@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Play, Check, X, Dumbbell, UserPlus, ImagePlus, Video as VideoIcon } from 'lucide-react';
-import { api, getAccessToken } from '../../lib/api';
+import { api, uploadWithAuth } from '../../lib/api';
 import { useAuth } from '../../store/auth';
 import { Loader, MediaImage, EmptyState, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -38,12 +38,7 @@ export default function CoachDashboard() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/social/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getAccessToken()}` },
-        credentials: 'include',
-        body: fd,
-      });
+      const res = await uploadWithAuth('/api/social/upload', fd);
       if (!res.ok) throw new Error('upload failed');
       const j = await res.json();
       if (kind === 'image') setCoverImage(j.mediaUrl);

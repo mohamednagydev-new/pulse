@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Mic, Send, Trash2, Flag, Ban } from 'lucide-react';
-import { api, getAccessToken } from '../../lib/api';
+import { api, uploadWithAuth } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import { Loader } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -113,12 +113,7 @@ export default function ChatRoom() {
           const blob = new Blob(chunks, { type: mime });
           const fd = new FormData();
           fd.append('file', new File([blob], mime === 'audio/webm' ? 'voice.webm' : 'voice.m4a', { type: mime }));
-          const res = await fetch('/api/chat/voice', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${getAccessToken()}` },
-            credentials: 'include',
-            body: fd,
-          });
+          const res = await uploadWithAuth('/api/chat/voice', fd);
           if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'Upload failed');
           const { audio } = await res.json();
           appendMsg(await api.post(`/api/chat/threads/${id}/messages`, { audio }));

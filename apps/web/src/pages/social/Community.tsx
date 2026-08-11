@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Users, MessageSquare, Send, ImagePlus, X, Award, Clapperboard } from 'lucide-react';
-import { api, getAccessToken } from '../../lib/api';
+import { api, uploadWithAuth } from '../../lib/api';
 import { trackAd, pickAd } from '../../lib/ads';
 import { getSocket } from '../../lib/socket';
 import { MediaImage } from '../../components/ui';
@@ -42,12 +42,7 @@ export default function Community() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/social/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getAccessToken()}` },
-        credentials: 'include',
-        body: fd,
-      });
+      const res = await uploadWithAuth('/api/social/upload', fd);
       if (res.ok) setMedia(await res.json());
     } finally {
       setUploading(false);

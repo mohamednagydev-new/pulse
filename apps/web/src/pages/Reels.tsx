@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clapperboard, Heart, Loader2, Plus, RefreshCw, Upload, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { api, getAccessToken } from '../lib/api';
+import { api, uploadWithAuth } from '../lib/api';
 import { toast } from '../lib/toast';
 import Sheet from '../components/Sheet';
 import ReelVideo, { type Reel } from '../components/ReelVideo';
@@ -247,12 +247,7 @@ function UploadSheet({
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/social/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getAccessToken()}` },
-        credentials: 'include',
-        body: fd,
-      });
+      const res = await uploadWithAuth('/api/social/upload', fd);
       if (!res.ok) throw new Error('Upload failed — try a smaller video.');
       const { mediaUrl } = await res.json();
       await api.post('/api/reels', { topic, mediaUrl, text: caption.trim() });

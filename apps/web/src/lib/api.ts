@@ -86,6 +86,22 @@ async function request(path: string, options: RequestInit = {}, retry = true): P
   return res.json();
 }
 
+/** Multipart upload with the same 401→refresh→retry the JSON layer gets.
+ *  Raw fetch call sites made every upload fail once the access token aged —
+ *  a page-reload-fixes-it bug users can't diagnose. */
+export async function uploadWithAuth(path: string, form: FormData): Promise<Response> {
+  const doFetch = () =>
+    fetch(path, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'x-lang': lang },
+      credentials: 'include',
+      body: form,
+    });
+  let res = await doFetch();
+  if (res.status === 401 && (await tryRefresh())) res = await doFetch();
+  return res;
+}
+
 export const api = {
   get: (p: string) => request(p),
   post: (p: string, body?: unknown) => request(p, { method: 'POST', body: JSON.stringify(body ?? {}) }),

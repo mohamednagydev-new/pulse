@@ -490,6 +490,7 @@ function SettingsForms() {
         </motion.button>
       </form>
       {msg && <p className="text-center text-sm text-brand-green">{msg}</p>}
+      <DeleteAccount />
     </div>
   );
 }
@@ -592,5 +593,35 @@ function WearablesSection() {
         )}
       </div>
     </div>
+  );
+}
+
+/** Self-service account deletion — a legal requirement, not a nicety. Double
+ *  confirm + password (OAuth-only accounts pass an empty one; server skips). */
+function DeleteAccount() {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const doDelete = async () => {
+    if (!window.confirm(t('info.deleteConfirm1'))) return;
+    const password = window.prompt(t('info.deletePw')) ?? '';
+    if (!window.confirm(t('info.deleteConfirm2'))) return;
+    setBusy(true);
+    try {
+      await api.post('/api/me/delete-account', { password });
+      localStorage.clear();
+      window.location.href = '/welcome';
+    } catch (e: any) {
+      toast(e?.message ?? 'Failed', 'error');
+      setBusy(false);
+    }
+  };
+  return (
+    <button
+      onClick={doDelete}
+      disabled={busy}
+      className="mt-2 w-full text-center text-xs font-bold text-red-400 disabled:opacity-50"
+    >
+      {t('info.deleteAccount')}
+    </button>
   );
 }

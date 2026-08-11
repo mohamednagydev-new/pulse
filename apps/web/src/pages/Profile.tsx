@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Bookmark, Camera, Download, Dumbbell, ChevronRight, Flame, Loader2, Pencil, Ruler, TrendingUp, Medal, Settings, Weight } from 'lucide-react';
 import { useAuth } from '../store/auth';
-import { api, getAccessToken } from '../lib/api';
+import { api, uploadWithAuth } from '../lib/api';
 import { installAvailable, openInstall } from '../lib/install';
 import { toast } from '../lib/toast';
 import { MediaImage } from '../components/ui';
@@ -241,12 +241,7 @@ export default function Profile() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/social/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getAccessToken()}` },
-        credentials: 'include',
-        body: fd,
-      });
+      const res = await uploadWithAuth('/api/social/upload', fd);
       if (!res.ok) throw new Error('upload failed');
       const { mediaUrl } = await res.json();
       await api.patch('/api/me', { avatarUrl: mediaUrl });

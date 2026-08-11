@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Music, Upload, Play, Pause, Star, Trash2 } from 'lucide-react';
-import { api, getAccessToken } from '../lib/api';
+import { api, uploadWithAuth } from '../lib/api';
 import { signedMediaUrl } from '../lib/media';
 import { toast } from '../lib/toast';
 import { useAuth } from '../store/auth';
@@ -33,7 +33,7 @@ export default function MusicGallery() {
       fd.append('file', file);
       fd.append('title', file.name.replace(/\.[^.]+$/, ''));
       if (isAdmin && asDefault) fd.append('isDefault', 'true');
-      const res = await fetch('/api/music', { method: 'POST', headers: { Authorization: `Bearer ${getAccessToken()}` }, body: fd });
+      const res = await uploadWithAuth('/api/music', fd);
       if (!res.ok) { toast(t('music.uploadFailed'), 'error'); return; }
       qc.invalidateQueries({ queryKey: ['music'] });
       toast(t('music.added'), 'success');

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Flame, Trophy, CheckCircle2, TrendingDown, Medal, Share2, Ruler, Plus, Trash2, X, ImagePlus } from 'lucide-react';
-import { api, getAccessToken } from '../lib/api';
+import { api, uploadWithAuth } from '../lib/api';
 import { shareMilestone } from '../lib/shareCard';
 import { toast } from '../lib/toast';
 import { Loader, MediaImage } from '../components/ui';
@@ -312,12 +312,7 @@ function BodySection() {
       fd.append('file', file);
       // Dedicated private endpoint — progress photos must never land in the
       // public images directory the social feed uses.
-      const res = await fetch('/api/daily/body-photo', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getAccessToken()}` },
-        credentials: 'include',
-        body: fd,
-      });
+      const res = await uploadWithAuth('/api/daily/body-photo', fd);
       if (res.ok) {
         const data = await res.json();
         setPhoto(data.photo ?? null); // stored path, saved with the entry

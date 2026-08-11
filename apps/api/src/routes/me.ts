@@ -163,6 +163,29 @@ meRouter.patch('/password', async (req: AuthedRequest, res) => {
   res.json({ ok: true });
 });
 
+// ---- Delete my account ----
+// Self-service, password-confirmed (OAuth-only accounts skip the check — they
+// have no password). Required for GDPR Art. 17 and by both app stores before
+// any TWA/wrapper submission. POST, not DELETE: a body-carrying DELETE is
+// swallowed by some proxies (the 411s we've met on this very server).
+meRouter.post('/delete-account', async (req: AuthedRequest, res) => {
+  const parsed = z.object({ password: z.string().optional() }).safeParse(req.body ?? {});
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const user = await prisma.user.findUnique({ where: { id: req.userId! }, select: { passwordHash: true, email: true } });
+  if (!user) return res.status(404).json({ error: 'Not found' });
+  if (user.passwordHash) {
+    if (!parsed.data.password || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
+      return res.status(401).json({ error: 'Password is wrong' });
+    }
+  }
+  console.log(`[account] user ${req.userId} (${user.email}) deleted their own account`);
+  // FK cascades take the personal data with the row; DM threads keep null-safe
+  // orphans by design (the other person keeps their side of the conversation).
+  await prisma.user.delete({ where: { id: req.userId! } });
+  res.clearCookie('refreshToken', { path: '/api/auth' });
+  res.json({ ok: true });
+});
+
 // ---- Bookmarks ----
 meRouter.get('/bookmarks', async (req: AuthedRequest, res) => {
   const bookmarks = await prisma.bookmark.findMany({
