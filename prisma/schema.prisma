@@ -91,6 +91,7 @@ model User {
   postComments   PostComment[]
   xpEvents       XpEvent[]
   challengeMsgs  ChallengeMessage[]
+  customRecipes  CustomRecipe[]
   musicTracks    MusicTrack[]
   leagueMembers    LeagueMember[]
   programEnrollments ProgramEnrollment[]
@@ -998,6 +999,26 @@ model LessonCompletion {
 }
 
 // ---------------- Nutrition tracker ----------------
+// A user-composed dish built from Food rows ("my mom's oats cup"): the server
+// computes the macros from the ingredients, so logging a serving is one tap
+// with real numbers. items is a JSON snapshot [{foodId, portions, name, nameAr}]
+// — a later edit to the food table must not silently rewrite old recipes.
+model CustomRecipe {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  servings  Int      @default(1)
+  items     String
+  calories  Int // totals for the WHOLE recipe; divide by servings for one portion
+  protein   Float    @default(0)
+  carbs     Float    @default(0)
+  fat       Float    @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 model CalorieEntry {
   id        String   @id @default(cuid())
   userId    String

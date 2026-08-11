@@ -257,6 +257,165 @@ mealsRouter.post('/foods/log', async (req: AuthedRequest, res) => {
   res.status(201).json(entry);
 });
 
+/* ------------------------------------------------------------------ *
+ * My recipes: user-composed dishes from Food rows. The server recomputes
+ * macros from the ingredient list — client-sent numbers are never trusted.
+ * ------------------------------------------------------------------ */
+mealsRouter.get('/my-recipes', async (req: AuthedRequest, res) => {
+  const recipes = await prisma.customRecipe.findMany({
+    where: { userId: req.userId! },
+    orderBy: { createdAt: 'desc' },
+  });
+  res.json({ recipes: recipes.map((r) => ({ ...r, items: JSON.parse(r.items) })) });
+});
+
+mealsRouter.post('/my-recipes', async (req: AuthedRequest, res) => {
+  const parsed = z
+    .object({
+      name: z.string().trim().min(2).max(60),
+      servings: z.number().int().min(1).max(20).default(1),
+      items: z.array(z.object({ foodId: z.string(), portions: z.number().min(0.25).max(20) })).min(1).max(30),
+    })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+
+  const foods = await prisma.food.findMany({ where: { id: { in: parsed.data.items.map((i) => i.foodId) } } });
+  const byId = new Map(foods.map((f) => [f.id, f]));
+  let calories = 0, protein = 0, carbs = 0, fat = 0;
+  const items = [];
+  for (const it of parsed.data.items) {
+    const f = byId.get(it.foodId);
+    if (!f) return res.status(400).json({ error: 'Unknown food' });
+    calories += f.calories * it.portions;
+    protein += f.protein * it.portions;
+    carbs += f.carbs * it.portions;
+    fat += f.fat * it.portions;
+    items.push({ foodId: f.id, portions: it.portions, name: f.name, nameAr: f.nameAr });
+  }
+  const recipe = await prisma.customRecipe.create({
+    data: {
+      userId: req.userId!,
+      name: parsed.data.name,
+      servings: parsed.data.servings,
+      items: JSON.stringify(items),
+      calories: Math.round(calories),
+      protein: Math.round(protein * 10) / 10,
+      carbs: Math.round(carbs * 10) / 10,
+      fat: Math.round(fat * 10) / 10,
+    },
+  });
+  res.status(201).json({ ...recipe, items });
+});
+
+mealsRouter.delete('/my-recipes/:id', async (req: AuthedRequest, res) => {
+  await prisma.customRecipe.deleteMany({ where: { id: req.params.id, userId: req.userId! } });
+  res.json({ ok: true });
+});
+
+mealsRouter.post('/my-recipes/:id/log', async (req: AuthedRequest, res) => {
+  const parsed = z
+    .object({
+      servings: z.number().min(0.5).max(10).default(1),
+      mealType: z.enum(SLOTS).default('snack'),
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    })
+    .safeParse(req.body ?? {});
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const r = await prisma.customRecipe.findFirst({ where: { id: req.params.id, userId: req.userId! } });
+  if (!r) return res.status(404).json({ error: 'Not found' });
+  const per = parsed.data.servings / r.servings;
+  const entry = await prisma.calorieEntry.create({
+    data: {
+      userId: req.userId!,
+      date: parsed.data.date ?? dayString(),
+      name: r.name,
+      mealType: parsed.data.mealType,
+      calories: Math.round(r.calories * per),
+      protein: Math.round(r.protein * per),
+      carbs: Math.round(r.carbs * per),
+      fat: Math.round(r.fat * per),
+    },
+  });
+  res.status(201).json(entry);
+});
+
+/* ------------------------------------------------------------------ *
+ * Barcode → nutrition + a 1–10 fit score for YOUR goal.
+ * Product data from Open Food Facts (server-side, cached) — it has good
+ * coverage of Egyptian supermarket products. The score is a transparent
+ * heuristic over per-100g numbers, tilted by the user's fitnessGoal.
+ * ------------------------------------------------------------------ */
+const barcodeCache = new Map<string, { at: number; data: unknown }>();
+
+mealsRouter.get('/barcode/:code', async (req: AuthedRequest, res) => {
+  const code = req.params.code;
+  if (!/^\d{6,14}$/.test(code)) return res.status(400).json({ error: 'Invalid barcode' });
+
+  const cached = barcodeCache.get(code);
+  if (cached && Date.now() - cached.at < 24 * 3600 * 1000) return res.json(cached.data);
+
+  let product: any;
+  try {
+    const r = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,brands,nutriments,serving_size,quantity`,
+      { headers: { 'User-Agent': 'PULSE-fitness-app/1.0 (pulse.geddo.online)' }, signal: AbortSignal.timeout(8000) },
+    );
+    const json: any = await r.json();
+    product = json?.product;
+  } catch {
+    return res.status(502).json({ error: 'Lookup unavailable — try again' });
+  }
+  if (!product) return res.status(404).json({ error: 'Product not found' });
+
+  const n = product.nutriments ?? {};
+  const kcal = Math.round(n['energy-kcal_100g'] ?? (n['energy_100g'] ? n['energy_100g'] / 4.184 : 0));
+  const protein = Math.round((n['proteins_100g'] ?? 0) * 10) / 10;
+  const carbs = Math.round((n['carbohydrates_100g'] ?? 0) * 10) / 10;
+  const fat = Math.round((n['fat_100g'] ?? 0) * 10) / 10;
+  const sugars = Math.round((n['sugars_100g'] ?? 0) * 10) / 10;
+
+  const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { fitnessGoal: true, preferredLang: true } });
+  const goal = me?.fitnessGoal ?? 'stay_fit';
+
+  // Transparent scoring: energy density and sugar push down, protein pulls up.
+  let score = 10;
+  if (kcal > 400) score -= 3;
+  else if (kcal > 250) score -= 2;
+  else if (kcal > 150) score -= 1;
+  if (sugars > 20) score -= 3;
+  else if (sugars > 10) score -= 2;
+  else if (sugars > 5) score -= 1;
+  if (protein >= 15) score += 2;
+  else if (protein >= 8) score += 1;
+  if (fat > 20) score -= 1;
+  if (goal === 'lose_weight' && kcal > 300) score -= 1;
+  if (goal === 'build_muscle' && protein < 5) score -= 1;
+  score = Math.max(1, Math.min(10, score));
+
+  const advice =
+    score >= 7
+      ? { en: 'Good fit for your goal 👌', ar: 'تمام لهدفك 👌' }
+      : score >= 4
+        ? { en: 'Okay — watch the portion size', ar: 'ماشي — بس خد بالك من الكمية' }
+        : {
+            en: 'Not your best pick — something high-protein or fresh fruit beats it',
+            ar: 'مش أحسن اختيار لهدفك — حاجة عالية البروتين أو فاكهة طازة أحسن منه',
+          };
+
+  const data = {
+    code,
+    name: product.product_name || 'Unknown product',
+    brand: product.brands || null,
+    servingSize: product.serving_size || null,
+    per100g: { kcal, protein, carbs, fat, sugars },
+    score,
+    advice,
+  };
+  if (barcodeCache.size > 500) barcodeCache.clear();
+  barcodeCache.set(code, { at: Date.now(), data });
+  res.json(data);
+});
+
 // What the user can filter the food table by, with counts.
 mealsRouter.get('/foods/categories', async (_req, res) => {
   const groups = await prisma.food.groupBy({ by: ['category'], _count: true });

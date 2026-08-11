@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Minus, Plus, Search, X } from 'lucide-react';
+import { ChefHat, Mic, Minus, Plus, ScanBarcode, Search, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { toast } from '../lib/toast';
 import { listenOnce, voiceSupported } from '../lib/voiceInput';
 import Sheet from './Sheet';
+import MyRecipes from './MyRecipes';
+import BarcodeScan from './BarcodeScan';
 
 /**
  * Pick what you ate from the Egyptian food table.
@@ -36,6 +38,7 @@ const SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 export default function FoodPicker({ onClose, date }: { onClose: () => void; date?: string }) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const [mode, setMode] = useState<'search' | 'recipes' | 'scan'>('search');
   const [q, setQ] = useState('');
   const [picked, setPicked] = useState<Food | null>(null);
   const [portions, setPortions] = useState(1);
@@ -92,6 +95,30 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
   return (
     <Sheet open onClose={onClose} label={t('food.search')}>
       <div className="flex max-h-[80dvh] min-h-0 flex-col">
+        {/* Three ways in: search the table, my saved recipes, or a barcode. */}
+        <div className="flex shrink-0 gap-1.5 px-4 pt-3">
+          {([
+            { key: 'search' as const, icon: Search, label: t('food.tabSearch') },
+            { key: 'recipes' as const, icon: ChefHat, label: t('food.tabRecipes') },
+            { key: 'scan' as const, icon: ScanBarcode, label: t('food.tabScan') },
+          ]).map(({ key, icon: Icon, label }) => (
+            <button
+              key={key}
+              onClick={() => setMode(key)}
+              className={`flex min-h-[34px] flex-1 items-center justify-center gap-1.5 rounded-full text-[12px] font-bold transition ${
+                mode === key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              <Icon size={13} /> {label}
+            </button>
+          ))}
+        </div>
+
+        {mode === 'recipes' && <MyRecipes onClose={onClose} date={date} />}
+        {mode === 'scan' && <BarcodeScan onClose={onClose} date={date} />}
+
+        {mode === 'search' && (
+        <>
         <div className="flex shrink-0 items-center gap-2 border-b border-gray-100 px-4 py-3">
           <Search size={18} className="shrink-0 text-gray-400" />
           <input
@@ -219,6 +246,8 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
             </motion.div>
           )}
         </AnimatePresence>
+        </>
+        )}
       </div>
     </Sheet>
   );
