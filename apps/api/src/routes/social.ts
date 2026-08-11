@@ -73,7 +73,16 @@ socialRouter.get('/coaches', async (req: AuthedRequest, res) => {
     orderBy: [{ coachFeatured: 'desc' }, { coachVerified: 'desc' }, { xp: 'desc' }],
     take: 40,
   });
-  res.json(coaches.map((c) => ({ ...c, isFollowing: set.has(c.id) })));
+  // Ratings finally reach the directory — the quality signal the whole
+  // rating feature was built for and never surfaced.
+  const ratings = await prisma.coachRating.groupBy({
+    by: ['coachUserId'],
+    where: { coachUserId: { in: coaches.map((c) => c.id) } },
+    _avg: { stars: true },
+    _count: true,
+  });
+  const rmap = new Map(ratings.map((r) => [r.coachUserId, { avg: Math.round((r._avg.stars ?? 0) * 10) / 10, count: r._count }]));
+  res.json(coaches.map((c) => ({ ...c, isFollowing: set.has(c.id), rating: rmap.get(c.id) ?? null })));
 });
 
 const userSelect = { id: true, firstName: true, lastName: true, avatarUrl: true, level: true, isCoach: true, coachVerified: true } as const;

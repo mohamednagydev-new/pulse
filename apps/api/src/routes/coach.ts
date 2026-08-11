@@ -103,16 +103,55 @@ coachRouter.get('/:userId/programs', async (req, res) => {
   res.json(list.map((p) => ({ ...p, days: parseArray(p.days) })));
 });
 
-coachRouter.get('/programs/:id', async (req, res) => {
+coachRouter.get('/programs/:id', async (req: AuthedRequest, res) => {
   const prog = await prisma.coachProgram.findUnique({ where: { id: req.params.id } });
   if (!prog) return res.status(404).json({ error: 'Not found' });
   const days = parseArray(prog.days) as { label: string; workoutId: string }[];
   const workouts = await prisma.coachWorkout.findMany({ where: { id: { in: days.map((d) => d.workoutId) } } });
   const wmap = new Map(workouts.map((w) => [w.id, w]));
+  // The viewer's own progress rides along — the page can finally remember
+  // which day you're on instead of looking unstarted forever.
+  const enrollment = await prisma.coachProgramEnrollment.findUnique({
+    where: { userId_programId: { userId: req.userId!, programId: prog.id } },
+  });
   res.json({
     ...prog,
     days: days.map((d) => ({ ...d, workout: wmap.get(d.workoutId) ? { id: d.workoutId, title: wmap.get(d.workoutId)!.title, muscleFocus: wmap.get(d.workoutId)!.muscleFocus } : null })),
+    completedDays: enrollment ? parseArray(enrollment.completedDays) : [],
+    enrolled: Boolean(enrollment),
   });
+});
+
+// Enroll (idempotent) — creates the memory the detail page reads back.
+coachRouter.post('/programs/:id/enroll', async (req: AuthedRequest, res) => {
+  const prog = await prisma.coachProgram.findUnique({ where: { id: req.params.id }, select: { id: true } });
+  if (!prog) return res.status(404).json({ error: 'Not found' });
+  const row = await prisma.coachProgramEnrollment.upsert({
+    where: { userId_programId: { userId: req.userId!, programId: prog.id } },
+    create: { userId: req.userId!, programId: prog.id },
+    update: {},
+  });
+  res.json({ ok: true, completedDays: parseArray(row.completedDays) });
+});
+
+// Toggle a day done/undone.
+coachRouter.post('/programs/:id/day-done', async (req: AuthedRequest, res) => {
+  const parsed = z.object({ day: z.number().int().min(0).max(365), done: z.boolean().default(true) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const row = await prisma.coachProgramEnrollment.upsert({
+    where: { userId_programId: { userId: req.userId!, programId: req.params.id } },
+    create: { userId: req.userId!, programId: req.params.id },
+    update: {},
+  });
+  const set = new Set(parseArray(row.completedDays) as number[]);
+  if (parsed.data.done) set.add(parsed.data.day);
+  else set.delete(parsed.data.day);
+  const completedDays = Array.from(set).sort((a, b) => a - b);
+  await prisma.coachProgramEnrollment.update({
+    where: { id: row.id },
+    data: { completedDays: JSON.stringify(completedDays) },
+  });
+  res.json({ ok: true, completedDays });
 });
 
 coachRouter.delete('/programs/:id', async (req: AuthedRequest, res) => {
@@ -218,5 +257,23 @@ coachRouter.post('/:userId/rate', async (req: AuthedRequest, res) => {
 coachRouter.get('/:userId/rating', async (req: AuthedRequest, res) => {
   const agg = await prisma.coachRating.aggregate({ where: { coachUserId: req.params.userId }, _avg: { stars: true }, _count: true });
   const mine = await prisma.coachRating.findUnique({ where: { clientId_coachUserId: { clientId: req.userId!, coachUserId: req.params.userId } } });
-  res.json({ avg: agg._avg.stars, count: agg._count, mine: mine?.stars ?? null });
+  // Written reviews were write-only dead data: accepted by POST, returned by
+  // nothing. The last few now show on the profile.
+  const reviews = await prisma.coachRating.findMany({
+    where: { coachUserId: req.params.userId, comment: { not: null } },
+    orderBy: { createdAt: 'desc' },
+    take: 3,
+    select: { stars: true, comment: true, clientId: true, createdAt: true },
+  });
+  const raters = await prisma.user.findMany({
+    where: { id: { in: reviews.map((r) => r.clientId) } },
+    select: { id: true, firstName: true },
+  });
+  const nameMap = new Map(raters.map((u) => [u.id, u.firstName]));
+  res.json({
+    avg: agg._avg.stars,
+    count: agg._count,
+    mine: mine?.stars ?? null,
+    reviews: reviews.map((r) => ({ stars: r.stars, comment: r.comment, by: nameMap.get(r.clientId) ?? '—', createdAt: r.createdAt })),
+  });
 });

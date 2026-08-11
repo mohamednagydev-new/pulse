@@ -20,6 +20,11 @@ export default function CoachesDirectory() {
   // lands on the people who answer that rather than on the full trainer list.
   const [params] = useSearchParams();
   const specialty = params.get('specialty') ?? '';
+  const { data: myCoaches } = useQuery({
+    queryKey: ['my-coaches'],
+    queryFn: () => api.get('/api/coach/my-coaches'),
+    staleTime: 60_000,
+  });
   const { data: coaches, isLoading } = useQuery({
     queryKey: ['coach-directory', q, specialty],
     queryFn: () => {
@@ -48,6 +53,21 @@ export default function CoachesDirectory() {
         </div>
       </div>
 
+      {/* The coaches who already accepted YOU — the endpoint existed with no screen. */}
+      {!!myCoaches?.length && (
+        <div className="mt-4 px-4">
+          <p className="px-1 pb-2 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('coach.myCoaches')}</p>
+          <div className="no-scrollbar flex gap-3 overflow-x-auto">
+            {myCoaches.map((c: any) => (
+              <Link key={c.id} to={`/u/${c.id}`} className="w-20 shrink-0 text-center">
+                <MediaImage path={c.avatarUrl} label={c.firstName} className="mx-auto h-14 w-14 rounded-full ring-2 ring-brand-blue/40" seed={c.id.length} />
+                <p className="mt-1 truncate text-xs font-semibold">{c.firstName}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <Loader />
       ) : (
@@ -68,6 +88,7 @@ export default function CoachesDirectory() {
                 <p className="mt-0.5 flex items-center gap-2 text-xs text-gray-400">
                   <span className="rounded-full bg-brand-blue/10 px-2 font-bold text-brand-blue">{t('common.lv', { n: c.level })}</span>
                   <span className="flex items-center gap-0.5"><Flame size={11} /> {c.currentStreak}</span>
+                  {c.rating && <span className="font-bold text-amber-500">★ {c.rating.avg} ({c.rating.count})</span>}
                 </p>
               </Link>
               <motion.button

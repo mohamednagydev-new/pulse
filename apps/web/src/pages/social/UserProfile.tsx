@@ -252,7 +252,11 @@ function CoachSection({ userId }: { userId: string }) {
   const { data: workouts } = useQuery({ queryKey: ['coach-workouts-pub', userId], queryFn: () => api.get(`/api/coach/${userId}/workouts`) });
   const { data: programs } = useQuery({ queryKey: ['coach-programs-pub', userId], queryFn: () => api.get(`/api/coach/${userId}/programs`) });
   const request = useMutation({ mutationFn: () => api.post(`/api/coach/${userId}/request`), onSuccess: () => { qc.invalidateQueries({ queryKey: ['coach-status', userId] }); toast(`${t('buddies.requested')} ✓`, 'success'); } });
-  const rate = useMutation({ mutationFn: (stars: number) => api.post(`/api/coach/${userId}/rate`, { stars }), onSuccess: () => { qc.invalidateQueries({ queryKey: ['coach-rating', userId] }); toast('Thanks for rating!', 'success'); } });
+  const rate = useMutation({
+    mutationFn: ({ stars, comment }: { stars: number; comment?: string }) =>
+      api.post(`/api/coach/${userId}/rate`, { stars, ...(comment?.trim() ? { comment: comment.trim() } : {}) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['coach-rating', userId] }); toast(t('coach.thanksRating'), 'success'); },
+  });
 
   const status = statusData?.status;
   const avg = rating?.avg ? Math.round(rating.avg * 10) / 10 : null;
@@ -286,9 +290,25 @@ function CoachSection({ userId }: { userId: string }) {
         {status === 'accepted' && (
           <div className="mt-3 flex items-center gap-1.5">
             {[1, 2, 3, 4, 5].map((s) => (
-              <motion.button key={s} whileTap={{ scale: 0.8 }} transition={tapSpring} onClick={() => rate.mutate(s)} className="flex h-10 w-8 items-center justify-center">
+              <motion.button
+                key={s}
+                whileTap={{ scale: 0.8 }}
+                transition={tapSpring}
+                onClick={() => rate.mutate({ stars: s, comment: window.prompt(t('coach.reviewPrompt')) ?? undefined })}
+                className="flex h-10 w-8 items-center justify-center"
+              >
                 <Star size={18} className={rating?.mine && s <= rating.mine ? 'fill-brand-pink text-brand-pink' : 'text-gray-300'} />
               </motion.button>
+            ))}
+          </div>
+        )}
+        {/* Written reviews were stored and never shown anywhere. */}
+        {!!rating?.reviews?.length && (
+          <div className="mt-3 space-y-1.5 border-t border-gray-100 pt-3">
+            {rating.reviews.map((r: any, i: number) => (
+              <p key={i} className="text-xs text-gray-500">
+                <span className="font-bold text-ink">{r.by}</span> {'★'.repeat(r.stars)} — {r.comment}
+              </p>
             ))}
           </div>
         )}

@@ -948,7 +948,15 @@
     "headlinePh": "مثلاً: مدرب قوة ومرونة",
     "specialties": "التخصصات (افصل بينها بفاصلة)",
     "specialtiesPh": "قوة، هيت، يوجا، تغذية",
-    "updateProfile": "حدّث بروفايل المدرب"
+    "updateProfile": "حدّث بروفايل المدرب",
+    "dayOf": "يوم {{x}} من {{n}}",
+    "programDone": "خلصت البرنامج! 🎉",
+    "upNext": "اللي جاي",
+    "markDayDone": "علّم اليوم كمخلص",
+    "markUndone": "شيل العلامة",
+    "myCoaches": "مدربيني",
+    "reviewPrompt": "اكتب رأيك في سطر (اختياري):",
+    "thanksRating": "شكراً لتقييمك!"
   },
   "workout": {
     "startSession": "ابدأ تمرينة",

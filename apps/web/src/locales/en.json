@@ -940,7 +940,15 @@
     "headlinePh": "e.g. Strength & mobility coach",
     "specialties": "Specialties (comma separated)",
     "specialtiesPh": "Strength, HIIT, Yoga, Nutrition",
-    "updateProfile": "Update coach profile"
+    "updateProfile": "Update coach profile",
+    "dayOf": "Day {{x}} of {{n}}",
+    "programDone": "Program complete! 🎉",
+    "upNext": "Up next",
+    "markDayDone": "Mark day done",
+    "markUndone": "Mark not done",
+    "myCoaches": "My coaches",
+    "reviewPrompt": "Add a short review (optional):",
+    "thanksRating": "Thanks for rating!"
   },
   "workout": {
     "startSession": "Start a session",
