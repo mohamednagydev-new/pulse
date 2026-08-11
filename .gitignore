@@ -24,3 +24,4 @@ backups/
 .DS_Store
 .vite/
 coverage/
+apps/web/dev-dist/

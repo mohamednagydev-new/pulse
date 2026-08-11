@@ -668,11 +668,11 @@ adminRouter.post('/broadcast', async (req, res) => {
 // how many of them can actually receive a push banner. Shown BEFORE sending.
 adminRouter.get('/broadcast/reach', async (_req, res) => {
   const weekAgo = daysAgoStr(7);
-  const wheres = {
+  const wheres: Record<string, Record<string, unknown>> = {
     all: {},
     active7: { lastActiveOn: { gte: weekAgo } },
     lapsed7: { OR: [{ lastActiveOn: { lt: weekAgo } }, { lastActiveOn: null }] },
-  } as const;
+  };
   const out: Record<string, { users: number; push: number }> = {};
   for (const [key, where] of Object.entries(wheres)) {
     const [users, push] = await Promise.all([
