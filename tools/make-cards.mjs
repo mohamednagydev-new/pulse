@@ -78,6 +78,12 @@ const CARDS = [
     '4️⃣ ابدأ أول تمرين النهارده 💪',
     '5️⃣ سجّل أكلك بالصوت 🎤 وادخل تحدي PULSE14',
   ] },
+
+  // ---- Aug 2026 feature wave: AI coach, barcode, recipes, meal photo ----
+  { file: '32-ai-coach', kind: 'big', bg: G.ink, emoji: '🤖', title: 'اسأل كوتشك أي حاجة', sub: 'تمرين، أكل، ثبات وزن، شد عضلي — كوتش الـAI يجاوبك بالمصري في ثانيتين', badge: 'جديد وببلاش' },
+  { file: '33-barcode', kind: 'big', bg: G.orange, emoji: '📷', title: 'امسح الباركود قبل ما تشتري', sub: 'أي منتج من السوبرماركت — القيم الغذائية كاملة + تقييم من ١٠ على حسب هدفك', badge: 'ميزة جديدة' },
+  { file: '34-my-recipes', kind: 'big', bg: G.green, emoji: '🍳', title: 'وصفتك… بحسابها', sub: 'اعمل وصفتك بمكوناتها مرة واحدة — السعرات والبروتين محسوبين للحصة، وتسجلها بضغطة', badge: 'جديد' },
+  { file: '35-meal-photo', kind: 'big', bg: G.violet, emoji: '✨', title: 'صوّر طبقك… وخلاص', sub: 'التطبيق يقدّر السعرات من الصورة — من غير كتابة ولا حساب', badge: 'ذكاء بيشتغل لك' },
 ];
 
 const html = (c) => `<!doctype html><html><head><meta charset="utf-8">

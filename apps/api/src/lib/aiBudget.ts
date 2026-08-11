@@ -20,10 +20,10 @@ import { dayString } from './time';
 export type AiKind = 'chat' | 'calories' | 'search' | 'vision' | 'summary';
 
 const LIMITS: Record<AiKind, number> = {
-  chat: 25, // a real conversation is 5-10 turns
-  calories: 20, // five meals, with retries
-  search: 40, // cheap, but still a call
-  vision: 10, // the most expensive per call
+  chat: 15, // a real conversation is 5-10 turns; answers are capped short anyway
+  calories: 15, // five meals, with retries
+  search: 30, // cheap, but still a call
+  vision: 8, // the most expensive per call
   summary: 3, // generated weekly; 3 covers manual refreshes
 };
 

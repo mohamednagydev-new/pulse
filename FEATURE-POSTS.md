@@ -227,6 +227,72 @@ pulse.geddo.online
 
 ---
 
+## Day 15 — Feature: AI Coach chat (NEW — Aug 2026 wave)
+
+Visual: card `marketing-cards/32-ai-coach.png`, or better: screen recording — open كوتش AI from the menu, type «إزاي أخس من غير حرمان؟», the answer appears in seconds.
+
+```
+عندك سؤال في التمرين أو الأكل؟ اسأل كوتش الـAI جوه التطبيق 🤖
+بيجاوبك بالمصري، قصير وعملي، ومن محتوى PULSE نفسه — مش كلام من النت.
+ثبات وزن؟ شد عضلي؟ أكل قبل التمرين؟ اسأله دلوقتي… ببلاش.
+Ask our in-app coach anything about training & food — free.
+pulse.geddo.online
+
+#PULSE #نبض #فتنس #لياقة
+```
+
+---
+
+## Day 16 — Feature: barcode scanner with a goal score (NEW)
+
+Visual: card `marketing-cards/33-barcode.png`, or phone video — scan a biscuit pack in a supermarket, the 1-10 score pops up. This one is MADE for reels.
+
+```
+واقف في السوبرماركت محتار تاخد إيه؟ 📷
+امسح الباركود بتاع أي منتج جوه PULSE — يطلعلك سعراته وبروتينه وسكره،
+وكمان تقييم من ١٠ على حسب هدفك إنت. قبل ما تدفع، اعرف بتشتري إيه.
+من غير اشتراكات — التطبيق كله مجاني.
+Scan any product barcode and get a 1-10 score for YOUR goal.
+pulse.geddo.online
+
+#PULSE #نبض #فتنس #دايت
+```
+
+---
+
+## Day 17 — Feature: build your own recipes (NEW)
+
+Visual: card `marketing-cards/34-my-recipes.png`, or screen recording — build «شوفان البروتين بتاعي» from 4 ingredients, totals update live, save, log with one tap.
+
+```
+عندك وصفة بتعملها كل يوم؟ سجّلها مرة واحدة وخلاص 🍳
+اختار مكوناتها من جدول الأكل المصري، والتطبيق يحسب السعرات
+والبروتين للحصة الواحدة — وبعدين تسجلها بضغطة واحدة كل مرة.
+مفيش فلوس خالص — كل ده ببلاش.
+Build your recipe once — macros per serving, logged in one tap.
+pulse.geddo.online
+
+#PULSE #نبض #وصفات #دايت
+```
+
+---
+
+## Day 18 — Feature: meal photo → calories (NEW)
+
+Visual: card `marketing-cards/35-meal-photo.png`, or phone video — photograph a real plate of فول وعيش, the estimate appears.
+
+```
+مش عارف الطبق اللي قدامك فيه كام سعرة؟ صوّره وخلاص ✨
+التطبيق بيبص على الصورة ويقدّرلك السعرات والبروتين — من غير كتابة ولا حساب.
+جرّبها على فطارك بكرة الصبح… وده برضه مجاني ١٠٠٪.
+Snap your plate — the app estimates the calories for you.
+pulse.geddo.online
+
+#PULSE #نبض #فتنس #سعرات
+```
+
+---
+
 # How to use · طريقة الاستخدام
 
 - **When to run it:** this pack stands alone — slot it between runs of the 30-day

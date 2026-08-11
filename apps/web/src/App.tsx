@@ -7,6 +7,7 @@ import { useAuth } from './store/auth';
 import TabBar from './components/TabBar';
 import Confetti from './components/Confetti';
 import Toaster from './components/Toaster';
+import FeatureToast from './components/FeatureToast';
 import DesktopGate from './components/DesktopGate';
 import InstallPrompt from './components/InstallPrompt';
 import InstallFab from './components/InstallFab';
@@ -213,6 +214,7 @@ export default function App() {
     <>
       <DesktopBackdrop />
       <Toaster />
+      <FeatureToast />
       <OfflineBanner />
       <PullToRefresh />
       <div className="app-frame">

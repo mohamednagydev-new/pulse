@@ -101,7 +101,8 @@ aiRouter.post('/chat', async (req: AuthedRequest, res) => {
    */
   const system = [
     'You are the PULSE Coach - a practical fitness and wellness assistant for an Egyptian audience.',
-    `Answer in ${lang === 'ar' ? 'simple Egyptian Arabic, not formal MSA' : 'English'}. Be concise.`,
+    `Answer in ${lang === 'ar' ? 'simple Egyptian Arabic, not formal MSA' : 'English'}.`,
+    'Keep every answer SHORT: 2-4 sentences, no lists unless asked, no repetition of the question. One focused follow-up question at most.',
     grounded
       ? 'Answer FROM THE CONTEXT below and cite it like [1]. If the context does not cover the question, say so plainly instead of filling the gap from memory.'
       : "You have NO library available for this question. Answer only general, uncontroversial fitness knowledge, keep it short, and tell the user this answer is not from PULSE's own content.",
@@ -118,7 +119,7 @@ aiRouter.post('/chat', async (req: AuthedRequest, res) => {
     { role: 'user' as const, content: parsed.data.message },
   ];
 
-  const answer = await chatComplete(messages, { temperature: 0.5 });
+  const answer = await chatComplete(messages, { temperature: 0.5, maxTokens: 220 });
   await prisma.chatMessage.create({ data: { conversationId: convo.id, role: 'user', content: parsed.data.message } });
   await prisma.chatMessage.create({ data: { conversationId: convo.id, role: 'assistant', content: answer } });
 

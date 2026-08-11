@@ -12,13 +12,15 @@ export function aiEnabled() {
 
 export async function chatComplete(
   messages: { role: 'system' | 'user' | 'assistant'; content: string }[],
-  opts: { json?: boolean; temperature?: number } = {},
+  opts: { json?: boolean; temperature?: number; maxTokens?: number } = {},
 ): Promise<string> {
   if (!openai) throw new Error('OPENAI_API_KEY not configured');
   const res = await openai.chat.completions.create({
     model: CHAT_MODEL,
     messages,
     temperature: opts.temperature ?? 0.6,
+    // Hard output cap on EVERY call — no caller can accidentally buy an essay.
+    max_tokens: opts.maxTokens ?? 400,
     ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
   });
   return res.choices[0]?.message?.content ?? '';
@@ -41,6 +43,7 @@ export async function visionComplete(
   const res = await openai.chat.completions.create({
     model: CHAT_MODEL,
     temperature: opts.temperature ?? 0.2,
+    max_tokens: 300, // a macro estimate is numbers + a sentence, never more
     ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
     messages: [
       { role: 'system', content: system },
