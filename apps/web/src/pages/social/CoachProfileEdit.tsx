@@ -79,6 +79,13 @@ export default function CoachProfileEdit() {
           <Dumbbell className="text-brand-blue" />
           <p className="text-sm text-gray-500">{t('coach.editIntro')}</p>
         </div>
+        {/* Approval status: coaches are public only after admin verification. */}
+        {isCoach && !me?.coachVerified && (
+          <div className="mb-4 rounded-2xl border border-amber-300/40 bg-amber-500/10 p-4 text-sm">
+            <p className="font-bold text-amber-600">{t('coach.pendingTitle')}</p>
+            <p className="mt-1 text-xs text-gray-500">{t('coach.pendingBody')}</p>
+          </div>
+        )}
         <form onSubmit={onSubmit} className="space-y-4">
           <label className="block">
             <span className="text-xs text-gray-500">{t('coach.headline')}</span>

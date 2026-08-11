@@ -6,6 +6,7 @@ import { AuthedRequest, requireAuth } from '../middleware/auth';
 import { touchStreak } from '../lib/gamify';
 import { awardXp, createFeedPost, bumpChallenges, XP_PER_LESSON } from '../lib/social';
 import { signMedia } from '../lib/mediaSign';
+import { notifyUser } from './push';
 import { env } from '../env';
 
 export const meRouter = Router();
@@ -258,7 +259,10 @@ meRouter.post('/workout-done', async (req: AuthedRequest, res) => {
   res.json({ ok: true });
 });
 
-// Become / update a coach profile.
+// Become / update a coach profile. Becoming one is instant for the user
+// (they can build their profile and programs right away) but they only enter
+// the public directory once an admin flips Verified — and the admins get told
+// there's someone to review, so applications can't rot silently.
 meRouter.patch('/coach-profile', async (req: AuthedRequest, res) => {
   const schema = z.object({
     coachHeadline: z.string().max(120).optional(),
@@ -267,6 +271,7 @@ meRouter.patch('/coach-profile', async (req: AuthedRequest, res) => {
   });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const before = await prisma.user.findUnique({ where: { id: req.userId! }, select: { isCoach: true, firstName: true, lastName: true } });
   const user = await prisma.user.update({
     where: { id: req.userId! },
     data: {
@@ -276,6 +281,19 @@ meRouter.patch('/coach-profile', async (req: AuthedRequest, res) => {
       coachSpecialties: JSON.stringify(parsed.data.coachSpecialties ?? []),
     },
   });
+  if (before && !before.isCoach) {
+    const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+    for (const a of admins) {
+      notifyUser(a.id, {
+        title: 'New coach application 🎓',
+        titleAr: 'طلب مدرب جديد 🎓',
+        body: `${before.firstName} ${before.lastName} set up a coach profile — review & verify in Admin → Users.`,
+        bodyAr: `${before.firstName} ${before.lastName} عمل بروفايل مدرب — راجعه وفعّله من إدارة المستخدمين.`,
+        url: '/admin/users',
+        type: 'general',
+      }).catch(() => {});
+    }
+  }
   const { passwordHash, ...safe } = user;
   res.json(safe);
 });

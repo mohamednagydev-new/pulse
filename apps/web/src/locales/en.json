@@ -900,6 +900,8 @@
     "profileUpdated": "Coach profile updated",
     "nowCoach": "You're now a coach! 🎉",
     "editIntro": "Share your expertise, publish content, and coach the community.",
+    "pendingTitle": "Profile under review ⏳",
+    "pendingBody": "You can build your workouts and programs now. You'll appear in the public coaches list once the PULSE team verifies your profile.",
     "headline": "Headline",
     "headlinePh": "e.g. Strength & mobility coach",
     "specialties": "Specialties (comma separated)",

@@ -28,6 +28,10 @@ socialRouter.get('/coaches', async (req: AuthedRequest, res) => {
   const coaches = await prisma.user.findMany({
     where: {
       isCoach: true,
+      // The admin's Verified toggle IS the approval gate: self-serve coaches
+      // stay invisible to the public until reviewed (they can still build
+      // their profile and programs while pending).
+      coachVerified: true,
       id: { not: req.userId! },
       ...(q ? { OR: [{ firstName: { contains: q } }, { lastName: { contains: q } }, { coachHeadline: { contains: q } }] } : {}),
       ...(specialty ? { coachSpecialties: { contains: specialty } } : {}),
