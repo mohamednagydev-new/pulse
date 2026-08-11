@@ -53,21 +53,48 @@ function lazyRoute<T extends ComponentType<any>>(load: () => Promise<{ default: 
         return m;
       })
       .catch(async (e) => {
-        if (!sessionStorage.getItem('pulse_chunk_reload')) {
+        const stage = Number(sessionStorage.getItem('pulse_chunk_reload') ?? 0);
+        if (stage === 0) {
           sessionStorage.setItem('pulse_chunk_reload', '1');
-          // Nudge the service worker first: right after a deploy the cached
-          // index.html still names old chunks — updating the SW makes the
-          // reload fetch the NEW build instead of failing a second time.
+          // Update the SW and WAIT for the new worker to activate (autoUpdate
+          // SWs skipWaiting) — reloading before activation re-served the same
+          // stale index.html and burned the retry ("empty chunk" reports).
           try {
             const reg = await navigator.serviceWorker?.getRegistration();
-            await reg?.update();
+            if (reg) {
+              await reg.update();
+              const fresh = reg.installing ?? reg.waiting;
+              if (fresh) {
+                await new Promise<void>((resolve) => {
+                  const t = setTimeout(resolve, 4000); // never hang the recovery
+                  fresh.addEventListener('statechange', () => {
+                    if (fresh.state === 'activated') { clearTimeout(t); resolve(); }
+                  });
+                });
+              }
+            }
           } catch {
             /* no SW (dev) — plain reload is still right */
           }
           window.location.reload();
           return new Promise<{ default: T }>(() => {}); // page is reloading — never settles
         }
-        throw e; // second failure: real problem, let the boundary report it
+        if (stage === 1) {
+          // The polite path failed — go nuclear: drop every SW and cache so the
+          // next load is guaranteed to come from the network.
+          sessionStorage.setItem('pulse_chunk_reload', '2');
+          try {
+            const regs = (await navigator.serviceWorker?.getRegistrations()) ?? [];
+            await Promise.all(regs.map((r) => r.unregister()));
+            const keys = (await caches?.keys()) ?? [];
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          } catch {
+            /* even partial cleanup helps */
+          }
+          window.location.reload();
+          return new Promise<{ default: T }>(() => {});
+        }
+        throw e; // third failure: a real problem, let the boundary report it
       }),
   );
 }
