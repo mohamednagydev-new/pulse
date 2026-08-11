@@ -9,7 +9,7 @@ import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { emitToThread, emitToUser, isOnline } from '../lib/realtime';
 import { areConnected } from '../lib/social';
 import { signMedia } from '../lib/mediaSign';
-import { pushToUser } from './push';
+import { pushToUser, notifyUser } from './push';
 
 export const chatRouter = Router();
 chatRouter.use(requireAuth);
@@ -75,6 +75,10 @@ chatRouter.post('/threads', async (req: AuthedRequest, res) => {
   if (!(await areConnected(req.userId!, parsed.data.userId))) {
     return res.status(403).json({ error: 'Connect with this person to chat' });
   }
+  const { isBlockedEither } = await import('./social');
+  if (await isBlockedEither(req.userId!, parsed.data.userId)) {
+    return res.status(403).json({ error: 'This conversation is unavailable' });
+  }
   const thread = await getOrCreateThread(req.userId!, parsed.data.userId);
   const other = await otherUser(thread, req.userId!);
   res.json({ id: thread.id, other });
@@ -93,6 +97,29 @@ chatRouter.get('/threads/:id/messages', async (req: AuthedRequest, res) => {
   const messages = await prisma.dMMessage.findMany({ where: { threadId: thread.id }, orderBy: { createdAt: 'asc' }, take: 200 });
   const other = await otherUser(thread, req.userId!);
   res.json({ other, messages: messages.map(shapeMessage) });
+});
+
+// ---- Report a conversation (opens its content to admin review) ----
+chatRouter.post('/threads/:id/report', async (req: AuthedRequest, res) => {
+  const thread = await prisma.dMThread.findUnique({ where: { id: req.params.id } });
+  if (!thread || (thread.userAId !== req.userId && thread.userBId !== req.userId)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  const reason = typeof req.body?.reason === 'string' ? req.body.reason.slice(0, 300) : null;
+  await prisma.chatReport.create({ data: { threadId: thread.id, reporterId: req.userId!, reason } });
+  const reporter = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true, lastName: true } });
+  const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+  for (const a of admins) {
+    notifyUser(a.id, {
+      title: 'Chat reported 🚩',
+      titleAr: 'محادثة اتبلغ عنها 🚩',
+      body: `${reporter?.firstName ?? 'A user'} reported a conversation — review it in Moderation.`,
+      bodyAr: `${reporter?.firstName ?? 'مستخدم'} بلّغ عن محادثة — راجعها من صفحة الإشراف.`,
+      url: '/admin/moderation',
+      type: 'general',
+    }).catch(() => {});
+  }
+  res.status(201).json({ ok: true });
 });
 
 // ---- Upload a voice note (returns the path to send with the message) ----
@@ -143,6 +170,10 @@ chatRouter.post('/threads/:id/messages', async (req: AuthedRequest, res) => {
   const otherIdForGate = thread.userAId === req.userId ? thread.userBId : thread.userAId;
   if (!(await areConnected(req.userId!, otherIdForGate))) {
     return res.status(403).json({ error: 'Connect with this person to chat' });
+  }
+  const { isBlockedEither } = await import('./social');
+  if (await isBlockedEither(req.userId!, otherIdForGate)) {
+    return res.status(403).json({ error: 'This conversation is unavailable' });
   }
   if (parsed.data.audio && !fs.existsSync(path.join(voiceDir, path.basename(parsed.data.audio)))) {
     return res.status(400).json({ error: 'Invalid audio' });

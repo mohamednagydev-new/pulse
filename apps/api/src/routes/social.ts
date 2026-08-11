@@ -16,6 +16,39 @@ socialRouter.use(requireAuth);
 
 socialRouter.get('/presence', (_req, res) => res.json({ online: onlineCount() }));
 
+/** Block in either direction kills all social interaction between two users. */
+export async function isBlockedEither(a: string, b: string): Promise<boolean> {
+  const row = await prisma.block.findFirst({
+    where: { OR: [{ blockerId: a, blockedId: b }, { blockerId: b, blockedId: a }] },
+    select: { id: true },
+  });
+  return Boolean(row);
+}
+
+// ---- Blocking ----
+socialRouter.post('/users/:id/block', async (req: AuthedRequest, res) => {
+  const other = req.params.id;
+  if (other === req.userId) return res.status(400).json({ error: 'Cannot block yourself' });
+  await prisma.block.upsert({
+    where: { blockerId_blockedId: { blockerId: req.userId!, blockedId: other } },
+    create: { blockerId: req.userId!, blockedId: other },
+    update: {},
+  });
+  // Blocking severs the existing relationship both ways — follows and buddyship.
+  await prisma.follow.deleteMany({
+    where: { OR: [{ followerId: req.userId!, followingId: other }, { followerId: other, followingId: req.userId! }] },
+  });
+  await prisma.connection.deleteMany({
+    where: { OR: [{ requesterId: req.userId!, addresseeId: other }, { requesterId: other, addresseeId: req.userId! }] },
+  });
+  res.json({ ok: true });
+});
+
+socialRouter.delete('/users/:id/block', async (req: AuthedRequest, res) => {
+  await prisma.block.deleteMany({ where: { blockerId: req.userId!, blockedId: req.params.id } });
+  res.json({ ok: true });
+});
+
 // Coach directory — users who are coaches.
 socialRouter.get('/coaches', async (req: AuthedRequest, res) => {
   const q = String(req.query.q || '').trim();
@@ -103,13 +136,18 @@ function summarizeReactions(reactions: any[]) {
 
 // ---- Feed (me + people I follow) ----
 socialRouter.get('/feed', async (req: AuthedRequest, res) => {
-  const [following, admins] = await Promise.all([
+  const [following, admins, blocks] = await Promise.all([
     prisma.follow.findMany({ where: { followerId: req.userId! }, select: { followingId: true } }),
     // Admin posts are announcements by nature — they reach every feed without
     // needing a follow (pinning is still available for the top slot).
     prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } }),
+    prisma.block.findMany({ where: { OR: [{ blockerId: req.userId! }, { blockedId: req.userId! }] } }),
   ]);
-  const ids = Array.from(new Set([req.userId!, ...following.map((f) => f.followingId), ...admins.map((a) => a.id)]));
+  const blockedSet = new Set(blocks.flatMap((b) => [b.blockerId, b.blockedId]));
+  blockedSet.delete(req.userId!);
+  const ids = Array.from(
+    new Set([req.userId!, ...following.map((f) => f.followingId), ...admins.map((a) => a.id)]),
+  ).filter((i) => !blockedSet.has(i));
 
   const include = {
     user: { select: userSelect },
@@ -143,7 +181,7 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
   if (rest.length < 30) {
     const discover = await prisma.feedPost.findMany({
       where: {
-        userId: { notIn: ids },
+        userId: { notIn: [...ids, ...blockedSet] },
         pinned: false,
         createdAt: { gte: new Date(Date.now() - 7 * 86400000) },
       },
@@ -283,6 +321,7 @@ socialRouter.post('/users/:id/follow', async (req: AuthedRequest, res) => {
   if (req.params.id === req.userId) return res.status(400).json({ error: "Can't follow yourself" });
   const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true } });
   if (!target) return res.status(404).json({ error: 'User not found' });
+  if (await isBlockedEither(req.userId!, req.params.id)) return res.status(403).json({ error: 'Not available' });
   await prisma.follow.upsert({
     where: { followerId_followingId: { followerId: req.userId!, followingId: req.params.id } },
     create: { followerId: req.userId!, followingId: req.params.id },
@@ -360,8 +399,12 @@ socialRouter.get('/users/:id', async (req: AuthedRequest, res) => {
     }),
   ]);
   const statuses = await connectionStatusMap(req.userId!, [req.params.id]);
+  const myBlock = await prisma.block.findUnique({
+    where: { blockerId_blockedId: { blockerId: req.userId!, blockedId: req.params.id } },
+    select: { id: true },
+  });
   res.json({
-    user: { ...user, connectionStatus: statuses.get(req.params.id) ?? 'none', online: isOnline(req.params.id) },
+    user: { ...user, connectionStatus: statuses.get(req.params.id) ?? 'none', online: isOnline(req.params.id), blocked: Boolean(myBlock) },
     stats: { followers, following: followingCount, completions },
     isFollowing: Boolean(isFollowing),
     posts: posts.map((p) => shapePost(p, req.userId!)),
@@ -390,6 +433,7 @@ socialRouter.post('/connections/:userId', async (req: AuthedRequest, res) => {
   // Connection has no FK to User — without this check we'd happily create orphan rows.
   const target = await prisma.user.findUnique({ where: { id: other }, select: { id: true } });
   if (!target) return res.status(404).json({ error: 'User not found' });
+  if (await isBlockedEither(me, other)) return res.status(403).json({ error: 'Not available' });
 
   // Already connected or an outgoing request already exists → no-op ok.
   const existing = await prisma.connection.findFirst({

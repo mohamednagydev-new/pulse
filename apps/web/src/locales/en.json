@@ -412,7 +412,12 @@
     "followers": "Followers",
     "activity": "Activity",
     "activeNow": "Active now 🟢",
-    "lastSeen": "Last seen {{ago}}"
+    "lastSeen": "Last seen {{ago}}",
+    "block": "Block",
+    "unblock": "Unblock",
+    "blockConfirm": "Block {{name}}? They won't be able to message, connect or follow you, and you won't see each other's posts.",
+    "blockDone": "Blocked. You can unblock any time from their profile.",
+    "unblockDone": "Unblocked."
   },
   "store": {
     "title": "Store & Offers",
@@ -962,6 +967,13 @@
     "empty": "No conversations yet.",
     "title": "Chats",
     "roomTitle": "Chat",
+    "report": "Report",
+    "reportWhy": "What happened? (optional)",
+    "reportConfirm": "Report this conversation to the PULSE team? Its messages will be reviewed.",
+    "reportDone": "Reported — our team will review it. Thank you.",
+    "block": "Block",
+    "blockConfirm": "Block this person? They won't be able to message or connect with you.",
+    "blockDone": "Blocked.",
     "findBuddies": "Find buddies →",
     "findPeople": "Find people →",
     "sayHi": "Say hi 👋",

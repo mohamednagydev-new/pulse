@@ -689,6 +689,31 @@ model PostComment {
 }
 
 // ---------------- Direct messages ----------------
+// One user shutting another out: kills DMs, connects and follows both ways,
+// and hides the blocked user's posts from the blocker's feed.
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+// A user flagging a DM conversation for admin review. Reporting is the consent
+// gesture that opens the thread's content to moderation.
+model ChatReport {
+  id         String   @id @default(cuid())
+  threadId   String
+  reporterId String
+  reason     String?
+  status     String   @default("open") // open | resolved
+  createdAt  DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
 model DMThread {
   id            String      @id @default(cuid())
   userAId       String

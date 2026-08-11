@@ -6,7 +6,7 @@ import fs from 'fs';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { env } from '../env';
-import { requireAuth, requireAdmin } from '../middleware/auth';
+import { requireAuth, requireAdmin, type AuthedRequest } from '../middleware/auth';
 import { processVideo } from '../lib/video';
 import { buildTranslationPatch } from '../lib/translate';
 import { aiEnabled, chatComplete } from '../lib/openai';
@@ -767,6 +767,60 @@ adminRouter.get('/moderation/dm-threads', async (_req, res) => {
       lastMessageAt: t.lastMessageAt,
     })),
   );
+});
+
+// User-filed chat reports — the front door for reading DM content.
+adminRouter.get('/moderation/reports', async (_req, res) => {
+  const reports = await prisma.chatReport.findMany({ orderBy: { createdAt: 'desc' }, take: 50 });
+  const threadIds = Array.from(new Set(reports.map((r) => r.threadId)));
+  const threads = await prisma.dMThread.findMany({ where: { id: { in: threadIds } } });
+  const userIds = Array.from(new Set([...threads.flatMap((t) => [t.userAId, t.userBId]), ...reports.map((r) => r.reporterId)]));
+  const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, firstName: true, lastName: true, email: true } });
+  const byId = new Map(users.map((u) => [u.id, u]));
+  const byThread = new Map(threads.map((t) => [t.id, t]));
+  res.json(
+    reports.map((r) => {
+      const t = byThread.get(r.threadId);
+      return {
+        id: r.id,
+        threadId: r.threadId,
+        status: r.status,
+        reason: r.reason,
+        createdAt: r.createdAt,
+        reporter: byId.get(r.reporterId) ?? null,
+        a: t ? byId.get(t.userAId) ?? null : null,
+        b: t ? byId.get(t.userBId) ?? null : null,
+      };
+    }),
+  );
+});
+
+adminRouter.post('/moderation/reports/:id/resolve', async (req, res) => {
+  await prisma.chatReport.update({ where: { id: req.params.id }, data: { status: 'resolved' } }).catch(() => {});
+  res.json({ ok: true });
+});
+
+// Full DM content. Owner's call: access exists for any thread, but every read
+// is logged loudly so it is an act, not a habit — and reports are the front door.
+adminRouter.get('/moderation/dm-threads/:id/messages', async (req: AuthedRequest, res) => {
+  const thread = await prisma.dMThread.findUnique({ where: { id: req.params.id } });
+  if (!thread) return res.status(404).json({ error: 'Not found' });
+  const [a, b, messages] = await Promise.all([
+    prisma.user.findUnique({ where: { id: thread.userAId }, select: { id: true, firstName: true, lastName: true } }),
+    prisma.user.findUnique({ where: { id: thread.userBId }, select: { id: true, firstName: true, lastName: true } }),
+    prisma.dMMessage.findMany({ where: { threadId: thread.id }, orderBy: { createdAt: 'asc' }, take: 300 }),
+  ]);
+  console.log(`[moderation] ADMIN ${req.userId} read DM thread ${thread.id} (${a?.firstName} <-> ${b?.firstName})`);
+  res.json({
+    a, b,
+    messages: messages.map((m) => ({
+      id: m.id,
+      from: m.senderId === thread.userAId ? a?.firstName : b?.firstName,
+      text: m.text,
+      voice: Boolean(m.audio),
+      createdAt: m.createdAt,
+    })),
+  });
 });
 
 adminRouter.get('/moderation/challenge-messages', async (_req, res) => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, MessageCircle, Trophy, RefreshCw, Wifi, Lock } from 'lucide-react';
+import { Trash2, MessageCircle, Trophy, RefreshCw, Wifi, Lock, Flag } from 'lucide-react';
 import { api } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import TopBar from '../../components/TopBar';
@@ -9,9 +9,27 @@ import { timeAgo } from '../../components/PostCard';
 
 /** Everything the community can see, in one list, with a delete on every row.
  *  DMs are deliberately absent — private messages aren't moderation surface. */
+/** Inline DM transcript for the moderation panels. Voice notes show as markers. */
+function ThreadView({ data, loading }: { data: any; loading: boolean }) {
+  if (loading || !data) return <p className="py-4 text-center text-xs text-gray-400">…</p>;
+  return (
+    <div className="mt-2.5 max-h-72 space-y-1 overflow-y-auto rounded-lg bg-gray-50 p-2.5">
+      {data.messages.map((m: any) => (
+        <p key={m.id} className="text-xs leading-relaxed">
+          <span className="font-bold">{m.from}:</span>{' '}
+          {m.voice ? <span className="text-gray-400">🎤 voice note</span> : m.text}
+          <span className="ms-1.5 text-[9px] text-gray-300">{timeAgo(m.createdAt)}</span>
+        </p>
+      ))}
+      {data.messages.length === 0 && <p className="text-center text-xs text-gray-400">Empty conversation.</p>}
+    </div>
+  );
+}
+
 export default function AdminModeration() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'online' | 'feed' | 'rooms' | 'dms'>('online');
+  const [tab, setTab] = useState<'online' | 'feed' | 'rooms' | 'dms' | 'reports'>('online');
+  const [openThread, setOpenThread] = useState<string | null>(null);
 
   const feed = useQuery({ queryKey: ['mod-feed'], queryFn: () => api.get('/api/admin/moderation/feed'), enabled: tab === 'feed' });
   const rooms = useQuery({ queryKey: ['mod-rooms'], queryFn: () => api.get('/api/admin/moderation/challenge-messages'), enabled: tab === 'rooms' });
@@ -22,6 +40,16 @@ export default function AdminModeration() {
     refetchInterval: 20000, // live-ish without sockets in the admin page
   });
   const dms = useQuery({ queryKey: ['mod-dms'], queryFn: () => api.get('/api/admin/moderation/dm-threads'), enabled: tab === 'dms' });
+  const reports = useQuery({ queryKey: ['mod-reports'], queryFn: () => api.get('/api/admin/moderation/reports'), enabled: tab === 'reports' });
+  const thread = useQuery({
+    queryKey: ['mod-thread', openThread],
+    queryFn: () => api.get(`/api/admin/moderation/dm-threads/${openThread}/messages`),
+    enabled: Boolean(openThread),
+  });
+  const resolve = useMutation({
+    mutationFn: (rid: string) => api.post(`/api/admin/moderation/reports/${rid}/resolve`, {}),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['mod-reports'] }); toast('Resolved', 'success'); },
+  });
 
   const del = useMutation({
     mutationFn: ({ type, id }: { type: string; id: string }) => api.del(`/api/admin/moderation/${type}/${id}`),
@@ -47,6 +75,7 @@ export default function AdminModeration() {
           { key: 'feed' as const, icon: MessageCircle, label: 'Feed' },
           { key: 'rooms' as const, icon: Trophy, label: 'Rooms' },
           { key: 'dms' as const, icon: Lock, label: 'DMs' },
+          { key: 'reports' as const, icon: Flag, label: `Reports${reports.data?.filter((r: any) => r.status === 'open').length ? ` (${reports.data.filter((r: any) => r.status === 'open').length})` : ''}` },
         ]).map(({ key, icon: Icon, label }) => (
           <button
             key={key}
@@ -95,27 +124,67 @@ export default function AdminModeration() {
         <div className="px-4">
           <p className="mb-3 rounded-xl bg-blue-500/10 p-3 text-xs leading-relaxed text-gray-500">
             <Lock size={12} className="mb-0.5 me-1 inline text-blue-500" />
-            <b>Metadata only, by design.</b> You see who talks to whom, how much, and when — never the content.
-            Private messages users can't trust are private messages users stop sending; investigations should
-            come through user reports, not silent reading.
+            Content access exists but <b>every read is logged</b>. Prefer the Reports tab — a report is the
+            user's consent to review. Casual reading erodes the trust that keeps chat alive.
           </p>
           <div className="space-y-1.5">
             {(dms.data ?? []).map((th: any) => (
-              <div key={th.id} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold">
-                    {th.a.firstName} {th.a.lastName} <span className="text-gray-400">↔</span> {th.b.firstName} {th.b.lastName}
-                  </p>
-                  <p className="truncate text-[11px] text-gray-400">{th.a.email} · {th.b.email}</p>
+              <div key={th.id} className="rounded-xl bg-white p-3 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold">
+                      {th.a.firstName} {th.a.lastName} <span className="text-gray-400">↔</span> {th.b.firstName} {th.b.lastName}
+                    </p>
+                    <p className="truncate text-[11px] text-gray-400">{th.a.email} · {th.b.email}</p>
+                  </div>
+                  <div className="shrink-0 text-end">
+                    <p className="text-sm font-bold">{th.messages}</p>
+                    <p className="text-[10px] text-gray-400">{timeAgo(th.lastMessageAt)}</p>
+                  </div>
+                  <button
+                    onClick={() => setOpenThread(openThread === th.id ? null : th.id)}
+                    className="shrink-0 rounded-full bg-gray-100 px-3 py-1.5 text-[11px] font-bold text-gray-600"
+                  >
+                    {openThread === th.id ? 'Hide' : 'View'}
+                  </button>
                 </div>
-                <div className="shrink-0 text-end">
-                  <p className="text-sm font-bold">{th.messages}</p>
-                  <p className="text-[10px] text-gray-400">{timeAgo(th.lastMessageAt)}</p>
-                </div>
+                {openThread === th.id && <ThreadView data={thread.data} loading={thread.isLoading} />}
               </div>
             ))}
             {dms.data?.length === 0 && <p className="py-10 text-center text-sm text-gray-400">No conversations yet.</p>}
           </div>
+        </div>
+      )}
+
+      {tab === 'reports' && (
+        <div className="space-y-1.5 px-4">
+          {(reports.data ?? []).map((r: any) => (
+            <div key={r.id} className={`rounded-xl bg-white p-3 shadow-sm ${r.status === 'resolved' ? 'opacity-60' : ''}`}>
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold">
+                    🚩 {r.reporter?.firstName} reported: {r.a?.firstName} ↔ {r.b?.firstName}
+                    {r.status === 'resolved' && <span className="ms-2 rounded bg-emerald-100 px-1.5 text-[10px] text-emerald-600">RESOLVED</span>}
+                  </p>
+                  {r.reason && <p className="mt-0.5 text-xs text-gray-500">"{r.reason}"</p>}
+                  <p className="mt-0.5 text-[10px] text-gray-400">{timeAgo(r.createdAt)}</p>
+                </div>
+                <button
+                  onClick={() => setOpenThread(openThread === r.threadId ? null : r.threadId)}
+                  className="shrink-0 rounded-full bg-gray-900 px-3 py-1.5 text-[11px] font-bold text-white"
+                >
+                  {openThread === r.threadId ? 'Hide' : 'Review'}
+                </button>
+                {r.status === 'open' && (
+                  <button onClick={() => resolve.mutate(r.id)} className="shrink-0 rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-white">
+                    Resolve
+                  </button>
+                )}
+              </div>
+              {openThread === r.threadId && <ThreadView data={thread.data} loading={thread.isLoading} />}
+            </div>
+          ))}
+          {reports.data?.length === 0 && <p className="py-10 text-center text-sm text-gray-400">No reports — a quiet community is a good community.</p>}
         </div>
       )}
 

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, Star, Play, Dumbbell, CalendarDays, UserPlus, Check, Clock, Zap, HeartHandshake, ArrowLeft, Users, Activity } from 'lucide-react';
+import { MessageSquare, Star, Play, Dumbbell, CalendarDays, UserPlus, Check, Clock, Zap, HeartHandshake, ArrowLeft, Users, Activity, Ban } from 'lucide-react';
 import { api } from '../../lib/api';
 import { MediaImage, Loader, ErrorMsg } from '../../components/ui';
 import Sheet from '../../components/Sheet';
@@ -42,6 +42,14 @@ export default function UserProfile() {
   const accept = useMutation({
     mutationFn: () => api.post(`/api/social/connections/${id}/accept`),
     onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast(`${t('buddies.connect')} ✓`, 'success'); },
+  });
+  const block = useMutation({
+    mutationFn: () => api.post(`/api/social/users/${id}/block`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast(t('social2.blockDone'), 'success'); },
+  });
+  const unblock = useMutation({
+    mutationFn: () => api.del(`/api/social/users/${id}/block`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: key }); toast(t('social2.unblockDone'), 'success'); },
   });
 
   if (isLoading) return <Loader />;
@@ -162,6 +170,20 @@ export default function UserProfile() {
             </motion.button>
           </>
         )}
+        <motion.button
+          whileTap={{ scale: 0.92 }}
+          transition={tapSpring}
+          onClick={() => {
+            if (user.blocked) { unblock.mutate(); return; }
+            if (window.confirm(t('social2.blockConfirm', { name: user.firstName }))) block.mutate();
+          }}
+          aria-label={user.blocked ? t('social2.unblock') : t('social2.block')}
+          className={`flex h-[34px] items-center justify-center gap-1 rounded-full px-3 text-[12px] font-bold shadow-sm ${
+            user.blocked ? 'bg-red-500 text-white' : 'bg-white text-gray-400'
+          }`}
+        >
+          <Ban size={13} /> {user.blocked ? t('social2.unblock') : ''}
+        </motion.button>
       </div>
 
       <Sheet open={gate} onClose={() => setGate(false)} label={t('buddies.chatGateTitle', { name: user.firstName })}>

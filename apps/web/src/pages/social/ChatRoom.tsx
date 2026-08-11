@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Mic, Send, Trash2 } from 'lucide-react';
+import { Mic, Send, Trash2, Flag, Ban } from 'lucide-react';
 import { api, getAccessToken } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import { Loader } from '../../components/ui';
@@ -14,6 +14,7 @@ interface Message { id: string; senderId: string; text: string | null; audioUrl?
 export default function ChatRoom() {
   const { t } = useTranslation();
   const { id } = useParams();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [other, setOther] = useState<any>(null);
   const [text, setText] = useState('');
@@ -142,9 +143,42 @@ export default function ChatRoom() {
   const recording = recSec >= 0;
   const mmss = `${Math.floor(recSec / 60)}:${String(recSec % 60).padStart(2, '0')}`;
 
+  const reportChat = async () => {
+    const reason = window.prompt(t('chat.reportWhy', { defaultValue: 'What happened? (optional)' })) ?? '';
+    if (!window.confirm(t('chat.reportConfirm', { defaultValue: 'Report this conversation to the PULSE team? Its messages will be reviewed.' }))) return;
+    try {
+      await api.post(`/api/chat/threads/${id}/report`, { reason });
+      toast(t('chat.reportDone', { defaultValue: 'Reported — our team will review it. Thank you.' }), 'success');
+    } catch {
+      toast(t('common.error', { defaultValue: 'Something went wrong' }), 'error');
+    }
+  };
+  const blockUser = async () => {
+    if (!other?.id) return;
+    if (!window.confirm(t('chat.blockConfirm', { defaultValue: `Block ${other.firstName}? They won't be able to message or connect with you.`, name: other.firstName }))) return;
+    try {
+      await api.post(`/api/social/users/${other.id}/block`);
+      toast(t('chat.blockDone', { defaultValue: 'Blocked.' }), 'success');
+      navigate('/chat');
+    } catch {
+      toast(t('common.error', { defaultValue: 'Something went wrong' }), 'error');
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
-      <TopBar title={other ? `${other.firstName} ${other.lastName}` : t('chat.roomTitle')} color="fitness-hero" textColor="text-white" />
+      <div className="relative">
+        <TopBar title={other ? `${other.firstName} ${other.lastName}` : t('chat.roomTitle')} color="fitness-hero" textColor="text-white" />
+        {/* Safety actions live where the conversation lives. */}
+        <div className="absolute end-2 top-1/2 flex -translate-y-1/2 gap-1" style={{ marginTop: 'calc(env(safe-area-inset-top, 0px) / 2)' }}>
+          <button onClick={reportChat} aria-label={t('chat.report', { defaultValue: 'Report' })} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+            <Flag size={15} />
+          </button>
+          <button onClick={blockUser} aria-label={t('chat.block', { defaultValue: 'Block' })} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+            <Ban size={15} />
+          </button>
+        </div>
+      </div>
       <div className="flex-1 space-y-2 overflow-y-auto p-4 pb-24">
         {messages.map((m) => {
           const mine = m.senderId === meId;
