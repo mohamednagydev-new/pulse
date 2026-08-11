@@ -114,11 +114,24 @@ function BroadcastCard() {
   const [order] = useState(() =>
     BROADCAST_IDEAS.map((_, i) => i).sort(() => Math.random() - 0.5),
   );
-  const suggest = () => {
-    const s = BROADCAST_IDEAS[order[ideaIdx % BROADCAST_IDEAS.length]];
-    setTitle(s.title); setTitleAr(s.titleAr); setBody(s.body); setBodyAr(s.bodyAr); setUrl(s.url);
-    setIdeaIdx((i) => i + 1);
+  const [suggesting, setSuggesting] = useState(false);
+  const fill = (s: { title: string; titleAr: string; body: string; bodyAr: string; url?: string }) => {
+    setTitle(s.title); setTitleAr(s.titleAr); setBody(s.body); setBodyAr(s.bodyAr); setUrl(s.url ?? '');
     setSent(null);
+  };
+  // AI writes a fresh one when the key is set; the static pool is the fallback,
+  // so the button never dead-ends.
+  const suggest = async () => {
+    setSuggesting(true);
+    try {
+      const r = await api.post('/api/admin/broadcast/suggest', {});
+      fill(r.idea);
+    } catch {
+      fill(BROADCAST_IDEAS[order[ideaIdx % BROADCAST_IDEAS.length]]);
+      setIdeaIdx((i) => i + 1);
+    } finally {
+      setSuggesting(false);
+    }
   };
 
   const send = useMutation({
@@ -150,8 +163,8 @@ function BroadcastCard() {
           <p className="flex items-center gap-1.5 text-sm font-bold text-gray-600">📣 Broadcast to users</p>
           <p className="mt-0.5 text-xs text-gray-400">Push on subscribed devices + in-app notification for everyone. Fill AR fields too and each user gets their own language.</p>
         </div>
-        <button onClick={suggest} className="flex shrink-0 items-center gap-1 rounded-full bg-brand-pink/10 px-3 py-1.5 text-xs font-bold text-brand-pink transition active:scale-95">
-          <Sparkles size={13} /> Suggest
+        <button onClick={suggest} disabled={suggesting} className="flex shrink-0 items-center gap-1 rounded-full bg-brand-pink/10 px-3 py-1.5 text-xs font-bold text-brand-pink transition active:scale-95 disabled:opacity-60">
+          <Sparkles size={13} className={suggesting ? 'animate-pulse' : ''} /> {suggesting ? 'Writing…' : 'Suggest'}
         </button>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">

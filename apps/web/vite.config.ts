@@ -79,10 +79,9 @@ export default defineConfig({
     }),
   ],
   build: {
-    // Keep previous builds' hashed chunks alongside new ones: an app that was
-    // open during a redeploy can still fetch the chunks its index.html names.
-    // install.ps1 prunes assets older than 14 days so dist doesn't grow forever.
-    emptyOutDir: false,
+    // NOTE: emptyOutDir must stay true (default) — with accumulation the PWA
+    // precache manifest globs every historical chunk (seen: 99 → 514 entries).
+    // Stale-chunk clients are healed by lazyRoute()'s one-shot reload instead.
     rollupOptions: {
       output: {
         // Stable vendor chunks: the framework code changes far less often than

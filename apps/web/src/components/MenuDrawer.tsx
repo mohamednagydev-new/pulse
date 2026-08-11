@@ -7,7 +7,7 @@ import {
   Menu, X, CalendarDays, Dumbbell, Music, TrendingUp, Flame, Medal,
   Settings, Shield, LogOut, Moon, Sun, MessagesSquare, ClipboardList, ChevronDown,
   Award, Trophy, UserPlus, Users, HeartHandshake, ShoppingBag, HelpCircle, Ticket,
-  Clapperboard, ScanLine, UtensilsCrossed, Building2, type LucideIcon,
+  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
@@ -25,6 +25,7 @@ const GROUPS: Group[] = [
   {
     en: 'Train', ar: 'تمرين',
     items: [
+      { to: '/coach-chat', en: 'AI Coach', ar: 'كوتش AI', icon: Bot },
       { to: '/my-plan', en: 'My plan', ar: 'خطتي', icon: ClipboardList },
       { to: '/schedule', en: 'Schedule', ar: 'جدولي', icon: CalendarDays },
       { to: '/workout', en: 'Workout', ar: 'تمرين', icon: Dumbbell },

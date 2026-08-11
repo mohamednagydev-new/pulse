@@ -994,6 +994,16 @@
     "askNutritionist": "Ask a nutritionist",
     "askNutritionistSub": "A plan cannot read your bloodwork. A person can — free, no commission."
   },
+  "coachChat": {
+    "title": "AI Coach",
+    "hello": "Ask me anything about training & food 💪",
+    "sub": "Answers come from PULSE's own library — not internet guesses",
+    "ph": "Type your question…",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "failed": "Couldn't answer right now — try again",
+    "disabled": "AI is warming up — check back soon"
+  },
   "myrec": {
     "new": "Create a recipe",
     "namePh": "Recipe name — e.g. My protein oats",

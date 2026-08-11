@@ -660,6 +660,39 @@ adminRouter.post('/broadcast', async (req, res) => {
   res.json({ ok: true, queued: users.length, pushSubscribed, audience });
 });
 
+// ---- AI broadcast suggestion ----
+// One fresh bilingual notification idea per call; the client falls back to its
+// static pool when AI is off. Marketing wording rules are enforced in-prompt.
+adminRouter.post('/broadcast/suggest', async (_req, res) => {
+  if (!aiEnabled()) return res.status(503).json({ error: 'AI not configured' });
+  try {
+    const raw = await chatComplete(
+      [
+        {
+          role: 'system',
+          content: [
+            'You write push notifications for PULSE, a free Egyptian fitness app (workouts, Egyptian food calories, challenges with friends, community).',
+            'Produce ONE notification as strict JSON: {"title":"...","titleAr":"...","body":"...","bodyAr":"...","url":"/"}.',
+            'titleAr/bodyAr: casual Egyptian Arabic (عامية مصرية), motivating, WhatsApp-friendly tone, one emoji in the title. title/body: matching English.',
+            'Body under 120 characters. Vary the angle: motivation, habit tip, water, sleep, protein, challenge, comeback, invite-a-friend.',
+            'url: one of / , /workout , /community , /achievements , /wellness/kitchen , /buddies , /tracker.',
+            'FORBIDDEN phrases (Arabic): "في جيبك", "خطة مخصصة", "مدعوم بالذكاء الاصطناعي", "حقق أهدافك", "كل حاجة في مكان واحد". Never mention Ramadan or fasting.',
+            'Return ONLY the JSON object.',
+          ].join('\n'),
+        },
+        { role: 'user', content: `Write one now. Random seed: ${Date.now() % 10000}` },
+      ],
+      { temperature: 1.0 },
+    );
+    const idea = JSON.parse(raw.replace(/^```json?\s*|\s*```$/g, ''));
+    if (!idea?.title || !idea?.titleAr || !idea?.body || !idea?.bodyAr) throw new Error('bad shape');
+    if (/في جيبك|رمضان|صيام/.test(`${idea.titleAr} ${idea.bodyAr}`)) throw new Error('banned phrase');
+    res.json({ idea });
+  } catch {
+    res.status(500).json({ error: 'Generation failed' });
+  }
+});
+
 // ---- Community moderation ----
 // Full admin visibility + delete over user-generated community content: feed
 // posts, their comments, and challenge-room messages. (DMs stay private by
