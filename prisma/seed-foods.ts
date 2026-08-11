@@ -161,6 +161,21 @@ const FOODS: F[] = [
   ['Sweetened hibiscus', 'كركديه بسكر', 'drink', '1 glass', 'كوباية', 300, 90, 0, 23, 0, false],
   ['Sahlab', 'سحلب', 'drink', '1 glass', 'كوباية', 250, 280, 7, 45, 8, false],
   ['Aniseed tea, no sugar', 'ينسون سادة', 'drink', '1 glass', 'كوباية', 200, 3, 0, 0.7, 0, false],
+  // From a user ticket (Aug 2026): "ordered tea with milk and couldn't find it" —
+  // the most-drunk beverage in Egypt was missing, plus shakes and packaged drinks.
+  ['Tea with milk, 2 sugars', 'شاي بلبن بسكرتين', 'drink', '1 glass', 'كوباية', 200, 120, 4, 20, 3, true, ['shai bel laban', 'tea with milk']],
+  ['Tea with milk, no sugar', 'شاي بلبن من غير سكر', 'drink', '1 glass', 'كوباية', 200, 60, 4, 6, 3, false],
+  ['Tea with 1 sugar', 'شاي بمعلقة سكر', 'drink', '1 glass', 'كوباية', 200, 20, 0, 5, 0, false],
+  ['Packaged juice box', 'عصير علبة', 'drink', '1 box', 'علبة', 250, 130, 0.5, 32, 0, true, ['juhayna', 'جهينة']],
+  ['Guava juice', 'عصير جوافة', 'drink', '1 glass', 'كوباية', 300, 180, 2, 43, 0.5, false],
+  ['Strawberry juice', 'عصير فراولة', 'drink', '1 glass', 'كوباية', 300, 150, 1.5, 36, 0.5, false],
+  ['Banana milk smoothie', 'عصير موز بلبن', 'drink', '1 glass', 'كوباية', 300, 220, 7, 42, 4, true, ['موز باللبن', 'banana shake']],
+  ['Date milk shake', 'تمر بلبن', 'drink', '1 glass', 'كوباية', 300, 260, 7, 52, 4, false],
+  ['Protein shake (scoop + water)', 'بروتين شيك (سكوب بالمية)', 'drink', '1 shaker', 'شيكر', 350, 120, 24, 3, 1.5, true, ['whey', 'واي بروتين']],
+  ['Protein shake (scoop + milk)', 'بروتين شيك بلبن', 'drink', '1 shaker', 'شيكر', 400, 220, 30, 12, 5, false],
+  ['Oats & banana shake', 'شيك شوفان وموز', 'drink', '1 glass', 'كوباية', 350, 320, 12, 55, 7, false, ['oats shake']],
+  ['Iced coffee, sweetened', 'آيس كوفي', 'drink', '1 cup', 'كوباية', 300, 180, 4, 28, 6, false],
+  ['Energy drink', 'مشروب طاقة', 'drink', '1 can', 'كانز', 250, 110, 0, 28, 0, false],
 
   // ------------------------------ sweets ---------------------------------
   ['Basbousa', 'بسبوسة', 'sweet', '1 piece', 'قطعة', 80, 300, 4, 45, 12, true],
@@ -177,6 +192,24 @@ const FOODS: F[] = [
   ['Chocolate bar', 'لوح شوكولاتة', 'sweet', '1 bar', 'لوح', 45, 240, 3, 27, 13, false],
   ['Ice cream', 'آيس كريم', 'sweet', '2 scoops', 'كورتين', 100, 210, 4, 25, 10, false],
   ['Molasses with tahini', 'عسل أسود بالطحينة', 'sweet', '2 tbsp', '٢ معلقة', 40, 190, 4, 20, 11, false],
+  // Ticket additions: biscuits by type, ice cream variants, and a diet corner.
+  ['Tea biscuits, plain', 'بسكوت شاي', 'snack', '4 pieces', '٤ قطع', 32, 150, 2, 22, 6, true, ['بسكويت', 'biscuits']],
+  ['Sandwich biscuits (Oreo-style)', 'بسكوت ساندوتش', 'snack', '3 pieces', '٣ قطع', 33, 160, 1.5, 23, 7, false, ['oreo', 'أوريو', 'بوريو']],
+  ['Chocolate wafer', 'ويفر شوكولاتة', 'snack', '1 bar', 'قطعة', 30, 160, 2, 18, 9, false],
+  ['Cake slice, plain', 'قطعة كيك سادة', 'sweet', '1 slice', 'قطعة', 60, 220, 3, 30, 10, false],
+  ['Cupcake', 'كب كيك', 'sweet', '1 piece', 'قطعة', 65, 250, 3, 33, 12, false],
+  ['Ice cream cone', 'آيس كريم كورنيتو', 'sweet', '1 cone', 'كورنيتو', 75, 220, 3.5, 26, 11, false, ['cornetto']],
+  ['Ice cream stick, chocolate-coated', 'آيس كريم ستيك', 'sweet', '1 stick', 'قطعة', 65, 200, 2.5, 20, 12, false],
+  ['Sugar-free chocolate', 'شوكولاتة دايت', 'sweet', '4 squares', '٤ قطع', 30, 150, 2, 14, 10, false, ['diet chocolate']],
+  ['Diet cupcake (stevia)', 'كب كيك دايت', 'sweet', '1 piece', 'قطعة', 55, 160, 4, 20, 7, false],
+  ['Diet jam', 'مربى دايت', 'sweet', '1 tbsp', 'معلقة كبيرة', 20, 25, 0, 6, 0, false],
+  ['Diet jelly', 'جيلي دايت', 'sweet', '1 bowl', 'طبق', 120, 10, 1.5, 1, 0, false],
+  ['Sweetener sachet', 'سكر دايت', 'other', '1 sachet', 'كيس', 1, 2, 0, 0.5, 0, false, ['stevia', 'ستيفيا']],
+  ['Oatmeal with milk & honey', 'شوفان بلبن وعسل', 'staple', '1 bowl', 'طبق', 250, 280, 10, 45, 7, true, ['oatmeal']],
+  ['Peanut butter sandwich', 'سندوتش زبدة فول سوداني', 'snack', '1 sandwich', 'سندوتش', 80, 270, 9, 30, 13, false],
+  ['Protein bar', 'بروتين بار', 'snack', '1 bar', 'قطعة', 50, 200, 15, 20, 7, false],
+  ['Rice cakes', 'رايس كيك', 'snack', '2 pieces', 'قطعتين', 18, 70, 1.5, 15, 0.5, false],
+  ['Fruit yogurt cup', 'زبادي بالفواكه', 'dairy', '1 cup', 'علبة', 150, 140, 5, 24, 2.5, false],
   ['Honey', 'عسل نحل', 'sweet', '1 tbsp', 'معلقة كبيرة', 21, 64, 0, 17, 0, false],
 
   // ------------------------- snacks, fats, extras ------------------------

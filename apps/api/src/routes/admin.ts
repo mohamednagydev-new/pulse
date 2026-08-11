@@ -660,6 +660,64 @@ adminRouter.post('/broadcast', async (req, res) => {
   res.json({ ok: true, queued: users.length, pushSubscribed, audience });
 });
 
+// ---- Community moderation ----
+// Full admin visibility + delete over user-generated community content: feed
+// posts, their comments, and challenge-room messages. (DMs stay private by
+// design — moderation covers what the community can see.)
+adminRouter.get('/moderation/feed', async (_req, res) => {
+  const posts = await prisma.feedPost.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 80,
+    include: {
+      user: { select: { id: true, firstName: true, lastName: true, email: true } },
+      comments: { include: { user: { select: { firstName: true } } }, orderBy: { createdAt: 'desc' as const }, take: 10 },
+      reactions: { select: { id: true } },
+    },
+  });
+  res.json(
+    posts.map((p) => ({
+      id: p.id,
+      kind: p.kind,
+      text: p.text,
+      textAr: p.textAr,
+      mediaType: p.mediaType,
+      createdAt: p.createdAt,
+      user: p.user,
+      reactionCount: p.reactions.length,
+      comments: p.comments.map((c) => ({ id: c.id, text: c.text, by: c.user.firstName, createdAt: c.createdAt })),
+    })),
+  );
+});
+adminRouter.delete('/moderation/posts/:id', async (req, res) => {
+  await prisma.feedPost.delete({ where: { id: req.params.id } }).catch(() => {});
+  res.json({ ok: true });
+});
+adminRouter.delete('/moderation/comments/:id', async (req, res) => {
+  await prisma.postComment.delete({ where: { id: req.params.id } }).catch(() => {});
+  res.json({ ok: true });
+});
+adminRouter.get('/moderation/challenge-messages', async (_req, res) => {
+  const msgs = await prisma.challengeMessage.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 80,
+    include: { user: { select: { firstName: true, lastName: true } }, challenge: { select: { title: true, titleAr: true } } },
+  });
+  res.json(
+    msgs.map((m) => ({
+      id: m.id,
+      text: m.text,
+      isCoach: m.isCoach,
+      by: m.isCoach ? 'Coach PULSE' : `${m.user?.firstName ?? ''} ${m.user?.lastName ?? ''}`.trim() || '—',
+      room: m.challenge.titleAr ?? m.challenge.title,
+      createdAt: m.createdAt,
+    })),
+  );
+});
+adminRouter.delete('/moderation/challenge-messages/:id', async (req, res) => {
+  await prisma.challengeMessage.delete({ where: { id: req.params.id } }).catch(() => {});
+  res.json({ ok: true });
+});
+
 // ---- Facebook post studio ----
 // The daily posting loop, in-app: 3 suggested captions (AI when a key exists,
 // else a smart rotation over live content), admin edits, attaches an uploaded
