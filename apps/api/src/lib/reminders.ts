@@ -230,6 +230,13 @@ async function runCheck() {
     if (await claimJob(`backup:${day}`)) await backupDatabase(day);
   }
 
+  // Friday 17:00 — the weekly win-back email digest for lapsed users (the ONE
+  // marketing email; everything else stays push/in-app by design).
+  if (localDow(now) === 5 && hour === 17 && (await claimJob(`digest:${day}`))) {
+    const { sendWeeklyDigest } = await import('./digest');
+    await sendWeeklyDigest().catch((e) => console.warn('[digest]', e?.message));
+  }
+
   // Saturday 12:00 — auto-post last week's league promotions to the Facebook
   // Page (the fixed weekly appointment from LAUNCH-CAMPAIGNS.md, on autopilot).
   // Requires FB_PAGE_ID/FB_PAGE_TOKEN in .env; silently skipped otherwise.

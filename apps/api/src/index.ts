@@ -69,6 +69,18 @@ app.get('/api/health', async (_req, res) => {
   }
 });
 
+// One-click unsubscribe from the weekly digest — arrives from an email link,
+// so no login: the HMAC token is the authorization.
+app.get('/api/unsubscribe', async (req, res) => {
+  const { u, t } = req.query as { u?: string; t?: string };
+  const { unsubToken } = await import('./lib/digest');
+  if (!u || !t || t !== unsubToken(u)) return res.status(400).send('Invalid link');
+  await prisma.user.updateMany({ where: { id: u }, data: { emailOptOut: true } });
+  res.send(
+    '<div style="font-family:sans-serif;text-align:center;padding:60px 20px"><h2>تم إلغاء الاشتراك ✓</h2><p>Unsubscribed — you will not receive these emails again.</p><a href="https://pulse.geddo.online" style="color:#f97316;font-weight:bold">pulse.geddo.online</a></div>',
+  );
+});
+
 // Rate limits: throttle credential stuffing and unbounded (billable) AI calls.
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 80, standardHeaders: true, legacyHeaders: false });
 const aiLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
