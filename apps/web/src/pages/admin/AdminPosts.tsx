@@ -106,6 +106,11 @@ function BroadcastCard() {
   const [bodyAr, setBodyAr] = useState('');
   const [url, setUrl] = useState('');
   const [audience, setAudience] = useState<'all' | 'active7' | 'lapsed7'>('all');
+  const reach = useQuery<Record<string, { users: number; push: number }>>({
+    queryKey: ['broadcast-reach'],
+    queryFn: () => api.get('/api/admin/broadcast/reach'),
+    staleTime: 60_000,
+  });
   const [arm, setArm] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
   const [ideaIdx, setIdeaIdx] = useState(0);
@@ -181,6 +186,12 @@ function BroadcastCard() {
           <option value="lapsed7">Lapsed 7d+</option>
         </select>
       </div>
+      {/* Reach preview BEFORE sending — the answer to "who will receive this?" */}
+      {reach.data?.[audience] && (
+        <p className="mt-2 text-center text-xs text-gray-500">
+          🔔 <b>{reach.data[audience].push}</b> of <b>{reach.data[audience].users}</b> users in this audience can receive a push banner — the rest see it in the app bell only.
+        </p>
+      )}
       <button
         onClick={() => (arm ? send.mutate() : setArm(true))}
         disabled={!ready || send.isPending}

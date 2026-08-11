@@ -67,11 +67,15 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-29be94d7'], (function (workbox) { 'use strict';
+define(['./workbox-53becfbb'], (function (workbox) { 'use strict';
 
   importScripts("/push-sw.js");
-  self.skipWaiting();
-  workbox.clientsClaim();
+  self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+    }
+  });
+
   /**
    * The precacheAndRoute() method efficiently caches and responds to
    * requests for URLs in the manifest.
@@ -79,18 +83,22 @@ define(['./workbox-29be94d7'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "/index.html",
-    "revision": "0.v7a7ptdhddg"
+    "revision": "0.ug2m9np07r4"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
-    allowlist: [/^\/$/]
+    allowlist: [/^\/$/],
+    denylist: [/^\/api/, /^\/media/]
   }));
   workbox.registerRoute(({
     url
   }) => url.pathname.startsWith("/api"), new workbox.NetworkFirst({
     "cacheName": "api",
-    "networkTimeoutSeconds": 5,
-    plugins: []
+    "networkTimeoutSeconds": 3,
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 200,
+      maxAgeSeconds: 86400
+    })]
   }), 'GET');
   workbox.registerRoute(({
     url

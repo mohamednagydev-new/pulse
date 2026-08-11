@@ -593,8 +593,10 @@ adminRouter.get('/analytics', async (_req, res) => {
     take: 20,
   });
 
+  const pushUsers = (await prisma.pushSubscription.findMany({ select: { userId: true }, distinct: ['userId'] })).length;
   res.json({
     onlineNow: onlineCount(),
+    pushUsers,
     dau: dau.map((d) => ({ day: d.day, users: Number(d.users) })),
     funnel,
     clientErrors: clientErrorsRaw.map((e) => ({ message: e.meta, count: e._count })),
@@ -660,6 +662,28 @@ adminRouter.post('/broadcast', async (req, res) => {
   })();
 
   res.json({ ok: true, queued: users.length, pushSubscribed, audience });
+});
+
+// Reach preview per audience — how many users each broadcast target holds and
+// how many of them can actually receive a push banner. Shown BEFORE sending.
+adminRouter.get('/broadcast/reach', async (_req, res) => {
+  const weekAgo = daysAgoStr(7);
+  const wheres = {
+    all: {},
+    active7: { lastActiveOn: { gte: weekAgo } },
+    lapsed7: { OR: [{ lastActiveOn: { lt: weekAgo } }, { lastActiveOn: null }] },
+  } as const;
+  const out: Record<string, { users: number; push: number }> = {};
+  for (const [key, where] of Object.entries(wheres)) {
+    const [users, push] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.pushSubscription
+        .findMany({ where: { user: where }, select: { userId: true }, distinct: ['userId'] })
+        .then((r) => r.length),
+    ]);
+    out[key] = { users, push };
+  }
+  res.json(out);
 });
 
 // ---- AI broadcast suggestion ----
@@ -1018,7 +1042,7 @@ adminRouter.get('/users', async (req, res) => {
     where: q
       ? { OR: [{ email: { contains: q } }, { firstName: { contains: q } }, { lastName: { contains: q } }] }
       : {},
-    select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true, isCoach: true, coachVerified: true, coachFeatured: true, avatarUrl: true, xp: true, level: true, currentStreak: true, lastActiveOn: true, lastSeenAt: true },
+    select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true, isCoach: true, coachVerified: true, coachFeatured: true, avatarUrl: true, xp: true, level: true, currentStreak: true, lastActiveOn: true, lastSeenAt: true, _count: { select: { pushSubs: true } } },
     orderBy: { createdAt: 'desc' },
     take,
   });
