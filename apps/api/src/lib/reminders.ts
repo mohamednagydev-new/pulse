@@ -80,6 +80,33 @@ async function runCheck() {
     await postDailyChallengePrompts().catch((e) => console.warn('[weekly-prompt]', e?.message));
   }
 
+  // Live-session reminders: joining a Thursday-7pm session used to produce
+  // total silence until (and including) Thursday 7pm. One ping in the hour
+  // before the start, per participant, claimed per session.
+  try {
+    const soon = await prisma.groupSession.findMany({
+      where: { scheduledAt: { gte: now, lte: new Date(now.getTime() + 60 * 60 * 1000) } },
+      select: { id: true, title: true, scheduledAt: true },
+    });
+    for (const s of soon) {
+      if (!(await claimJob(`groupremind:${s.id}`))) continue;
+      const parts = await prisma.groupParticipant.findMany({ where: { sessionId: s.id }, select: { userId: true } });
+      const mins = Math.max(1, Math.round((s.scheduledAt.getTime() - now.getTime()) / 60000));
+      for (const p of parts) {
+        notifyUser(p.userId, {
+          title: `Live session soon 🎥 (${mins}m)`,
+          titleAr: `التمرين الجماعي قرّب 🎥 (بعد ${mins} دقيقة)`,
+          body: `"${s.title}" starts soon — warm up!`,
+          bodyAr: `"${s.title}" هيبدأ قريب — سخّن نفسك!`,
+          url: `/group/${s.id}`,
+          type: 'reminder',
+        }).catch(() => {});
+      }
+    }
+  } catch (e: any) {
+    console.warn('[group-remind]', e?.message);
+  }
+
   // Close out last week's league rooms so podium XP lands even for people who
   // haven't opened the app since.
   await settleStaleRooms().catch((e) => console.warn('[leagues]', e?.message));

@@ -35,7 +35,7 @@ const GOAL_ANIM: Record<string, (p: { className?: string }) => JSX.Element> = {
 };
 
 type ChallengeKind = 'global' | 'personal' | 'group';
-type GoalType = 'lessons' | 'streak' | 'calories';
+type GoalType = 'lessons' | 'streak' | 'calories' | 'water' | 'lifts' | 'xp';
 
 type Challenge = {
   id: string;
@@ -61,6 +61,10 @@ const GOAL_OPTIONS: { value: GoalType; emoji: string; labelKey: string; def: num
   { value: 'lessons', emoji: '💪', labelKey: 'challenges.workouts', def: 12 },
   { value: 'streak', emoji: '🔥', labelKey: 'challenges.streakDays', def: 7 },
   { value: 'calories', emoji: '⚡', labelKey: 'challenges.calories', def: 5000 },
+  // The three goal types the server always supported and users could never create:
+  { value: 'water', emoji: '💧', labelKey: 'challenges.waterGlasses', def: 40 },
+  { value: 'lifts', emoji: '🏋️', labelKey: 'challenges.liftSets', def: 15 },
+  { value: 'xp', emoji: '🎯', labelKey: 'challenges.xpPoints', def: 300 },
 ];
 
 const DURATIONS = [7, 14, 30, 60, 90];

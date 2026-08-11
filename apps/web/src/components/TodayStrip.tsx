@@ -135,7 +135,7 @@ export default function TodayStrip() {
           <div className="grid grid-cols-3 gap-2">
             {[
               { to: '/yoga', icon: Flower2, label: t('daily.stretch') },
-              { to: '/tracker', icon: Droplets, label: t('daily.walk') },
+              { to: '/', icon: Droplets, label: t('daily.water') },
               { to: '/wellness', icon: Wind, label: t('daily.breathe') },
             ].map(({ to, icon: Icon, label }) => (
               <button

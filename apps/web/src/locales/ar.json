@@ -511,7 +511,10 @@
     "ended": "انتهى",
     "daysLeft": "فاضل {{n}} يوم",
     "empty": "مفيش تحديات — اعمل واحد 🎯",
-    "deleteConfirm": "تمسح التحدي ده؟"
+    "deleteConfirm": "تمسح التحدي ده؟",
+    "waterGlasses": "كوبايات مية",
+    "liftSets": "مجموعات متسجلة",
+    "xpPoints": "نقط XP"
   },
   "deals": {
     "title": "عروض وكوبونات",

@@ -465,6 +465,16 @@ adminRouter.patch('/tickets/:id', async (req, res) => {
   // Tell them they have an answer — a reply nobody sees is not a reply. Via
   // notifyUser so it ALSO pushes: this is the one notification a user is
   // actively waiting for, and it was the only one arriving without a banner.
+  // Guest tickets have no account to notify — but they left a contact. If it's
+  // an email, the reply actually reaches them (it used to save-and-vanish).
+  if (sendingReply && !ticket.userId && ticket.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ticket.contact)) {
+    const { sendMail } = await import('../lib/mailer');
+    sendMail({
+      to: ticket.contact,
+      subject: `PULSE — Reply to: ${ticket.subject}`,
+      text: `${String(reply).trim()}\n\n— PULSE team · pulse.geddo.online`,
+    }).catch((e: any) => console.warn('[support] guest reply mail failed:', e?.message));
+  }
   if (sendingReply && ticket.userId) {
     await notifyUser(ticket.userId, {
       type: 'general',

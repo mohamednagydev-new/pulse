@@ -449,7 +449,7 @@ export default function WorkoutSession() {
           >
             <Share2 size={16} /> {t('session.share')}
           </button>
-          <button onClick={() => navigate('/')} className="btn-pill btn-primary px-10">{t('session.doneBtn')}</button>
+          <button onClick={() => { const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0; if (idx > 0) navigate(-1); else navigate('/'); }} className="btn-pill btn-primary px-10">{t('session.doneBtn')}</button>
         </div>
       </div>
     );

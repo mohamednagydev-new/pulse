@@ -42,6 +42,19 @@ supportRouter.post('/guest', async (req, res) => {
     },
     select: { id: true, createdAt: true },
   });
+  // Guests are usually locked-out users — the most urgent tickets of all.
+  const { notifyUser } = await import('./push');
+  const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+  for (const a of admins) {
+    notifyUser(a.id, {
+      title: 'Guest ticket 📩 (locked-out user?)',
+      titleAr: 'رسالة من زائر 📩',
+      body: parsed.data.subject,
+      bodyAr: parsed.data.subject,
+      url: '/admin/support',
+      type: 'general',
+    }).catch(() => {});
+  }
   res.status(201).json(ticket);
 });
 

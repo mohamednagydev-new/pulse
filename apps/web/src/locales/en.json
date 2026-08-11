@@ -507,7 +507,10 @@
     "ended": "Ended",
     "daysLeft": "{{n}} days left",
     "empty": "No challenges yet — create one 🎯",
-    "deleteConfirm": "Delete this challenge?"
+    "deleteConfirm": "Delete this challenge?",
+    "waterGlasses": "Water glasses",
+    "liftSets": "Logged sets",
+    "xpPoints": "XP points"
   },
   "deals": {
     "title": "Deals & coupons",
