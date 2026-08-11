@@ -38,7 +38,7 @@ export default function Onboarding() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.dir() === 'rtl';
   // Funnel step: ad click → landing → onboarding slides.
-  useEffect(() => track('funnel-onboarding', utmMeta()), []);
+  useEffect(() => { track('funnel-onboarding', utmMeta()); }, []);
 
   // Admin-managed slide media: Banners with section "onboarding" (image per slide, by order).
   const { data: media } = useQuery({

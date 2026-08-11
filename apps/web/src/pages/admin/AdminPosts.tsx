@@ -202,7 +202,7 @@ function PostCardEditor({ suggestion, canPost }: { suggestion: Suggestion; canPo
   const [posted, setPosted] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  useEffect(() => setCaption(suggestion.caption), [suggestion.caption]);
+  useEffect(() => { setCaption(suggestion.caption); }, [suggestion.caption]);
 
   const uploadImage = async (f: File) => {
     setUploading(true);

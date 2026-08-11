@@ -15,7 +15,13 @@ function flush() {
 
 export function track(name: string, meta?: string) {
   queue.push({ name, meta: meta?.slice(0, 200) });
-  if (queue.length >= 15) return flush();
+  // void on purpose: track() must never return flush()'s promise — an
+  // implicit-return `useEffect(() => track(...))` would hand it to React as a
+  // "cleanup" and crash the tree on unmount (the chat-back blank screen).
+  if (queue.length >= 15) {
+    void flush();
+    return;
+  }
   if (!timer) timer = setTimeout(flush, 4000);
 }
 

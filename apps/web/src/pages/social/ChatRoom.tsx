@@ -49,7 +49,12 @@ export default function ChatRoom() {
     };
   }, [id]);
 
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages]);
+  // Block body on purpose: an implicit-return arrow hands whatever the call
+  // returns to React as the effect "cleanup" — anything non-function crashes
+  // the whole tree on unmount ("destroy is not a function", blank screen).
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Stop the recorder if the user navigates away mid-recording.
   useEffect(() => () => {

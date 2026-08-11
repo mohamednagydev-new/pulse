@@ -44,7 +44,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   // Funnel step: ad click → landing → this screen.
-  useEffect(() => track('funnel-login-view', utmMeta()), []);
+  useEffect(() => { track('funnel-login-view', utmMeta()); }, []);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

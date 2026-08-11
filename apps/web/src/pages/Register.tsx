@@ -14,7 +14,7 @@ export default function Register() {
   const navigate = useNavigate();
   const register = useAuth((s) => s.register);
   // Funnel step: how many ad clicks make it to the register form.
-  useEffect(() => track('funnel-register-view', utmMeta()), []);
+  useEffect(() => { track('funnel-register-view', utmMeta()); }, []);
   const [searchParams] = useSearchParams();
   const [ref] = useState(() => searchParams.get('ref') ?? '');
   const [form, setForm] = useState({ firstName: '', lastName: '', mobile: '', email: '', password: '', zip: '' });
