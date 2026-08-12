@@ -223,7 +223,9 @@ mealsRouter.get('/foods', async (req: AuthedRequest, res) => {
     orderBy: [{ common: 'desc' }, { order: 'asc' }],
   });
 
-  if (!q) return res.json({ foods: all.filter((f) => f.common).slice(0, 40) });
+  // Category browse shows the WHOLE category — the common-only cut made most
+  // of the table undiscoverable without guessing the right search word.
+  if (!q) return res.json({ foods: category ? all.slice(0, 80) : all.filter((f) => f.common).slice(0, 40) });
 
   const hit = (f: (typeof all)[number]) => {
     const hay = [f.name, f.nameAr, ...parseAvoid(f.aliases)].map(normalizeAr);

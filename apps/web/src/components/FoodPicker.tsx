@@ -71,9 +71,10 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
     }
   };
 
+  const [category, setCategory] = useState('');
   const { data, isLoading } = useQuery({
-    queryKey: ['foods', q],
-    queryFn: () => api.get(`/api/meals/foods?q=${encodeURIComponent(q)}`),
+    queryKey: ['foods', q, category],
+    queryFn: () => api.get(`/api/meals/foods?q=${encodeURIComponent(q)}${category ? `&category=${category}` : ''}`),
   });
 
   const log = useMutation({
@@ -144,6 +145,32 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
           <button onClick={onClose} aria-label={t('common.close')} className="-me-1 shrink-0 p-1 text-gray-400">
             <X size={20} />
           </button>
+        </div>
+
+        {/* Category chips: browse the whole table without guessing search words. */}
+        <div className="no-scrollbar flex shrink-0 gap-1.5 overflow-x-auto px-4 py-2">
+          {([
+            ['', i18n.language.startsWith('ar') ? 'الشائع' : 'Common'],
+            ['staple', i18n.language.startsWith('ar') ? 'نشويات' : 'Staples'],
+            ['protein', i18n.language.startsWith('ar') ? 'بروتين' : 'Protein'],
+            ['dairy', i18n.language.startsWith('ar') ? 'ألبان' : 'Dairy'],
+            ['veg', i18n.language.startsWith('ar') ? 'خضار' : 'Veg'],
+            ['fruit', i18n.language.startsWith('ar') ? 'فاكهة' : 'Fruit'],
+            ['street', i18n.language.startsWith('ar') ? 'أكل شارع' : 'Street'],
+            ['drink', i18n.language.startsWith('ar') ? 'مشروبات' : 'Drinks'],
+            ['sweet', i18n.language.startsWith('ar') ? 'حلويات' : 'Sweets'],
+            ['snack', i18n.language.startsWith('ar') ? 'سناكس' : 'Snacks'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setCategory(key)}
+              className={`min-h-[30px] shrink-0 rounded-full px-3 text-[11px] font-bold ${
+                category === key ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-3">

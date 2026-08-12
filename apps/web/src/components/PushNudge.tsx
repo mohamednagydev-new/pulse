@@ -9,7 +9,9 @@ import { toast } from '../lib/toast';
 import { pulseChime } from '../lib/chime';
 
 const SNOOZE_KEY = 'pulse_push_nudge_snooze';
-const SNOOZE_DAYS = 14;
+// Aggressive mode (owner call, Aug 2026): every 3 days instead of 14 — the
+// push-enabled count IS the retainable-user count, so we push harder for it.
+const SNOOZE_DAYS = 3;
 
 /**
  * The permission ask, timed to an earned moment: only appears once the user has
@@ -37,8 +39,13 @@ export default function PushNudge() {
   const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
   const { data: challenges } = useQuery({ queryKey: ['challenges'], queryFn: () => api.get('/api/gamification/challenges'), staleTime: 60_000 });
 
+  // Aggressive mode: any activity counts — a completion, a joined challenge,
+  // or simply having the app data loaded on a second visit. The polite
+  // earned-moment-only gate left the push count growing too slowly.
   const earned =
-    (progress?.totalCompletions ?? 0) > 0 || (Array.isArray(challenges) && challenges.some((c: any) => c.joined));
+    (progress?.totalCompletions ?? 0) > 0 ||
+    (Array.isArray(challenges) && challenges.some((c: any) => c.joined)) ||
+    progress !== undefined; // data loaded at all = user is here, ask
 
   const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const standalone =

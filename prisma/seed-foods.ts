@@ -143,7 +143,10 @@ const FOODS: F[] = [
   ['Liver sandwich', 'سندوتش كبدة', 'street', '1 sandwich', 'سندوتش', 180, 400, 24, 45, 14, false],
   ['Sausage sandwich', 'سندوتش سجق', 'street', '1 sandwich', 'سندوتش', 180, 480, 20, 46, 24, false],
   ['Potato sandwich', 'سندوتش بطاطس', 'street', '1 sandwich', 'سندوتش', 180, 420, 8, 62, 16, false],
-  ['Grilled corn', 'درة مشوية', 'street', '1 cob', 'كوزة', 150, 130, 4, 28, 1.5, false],
+  // Both spellings matter: users type ذرة (standard) as often as درة (colloquial).
+  ['Grilled corn', 'درة مشوية', 'street', '1 cob', 'كوزة', 150, 130, 4, 28, 1.5, false, ['ذرة مشوية', 'corn', 'dora']],
+  ['Boiled corn', 'درة مسلوقة', 'veg', '1 cob', 'كوزة', 150, 120, 4, 27, 1, false, ['ذرة مسلوقة', 'boiled corn']],
+  ['Sweet corn, canned', 'درة معلبة', 'veg', '1/2 cup', 'نص كوب', 80, 70, 2, 15, 0.8, false, ['ذرة معلبة', 'sweet corn']],
   ['Cart sweet potato', 'بطاطا العربية', 'street', '1 large', 'حبة كبيرة', 250, 220, 4, 52, 0.3, false],
 
   // ------------------------------ drinks ---------------------------------
