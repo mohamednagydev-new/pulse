@@ -1203,6 +1203,10 @@
     "behind": "A bit behind — this week counts",
     "stats": "{{moved}} kg moved · week {{weeks}} · ~{{eta}} weeks total at a healthy pace",
     "stop": "Stop this journey",
-    "stopConfirm": "Stop the diet journey? Your logs stay; only the target is cleared."
+    "stopConfirm": "Stop the diet journey? Your logs stay; only the target is cleared.",
+    "completed": "TARGET REACHED! +300 XP 🏆",
+    "pairWorkout": "Pair it with a workout program",
+    "trackerCta": "Want a weight goal?",
+    "trackerCtaSub": "Start a diet journey — progress bar, reminders, Friday weigh-ins"
   }
 }

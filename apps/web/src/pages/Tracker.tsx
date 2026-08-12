@@ -32,6 +32,8 @@ export default function Tracker() {
   useEffect(() => () => voice.current?.cancel(), []);
 
   const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: ['tracker-day'], queryFn: () => api.get('/api/tracker/day') });
+  // Diet Journey lives on Progress, but diet-minded users live HERE — surface it.
+  const { data: journey } = useQuery({ queryKey: ['diet-journey'], queryFn: () => api.get('/api/tracker/diet-journey') });
 
   // The free-text estimator needs a configured key. Asking first means we show the
   // box only where it works, instead of offering a button that quietly fails.
@@ -113,6 +115,30 @@ export default function Tracker() {
           </div>
         ) : null}
       </motion.div>
+
+      {journey && !journey.active && (
+        <Link to="/progress" className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-white shadow-sm transition active:scale-[0.98]">
+          <span className="text-lg">🎯</span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-extrabold">{t('diet.trackerCta')}</span>
+            <span className="block truncate text-[11px] text-white/80">{t('diet.trackerCtaSub')}</span>
+          </span>
+        </Link>
+      )}
+      {journey?.active && (
+        <Link to="/progress" className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-2.5 rounded-2xl bg-white px-4 py-3 shadow-sm transition active:scale-[0.98]">
+          <span className="text-lg">🎯</span>
+          <span className="min-w-0 flex-1">
+            <span className="mb-1.5 flex items-center justify-between text-[11px] font-bold">
+              <span>{t('diet.title')}</span>
+              <span className={journey.onTrack ? 'text-emerald-500' : 'text-amber-500'}>{journey.onTrack ? t('diet.onTrack') : t('diet.behind')}</span>
+            </span>
+            <span className="block h-1.5 overflow-hidden rounded-full bg-gray-100">
+              <span className="block h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-600" style={{ width: `${journey.pct}%` }} />
+            </span>
+          </span>
+        </Link>
+      )}
 
       {/* The primary way in: pick from the Egyptian food table. Always works. */}
       <motion.button

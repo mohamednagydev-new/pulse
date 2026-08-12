@@ -14,6 +14,7 @@ import AmbientBg from '../components/AmbientBg';
 import WeekRecap from '../components/WeekRecap';
 import CountUp from '../components/CountUp';
 import StreakCalendar from '../components/StreakCalendar';
+import Confetti from '../components/Confetti';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
@@ -515,14 +516,21 @@ function WeightQuickLog() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [kg, setKg] = useState('');
+  const [celebrate, setCelebrate] = useState(false);
   const save = useMutation({
     mutationFn: () => api.post('/api/tracker/weight', { weightKg: Number(kg) }),
-    onSuccess: () => {
+    onSuccess: (r: any) => {
       setKg('');
       qc.invalidateQueries({ queryKey: ['progress'] });
       qc.invalidateQueries({ queryKey: ['quests'] });
       qc.invalidateQueries({ queryKey: ['me'] });
-      toast(t('progress2.weightSaved'), 'success');
+      qc.invalidateQueries({ queryKey: ['diet-journey'] });
+      if (r?.journeyCompleted) {
+        setCelebrate(true);
+        toast(t('diet.completed'), 'success');
+      } else {
+        toast(t('progress2.weightSaved'), 'success');
+      }
     },
     onError: (e: any) => toast(e?.message ?? 'Failed', 'error'),
   });
@@ -530,6 +538,7 @@ function WeightQuickLog() {
   const valid = Number.isFinite(n) && n >= 20 && n <= 400;
   return (
     <div className="flex items-center gap-2">
+      {celebrate && <Confetti onDone={() => setCelebrate(false)} />}
       <input
         inputMode="decimal"
         className="input-field min-w-0 flex-1"
@@ -645,6 +654,10 @@ function DietJourneyCard() {
           eta: j.etaWeeks,
         })}
       </p>
+      {/* Diet moves the scale; training keeps the muscle. Bridge to the workout side. */}
+      <Link to="/programs" className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-orange-50 py-2.5 text-xs font-bold text-orange-600">
+        💪 {t('diet.pairWorkout')}
+      </Link>
       <button onClick={() => window.confirm(t('diet.stopConfirm')) && stop.mutate()} className="mt-2 w-full text-center text-[10px] font-bold text-gray-300">
         {t('diet.stop')}
       </button>

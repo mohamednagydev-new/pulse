@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { touchStreak } from '../lib/gamify';
-import { bumpChallenges } from '../lib/social';
+import { bumpChallenges, awardXp } from '../lib/social';
+import { notifyUser } from './push';
 import { dayString } from '../lib/time';
 
 export const trackerRouter = Router();
@@ -91,7 +92,36 @@ trackerRouter.post('/weight', async (req: AuthedRequest, res) => {
     data: { userId: req.userId!, weightKg: parsed.data.weightKg, date: parsed.data.date ?? today() },
   });
   await prisma.user.update({ where: { id: req.userId! }, data: { weightKg: parsed.data.weightKg } });
-  res.status(201).json(log);
+
+  // Journey finish line: a weigh-in that crosses the target ends the journey
+  // with a celebration, not silence — this is the whole point of the program.
+  let journeyCompleted = false;
+  const u = await prisma.user.findUnique({
+    where: { id: req.userId! },
+    select: { dietStartedAt: true, dietStartWeightKg: true, targetWeightKg: true },
+  });
+  if (u?.dietStartedAt && u.dietStartWeightKg && u.targetWeightKg) {
+    const cutting = u.targetWeightKg < u.dietStartWeightKg;
+    const reached = cutting ? parsed.data.weightKg <= u.targetWeightKg : parsed.data.weightKg >= u.targetWeightKg;
+    if (reached) {
+      journeyCompleted = true;
+      await prisma.user.update({
+        where: { id: req.userId! },
+        data: { dietStartedAt: null, dietStartWeightKg: null, targetWeightKg: null },
+      });
+      await awardXp(req.userId!, 300, 'diet-journey-complete');
+      const moved = Math.abs(Math.round((u.targetWeightKg - u.dietStartWeightKg) * 10) / 10);
+      notifyUser(req.userId!, {
+        title: 'Target weight reached! 🏆',
+        titleAr: 'وصلت لوزنك المستهدف! 🏆',
+        body: `${moved} kg — you set a target and you hit it. +300 XP. Set the next one?`,
+        bodyAr: `${moved} كجم — حطيت هدف ووصلته. +٣٠٠ نقطة. تحط الهدف اللي بعده؟`,
+        url: '/progress',
+        type: 'milestone',
+      }).catch(() => {});
+    }
+  }
+  res.status(201).json({ ...log, journeyCompleted });
 });
 
 trackerRouter.get('/progress', async (req: AuthedRequest, res) => {
