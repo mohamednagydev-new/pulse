@@ -33,7 +33,7 @@ authRouter.post('/register', async (req, res) => {
   if (existing) return res.status(409).json({ error: 'Email already registered' });
 
   const referrer = ref
-    ? await prisma.user.findUnique({ where: { referralCode: ref.toUpperCase() }, select: { id: true, firstName: true, streakFreezes: true } })
+    ? await prisma.user.findUnique({ where: { referralCode: ref.toUpperCase() }, select: { id: true, firstName: true, streakFreezes: true, currentStreak: true, level: true } })
     : null;
 
   const user = await prisma.user.create({
@@ -61,6 +61,10 @@ authRouter.post('/register', async (req, res) => {
       url: '/buddies',
       type: 'general',
     });
+    // The referral badge used to wait for the referrer's next workout
+    // (checkBadges only ran from touchStreak) — award it at the moment it's earned.
+    const { checkBadges } = await import('../lib/gamify');
+    checkBadges(referrer.id, referrer.currentStreak, referrer.level).catch(() => {});
   }
 
   const accessToken = await issueTokens(res, user);

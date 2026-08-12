@@ -153,9 +153,23 @@ function pickQuests(userId: string, day: string): Quest[] {
   return out;
 }
 
+// First-week special: inviting a friend is the stickiest thing an Egyptian
+// user can do (friends train together). New users who haven't referred anyone
+// yet get this pinned as their first quest slot instead of a random pick.
+const INVITE_QUEST: Quest = {
+  key: 'invite', en: 'Invite a friend to PULSE', ar: 'اعزم صاحبك على PULSE', icon: '🎁', target: 1,
+  progress: (userId) => prisma.user.count({ where: { referredById: userId } }),
+};
+
 dailyRouter.get('/quests', async (req: AuthedRequest, res) => {
   const day = dayString();
-  const picked = pickQuests(req.userId!, day);
+  let picked = pickQuests(req.userId!, day);
+  const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { createdAt: true } });
+  const firstWeek = me && Date.now() - me.createdAt.getTime() < 14 * 86400000;
+  if (firstWeek) {
+    const invited = await prisma.user.count({ where: { referredById: req.userId! } });
+    if (invited === 0) picked = [INVITE_QUEST, ...picked.slice(0, 2)];
+  }
   const claims = await prisma.questClaim.findMany({ where: { userId: req.userId!, day } });
   const claimed = new Set(claims.map((c) => c.questKey));
 

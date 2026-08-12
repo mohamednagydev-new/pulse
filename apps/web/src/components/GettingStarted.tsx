@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Check, ChevronRight, ClipboardList, Dumbbell, Trophy, HeartHandshake, X, HelpCircle } from 'lucide-react';
+import { Check, ChevronRight, ClipboardList, Dumbbell, Trophy, HeartHandshake, X, HelpCircle, Gift } from 'lucide-react';
+import { waOpen } from './WaShare';
 import { api } from '../lib/api';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
@@ -20,17 +21,27 @@ export default function GettingStarted() {
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(DISMISS_KEY) === '1');
 
-  // All four signals are queries other cards already keep warm.
+  // All signals are queries other cards already keep warm.
   const { data: plan } = useQuery({ queryKey: ['assessment'], queryFn: () => api.get('/api/assessment'), staleTime: 5 * 60_000 });
   const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
   const { data: buddies } = useQuery({ queryKey: ['buddies'], queryFn: () => api.get('/api/social/buddies') });
   const { data: challenges } = useQuery({ queryKey: ['challenges'], queryFn: () => api.get('/api/gamification/challenges'), staleTime: 60_000 });
+  const { data: referral } = useQuery({ queryKey: ['referral'], queryFn: () => api.get('/api/me/referral'), staleTime: Infinity });
+
+  // Invite goes straight to WhatsApp with the personal link — referral was
+  // buried in Settings, and friends-who-train-together is the stickiest
+  // configuration this app has.
+  const inviteNow = () => {
+    if (!referral?.link) return navigate('/info');
+    waOpen(t('gs.inviteMsg', { link: referral.link }));
+  };
 
   const steps = [
-    { key: 'plan', icon: ClipboardList, done: plan?.hasPlan === true, to: '/my-plan', label: t('gs.plan') },
-    { key: 'workout', icon: Dumbbell, done: (progress?.totalCompletions ?? 0) > 0, to: '/workout', label: t('gs.workout') },
-    { key: 'challenge', icon: Trophy, done: Array.isArray(challenges) && challenges.some((c: any) => c.joined), to: '/achievements', label: t('gs.challenge') },
-    { key: 'buddy', icon: HeartHandshake, done: Array.isArray(buddies) && buddies.length > 0, to: '/people', label: t('gs.buddy') },
+    { key: 'plan', icon: ClipboardList, done: plan?.hasPlan === true, action: () => navigate('/my-plan'), label: t('gs.plan') },
+    { key: 'workout', icon: Dumbbell, done: (progress?.totalCompletions ?? 0) > 0, action: () => navigate('/workout'), label: t('gs.workout') },
+    { key: 'challenge', icon: Trophy, done: Array.isArray(challenges) && challenges.some((c: any) => c.joined), action: () => navigate('/achievements'), label: t('gs.challenge') },
+    { key: 'buddy', icon: HeartHandshake, done: Array.isArray(buddies) && buddies.length > 0, action: () => navigate('/people'), label: t('gs.buddy') },
+    { key: 'invite', icon: Gift, done: (referral?.invited ?? 0) > 0, action: inviteNow, label: t('gs.invite') },
   ];
   const doneCount = steps.filter((s) => s.done).length;
 
@@ -65,10 +76,10 @@ export default function GettingStarted() {
       </div>
 
       <div className="px-2 pb-2">
-        {steps.map(({ key, icon: Icon, done, to, label }, i) => (
+        {steps.map(({ key, icon: Icon, done, action, label }, i) => (
           <button
             key={key}
-            onClick={() => !done && navigate(to)}
+            onClick={() => !done && action()}
             disabled={done}
             className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-start transition active:bg-gray-50"
           >

@@ -51,7 +51,9 @@
     "workout": "Finish your first workout",
     "challenge": "Join a challenge",
     "buddy": "Add a training buddy",
-    "whatIsThis": "What is all this? The 2-minute guide"
+    "whatIsThis": "What is all this? The 2-minute guide",
+    "invite": "Invite a friend — you both get a streak freeze 🎁",
+    "inviteMsg": "Training with PULSE — a free Egyptian fitness app 💪 Join me and we both get rewards: {{link}}"
   },
   "guest": {
     "bar": "You're browsing as a guest — join free to train, track and compete",

@@ -46,6 +46,11 @@ export default function AdminModeration() {
     queryFn: () => api.get(`/api/admin/moderation/dm-threads/${openThread}/messages`),
     enabled: Boolean(openThread),
   });
+  const pin = useMutation({
+    mutationFn: (postId: string) => api.post('/api/admin/pinned', { postId, days: 7 }),
+    onSuccess: () => toast('Pinned for 7 days 📌', 'success'),
+    onError: (e: any) => toast(e?.message ?? 'Pin failed', 'error'),
+  });
   const resolve = useMutation({
     mutationFn: (rid: string) => api.post(`/api/admin/moderation/reports/${rid}/resolve`, {}),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['mod-reports'] }); toast('Resolved', 'success'); },
@@ -201,6 +206,14 @@ export default function AdminModeration() {
                   {(p.text || p.textAr) && <p className="mt-1 break-words text-sm">{p.textAr ?? p.text}</p>}
                   {p.mediaType && <p className="mt-0.5 text-[11px] text-gray-400">[{p.mediaType} attached]</p>}
                 </div>
+                <button
+                  onClick={() => pin.mutate(p.id)}
+                  aria-label="Pin post"
+                  className="shrink-0 rounded-lg p-1.5 text-amber-500 hover:bg-amber-50"
+                  title="Pin to the top of everyone's feed for 7 days"
+                >
+                  📌
+                </button>
                 <button onClick={() => confirmDel('posts', p.id, 'post')} aria-label="Delete post" className="shrink-0 rounded-lg p-1.5 text-red-500 hover:bg-red-50">
                   <Trash2 size={15} />
                 </button>

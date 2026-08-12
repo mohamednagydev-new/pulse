@@ -6,6 +6,7 @@ import { CurlAnim } from './TrainingAnim';
 import { WaterAnim, MealAnim, FlameAnim } from './MicroAnims';
 import { api } from '../lib/api';
 import { toast } from '../lib/toast';
+import { waOpen } from './WaShare';
 import { celebrateFeedback } from '../lib/haptics';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
@@ -50,6 +51,9 @@ export default function DailyQuests() {
     queryFn: () => api.get('/api/daily/quests'),
     staleTime: 60_000,
   });
+
+  const { data: referral } = useQuery({ queryKey: ['referral'], queryFn: () => api.get('/api/me/referral'), staleTime: Infinity });
+  const inviteFriend = () => referral?.link && waOpen(t('gs.inviteMsg', { link: referral.link }));
 
   const claim = useMutation({
     mutationFn: () => api.post('/api/daily/quests/claim'),
@@ -114,9 +118,11 @@ export default function DailyQuests() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ ...spring, delay: 0.06 * i }}
+              // The invite quest is actionable in place: tap → WhatsApp with the link.
+              onClick={() => !q.done && q.key === 'invite' && inviteFriend()}
               className={`flex min-w-0 flex-col items-center rounded-xl px-1.5 py-2.5 text-center ${
                 q.done ? 'bg-emerald-50' : 'bg-gray-50'
-              }`}
+              } ${q.key === 'invite' && !q.done ? 'cursor-pointer ring-1 ring-orange-300/60' : ''}`}
             >
               <span
                 className={`flex h-9 w-9 items-center justify-center rounded-xl text-base ${

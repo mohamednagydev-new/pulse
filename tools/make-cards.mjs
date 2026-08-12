@@ -84,6 +84,12 @@ const CARDS = [
   { file: '33-barcode', kind: 'big', bg: G.orange, emoji: '📷', title: 'امسح الباركود قبل ما تشتري', sub: 'أي منتج من السوبرماركت — القيم الغذائية كاملة + تقييم من ١٠ على حسب هدفك', badge: 'ميزة جديدة' },
   { file: '34-my-recipes', kind: 'big', bg: G.green, emoji: '🍳', title: 'وصفتك… بحسابها', sub: 'اعمل وصفتك بمكوناتها مرة واحدة — السعرات والبروتين محسوبين للحصة، وتسجلها بضغطة', badge: 'جديد' },
   { file: '35-meal-photo', kind: 'big', bg: G.violet, emoji: '✨', title: 'صوّر طبقك… وخلاص', sub: 'التطبيق يقدّر السعرات من الصورة — من غير كتابة ولا حساب', badge: 'ذكاء بيشتغل لك' },
+  { file: '36-enable-notifications', kind: 'qa', bg: G.ink, title: 'إزاي تفعّل الإشعارات؟ 🔔', rows: [
+    '1️⃣ افتح pulse.geddo.online وسجّل دخولك',
+    '2️⃣ آيفون؟ دوس زرار المشاركة ⬆️ → «إضافة إلى الشاشة الرئيسية» 📲',
+    '3️⃣ افتح التطبيق من الأيقونة الجديدة (مش من سفاري)',
+    '4️⃣ هيظهرلك كارت «فعّل الإشعارات 🔔» — دوس فعّل واسمح ✅ وخلاص، تفكيرة تمرينك هتوصلك 💪',
+  ] },
 ];
 
 const html = (c) => `<!doctype html><html><head><meta charset="utf-8">
@@ -121,7 +127,7 @@ ${
   c.kind === 'feature'
     ? `<div class="featwrap"><div class="ftext"><div class="emoji">${c.emoji}</div><h1>${c.title}</h1><div class="sub">${c.sub}</div></div><img class="phone" src="${shot(c.img)}"></div>`
     : c.kind === 'qa'
-      ? `<div class="wrap"><h1 style="font-size:82px">${c.title}</h1><div class="rows">${c.rows.map((r) => `<div class="row">${r}</div>`).join('')}</div></div>`
+      ? `<div class="wrap" style="padding-top:200px;justify-content:flex-start"><h1 style="font-size:82px">${c.title}</h1><div class="rows">${c.rows.map((r) => `<div class="row">${r}</div>`).join('')}</div></div>`
       : `<div class="wrap"><div class="emoji">${c.emoji}</div><h1>${c.title}</h1><div class="sub">${c.sub}</div>${c.badge ? `<div class="badge">${c.badge}</div>` : ''}</div>`
 }
 <div class="site">pulse.geddo.online</div>
