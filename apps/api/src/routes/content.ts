@@ -193,8 +193,12 @@ contentRouter.get('/categories/:id', async (req, res) => {
   const category = await prisma.category.findUnique({
     where: { id: req.params.id },
     include: {
-      articles: { orderBy: { order: 'asc' }, select: { id: true, title: true, excerpt: true, coverImage: true, readTimeMin: true } },
-      recipes: { orderBy: { order: 'asc' }, select: { id: true, title: true, coverImage: true, calories: true, prepTimeMin: true, difficulty: true } },
+      // The *Ar columns MUST ride along: the global localizeResponse overlays
+      // titleAr onto title, but only for keys present in the payload — without
+      // them the category rows stayed English while the detail pages (full
+      // rows) translated fine.
+      articles: { orderBy: { order: 'asc' }, select: { id: true, title: true, titleAr: true, excerpt: true, excerptAr: true, coverImage: true, readTimeMin: true } },
+      recipes: { orderBy: { order: 'asc' }, select: { id: true, title: true, titleAr: true, coverImage: true, calories: true, prepTimeMin: true, difficulty: true } },
     },
   });
   if (!category) return res.status(404).json({ error: 'Not found' });

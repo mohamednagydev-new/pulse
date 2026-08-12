@@ -33,7 +33,7 @@ export default function WellnessSection() {
   return (
     <div className="min-h-screen pb-10">
       <TopBar title={t(conf.titleKey)} color={conf.hero} textColor="text-white" curved />
-      <div className="-mt-5 px-4">
+      <div className="px-4 pt-4">
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
