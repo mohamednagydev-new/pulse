@@ -126,6 +126,63 @@ trackerRouter.get('/progress', async (req: AuthedRequest, res) => {
   });
 });
 
+/* ------------------------------------------------------------------ *
+ * Diet journey — start weight → target weight with a healthy-pace
+ * trajectory (±0.5 kg/week). Weight quick-logs become progress against
+ * the line; the reminder engine picks up food nudges + Friday weigh-ins
+ * for anyone with an active journey.
+ * ------------------------------------------------------------------ */
+trackerRouter.get('/diet-journey', async (req: AuthedRequest, res) => {
+  const u = await prisma.user.findUnique({
+    where: { id: req.userId! },
+    select: { dietStartedAt: true, dietStartWeightKg: true, targetWeightKg: true, weightKg: true },
+  });
+  if (!u?.dietStartedAt || !u.dietStartWeightKg || !u.targetWeightKg) return res.json({ active: false });
+  const latest = await prisma.weightLog.findFirst({ where: { userId: req.userId! }, orderBy: { date: 'desc' } });
+  const current = latest?.weightKg ?? u.weightKg ?? u.dietStartWeightKg;
+  const totalDelta = u.targetWeightKg - u.dietStartWeightKg; // negative = cut
+  const doneDelta = current - u.dietStartWeightKg;
+  const pct = totalDelta === 0 ? 100 : Math.max(0, Math.min(100, Math.round((doneDelta / totalDelta) * 100)));
+  const weeksIn = (Date.now() - u.dietStartedAt.getTime()) / (7 * 86400000);
+  // Healthy pace: 0.5 kg per week in whichever direction.
+  const expected = u.dietStartWeightKg + Math.sign(totalDelta) * Math.min(Math.abs(totalDelta), weeksIn * 0.5);
+  const etaWeeks = Math.ceil(Math.abs(totalDelta) / 0.5);
+  res.json({
+    active: true,
+    startedAt: u.dietStartedAt,
+    startWeightKg: u.dietStartWeightKg,
+    targetWeightKg: u.targetWeightKg,
+    currentWeightKg: current,
+    pct,
+    expectedWeightKg: Math.round(expected * 10) / 10,
+    onTrack: Math.sign(totalDelta) < 0 ? current <= expected + 0.6 : current >= expected - 0.6,
+    etaWeeks,
+    weeksIn: Math.floor(weeksIn),
+  });
+});
+
+trackerRouter.post('/diet-journey', async (req: AuthedRequest, res) => {
+  const parsed = z.object({ targetWeightKg: z.number().min(30).max(300) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid target' });
+  const u = await prisma.user.findUnique({ where: { id: req.userId! }, select: { weightKg: true } });
+  if (!u?.weightKg) return res.status(400).json({ error: 'Log your current weight first' });
+  await prisma.user.update({
+    where: { id: req.userId! },
+    data: { dietStartedAt: new Date(), dietStartWeightKg: u.weightKg, targetWeightKg: parsed.data.targetWeightKg },
+  });
+  // The journey starts with a data point, not an intention.
+  await prisma.weightLog.create({ data: { userId: req.userId!, weightKg: u.weightKg, date: today() } }).catch(() => {});
+  res.status(201).json({ ok: true });
+});
+
+trackerRouter.delete('/diet-journey', async (req: AuthedRequest, res) => {
+  await prisma.user.update({
+    where: { id: req.userId! },
+    data: { dietStartedAt: null, dietStartWeightKg: null, targetWeightKg: null },
+  });
+  res.json({ ok: true });
+});
+
 trackerRouter.patch('/goals', async (req: AuthedRequest, res) => {
   const schema = z.object({
     goalCalories: z.number().optional(),

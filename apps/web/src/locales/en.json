@@ -1058,7 +1058,9 @@
     "noSwaps": "No alternatives for this slot yet",
     "whyThis": "Why this plan",
     "askNutritionist": "Ask a nutritionist",
-    "askNutritionistSub": "A plan cannot read your bloodwork. A person can — free, no commission."
+    "askNutritionistSub": "A plan cannot read your bloodwork. A person can — free, no commission.",
+    "trainingDay": "Training day +200",
+    "fitLine": "Plan matches your target {{pct}}%"
   },
   "coachChat": {
     "title": "AI Coach",
@@ -1187,5 +1189,20 @@
     "dayDone": "Day {{n}} done — nice and easy 🎉",
     "setSchedule": "Set your schedule",
     "takeIntake": "Build my plan"
+  },
+  "diet": {
+    "ctaTitle": "Start your diet journey",
+    "ctaSub": "Pick a target weight — we track the pace, remind you to log, and adjust for training days.",
+    "ctaBtn": "Start now",
+    "targetPh": "Target weight (kg)",
+    "go": "Go",
+    "started": "Journey started! Friday weigh-ins + food reminders are on 🎯",
+    "stopped": "Journey stopped",
+    "title": "Diet journey",
+    "onTrack": "On track ✓",
+    "behind": "A bit behind — this week counts",
+    "stats": "{{moved}} kg moved · week {{weeks}} · ~{{eta}} weeks total at a healthy pace",
+    "stop": "Stop this journey",
+    "stopConfirm": "Stop the diet journey? Your logs stay; only the target is cleared."
   }
 }

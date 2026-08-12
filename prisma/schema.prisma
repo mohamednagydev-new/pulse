@@ -58,6 +58,11 @@ model User {
   lastSeenAt    DateTime?
   /** Weekly win-back digest opt-out (one-click unsubscribe link in the email). */
   emailOptOut   Boolean  @default(false)
+  // ---- Diet journey: the missing spine that turns the nutrition toolbox
+  // into a PROGRAM (start → target, trajectory, weigh-ins, food nudges). ----
+  dietStartedAt     DateTime?
+  dietStartWeightKg Float?
+  targetWeightKg    Float?
   streakFreezes Int      @default(1) // mercy tokens: one missed day consumes a freeze instead of resetting
   reminderHour  Int?     // preferred daily reminder hour (0-23), local
   onboarded     Boolean  @default(false)

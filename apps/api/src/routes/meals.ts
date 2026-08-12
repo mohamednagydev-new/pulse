@@ -5,7 +5,7 @@ import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { localizeResponse } from '../lib/localize';
 import { touchStreak } from '../lib/gamify';
 import { bumpChallenges } from '../lib/social';
-import { dayString, weekStart } from '../lib/time';
+import { dayString, weekStart, localDow } from '../lib/time';
 import { computeTargets, type Targets } from '../lib/nutrition';
 import { buildMealPlan, swapsFor, slotLabel, type DietPref, type PlanRecipe, type Slot } from '../lib/mealplan';
 import { gatherStats, writeRecap, rewritePrompt } from '../lib/recap';
@@ -45,17 +45,37 @@ function parseAvoid(json: string | null): string[] {
   }
 }
 
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 /** Targets from the profile when the intake has set them; otherwise worked out on the
- *  spot so someone who skipped the intake still gets a usable plan. */
-async function targetsFor(userId: string): Promise<{ targets: Targets; pref: DietPref }> {
+ *  spot so someone who skipped the intake still gets a usable plan.
+ *  Training days get a bigger budget (+200 kcal, +10g protein) from the user's
+ *  own weekly schedule — the diet finally KNOWS about the workouts. */
+async function targetsFor(userId: string): Promise<{ targets: Targets; pref: DietPref; trainingDay: boolean }> {
   const u = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       goalCalories: true, goalProtein: true, goalCarbs: true, goalFat: true,
       fitnessGoal: true, heightCm: true, weightKg: true, birthYear: true, gender: true,
-      dietPref: true, avoidFoods: true,
+      dietPref: true, avoidFoods: true, scheduleJson: true,
     },
   });
+
+  // Planned (not completed) day: stable all day, so the plate doesn't change
+  // under the user depending on whether they trained before or after lunch.
+  let trainingDay = false;
+  try {
+    const sched = u?.scheduleJson ? JSON.parse(u.scheduleJson) : null;
+    const today = Array.isArray(sched) ? sched.find((d: any) => d.day === WEEKDAYS[localDow()]) : null;
+    trainingDay = today ? Array.isArray(today.groups) && today.groups.length > 0 : WEEKDAYS[localDow()] !== 'Sunday';
+  } catch {
+    trainingDay = false;
+  }
+
+  const boost = (t: Targets): Targets =>
+    trainingDay
+      ? { ...t, calories: t.calories + 200, protein: t.protein + 10, carbs: t.carbs ? t.carbs + 25 : t.carbs }
+      : t;
 
   const pref: DietPref = {
     diet: u?.dietPref && u.dietPref !== 'none' ? u.dietPref : null,
@@ -64,7 +84,7 @@ async function targetsFor(userId: string): Promise<{ targets: Targets; pref: Die
 
   if (u?.goalCalories && u.goalProtein) {
     return {
-      targets: {
+      targets: boost({
         calories: u.goalCalories,
         protein: u.goalProtein,
         carbs: u.goalCarbs ?? 0,
@@ -74,8 +94,9 @@ async function targetsFor(userId: string): Promise<{ targets: Targets; pref: Die
           en: 'Built from the targets on your profile. Change them in Tracker and the plan follows.',
           ar: 'مبنية على الأرقام اللي في بروفايلك. غيّرها من التراكر والخطة هتمشي وراها.',
         },
-      },
+      }),
       pref,
+      trainingDay,
     };
   }
 
@@ -86,13 +107,16 @@ async function targetsFor(userId: string): Promise<{ targets: Targets; pref: Die
   });
 
   return {
-    targets: computeTargets(
-      assessment?.goal ?? u?.fitnessGoal ?? 'stay_fit',
-      assessment?.activityLevel ?? 'light',
-      assessment?.daysPerWeek ?? 3,
-      { heightCm: u?.heightCm, weightKg: u?.weightKg, birthYear: u?.birthYear, gender: u?.gender },
+    targets: boost(
+      computeTargets(
+        assessment?.goal ?? u?.fitnessGoal ?? 'stay_fit',
+        assessment?.activityLevel ?? 'light',
+        assessment?.daysPerWeek ?? 3,
+        { heightCm: u?.heightCm, weightKg: u?.weightKg, birthYear: u?.birthYear, gender: u?.gender },
+      ),
     ),
     pref,
+    trainingDay,
   };
 }
 
@@ -106,7 +130,7 @@ async function library(): Promise<PlanRecipe[]> {
 // The day's plate. ?date=YYYY-MM-DD for looking ahead or back.
 mealsRouter.get('/plan', async (req: AuthedRequest, res) => {
   const date = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.date || '')) ? String(req.query.date) : dayString();
-  const [{ targets, pref }, recipes] = await Promise.all([targetsFor(req.userId!), library()]);
+  const [{ targets, pref, trainingDay }, recipes] = await Promise.all([targetsFor(req.userId!), library()]);
 
   if (recipes.length === 0) {
     return res.json({
@@ -138,6 +162,16 @@ mealsRouter.get('/plan', async (req: AuthedRequest, res) => {
     ...plan,
     meals: plan.meals.map((m) => ({ ...m, label: slotLabel(m.slot) })),
     logged: { slots: [...new Set(logged.map((l) => l.mealType))], calories: eaten },
+    trainingDay,
+    notes: [
+      ...(trainingDay
+        ? [{
+            en: 'Training day: +200 kcal and +10g protein over your base — fuel the session.',
+            ar: 'يوم تمرين: زودنالك ٢٠٠ سعرة و١٠ جرام بروتين عن يومك العادي — عشان تدّي في التمرين.',
+          }]
+        : []),
+      ...(plan as any).notes ?? [],
+    ],
   });
 });
 

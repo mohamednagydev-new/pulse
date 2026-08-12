@@ -108,6 +108,12 @@ export default function MealPlan() {
               {totals.calories}
               <span className="text-base font-semibold text-gray-400"> / {targets.calories} kcal</span>
             </p>
+            {/* fit% was computed server-side and never shown; training-day chip
+                makes the +200 kcal boost legible instead of mysterious. */}
+            <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold text-gray-400">
+              {data?.trainingDay && <span className="rounded-full bg-orange-100 px-2 py-0.5 font-bold text-orange-600">💪 {t('meals.trainingDay')}</span>}
+              {data?.fit?.calories ? <span>{t('meals.fitLine', { pct: data.fit.calories })}</span> : null}
+            </p>
           </div>
           <div className="shrink-0 text-end text-xs text-gray-500" dir="ltr">
             <p className="font-bold text-gray-700">

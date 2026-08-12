@@ -101,6 +101,8 @@ export default function Progress() {
         </div>
       </motion.section>
 
+      <DietJourneyCard />
+
       {/* Weight: quick-log + trend. The chart could NEVER render before — no UI
           ever wrote a WeightLog row, so weights was empty for every user. */}
       <motion.section
@@ -543,5 +545,109 @@ function WeightQuickLog() {
         {t('common.save')}
       </button>
     </div>
+  );
+}
+
+/** The diet JOURNEY: start → target with a healthy-pace trajectory. Turns the
+ *  nutrition toolbox (targets, plan, logging, weigh-ins) into a program with
+ *  a progress needle — and opts the user into food nudges + Friday weigh-ins. */
+function DietJourneyCard() {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [target, setTarget] = useState('');
+  const [starting, setStarting] = useState(false);
+  const { data: j } = useQuery({ queryKey: ['diet-journey'], queryFn: () => api.get('/api/tracker/diet-journey') });
+
+  const start = useMutation({
+    mutationFn: () => api.post('/api/tracker/diet-journey', { targetWeightKg: Number(target) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['diet-journey'] });
+      qc.invalidateQueries({ queryKey: ['progress'] });
+      setStarting(false);
+      toast(t('diet.started'), 'success');
+    },
+    onError: (e: any) => toast(e?.message ?? 'Failed', 'error'),
+  });
+  const stop = useMutation({
+    mutationFn: () => api.del('/api/tracker/diet-journey'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['diet-journey'] }); toast(t('diet.stopped'), 'info'); },
+  });
+
+  if (!j) return null;
+
+  if (!j.active) {
+    return (
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+        className="scene-tex mx-4 mt-4 rounded-2xl bg-gradient-to-br from-emerald-500/95 to-teal-700/85 p-5 text-white shadow-md"
+      >
+        <h2 className="text-base font-extrabold">🎯 {t('diet.ctaTitle')}</h2>
+        <p className="mt-1 text-xs text-white/85">{t('diet.ctaSub')}</p>
+        {starting ? (
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              inputMode="decimal"
+              className="min-w-0 flex-1 rounded-xl bg-white/15 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/50"
+              placeholder={t('diet.targetPh')}
+              value={target}
+              onChange={(e) => setTarget(e.target.value.replace(/[^\d.]/g, ''))}
+            />
+            <button
+              onClick={() => Number(target) >= 30 && start.mutate()}
+              disabled={start.isPending || !(Number(target) >= 30)}
+              className="min-h-[42px] shrink-0 rounded-full bg-white px-5 text-sm font-extrabold text-emerald-700 disabled:opacity-50"
+            >
+              {t('diet.go')}
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setStarting(true)} className="mt-3 min-h-[40px] rounded-full bg-white px-5 text-sm font-extrabold text-emerald-700">
+            {t('diet.ctaBtn')}
+          </button>
+        )}
+      </motion.section>
+    );
+  }
+
+  const losing = j.targetWeightKg < j.startWeightKg;
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+      className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <h2 className="font-bold">🎯 {t('diet.title')}</h2>
+        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${j.onTrack ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+          {j.onTrack ? t('diet.onTrack') : t('diet.behind')}
+        </span>
+      </div>
+      <div className="mt-3 flex items-baseline justify-between text-xs font-bold text-gray-400" dir="ltr">
+        <span>{j.startWeightKg} kg</span>
+        <span className="text-xl font-extrabold text-ink">{j.currentWeightKg} kg</span>
+        <span>{j.targetWeightKg} kg 🏁</span>
+      </div>
+      <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-gray-100">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${j.pct}%` }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className={`h-full rounded-full bg-gradient-to-r ${losing ? 'from-emerald-400 to-teal-600' : 'from-orange-400 to-pink-600'}`}
+        />
+      </div>
+      <p className="mt-2 text-center text-[11px] text-gray-400">
+        {t('diet.stats', {
+          moved: Math.abs(Math.round((j.currentWeightKg - j.startWeightKg) * 10) / 10),
+          weeks: j.weeksIn,
+          eta: j.etaWeeks,
+        })}
+      </p>
+      <button onClick={() => window.confirm(t('diet.stopConfirm')) && stop.mutate()} className="mt-2 w-full text-center text-[10px] font-bold text-gray-300">
+        {t('diet.stop')}
+      </button>
+    </motion.section>
   );
 }

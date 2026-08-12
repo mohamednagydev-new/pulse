@@ -230,6 +230,49 @@ async function runCheck() {
     if (await claimJob(`backup:${day}`)) await backupDatabase(day);
   }
 
+  // ---- Diet-journey nudges: the reminder engine was workout-only; a user on
+  // an active cut/bulk now gets FOOD accountability too. Journey users opted
+  // into this by starting a journey — no nagging for casual trackers. ----
+  // 15:00 — nothing logged yet today → lunch nudge.
+  if (hour === 15 && (await claimJob(`dietlog:${day}`))) {
+    const journeyers = await prisma.user.findMany({
+      where: { dietStartedAt: { not: null } },
+      select: { id: true, firstName: true },
+    });
+    for (const u of journeyers) {
+      const logged = await prisma.calorieEntry.count({ where: { userId: u.id, date: day } });
+      if (logged > 0) continue;
+      notifyUser(u.id, {
+        title: 'Log your food 🥗',
+        titleAr: 'سجّل أكلك 🥗',
+        body: `${u.firstName}, nothing logged today — 30 seconds keeps your diet honest.`,
+        bodyAr: `${u.firstName}، لسه مسجلتش حاجة النهارده — نص دقيقة تخلي الدايت ماشي صح.`,
+        url: '/tracker',
+        type: 'reminder',
+      }).catch(() => {});
+    }
+  }
+  // Friday 09:00 — weekly weigh-in: the journey's progress needle only moves
+  // when a weight lands.
+  if (localDow(now) === 5 && hour === 9 && (await claimJob(`weighin:${day}`))) {
+    const journeyers = await prisma.user.findMany({
+      where: { dietStartedAt: { not: null } },
+      select: { id: true, firstName: true },
+    });
+    for (const u of journeyers) {
+      const recent = await prisma.weightLog.count({ where: { userId: u.id, date: { gte: daysAgoStr(2) } } });
+      if (recent > 0) continue;
+      notifyUser(u.id, {
+        title: 'Weekly weigh-in ⚖️',
+        titleAr: 'وزن الجمعة ⚖️',
+        body: 'Same scale, same time — log it and watch the trend line move.',
+        bodyAr: 'نفس الميزان ونفس المعاد — سجّله وشوف الخط بيتحرك.',
+        url: '/progress',
+        type: 'reminder',
+      }).catch(() => {});
+    }
+  }
+
   // Friday 17:00 — the weekly win-back email digest for lapsed users (the ONE
   // marketing email; everything else stays push/in-app by design).
   if (localDow(now) === 5 && hour === 17 && (await claimJob(`digest:${day}`))) {
