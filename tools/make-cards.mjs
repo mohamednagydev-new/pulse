@@ -101,6 +101,14 @@ const CARDS = [
     '5️⃣ وصلت لهدفك؟ احتفال و+٣٠٠ نقطة 🏆',
   ] },
   { file: '39-tekhes-maa-sohabak', kind: 'big', bg: G.violet, emoji: '🤝', title: 'بتخس لوحدك؟ صعب', sub: 'مع صحابك؟ لعبة 😄 — سجّلوا أكلكم، اتحدوا بعض، ودوري كل أسبوع يخليكم مكملين', badge: 'ادعُ صاحبك' },
+
+  // ---- Install how-to: the #1 support question — no store, add from the browser ----
+  { file: '40-how-to-install', kind: 'qa', bg: G.blue, title: 'إزاي تنزّل التطبيق؟ 📲', rows: [
+    '1️⃣ افتح pulse.geddo.online من متصفح موبايلك — من غير متجر ومن غير تحميل',
+    '2️⃣ أندرويد؟ من كروم دوس النقط ⋮ → «إضافة إلى الشاشة الرئيسية» ✅',
+    '3️⃣ آيفون؟ من سفاري دوس زرار المشاركة ⬆️ → «إضافة إلى الشاشة الرئيسية»',
+    '4️⃣ خلاص! افتح من أيقونة PULSE على شاشتك — وشغال أوفلاين كمان 💪',
+  ] },
 ];
 
 const html = (c) => `<!doctype html><html><head><meta charset="utf-8">
