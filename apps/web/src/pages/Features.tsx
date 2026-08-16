@@ -30,6 +30,7 @@ const TILES: Tile[] = [
   { key: 'live', emoji: '🔴', ar: 'حصص لايف', en: 'Live classes', hookAr: 'فيديو متزامن وتايمر مشترك مع الكل', hookEn: 'Synced video + shared timer together', to: '/group' },
   { key: 'duels', emoji: '⚔️', ar: 'تحدي ١ ضد ١', en: '1v1 duels', hookAr: 'اتحدى صاحبك على الأيام والنقط', hookEn: 'Challenge a friend on days and XP', to: '/buddies' },
   { key: 'leagues', emoji: '🏅', ar: 'الدوري الأسبوعي', en: 'Weekly league', hookAr: 'اجمع نقط واصعد الدرجات', hookEn: 'Earn XP, climb the divisions', to: '/leagues' },
+  { key: 'champions', emoji: '👑', ar: 'أبطال التحديات', en: 'Wall of champions', hookAr: 'الفايزين بجوايز حقيقية — ممكن تبقى منهم', hookEn: 'Real prize winners — you could be next', to: '/champions' },
   { key: 'reels', emoji: '🎬', ar: 'ريلز', en: 'Reels', hookAr: 'مقاطع تمارين سريعة تتحمس بيها', hookEn: 'Quick workout clips to get you going', to: '/reels' },
   { key: 'wellness', emoji: '🧘', ar: 'صحتك', en: 'Wellness', hookAr: 'نوم وضغط وسكر — مقالات تثق فيها', hookEn: 'Sleep, stress, sugar — articles you can trust', to: '/wellness' },
   { key: 'events', emoji: '📅', ar: 'الأحداث', en: 'Events', hookAr: 'تحديات ومناسبات المجتمع', hookEn: 'Community challenges and moments', to: '/events' },

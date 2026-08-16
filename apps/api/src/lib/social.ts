@@ -137,6 +137,24 @@ export async function bumpChallenges(userId: string, trigger: 'workout' | 'calor
       where: { id: p.id },
       data: { progress, ...(justFinished ? { completedAt: new Date() } : {}) },
     });
+    // Halfway milestone: a streak freeze at 50% — the mid-challenge slump is
+    // where most people quietly drop; a tangible "keep going" beats a chart.
+    const half = Math.ceil(p.challenge.goalValue / 2);
+    if (!justFinished && p.challenge.goalValue >= 4 && progress >= half && p.progress < half && !p.halfRewardedAt) {
+      await prisma.challengeParticipant.update({ where: { id: p.id }, data: { halfRewardedAt: new Date() } });
+      const u2 = await prisma.user.findUnique({ where: { id: userId }, select: { streakFreezes: true } });
+      await prisma.user.update({ where: { id: userId }, data: { streakFreezes: Math.min(3, (u2?.streakFreezes ?? 0) + 1) } });
+      const { notifyUser } = await import('../routes/push');
+      notifyUser(userId, {
+        title: 'Halfway there! 🧊',
+        titleAr: 'نص الطريق! 🧊',
+        body: `Half of "${p.challenge.title}" done — have a streak freeze on us. Finish it!`,
+        bodyAr: `خلّصت نص «${p.challenge.titleAr ?? p.challenge.title}» — خد فريز هدية. كمّلها بقى!`,
+        url: `/challenge/${p.challengeId}`,
+        type: 'challenge',
+      }).catch(() => {});
+    }
+
     if (!justFinished) continue;
 
     await createFeedPost(userId, 'challenge', `Completed the "${p.challenge.title}" challenge! 🏆`, 'challenge', p.challengeId, {

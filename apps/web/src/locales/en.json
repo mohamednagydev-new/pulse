@@ -1274,5 +1274,13 @@
     "finished": "PROGRAM COMPLETE! +250 XP 🏆",
     "completed": "Completed",
     "oneAtATime": "One active program at a time — commitments compete, they don't stack."
+  },
+  "champions": {
+    "title": "Wall of Champions",
+    "sub": "Every prize challenge, its podium, and its raffle winner — real people, real prizes.",
+    "emptyTitle": "The wall is waiting",
+    "emptyHint": "The first prize challenge to finish puts its winners here — forever.",
+    "raffle": "Raffle winner",
+    "joinNext": "Join the next challenge"
   }
 }

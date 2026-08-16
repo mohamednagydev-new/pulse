@@ -242,6 +242,27 @@ gamificationRouter.post('/challenges/:id/messages', async (req: AuthedRequest, r
   });
   emitToChallenge(req.params.id, 'challenge:msg', message);
 
+  // Proof check-ins in GLOBAL challenges cross-post to the community feed —
+  // real people sweating is the best content this feed can carry, and the
+  // room was already public to every member.
+  if (message.isProof && message.mediaUrl) {
+    const ch = await prisma.challenge.findUnique({
+      where: { id: req.params.id },
+      select: { kind: true, title: true, titleAr: true },
+    });
+    if (ch?.kind === 'global') {
+      const { createFeedPost } = await import('../lib/social');
+      createFeedPost(
+        req.userId!,
+        'proof',
+        `📸 Workout proof — "${ch.title}" challenge${d.text.trim() ? `: ${d.text.trim()}` : ''}`,
+        'challenge',
+        req.params.id,
+        { mediaType: message.mediaType ?? undefined, mediaUrl: message.mediaUrl, textAr: `📸 إثبات تمرين — تحدي «${ch.titleAr ?? ch.title}»${d.text.trim() ? `: ${d.text.trim()}` : ''}` },
+      ).catch(() => {});
+    }
+  }
+
   // "@coach ..." triggers an AI reply posted into the room
   if (parsed.data.text.trim().toLowerCase().startsWith('@coach') && aiEnabled()) {
     const question = parsed.data.text.replace(/@coach/i, '').trim();
@@ -277,4 +298,46 @@ gamificationRouter.get('/league', async (req: AuthedRequest, res) => {
 /** Past weeks — how far you climbed and where you slipped. */
 gamificationRouter.get('/league/history', async (req: AuthedRequest, res) => {
   res.json(await leagueHistory(req.userId!));
+});
+
+/* ------------------------------------------------------------------ *
+ * Wall of Champions — finished prize challenges with their podiums.
+ * Social proof that the prizes are real, and permanent fame for winners:
+ * the strongest motivation for the NEXT challenge.
+ * ------------------------------------------------------------------ */
+gamificationRouter.get('/champions', async (_req: AuthedRequest, res) => {
+  const { dayString } = await import('../lib/time');
+  const done = await prisma.challenge.findMany({
+    where: { kind: 'global', endsOn: { lt: dayString() }, prizeText: { not: null } },
+    orderBy: { endsOn: 'desc' },
+    take: 12,
+    include: {
+      participants: {
+        orderBy: { progress: 'desc' },
+        take: 3,
+        where: { progress: { gt: 0 } },
+        include: { user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true } } },
+      },
+    },
+  });
+  const raffleIds = done.map((c) => c.raffleWinnerId).filter(Boolean) as string[];
+  const raffleUsers = raffleIds.length
+    ? await prisma.user.findMany({ where: { id: { in: raffleIds } }, select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true } })
+    : [];
+  const raffleMap = new Map(raffleUsers.map((u) => [u.id, u]));
+  res.json(
+    done
+      .filter((c) => c.participants.length > 0)
+      .map((c) => ({
+        id: c.id,
+        title: c.title,
+        titleAr: c.titleAr,
+        endsOn: c.endsOn,
+        prizeText: c.prizeText,
+        prizeTextAr: c.prizeTextAr,
+        coverImage: c.coverImage,
+        podium: c.participants.map((p) => ({ user: p.user, progress: p.progress })),
+        raffleWinner: c.raffleWinnerId ? raffleMap.get(c.raffleWinnerId) ?? null : null,
+      })),
+  );
 });

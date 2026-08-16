@@ -299,6 +299,7 @@ async function runCheck() {
           select: { userId: true },
         });
         if (completers.length) raffleWinnerId = completers[Math.floor(Math.random() * completers.length)].userId;
+        if (raffleWinnerId) await prisma.challenge.update({ where: { id: ch.id }, data: { raffleWinnerId } }).catch(() => {});
       }
 
       const winners = await prisma.user.findMany({

@@ -1182,6 +1182,8 @@ model Challenge {
    *  both = podium + one raffle winner. Raffle keeps average users motivated:
    *  finishing is a ticket, not just watching the top 3 race. */
   prizeMode    String   @default("top3")
+  /** Persisted at podium time so the Wall of Champions can show the draw winner. */
+  raffleWinnerId String?
   /** easy | medium | hard — display only, drives the colour of the difficulty chip. */
   difficulty   String   @default("medium")
   participants ChallengeParticipant[]
@@ -1197,6 +1199,8 @@ model ChallengeParticipant {
   progress    Int       @default(0)
   /** Set once, the first time progress reaches the goal — the reward gate. */
   completedAt DateTime?
+  /** Halfway milestone paid (streak freeze) — set once at 50% progress. */
+  halfRewardedAt DateTime?
   joinedAt    DateTime  @default(now())
 
   @@unique([challengeId, userId])
