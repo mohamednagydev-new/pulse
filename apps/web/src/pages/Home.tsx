@@ -151,6 +151,12 @@ export default function Home() {
                         {t(`home.diff.${c.difficulty}`)}
                       </span>
                     )}
+                    {/* Real prizes = the loudest badge on the card. */}
+                    {c.prizeText && (
+                      <span className="absolute end-2 top-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[9px] font-extrabold text-white shadow">
+                        🎁 {t('challenge.prizesBadge')}
+                      </span>
+                    )}
                   </div>
                   <div className="p-2">
                     <p className="line-clamp-2 text-sm font-bold leading-tight">{c.title}</p>

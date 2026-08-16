@@ -1297,3 +1297,94 @@ adminRouter.post('/email/send', async (req: AuthedRequest, res) => {
   }
   res.json({ sent, capped: users.length === EMAIL_SEND_CAP });
 });
+
+/* ------------------------------------------------------------------ *
+ * Challenge audit — is the winner real? Self-reported fitness data can
+ * never be PROVEN, but cheating leaves fingerprints: impossible daily
+ * volumes, burst logging, brand-new accounts, XP with no matching
+ * activity. This surfaces those fingerprints so a human decides before
+ * a prize is paid.
+ * ------------------------------------------------------------------ */
+
+adminRouter.get('/challenge-audit', async (_req, res) => {
+  const list = await prisma.challenge.findMany({
+    where: { kind: 'global' },
+    orderBy: { endsOn: 'desc' },
+    take: 30,
+    include: { _count: { select: { participants: true } } },
+  });
+  res.json(list.map((c) => ({
+    id: c.id, title: c.title, goalType: c.goalType, goalValue: c.goalValue,
+    startsOn: c.startsOn, endsOn: c.endsOn, prizeText: c.prizeText,
+    participants: c._count.participants,
+  })));
+});
+
+adminRouter.get('/challenge-audit/:id', async (req, res) => {
+  const ch = await prisma.challenge.findUnique({
+    where: { id: req.params.id },
+    include: { participants: { orderBy: { progress: 'desc' }, take: 10, include: { user: { select: { id: true, firstName: true, lastName: true, email: true, createdAt: true, xp: true } } } } },
+  });
+  if (!ch) return res.status(404).json({ error: 'Not found' });
+  const winStart = new Date(`${ch.startsOn}T00:00:00Z`);
+  const winEnd = new Date(`${ch.endsOn}T23:59:59Z`);
+
+  const rows = await Promise.all(
+    ch.participants.map(async (p) => {
+      const u = p.user;
+      const [xpEvents, calorieDays, workoutEvents, biggestEntry, entryCount] = await Promise.all([
+        prisma.xpEvent.findMany({ where: { userId: u.id, createdAt: { gte: winStart, lte: winEnd } }, select: { amount: true, createdAt: true, reason: true } }),
+        prisma.calorieEntry.groupBy({ by: ['date'], where: { userId: u.id, date: { gte: ch.startsOn, lte: ch.endsOn } }, _sum: { calories: true }, _count: true }),
+        prisma.xpEvent.findMany({ where: { userId: u.id, reason: { in: ['workout-session', 'workout-lesson'] }, createdAt: { gte: winStart, lte: winEnd } }, select: { createdAt: true } }),
+        prisma.calorieEntry.findFirst({ where: { userId: u.id, date: { gte: ch.startsOn, lte: ch.endsOn } }, orderBy: { calories: 'desc' }, select: { calories: true, name: true } }),
+        prisma.calorieEntry.count({ where: { userId: u.id, date: { gte: ch.startsOn, lte: ch.endsOn } } }),
+      ]);
+
+      // Per-day aggregates for the fingerprints.
+      const xpByDay = new Map<string, number>();
+      for (const e of xpEvents) {
+        const d = e.createdAt.toISOString().slice(0, 10);
+        xpByDay.set(d, (xpByDay.get(d) ?? 0) + e.amount);
+      }
+      const workoutsByDay = new Map<string, number>();
+      for (const e of workoutEvents) {
+        const d = e.createdAt.toISOString().slice(0, 10);
+        workoutsByDay.set(d, (workoutsByDay.get(d) ?? 0) + 1);
+      }
+      const maxXpDay = Math.max(0, ...xpByDay.values());
+      const maxWorkoutsDay = Math.max(0, ...workoutsByDay.values());
+      const maxCalDay = Math.max(0, ...calorieDays.map((d) => d._sum.calories ?? 0));
+      const maxEntriesDay = Math.max(0, ...calorieDays.map((d) => d._count));
+      const accountAgeDays = Math.floor((Date.now() - u.createdAt.getTime()) / 86400000);
+      const joinedAfterStart = u.createdAt > winStart;
+
+      const flags: string[] = [];
+      if (maxWorkoutsDay > 4) flags.push(`${maxWorkoutsDay} workouts in one day`);
+      if (maxXpDay > 800) flags.push(`${maxXpDay} XP in one day`);
+      if (maxCalDay > 8000) flags.push(`${maxCalDay} kcal logged in one day`);
+      if (maxEntriesDay > 20) flags.push(`${maxEntriesDay} food entries in one day (burst logging)`);
+      if (biggestEntry && biggestEntry.calories > 3000) flags.push(`single "${biggestEntry.name}" entry of ${biggestEntry.calories} kcal`);
+      if (joinedAfterStart && accountAgeDays < 7) flags.push('account created after the challenge started');
+
+      return {
+        userId: u.id,
+        name: `${u.firstName} ${u.lastName}`,
+        email: u.email,
+        progress: p.progress,
+        accountAgeDays,
+        totalXpInWindow: [...xpByDay.values()].reduce((a, b) => a + b, 0),
+        maxXpDay,
+        maxWorkoutsDay,
+        maxCalDay,
+        entryCount,
+        flags,
+        suspicious: flags.length > 0,
+      };
+    }),
+  );
+
+  res.json({
+    challenge: { id: ch.id, title: ch.title, goalType: ch.goalType, goalValue: ch.goalValue, startsOn: ch.startsOn, endsOn: ch.endsOn, prizeText: ch.prizeText },
+    participants: rows,
+  });
+});

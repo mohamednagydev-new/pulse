@@ -1169,6 +1169,10 @@ model Challenge {
   sponsorUrl   String?
   /** XP paid out once, on completion. 0 means "no reward beyond the badge". */
   rewardXp     Int      @default(0)
+  /** Prize description for the top-3 podium («الأول: سماعة — التاني: شيكر...»).
+   *  When set, the podium engine announces winners the day after endsOn. */
+  prizeText    String?
+  prizeTextAr  String?
   /** easy | medium | hard — display only, drives the colour of the difficulty chip. */
   difficulty   String   @default("medium")
   participants ChallengeParticipant[]

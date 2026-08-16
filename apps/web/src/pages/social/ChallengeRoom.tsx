@@ -133,6 +133,17 @@ export default function ChallengeRoom() {
                 </span>
               )}
             </div>
+
+            {/* Real prizes for the top 3 — the rules and the reason to fight for the podium. */}
+            {challenge?.prizeText && (
+              <div className="mt-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-3 ring-1 ring-amber-200">
+                <p className="text-xs font-extrabold text-amber-700">🏆 {t('challenge.prizes')}</p>
+                <p className="mt-1 text-sm font-semibold leading-relaxed text-amber-900">
+                  {(isAr && challenge.prizeTextAr) || challenge.prizeText}
+                </p>
+                <p className="mt-1 text-[11px] text-amber-600">{t('challenge.prizesNote')}</p>
+              </div>
+            )}
           </div>
 
           {challenge?.joined ? (

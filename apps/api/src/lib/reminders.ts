@@ -275,6 +275,53 @@ async function runCheck() {
     }
   }
 
+  // 10:00 daily — the PODIUM: prize challenges that ended yesterday get their
+  // top-3 computed, winners notified with their prize, and a feed announcement
+  // everyone sees. Per-challenge claim so each podium fires exactly once.
+  if (hour === 10 && (await claimJob(`podiumscan:${day}`))) {
+    const yesterday = daysAgoStr(1);
+    const ended = await prisma.challenge.findMany({
+      where: { kind: 'global', endsOn: yesterday, prizeText: { not: null } },
+      include: { participants: { orderBy: { progress: 'desc' }, take: 3, where: { progress: { gt: 0 } } } },
+    });
+    for (const ch of ended) {
+      if (!ch.participants.length) continue;
+      if (!(await claimJob(`podium:${ch.id}`))) continue;
+      const winners = await prisma.user.findMany({
+        where: { id: { in: ch.participants.map((p) => p.userId) } },
+        select: { id: true, firstName: true },
+      });
+      const nameOf = new Map(winners.map((w) => [w.id, w.firstName]));
+      const medals = ['🥇', '🥈', '🥉'];
+      const medalsAr = ['الأول', 'التاني', 'التالت'];
+      ch.participants.forEach((p, i) => {
+        notifyUser(p.userId, {
+          title: `You're on the podium! ${medals[i]}`,
+          titleAr: `انت على المنصة! ${medals[i]}`,
+          body: `${medals[i]} in "${ch.title}". Prizes: ${ch.prizeText}. We'll contact you to deliver yours.`,
+          bodyAr: `جيت ${medalsAr[i]} في «${ch.titleAr ?? ch.title}». الجوايز: ${ch.prizeTextAr ?? ch.prizeText}. هنكلمك عشان جايزتك توصلك.`,
+          url: `/challenge/${ch.id}`,
+          type: 'milestone',
+        }).catch(() => {});
+      });
+      // Public announcement — the podium is also next challenge's marketing.
+      const lines = ch.participants.map((p, i) => `${medals[i]} ${nameOf.get(p.userId) ?? '—'}`).join('  ·  ');
+      const { createFeedPost } = await import('./social');
+      const adminUser = await prisma.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
+      if (adminUser) {
+        await createFeedPost(
+          adminUser.id,
+          'text',
+          `🏆 Challenge "${ch.title}" results: ${lines} — prizes: ${ch.prizeText}. Congratulations!`,
+          'challenge',
+          ch.id,
+          { textAr: `🏆 نتيجة تحدي «${ch.titleAr ?? ch.title}»: ${lines} — الجوايز: ${ch.prizeTextAr ?? ch.prizeText}. ألف مبروك للأبطال! 🎉` },
+        ).catch(() => {});
+      }
+      console.log(`[podium] announced ${ch.title}: ${lines}`);
+    }
+  }
+
   // 11:00 daily — install/notifications email for users with no push channel.
   // Per-user-per-month claims inside; the daily key just gates the scan.
   if (hour === 11 && (await claimJob(`instmailscan:${day}`))) {

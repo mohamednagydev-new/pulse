@@ -987,7 +987,10 @@
     "joined": "You're in! 💪",
     "completed": "Completed ✅",
     "leave": "Leave challenge",
-    "leaveConfirm": "Leave this challenge? Your progress in it is discarded."
+    "leaveConfirm": "Leave this challenge? Your progress in it is discarded.",
+    "prizes": "Real prizes for the top 3",
+    "prizesBadge": "PRIZES",
+    "prizesNote": "Winners are announced the day after the challenge ends — and verified before prizes are delivered."
   },
   "community": {
     "addMedia": "Add media",

@@ -97,11 +97,14 @@ export async function bumpChallenges(userId: string, trigger: 'workout' | 'calor
       // today-only sum made any multi-day calorie challenge mathematically
       // unwinnable (progress RESET at midnight; the monthly 20k could only
       // complete via a 20k-kcal day).
-      const sum = await prisma.calorieEntry.aggregate({
+      // ANTI-CHEAT: each day contributes at most 6000 kcal. Logging a fake
+      // 50,000-kcal "meal" used to win a monthly challenge in one tap.
+      const rows = await prisma.calorieEntry.groupBy({
+        by: ['date'],
         where: { userId, date: { gte: p.challenge.startsOn } },
         _sum: { calories: true },
       });
-      progress = sum._sum.calories ?? p.progress;
+      progress = rows.reduce((s, r) => s + Math.min(r._sum.calories ?? 0, 6000), 0);
     } else if (goal === 'water') {
       // Total glasses logged since the challenge opened.
       const sum = await prisma.waterLog.aggregate({
