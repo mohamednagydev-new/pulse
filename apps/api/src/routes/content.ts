@@ -275,7 +275,7 @@ contentRouter.get('/sitemap.xml', async (_req, res) => {
     prisma.category.findMany({ select: { id: true } }),
   ]);
   const urls = [
-    '', '/programs', '/wellness', '/workout', '/yoga', '/exercises', '/help', '/gyms',
+    '', '/blog/', '/programs', '/wellness', '/workout', '/yoga', '/exercises', '/help', '/gyms',
     ...articles.map((a) => `/article/${a.id}`),
     ...recipes.map((r) => `/recipe/${r.id}`),
     ...programs.map((p) => `/programs/${p.id}`),

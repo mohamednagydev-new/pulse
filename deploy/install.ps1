@@ -102,6 +102,13 @@ try {
   Copy-Item (Join-Path $Root 'deploy\iis\web.config') (Join-Path $dist 'web.config') -Force
   Ok 'web.config in place.'
 
+  # SEO prerender: static crawlable HTML for every article/recipe + /blog hub.
+  # IIS serves these physical files before the SPA fallback fires. Non-fatal:
+  # the app works without them, they just stop being indexed until next deploy.
+  Step 'Prerendering public pages for SEO (articles, recipes, /blog)'
+  & $NodeExe (Join-Path $Root 'tools\prerender.mjs')
+  if ($LASTEXITCODE -ne 0) { Ok 'Prerender FAILED - site still works, SEO pages skipped this deploy.' } else { Ok 'Static SEO pages written.' }
+
   # Old builds' hashed chunks stay servable (emptyOutDir:false) so apps that
   # were open during the deploy keep working; prune leftovers after 14 days.
   $assets = Join-Path $dist 'assets'
