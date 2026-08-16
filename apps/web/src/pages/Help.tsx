@@ -42,6 +42,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import TopBar from '../components/TopBar';
+import ScreenshotRail from '../components/ScreenshotRail';
 import AmbientBg from '../components/AmbientBg';
 import { openInstall } from '../lib/install';
 import { useAuth } from '../store/auth';
@@ -373,6 +374,10 @@ export default function Help() {
                 <span className="block truncate text-[11px] text-white/75">{t('feat.homeCtaSub')}</span>
               </span>
             </button>
+            {/* Screens beat sentences — the walkthrough rail above the steps. */}
+            <div className="-mx-4 mb-3">
+              <ScreenshotRail />
+            </div>
             <SectionHead title={t('help.howToTitle')} chips={[t('help.howToChip')]} />
             <ol className="space-y-2.5">
               {HOW_TO.map((step, i) => (

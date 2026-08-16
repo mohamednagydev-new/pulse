@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 import { markSpot, spotSeen } from '../lib/spotlight';
+import ScreenshotRail from '../components/ScreenshotRail';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
@@ -44,6 +45,9 @@ export default function Features() {
       <TopBar title={t('feat.title')} color="bg-gradient-to-b from-violet-600 to-purple-700" textColor="text-white" />
 
       <p className="px-5 pt-3 text-sm text-gray-500">{t('feat.sub')}</p>
+
+      {/* Show, then tell: swipe the real screens before the tile list. */}
+      <ScreenshotRail className="mt-3" />
 
       <div className="mt-3 grid grid-cols-2 gap-3 px-4">
         {TILES.map((f, i) => {

@@ -8,6 +8,7 @@ import CountUp from '../components/CountUp';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
 import { pixelViewContent } from '../lib/pixels';
+import ScreenshotRail from '../components/ScreenshotRail';
 
 /**
  * The pitch page — what a stranger from an ad sees first. Real screenshots,
@@ -144,9 +145,9 @@ export default function Landing() {
           </button>
         </motion.div>
 
-        {/* Hero screenshot */}
+        {/* Hero screenshot — the CURRENT home, not a stale art shot. */}
         <motion.img
-          src="/landing/home.jpg"
+          src="/landing/shots/s-home.jpg"
           alt=""
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -171,6 +172,13 @@ export default function Landing() {
             <p className="mt-0.5 text-[11px] text-white/70">{s.label}</p>
           </div>
         ))}
+      </motion.div>
+
+      {/* Real, current screenshots — swipe through the app before signing up. */}
+      <motion.div {...reveal} className="mt-10">
+        <h2 className="px-5 text-center text-xl font-extrabold">{L('See it from inside', 'شوف التطبيق من جوه')}</h2>
+        <p className="mt-1 px-5 text-center text-xs text-white/60">{L('Swipe — tap any screen to enlarge', 'اسحب — ودوس على أي شاشة تكبر')}</p>
+        <ScreenshotRail className="mt-4" />
       </motion.div>
 
       {/* Feature sections — screenshot + copy, alternating sides */}
