@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send, Trophy, MessageSquare, Users, Zap, CalendarDays, Info } from 'lucide-react';
-import { api } from '../../lib/api';
+import { Send, Trophy, MessageSquare, Users, Zap, CalendarDays, Info, Camera, Loader2 } from 'lucide-react';
+import { api, uploadWithAuth } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import { MediaImage, Loader } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -22,7 +22,9 @@ export default function ChallengeRoom() {
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState('');
   const [meId, setMeId] = useState('');
+  const [uploadingProof, setUploadingProof] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const proofRef = useRef<HTMLInputElement>(null);
 
   const { data: challenge, isLoading } = useQuery({
     queryKey: ['challenge', id],
@@ -87,6 +89,30 @@ export default function ChallengeRoom() {
     }
   };
 
+  // Proof check-in: photo/video evidence of the workout — counted in the
+  // winner audit, so posting them protects your podium spot.
+  const sendProof = async (file: File) => {
+    setUploadingProof(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await uploadWithAuth('/api/social/upload', fd);
+      if (!res.ok) throw new Error('upload failed');
+      const { mediaType, mediaUrl } = await res.json();
+      const m = await api.post(`/api/gamification/challenges/${id}/messages`, {
+        text: text.trim(), mediaType, mediaUrl, isProof: true,
+      });
+      setText('');
+      setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+      toast(t('challenge.proofSent'), 'success');
+    } catch (e: any) {
+      toast(e?.message || t('common.somethingWrong'), 'error');
+    } finally {
+      setUploadingProof(false);
+      if (proofRef.current) proofRef.current.value = '';
+    }
+  };
+
   if (isLoading) return <Loader />;
 
   const rows: any[] = Array.isArray(board) ? board : [];
@@ -142,6 +168,10 @@ export default function ChallengeRoom() {
                   {(isAr && challenge.prizeTextAr) || challenge.prizeText}
                 </p>
                 <p className="mt-1 text-[11px] text-amber-600">{t('challenge.prizesNote')}</p>
+                {challenge?.prizeMode && challenge.prizeMode !== 'top3' && (
+                  <p className="mt-1 text-[11px] font-bold text-amber-700">🎟 {t('challenge.raffleNote')}</p>
+                )}
+                <p className="mt-1 text-[11px] text-amber-600">📸 {t('challenge.proofHint')}</p>
               </div>
             )}
           </div>
@@ -211,6 +241,14 @@ export default function ChallengeRoom() {
                   {!mine && <MediaImage path={m.user?.avatarUrl} label={m.isCoach ? '🤖' : m.user?.firstName} className="h-7 w-7 rounded-full" seed={(m.id || '').length} />}
                   <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${m.isCoach ? 'bg-brand-pink/10 text-ink ring-1 ring-brand-pink/30' : mine ? 'bg-brand-blue text-white' : 'bg-white shadow-sm'}`}>
                     {!mine && <p className="text-[11px] font-semibold opacity-70">{m.isCoach ? '🤖 PULSE Coach' : m.user?.firstName}</p>}
+                    {m.isProof && (
+                      <p className={`mb-1 text-[10px] font-extrabold ${mine ? 'text-white/80' : 'text-emerald-600'}`}>📸 {t('challenge.proofBadge')}</p>
+                    )}
+                    {m.mediaUrl && (
+                      m.mediaType === 'video'
+                        ? <video src={m.mediaUrl} controls playsInline className="mb-1 max-h-64 w-full rounded-xl" />
+                        : <MediaImage path={m.mediaUrl} label="proof" className="mb-1 max-h-64 w-full rounded-xl" />
+                    )}
                     {m.text}
                   </div>
                 </div>
@@ -226,6 +264,22 @@ export default function ChallengeRoom() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && send()}
+              />
+              <button
+                onClick={() => proofRef.current?.click()}
+                disabled={uploadingProof}
+                aria-label={t('challenge.proofBtn')}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-white active:scale-90 disabled:opacity-60"
+              >
+                {uploadingProof ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
+              </button>
+              <input
+                ref={proofRef}
+                type="file"
+                accept="image/*,video/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && sendProof(e.target.files[0])}
               />
               <button onClick={send} className="flex h-11 w-11 items-center justify-center rounded-full btn-blue">
                 <Send size={18} />

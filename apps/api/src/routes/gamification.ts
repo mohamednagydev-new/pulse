@@ -209,8 +209,19 @@ gamificationRouter.get('/challenges/:id/messages', async (req: AuthedRequest, re
 });
 
 gamificationRouter.post('/challenges/:id/messages', async (req: AuthedRequest, res) => {
-  const parsed = z.object({ text: z.string().min(1).max(1000) }).safeParse(req.body);
+  const parsed = z
+    .object({
+      text: z.string().max(1000).default(''),
+      // Proof check-ins: media uploaded via /api/social/upload, flagged as
+      // evidence. Counted in the winner audit.
+      mediaType: z.enum(['image', 'video']).optional(),
+      mediaUrl: z.string().max(500).optional(),
+      isProof: z.boolean().optional(),
+    })
+    .safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const d = parsed.data;
+  if (!d.text.trim() && !d.mediaUrl) return res.status(400).json({ error: 'Say something or attach a photo' });
 
   // Posting requires actually being in the challenge — join first, then chat.
   const member = await prisma.challengeParticipant.findUnique({
@@ -219,7 +230,14 @@ gamificationRouter.post('/challenges/:id/messages', async (req: AuthedRequest, r
   if (!member) return res.status(403).json({ error: 'Join the challenge to chat' });
 
   const message = await prisma.challengeMessage.create({
-    data: { challengeId: req.params.id, userId: req.userId!, text: parsed.data.text },
+    data: {
+      challengeId: req.params.id,
+      userId: req.userId!,
+      text: d.text.trim(),
+      mediaType: d.mediaUrl ? d.mediaType : null,
+      mediaUrl: d.mediaUrl || null,
+      isProof: !!d.isProof && !!d.mediaUrl,
+    },
     include: { user: { select: chatUserSelect } },
   });
   emitToChallenge(req.params.id, 'challenge:msg', message);

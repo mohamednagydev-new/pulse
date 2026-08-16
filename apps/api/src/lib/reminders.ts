@@ -287,14 +287,26 @@ async function runCheck() {
     for (const ch of ended) {
       if (!ch.participants.length) continue;
       if (!(await claimJob(`podium:${ch.id}`))) continue;
+      const medals = ['🥇', '🥈', '🥉'];
+      const medalsAr = ['الأول', 'التاني', 'التالت'];
+      const podium = ch.prizeMode === 'raffle' ? [] : ch.participants;
+
+      // Raffle: every COMPLETER is a ticket — finishing matters, not ranking.
+      let raffleWinnerId: string | null = null;
+      if (ch.prizeMode === 'raffle' || ch.prizeMode === 'both') {
+        const completers = await prisma.challengeParticipant.findMany({
+          where: { challengeId: ch.id, progress: { gte: ch.goalValue }, userId: { notIn: podium.map((p) => p.userId) } },
+          select: { userId: true },
+        });
+        if (completers.length) raffleWinnerId = completers[Math.floor(Math.random() * completers.length)].userId;
+      }
+
       const winners = await prisma.user.findMany({
-        where: { id: { in: ch.participants.map((p) => p.userId) } },
+        where: { id: { in: [...podium.map((p) => p.userId), ...(raffleWinnerId ? [raffleWinnerId] : [])] } },
         select: { id: true, firstName: true },
       });
       const nameOf = new Map(winners.map((w) => [w.id, w.firstName]));
-      const medals = ['🥇', '🥈', '🥉'];
-      const medalsAr = ['الأول', 'التاني', 'التالت'];
-      ch.participants.forEach((p, i) => {
+      podium.forEach((p, i) => {
         notifyUser(p.userId, {
           title: `You're on the podium! ${medals[i]}`,
           titleAr: `انت على المنصة! ${medals[i]}`,
@@ -304,8 +316,21 @@ async function runCheck() {
           type: 'milestone',
         }).catch(() => {});
       });
+      if (raffleWinnerId) {
+        notifyUser(raffleWinnerId, {
+          title: 'You won the completion raffle! 🎁',
+          titleAr: 'كسبت سحب المكمّلين! 🎁',
+          body: `You finished "${ch.title}" and the draw picked YOU. Prizes: ${ch.prizeText}. We'll contact you.`,
+          bodyAr: `خلّصت «${ch.titleAr ?? ch.title}» والسحب اختارك انت! الجوايز: ${ch.prizeTextAr ?? ch.prizeText}. هنكلمك.`,
+          url: `/challenge/${ch.id}`,
+          type: 'milestone',
+        }).catch(() => {});
+      }
       // Public announcement — the podium is also next challenge's marketing.
-      const lines = ch.participants.map((p, i) => `${medals[i]} ${nameOf.get(p.userId) ?? '—'}`).join('  ·  ');
+      const lines = [
+        ...podium.map((p, i) => `${medals[i]} ${nameOf.get(p.userId) ?? '—'}`),
+        ...(raffleWinnerId ? [`🎁 ${nameOf.get(raffleWinnerId) ?? '—'}`] : []),
+      ].join('  ·  ');
       const { createFeedPost } = await import('./social');
       const adminUser = await prisma.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
       if (adminUser) {

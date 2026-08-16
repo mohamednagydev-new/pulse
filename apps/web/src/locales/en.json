@@ -990,7 +990,12 @@
     "leaveConfirm": "Leave this challenge? Your progress in it is discarded.",
     "prizes": "Real prizes for the top 3",
     "prizesBadge": "PRIZES",
-    "prizesNote": "Winners are announced the day after the challenge ends — and verified before prizes are delivered."
+    "prizesNote": "Winners are announced the day after the challenge ends — and verified before prizes are delivered.",
+    "proofBadge": "Workout proof",
+    "proofBtn": "Post workout proof",
+    "proofSent": "Proof posted! 📸 It counts in the winner review.",
+    "proofHint": "Post photo/video proof of your workouts from the chat — proofs protect your podium spot in the review.",
+    "raffleNote": "EVERYONE who completes the goal enters the prize draw — you don't have to beat the top 3, just finish!"
   },
   "community": {
     "addMedia": "Add media",

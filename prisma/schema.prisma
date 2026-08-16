@@ -677,6 +677,11 @@ model ChallengeMessage {
   user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   isCoach     Boolean   @default(false)
   text        String
+  /** Workout-proof check-ins: a photo/video posted as evidence. Counted in the
+   *  winner audit — the receipts that make prize challenges trustworthy. */
+  mediaType   String?
+  mediaUrl    String?
+  isProof     Boolean   @default(false)
   createdAt   DateTime  @default(now())
 
   @@index([challengeId, createdAt])
@@ -1173,6 +1178,10 @@ model Challenge {
    *  When set, the podium engine announces winners the day after endsOn. */
   prizeText    String?
   prizeTextAr  String?
+  /** top3 = podium by progress · raffle = random draw among COMPLETERS ·
+   *  both = podium + one raffle winner. Raffle keeps average users motivated:
+   *  finishing is a ticket, not just watching the top 3 race. */
+  prizeMode    String   @default("top3")
   /** easy | medium | hard — display only, drives the colour of the difficulty chip. */
   difficulty   String   @default("medium")
   participants ChallengeParticipant[]

@@ -1332,12 +1332,13 @@ adminRouter.get('/challenge-audit/:id', async (req, res) => {
   const rows = await Promise.all(
     ch.participants.map(async (p) => {
       const u = p.user;
-      const [xpEvents, calorieDays, workoutEvents, biggestEntry, entryCount] = await Promise.all([
+      const [xpEvents, calorieDays, workoutEvents, biggestEntry, entryCount, proofCount] = await Promise.all([
         prisma.xpEvent.findMany({ where: { userId: u.id, createdAt: { gte: winStart, lte: winEnd } }, select: { amount: true, createdAt: true, reason: true } }),
         prisma.calorieEntry.groupBy({ by: ['date'], where: { userId: u.id, date: { gte: ch.startsOn, lte: ch.endsOn } }, _sum: { calories: true }, _count: true }),
         prisma.xpEvent.findMany({ where: { userId: u.id, reason: { in: ['workout-session', 'workout-lesson'] }, createdAt: { gte: winStart, lte: winEnd } }, select: { createdAt: true } }),
         prisma.calorieEntry.findFirst({ where: { userId: u.id, date: { gte: ch.startsOn, lte: ch.endsOn } }, orderBy: { calories: 'desc' }, select: { calories: true, name: true } }),
         prisma.calorieEntry.count({ where: { userId: u.id, date: { gte: ch.startsOn, lte: ch.endsOn } } }),
+        prisma.challengeMessage.count({ where: { challengeId: ch.id, userId: u.id, isProof: true } }),
       ]);
 
       // Per-day aggregates for the fingerprints.
@@ -1377,6 +1378,7 @@ adminRouter.get('/challenge-audit/:id', async (req, res) => {
         maxWorkoutsDay,
         maxCalDay,
         entryCount,
+        proofCount,
         flags,
         suspicious: flags.length > 0,
       };
