@@ -100,6 +100,22 @@ export default function Home() {
 
       <QuickActions />
 
+      {/* The feature map — where "I didn't know the app does that" gets fixed. */}
+      <motion.button
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => navigate('/features')}
+        className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 px-4 py-3 text-start text-white shadow-sm"
+      >
+        <span className="text-xl" aria-hidden>💎</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-extrabold">{t('feat.homeCta')}</span>
+          <span className="block truncate text-[11px] text-white/75">{t('feat.homeCtaSub')}</span>
+        </span>
+      </motion.button>
+
       {/* Today's habits — the things that reset every morning */}
       <DailyQuests />
 

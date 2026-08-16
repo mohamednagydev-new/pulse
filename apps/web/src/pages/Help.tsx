@@ -363,6 +363,16 @@ export default function Help() {
 
         {tab === 'howto' && (
           <>
+            <button
+              onClick={() => navigate('/features')}
+              className="mb-3 flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 px-4 py-3 text-start text-white shadow-sm transition active:scale-[0.98]"
+            >
+              <span className="text-xl" aria-hidden>💎</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-extrabold">{t('feat.homeCta')}</span>
+                <span className="block truncate text-[11px] text-white/75">{t('feat.homeCtaSub')}</span>
+              </span>
+            </button>
             <SectionHead title={t('help.howToTitle')} chips={[t('help.howToChip')]} />
             <ol className="space-y-2.5">
               {HOW_TO.map((step, i) => (

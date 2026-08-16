@@ -14,6 +14,8 @@ import CountUp from '../components/CountUp';
 import AmbientBg from '../components/AmbientBg';
 import FoodPicker from '../components/FoodPicker';
 import MealPhoto from '../components/MealPhoto';
+import SpotlightBubble from '../components/SpotlightBubble';
+import { bumpDaily, markSpot, spotSeen } from '../lib/spotlight';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
@@ -31,9 +33,18 @@ export default function Tracker() {
   // Leaving the page mid-dictation must release the microphone.
   useEffect(() => () => voice.current?.cancel(), []);
 
+  // Voice spotlight: fires after the user has LOGGED FOOD on 3 different days
+  // without ever dictating — the moment the tip answers a real habit.
+  const [voiceSpot, setVoiceSpot] = useState(false);
+
   const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: ['tracker-day'], queryFn: () => api.get('/api/tracker/day') });
   // Diet Journey lives on Progress, but diet-minded users live HERE — surface it.
   const { data: journey } = useQuery({ queryKey: ['diet-journey'], queryFn: () => api.get('/api/tracker/diet-journey') });
+
+  useEffect(() => {
+    if (!data?.entries?.length || spotSeen('spot-voice') || !voiceSupported()) return;
+    if (bumpDaily('tracker-logged') >= 3) setVoiceSpot(true);
+  }, [data]);
 
   // The free-text estimator needs a configured key. Asking first means we show the
   // box only where it works, instead of offering a button that quietly fails.
@@ -194,6 +205,9 @@ export default function Tracker() {
       )}
 
       {/* Secondary, and only when it is actually configured. */}
+      {ai?.enabled && voiceSpot && !spotSeen('spot-voice') && (
+        <SpotlightBubble spotKey="spot-voice" text={t('spot.voice')} onDismiss={() => setVoiceSpot(false)} className="mx-4 mt-2" />
+      )}
       {ai?.enabled && (
         <motion.div
           initial={{ opacity: 0, y: 14 }}
@@ -219,6 +233,8 @@ export default function Tracker() {
                     return;
                   }
                   setListening(true);
+                  markSpot('spot-voice'); // they found the mic — the tip has nothing left to teach
+                  setVoiceSpot(false);
                   try {
                     const session = listenOnce(i18n.language.startsWith('ar') ? 'ar-EG' : 'en-US', (s) => setText(s));
                     voice.current = session;

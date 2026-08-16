@@ -9,6 +9,8 @@ import { listenOnce, voiceSupported } from '../lib/voiceInput';
 import Sheet from './Sheet';
 import MyRecipes from './MyRecipes';
 import BarcodeScan from './BarcodeScan';
+import SpotlightBubble from './SpotlightBubble';
+import { bump, markSpot, spotSeen } from '../lib/spotlight';
 
 /**
  * Pick what you ate from the Egyptian food table.
@@ -47,6 +49,14 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
   const voice = useRef<{ cancel: () => void } | null>(null);
 
   useEffect(() => () => voice.current?.cancel(), []);
+
+  // Barcode spotlight: third time in the picker without ever opening the scan
+  // tab — the user demonstrably logs food but hasn't found the scanner.
+  const [scanSpot, setScanSpot] = useState(false);
+  useEffect(() => {
+    if (spotSeen('spot-scan') || spotSeen('scan-used')) return;
+    if (bump('picker-opens') >= 3) setScanSpot(true);
+  }, []);
 
   // Dialect voice logging: the transcript drops straight into the search box,
   // and the API's Arabic normalisation does the matching ("كشري" → koshari).
@@ -106,15 +116,22 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
           ]).map(({ key, icon: Icon, label }) => (
             <button
               key={key}
-              onClick={() => setMode(key)}
+              onClick={() => {
+                setMode(key);
+                if (key === 'scan') { markSpot('scan-used'); setScanSpot(false); }
+              }}
               className={`flex min-h-[34px] flex-1 items-center justify-center gap-1.5 rounded-full text-[12px] font-bold transition ${
                 mode === key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'
-              }`}
+              } ${key === 'scan' && scanSpot ? 'ring-2 ring-violet-500' : ''}`}
             >
               <Icon size={13} /> {label}
             </button>
           ))}
         </div>
+
+        {scanSpot && !spotSeen('spot-scan') && (
+          <SpotlightBubble spotKey="spot-scan" text={t('spot.scan')} onDismiss={() => setScanSpot(false)} className="mx-4 mt-2" />
+        )}
 
         {mode === 'recipes' && <MyRecipes onClose={onClose} date={date} />}
         {mode === 'scan' && <BarcodeScan onClose={onClose} date={date} />}

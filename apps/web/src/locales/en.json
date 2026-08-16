@@ -1216,5 +1216,16 @@
     "pairWorkout": "Pair it with a workout program",
     "trackerCta": "Want a weight goal?",
     "trackerCtaSub": "Start a diet journey — progress bar, reminders, Friday weigh-ins"
+  },
+  "feat": {
+    "title": "PULSE treasures",
+    "sub": "Everything the app can do — tap any tile and try it.",
+    "new": "New to you",
+    "homeCta": "PULSE treasures 💎",
+    "homeCtaSub": "Discover everything the app can do"
+  },
+  "spot": {
+    "voice": "Try saying what you ate instead of typing — tap the mic and speak 🎤",
+    "scan": "Buying something packaged? Scan its barcode and get a score for your goal 📷"
   }
 }

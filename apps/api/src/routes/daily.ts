@@ -100,8 +100,12 @@ type Quest = {
   ar: string;
   icon: string;
   target: number;
+  /** Explore quests pay more than the daily grind. */
+  xp?: number;
   /** How many units the user has done today. */
   progress: (userId: string, day: string) => Promise<number>;
+  /** Lifetime check — has the user EVER used this feature? (explore quests only) */
+  everUsed?: (userId: string) => Promise<boolean>;
 };
 
 const startOfDay = (day: string) => startOfDayTz(day);
@@ -161,17 +165,97 @@ const INVITE_QUEST: Quest = {
   progress: (userId) => prisma.user.count({ where: { referredById: userId } }),
 };
 
+/* Explore quests: discovery as gameplay. Each targets a feature the user has
+ * NEVER touched; doing it once completes the quest — and teaches the feature
+ * forever, which is the real reward. One pinned slot, rotating daily among
+ * whatever is still undiscovered. */
+const EXPLORE_XP = 20;
+const EXPLORE_QUESTS: Quest[] = [
+  {
+    key: 'explore-ai', en: 'Ask the AI coach anything', ar: 'اسأل كوتش الـAI أي سؤال', icon: '🤖', target: 1, xp: EXPLORE_XP,
+    progress: async (userId, day) => prisma.aiUsage.count({ where: { userId, kind: 'chat', date: day } }),
+    everUsed: async (userId) => (await prisma.aiUsage.count({ where: { userId, kind: 'chat' } })) > 0,
+  },
+  {
+    key: 'explore-photo', en: 'Snap a meal photo — calories from the picture', ar: 'صوّر طبقك والسعرات تتحسب لوحدها', icon: '✨', target: 1, xp: EXPLORE_XP,
+    progress: async (userId, day) => prisma.aiUsage.count({ where: { userId, kind: 'vision', date: day } }),
+    everUsed: async (userId) => (await prisma.aiUsage.count({ where: { userId, kind: 'vision' } })) > 0,
+  },
+  {
+    key: 'explore-recipe', en: 'Build your own recipe', ar: 'اعمل وصفتك بحسابها', icon: '👨‍🍳', target: 1, xp: EXPLORE_XP,
+    progress: (userId, day) => prisma.customRecipe.count({ where: { userId, createdAt: { gte: startOfDay(day), lte: endOfDay(day) } } }),
+    everUsed: async (userId) => (await prisma.customRecipe.count({ where: { userId } })) > 0,
+  },
+  {
+    key: 'explore-journey', en: 'Start a diet journey', ar: 'ابدأ رحلة الدايت 🎯', icon: '🎯', target: 1, xp: EXPLORE_XP,
+    progress: async (userId, day) => {
+      const u = await prisma.user.findUnique({ where: { id: userId }, select: { dietStartedAt: true } });
+      return u?.dietStartedAt && u.dietStartedAt >= startOfDay(day) ? 1 : 0;
+    },
+    everUsed: async (userId) => {
+      const u = await prisma.user.findUnique({ where: { id: userId }, select: { dietStartedAt: true } });
+      if (u?.dietStartedAt) return true;
+      return (await prisma.xpEvent.count({ where: { userId, reason: 'diet-journey-complete' } })) > 0;
+    },
+  },
+  {
+    key: 'explore-duel', en: 'Challenge a friend 1-on-1', ar: 'اتحدى صاحبك ١ ضد ١ ⚔️', icon: '⚔️', target: 1, xp: EXPLORE_XP,
+    progress: (userId, day) =>
+      prisma.buddyChallenge.count({
+        where: { OR: [{ challengerId: userId }, { opponentId: userId }], createdAt: { gte: startOfDay(day), lte: endOfDay(day) } },
+      }),
+    everUsed: async (userId) =>
+      (await prisma.buddyChallenge.count({ where: { OR: [{ challengerId: userId }, { opponentId: userId }] } })) > 0,
+  },
+  {
+    key: 'explore-group', en: 'Join a live group session', ar: 'انضم لحصة لايف جماعية 🔴', icon: '🔴', target: 1, xp: EXPLORE_XP,
+    progress: (userId, day) => prisma.groupParticipant.count({ where: { userId, joinedAt: { gte: startOfDay(day), lte: endOfDay(day) } } }),
+    everUsed: async (userId) => (await prisma.groupParticipant.count({ where: { userId } })) > 0,
+  },
+];
+
+/** Today's explore pick: hashed daily order over the pool; keep a quest that was
+ *  used or claimed TODAY (stability within the day), otherwise the first still-
+ *  undiscovered one. Null when everything is discovered — the map is complete. */
+async function pickExplore(userId: string, day: string, claimedKeys: Set<string>): Promise<Quest | null> {
+  let h = 0;
+  const seed = `explore:${userId}:${day}`;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  const pool = [...EXPLORE_QUESTS];
+  const ordered: Quest[] = [];
+  while (pool.length) {
+    h = (h * 1103515245 + 12345) >>> 0;
+    ordered.push(...pool.splice(h % pool.length, 1));
+  }
+  for (const q of ordered) {
+    if (claimedKeys.has(q.key)) return q;
+    if ((await q.progress(userId, day)) > 0) return q;
+    if (!(await q.everUsed!(userId))) return q;
+  }
+  return null;
+}
+
+/** The effective quest list for the day — pins first, randoms fill to 3.
+ *  Single source of truth for BOTH the GET and the claim route: deriving them
+ *  separately once let pinned quests show as claimable but never pay out. */
+async function questsFor(userId: string, day: string, claimedKeys: Set<string>): Promise<Quest[]> {
+  const pins: Quest[] = [];
+  const me = await prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } });
+  if (me && Date.now() - me.createdAt.getTime() < 14 * 86400000) {
+    const invited = await prisma.user.count({ where: { referredById: userId } });
+    if (invited === 0) pins.push(INVITE_QUEST);
+  }
+  const explore = await pickExplore(userId, day, claimedKeys);
+  if (explore) pins.push(explore);
+  const pinned = new Set(pins.map((q) => q.key));
+  return [...pins, ...pickQuests(userId, day).filter((q) => !pinned.has(q.key))].slice(0, 3);
+}
+
 dailyRouter.get('/quests', async (req: AuthedRequest, res) => {
   const day = dayString();
-  let picked = pickQuests(req.userId!, day);
-  const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { createdAt: true } });
-  const firstWeek = me && Date.now() - me.createdAt.getTime() < 14 * 86400000;
-  if (firstWeek) {
-    const invited = await prisma.user.count({ where: { referredById: req.userId! } });
-    if (invited === 0) picked = [INVITE_QUEST, ...picked.slice(0, 2)];
-  }
   const claims = await prisma.questClaim.findMany({ where: { userId: req.userId!, day } });
   const claimed = new Set(claims.map((c) => c.questKey));
+  const picked = await questsFor(req.userId!, day, claimed);
 
   const quests = await Promise.all(
     picked.map(async (q) => {
@@ -183,9 +267,9 @@ dailyRouter.get('/quests', async (req: AuthedRequest, res) => {
         icon: q.icon,
         target: q.target,
         progress: Math.min(progress, q.target),
-        done: progress >= q.target,
+        done: progress >= q.target || claimed.has(q.key),
         claimed: claimed.has(q.key),
-        xp: QUEST_XP,
+        xp: q.xp ?? QUEST_XP,
       };
     }),
   );
@@ -204,22 +288,23 @@ dailyRouter.get('/quests', async (req: AuthedRequest, res) => {
 /** Claim every completed-but-unclaimed quest (plus the all-three bonus). */
 dailyRouter.post('/quests/claim', async (req: AuthedRequest, res) => {
   const day = dayString();
-  const picked = pickQuests(req.userId!, day);
   const claims = await prisma.questClaim.findMany({ where: { userId: req.userId!, day } });
   const claimed = new Set(claims.map((c) => c.questKey));
+  const picked = await questsFor(req.userId!, day, claimed);
 
   let awarded = 0;
   const newlyClaimed: string[] = [];
   let allDone = true;
 
   for (const q of picked) {
+    if (claimed.has(q.key)) continue;
     const progress = await q.progress(req.userId!, day);
     const done = progress >= q.target;
     if (!done) { allDone = false; continue; }
-    if (claimed.has(q.key)) continue;
+    const xp = q.xp ?? QUEST_XP;
     try {
-      await prisma.questClaim.create({ data: { userId: req.userId!, day, questKey: q.key, xp: QUEST_XP } });
-      awarded += QUEST_XP;
+      await prisma.questClaim.create({ data: { userId: req.userId!, day, questKey: q.key, xp } });
+      awarded += xp;
       newlyClaimed.push(q.key);
     } catch { /* already claimed in a parallel request */ }
   }
