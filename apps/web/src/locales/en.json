@@ -1229,5 +1229,18 @@
   "spot": {
     "voice": "Try saying what you ate instead of typing — tap the mic and speak 🎤",
     "scan": "Buying something packaged? Scan its barcode and get a score for your goal 📷"
+  },
+  "homeSlim": {
+    "more": "More for you — tap to open",
+    "water": "Water",
+    "spin": "Lucky wheel",
+    "league": "League",
+    "week": "Week activity",
+    "reset": "2-min calm",
+    "challenges": "Challenges",
+    "fame": "Hall of fame",
+    "discover": "Discover content",
+    "pin": "Pin to Home",
+    "unpin": "Unpin"
   }
 }

@@ -88,6 +88,18 @@ h3 {
   padding-bottom: calc(76px + env(safe-area-inset-bottom, 0));
 }
 
+/* ---- Global type scale (user feedback: fonts too small, eyes hurt) ----
+   Root rem bump lifts every rem-based size ~6%; the arbitrary px utilities
+   below don't scale with rem, so each gets nudged up a step explicitly. */
+html {
+  font-size: 18px;
+}
+.text-\[9px\] { font-size: 11px !important; }
+.text-\[10px\] { font-size: 12px !important; }
+.text-\[11px\] { font-size: 13px !important; }
+.text-\[12px\] { font-size: 14px !important; }
+.text-\[13px\] { font-size: 15px !important; }
+
 /* Admin headers are plain <header>s, not TopBar — without this the iOS status
    bar (standalone PWA) sits ON TOP of the back button and it can't be tapped. */
 .safe-header {

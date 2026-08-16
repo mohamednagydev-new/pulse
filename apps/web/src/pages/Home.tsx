@@ -27,11 +27,35 @@ import CountUp from '../components/CountUp';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
+/* Progressive disclosure: the calm default shows only the core (today's action,
+ * quests). Everything else lives behind one-tap chips — expanded on demand,
+ * pinnable so each user builds the Home THEY want. This is the direction for
+ * every busy screen: fewer things visible, the user decides. */
+const PINS_KEY = 'pulse-home-pins';
+const loadPins = (): string[] => {
+  try {
+    const v = JSON.parse(localStorage.getItem(PINS_KEY) || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({ queryKey: ['home'], queryFn: () => api.get('/api/home') });
   const [playing, setPlaying] = useState<{ videoId: string; title?: string } | null>(null);
+  const [pins, setPins] = useState<string[]>(loadPins);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const togglePin = (key: string) => {
+    setPins((prev) => {
+      const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
+      try { localStorage.setItem(PINS_KEY, JSON.stringify(next)); } catch { /* fine */ }
+      return next;
+    });
+  };
 
   // Featured cards: play their video, follow their link, or fall back to the section hub.
   const openFeatured = (f: any, fallback: string) => {
@@ -100,72 +124,147 @@ export default function Home() {
 
       <QuickActions />
 
-      {/* The feature map — where "I didn't know the app does that" gets fixed. */}
-      <motion.button
-        initial={{ opacity: 0, y: 12 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => navigate('/features')}
-        className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 px-4 py-3 text-start text-white shadow-sm"
-      >
-        <span className="text-xl" aria-hidden>💎</span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-extrabold">{t('feat.homeCta')}</span>
-          <span className="block truncate text-[11px] text-white/75">{t('feat.homeCtaSub')}</span>
-        </span>
-      </motion.button>
-
       {/* Today's habits — the things that reset every morning */}
       <DailyQuests />
 
-      {/* A 2-minute micro-routine for the non-training moments of the day */}
-      <DailyReset />
-
-      <SpinWheel />
-
-      <WaterCard />
-
-      {/* Progress and competition — how the week is going */}
-      <LeagueCard />
-
-      <WeekActivityCard />
-
-      {challenges.length > 0 && (
-        <Section title={t('home.challenges')} onSeeAll={() => navigate('/achievements')}>
-          <HScroll>
-            {challenges.map((c: any, idx: number) => (
-              // Links to the challenge itself. Every card here used to point at the
-              // same generic page, so tapping any of them did the same thing.
-              <Link
-                key={c.id}
-                to={`/challenge/${c.id}`}
-                className="card-hover w-44 shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm"
-              >
-                <div className="relative">
-                  <MediaImage path={c.coverImage} seed={idx + 1} label={c.title} className="h-28 w-full" />
-                  {c.difficulty && (
-                    <span className={`absolute start-2 top-2 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white ${
-                      c.difficulty === 'hard' ? 'bg-red-500' : c.difficulty === 'easy' ? 'bg-brand-green' : 'bg-orange-500'
-                    }`}>
-                      {t(`home.diff.${c.difficulty}`)}
-                    </span>
-                  )}
-                </div>
-                <div className="p-2">
-                  <p className="line-clamp-2 text-sm font-bold leading-tight">{c.title}</p>
-                  <div className="mt-1 flex items-center justify-between text-[11px] text-gray-400">
-                    <span className="flex items-center gap-1"><Users size={11} /> {c.participants ?? 0}</span>
-                    {c.rewardXp > 0 && <span className="font-bold text-orange-500">+{c.rewardXp} XP</span>}
+      {/* Everything below is OPT-IN. One chip = one tap away; pin what you love. */}
+      {(() => {
+        const challengesNode = challenges.length > 0 && (
+          <Section title={t('home.challenges')} onSeeAll={() => navigate('/achievements')}>
+            <HScroll>
+              {challenges.map((c: any, idx: number) => (
+                <Link
+                  key={c.id}
+                  to={`/challenge/${c.id}`}
+                  className="card-hover w-44 shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm"
+                >
+                  <div className="relative">
+                    <MediaImage path={c.coverImage} seed={idx + 1} label={c.title} className="h-28 w-full" />
+                    {c.difficulty && (
+                      <span className={`absolute start-2 top-2 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white ${
+                        c.difficulty === 'hard' ? 'bg-red-500' : c.difficulty === 'easy' ? 'bg-brand-green' : 'bg-orange-500'
+                      }`}>
+                        {t(`home.diff.${c.difficulty}`)}
+                      </span>
+                    )}
                   </div>
-                </div>
-              </Link>
-            ))}
-          </HScroll>
-        </Section>
-      )}
+                  <div className="p-2">
+                    <p className="line-clamp-2 text-sm font-bold leading-tight">{c.title}</p>
+                    <div className="mt-1 flex items-center justify-between text-[11px] text-gray-400">
+                      <span className="flex items-center gap-1"><Users size={11} /> {c.participants ?? 0}</span>
+                      {c.rewardXp > 0 && <span className="font-bold text-orange-500">+{c.rewardXp} XP</span>}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </HScroll>
+          </Section>
+        );
+        const discoverNode = (
+          <>
+            <Section title={t('home.fitForLife')}>
+              <HScroll>
+                {fitForLife.map((f: any, idx: number) => (
+                  <motion.button whileTap={{ scale: 0.97 }} key={f.id} onClick={() => openFeatured(f, '/programs')} className="w-64 shrink-0 text-start">
+                    <div className="relative">
+                      <MediaImage path={f.image} seed={idx} label={f.title} className="h-40 w-full rounded-2xl" />
+                      {f.videoId && <PlayBadge />}
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-sm font-semibold">{f.title}</p>
+                    <p className="text-xs text-gray-400">{formatDuration(f.durationSec)}</p>
+                  </motion.button>
+                ))}
+              </HScroll>
+            </Section>
+            <Section title={t('home.coaches')} onSeeAll={() => navigate('/programs')}>
+              <HScroll>
+                {coaches.map((c: any, idx: number) => (
+                  <Link key={c.id} to={`/programs/coach/${c.id}`} className="w-28 shrink-0 text-center">
+                    <MediaImage path={c.avatarUrl} seed={idx + 2} label={c.name} className="mx-auto h-24 w-24 rounded-full" />
+                    <p className="mt-2 truncate text-sm font-semibold">{c.name}</p>
+                  </Link>
+                ))}
+              </HScroll>
+            </Section>
+            <Section title={t('home.prepareMeal')} onSeeAll={() => navigate('/wellness/kitchen')}>
+              <HScroll>
+                {mealPrep.map((m: any, idx: number) => (
+                  <motion.button whileTap={{ scale: 0.97 }} key={m.id} onClick={() => openFeatured(m, '/wellness/kitchen')} className="w-56 shrink-0 text-start">
+                    <div className="relative">
+                      <MediaImage path={m.image} seed={idx + 4} label={m.title} className="h-32 w-full rounded-2xl" />
+                      {m.videoId && <PlayBadge />}
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-sm font-semibold">{m.title}</p>
+                  </motion.button>
+                ))}
+              </HScroll>
+            </Section>
+          </>
+        );
 
-      <HallOfFame />
+        const OPTIONAL: { key: string; emoji: string; label: string; node: React.ReactNode }[] = [
+          { key: 'water', emoji: '💧', label: t('homeSlim.water'), node: <WaterCard /> },
+          { key: 'spin', emoji: '🎁', label: t('homeSlim.spin'), node: <SpinWheel /> },
+          { key: 'league', emoji: '🏅', label: t('homeSlim.league'), node: <LeagueCard /> },
+          { key: 'week', emoji: '📊', label: t('homeSlim.week'), node: <WeekActivityCard /> },
+          { key: 'reset', emoji: '🧘', label: t('homeSlim.reset'), node: <DailyReset /> },
+          ...(challengesNode ? [{ key: 'challenges', emoji: '🏆', label: t('homeSlim.challenges'), node: challengesNode }] : []),
+          { key: 'fame', emoji: '👑', label: t('homeSlim.fame'), node: <HallOfFame /> },
+          { key: 'discover', emoji: '🎬', label: t('homeSlim.discover'), node: discoverNode },
+        ];
+        const pinned = OPTIONAL.filter((s) => pins.includes(s.key));
+        const unpinned = OPTIONAL.filter((s) => !pins.includes(s.key));
+        const open = unpinned.find((s) => s.key === expanded) ?? null;
+
+        return (
+          <>
+            {pinned.map((s) => (
+              <div key={s.key}>
+                <div className="mx-5 mt-4 flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-400">{s.emoji} {s.label}</span>
+                  <button onClick={() => togglePin(s.key)} className="text-xs font-bold text-gray-300">{t('homeSlim.unpin')}</button>
+                </div>
+                <div className="-mt-2">{s.node}</div>
+              </div>
+            ))}
+
+            {unpinned.length > 0 && (
+              <div className="mt-5 px-4">
+                <p className="px-1 text-xs font-bold uppercase tracking-wide text-gray-400">{t('homeSlim.more')}</p>
+                <div className="mt-2 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  <button
+                    onClick={() => navigate('/features')}
+                    className="flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-purple-700 px-4 py-2.5 text-sm font-bold text-white"
+                  >
+                    💎 {t('feat.title')}
+                  </button>
+                  {unpinned.map((s) => (
+                    <button
+                      key={s.key}
+                      onClick={() => setExpanded(expanded === s.key ? null : s.key)}
+                      className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition ${
+                        expanded === s.key ? 'bg-ink text-white' : 'bg-white text-gray-600 shadow-sm'
+                      }`}
+                    >
+                      {s.emoji} {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {open && (
+              <div>
+                <div className="mx-5 mt-3 flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-400">{open.emoji} {open.label}</span>
+                  <button onClick={() => { togglePin(open.key); setExpanded(null); }} className="text-xs font-bold text-brand-blue">📌 {t('homeSlim.pin')}</button>
+                </div>
+                <div className="-mt-2">{open.node}</div>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {banner && (
         <a
@@ -182,50 +281,6 @@ export default function Home() {
           </div>
         </a>
       )}
-
-      <Section title={t('home.fitForLife')}>
-        <HScroll>
-          {fitForLife.map((f: any, idx: number) => (
-            <motion.button whileTap={{ scale: 0.97 }} key={f.id} onClick={() => openFeatured(f, '/programs')} className="w-64 shrink-0 text-start">
-              <div className="relative">
-                <MediaImage path={f.image} seed={idx} label={f.title} className="h-40 w-full rounded-2xl" />
-                {f.videoId && <PlayBadge />}
-              </div>
-              <p className="mt-2 line-clamp-2 text-sm font-semibold">{f.title}</p>
-              <p className="text-xs text-gray-400">{formatDuration(f.durationSec)}</p>
-            </motion.button>
-          ))}
-        </HScroll>
-      </Section>
-
-      {/* The big Reels banner that used to sit here duplicated the Reels quick
-          action above — one more full-width row for a destination already one
-          tap away. Removed to shorten the page. */}
-      <Section title={t('home.coaches')} onSeeAll={() => navigate('/programs')}>
-        <HScroll>
-          {coaches.map((c: any, idx: number) => (
-            <Link key={c.id} to={`/programs/coach/${c.id}`} className="w-28 shrink-0 text-center">
-              <MediaImage path={c.avatarUrl} seed={idx + 2} label={c.name} className="mx-auto h-24 w-24 rounded-full" />
-              <p className="mt-2 truncate text-sm font-semibold">{c.name}</p>
-            </Link>
-          ))}
-        </HScroll>
-      </Section>
-
-      <Section title={t('home.prepareMeal')} onSeeAll={() => navigate('/wellness/kitchen')}>
-        <HScroll>
-          {mealPrep.map((m: any, idx: number) => (
-            <motion.button whileTap={{ scale: 0.97 }} key={m.id} onClick={() => openFeatured(m, '/wellness/kitchen')} className="w-56 shrink-0 text-start">
-              <div className="relative">
-                <MediaImage path={m.image} seed={idx + 4} label={m.title} className="h-32 w-full rounded-2xl" />
-                {m.videoId && <PlayBadge />}
-              </div>
-              <p className="mt-2 line-clamp-2 text-sm font-semibold">{m.title}</p>
-            </motion.button>
-          ))}
-        </HScroll>
-      </Section>
-
 
       {/* Inline video player for featured cards with an uploaded video */}
       <AnimatePresence>
