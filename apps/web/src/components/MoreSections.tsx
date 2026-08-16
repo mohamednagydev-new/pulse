@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { track } from '../lib/track';
 
 /**
  * Progressive disclosure for crowded screens (the pattern Home established):
@@ -31,6 +32,7 @@ export default function MoreSections({ storageKey, sections }: { storageKey: str
     setPins((prev) => {
       const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
       try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* fine */ }
+      track(`chip/${key}/${next.includes(key) ? 'pin' : 'unpin'}`, storageKey);
       return next;
     });
   };
@@ -58,7 +60,10 @@ export default function MoreSections({ storageKey, sections }: { storageKey: str
             {unpinned.map((s) => (
               <button
                 key={s.key}
-                onClick={() => setExpanded(expanded === s.key ? null : s.key)}
+                onClick={() => {
+                  if (expanded !== s.key) track(`chip/${s.key}/open`, storageKey);
+                  setExpanded(expanded === s.key ? null : s.key);
+                }}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition ${
                   expanded === s.key ? 'bg-ink text-white' : 'bg-white text-gray-600 shadow-sm'
                 }`}

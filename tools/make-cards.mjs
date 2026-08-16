@@ -105,6 +105,9 @@ const CARDS = [
   // ---- Animated move figures: show the app teaches the movement itself ----
   { file: '41-move-figures', kind: 'feature', bg: G.blue, img: 'human-moves.png', emoji: '🤸', title: 'التطبيق بيوريك الحركة', sub: 'شخصية متحركة بتأدي التمرينة قدامك — والعضلة اللي بتشتغل مضيّة باللون — في كل تمرينة' },
 
+  // ---- Redesign announcement: calmer screens, user decides what shows ----
+  { file: '42-new-look', kind: 'feature', bg: G.violet, img: 'new-home.png', emoji: '🧘', title: 'الشكل الجديد أهدى', sub: 'خط أكبر وشاشة مرتبة — وكل حاجة لسه موجودة: دوس على أي كارت تحت وثبّته 📌 وخلّي شاشتك على مزاجك' },
+
   // ---- Install how-to: the #1 support question — no store, add from the browser ----
   { file: '40-how-to-install', kind: 'qa', bg: G.blue, title: 'إزاي تنزّل التطبيق؟ 📲', rows: [
     '1️⃣ افتح pulse.geddo.online من متصفح موبايلك — من غير متجر ومن غير تحميل',

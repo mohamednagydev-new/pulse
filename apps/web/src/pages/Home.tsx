@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { trackAd, pickAd } from '../lib/ads';
+import { track } from '../lib/track';
 import { Search, ChevronRight, Play, Clapperboard, X, Bell, Flame, HeartHandshake, ScanLine, Users, HelpCircle, Sun, Moon } from 'lucide-react';
 import { currentTheme, toggleTheme } from '../lib/theme';
 import { api } from '../lib/api';
@@ -52,6 +53,7 @@ export default function Home() {
     setPins((prev) => {
       const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
       try { localStorage.setItem(PINS_KEY, JSON.stringify(next)); } catch { /* fine */ }
+      track(`chip/${key}/${next.includes(key) ? 'pin' : 'unpin'}`, 'home');
       return next;
     });
   };
@@ -233,7 +235,7 @@ export default function Home() {
                   {/* Direct door to the weekly leaderboard — competition is a
                       destination, not a preview to expand. */}
                   <button
-                    onClick={() => navigate('/leagues')}
+                    onClick={() => { track('chip/ranks/open', 'home'); navigate('/leagues'); }}
                     className="flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30"
                   >
                     🏅 {t('homeSlim.ranks')}
@@ -241,7 +243,10 @@ export default function Home() {
                   {unpinned.map((s) => (
                     <button
                       key={s.key}
-                      onClick={() => setExpanded(expanded === s.key ? null : s.key)}
+                      onClick={() => {
+                        if (expanded !== s.key) track(`chip/${s.key}/open`, 'home');
+                        setExpanded(expanded === s.key ? null : s.key);
+                      }}
                       className={`flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-br px-4 py-2.5 text-sm font-bold text-white shadow-md transition ${s.grad} ${
                         expanded === s.key ? 'ring-2 ring-white ring-offset-2 ring-offset-transparent' : 'opacity-90'
                       }`}
