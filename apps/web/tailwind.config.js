@@ -40,6 +40,13 @@ export default {
         // Tajawal fallback keeps Arabic-adjacent glyphs consistent.
         display: ['Fraunces', 'Tajawal', 'serif'],
       },
+      // User feedback: small text hurt to read. The small end of the scale is
+      // lifted (xs 12→14.4px, sm 14→16.2px at the 18px root) so every screen's
+      // body/secondary text grows without inflating spacing any further.
+      fontSize: {
+        xs: ['0.8rem', { lineHeight: '1.15rem' }],
+        sm: ['0.9rem', { lineHeight: '1.3rem' }],
+      },
     },
   },
   plugins: [],
