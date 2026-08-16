@@ -69,7 +69,7 @@ export default function WorkoutHub() {
           >
             {/* tone is set here, not in the component: the silhouette draws with
                 currentColor so the card decides how warm and how dark it reads */}
-            <MuscleFigure side={g.bodySide} posX={g.posX} posY={g.posY} name={g.name} className="h-24 w-full text-orange-900" />
+            <MuscleFigure side={g.bodySide} posX={g.posX} posY={g.posY} name={g.name} className="h-24 w-full text-orange-900 dark:text-orange-200" />
             <span className="mt-1 line-clamp-2 w-full text-center text-xs font-semibold">{g.name}</span>
           </motion.button>
         ))}

@@ -40,7 +40,8 @@ interface Spec {
 
 export type PatternName =
   | 'squat' | 'lunge' | 'pushup' | 'plank' | 'press' | 'curl'
-  | 'row' | 'pullup' | 'jog' | 'breathe' | 'calfraise';
+  | 'row' | 'pullup' | 'jog' | 'breathe' | 'calfraise'
+  | 'deadlift' | 'bridge' | 'dip' | 'raise' | 'carry' | 'jump' | 'twist';
 
 const PATTERNS: Record<PatternName, Spec> = {
   squat:  { dur: 1.8, body: '0 0; 0 13; 0 0', lean: '0; 18; 0', shoulder: '15; -70; 15', elbow: '-15; -5; -15',
@@ -85,6 +86,34 @@ const PATTERNS: Record<PatternName, Spec> = {
             shoulder: '8', elbow: '-6',
             hip: '-4', knee: '4', hipF: '4', kneeF: '0',
             highlight: ['shin'] },
+  deadlift: { dur: 2.0, body: '0 0; 0 6; 0 0', lean: '8; 52; 8',
+            shoulder: '-4; -12; -4', elbow: '0',
+            hip: '-3; -30; -3', knee: '3; 30; 3',
+            highlight: ['thigh', 'torso'] },
+  bridge: { dur: 1.8, rootRot: -78, body: '0 16', lean: '0; -18; 0',
+            shoulder: '-30; -12; -30', elbow: '10',
+            hip: '-70; -95; -70', knee: '80; 95; 80',
+            highlight: ['thigh', 'torso'] },
+  dip:    { dur: 1.6, body: '0 0; 0 9; 0 0',
+            shoulder: '12; 42; 12', elbow: '-12; -70; -12',
+            hip: '-12; -20; -12', knee: '20; 32; 20',
+            highlight: ['upperArm', 'forearm'] },
+  raise:  { dur: 1.8,
+            shoulder: '8; -95; 8', elbow: '-4',
+            hip: '-4', knee: '4', hipF: '4', kneeF: '0',
+            highlight: ['upperArm'] },
+  carry:  { dur: 1.1, body: '0 1; 0 -1; 0 1', lean: '4',
+            shoulder: '6', elbow: '-4',
+            hip: '-22; 16; -22', knee: '12; 28; 12', hipF: '16; -22; 16', kneeF: '28; 12; 28',
+            highlight: ['forearm', 'torso'] },
+  jump:   { dur: 0.9, body: '0 5; 0 -7; 0 5',
+            shoulder: '12; -168; 12', elbow: '-6',
+            hip: '-8; 10; -8', knee: '6; 14; 6', hipF: '10; -8; 10', kneeF: '14; 6; 14',
+            highlight: ['thigh', 'shin'] },
+  twist:  { dur: 1.9, lean: '-13; 15; -13',
+            shoulder: '-82; -88; -82', elbow: '6',
+            hip: '-6', knee: '6', hipF: '6', kneeF: '0',
+            corePulse: true, highlight: [] },
 };
 
 /** Multi-keyframe SMIL rotate/translate around a fixed local pivot. */
@@ -202,15 +231,21 @@ export function patternFor(text?: string): PatternName {
 
   if (/calf raise|calf|سمانة/.test(t)) return 'calfraise';
   if (/pull-?up|chin-?up|pulldown|face pull|عقلة|سحب لأعلى|سحب علوي/.test(t)) return 'pullup';
-  if (/row|bent-?over|تجديف/.test(t)) return 'row';
   if (/wrist|forearm|curl|رسغ|معصم|مرجحة/.test(t)) return 'curl';
-  if (/tricep|skull ?crusher|pushdown|dip|متوازي|فرنساوي/.test(t)) return 'press';
+  if (/tricep|skull ?crusher|pushdown|dip|متوازي|فرنساوي/.test(t)) return 'dip';
+  if (/lateral raise|front raise|y raise|رفرفة/.test(t)) return 'raise';
+  if (/carry|farmer|shrug|dead ?hang|حمل المزارع|هز الكتف|هز الأكتاف|تعليق/.test(t)) return 'carry';
+  if (/deadlift|rdl|romanian|good ?morning|رفعة|ديدليفت/.test(t)) return 'deadlift';
+  if (/bridge|hip thrust|glute|kickback|جسر|مؤخرة/.test(t)) return 'bridge';
+  if (/twist|chop|woodchopper|russian|oblique|side bend|حطاب|لف الجذع|تدوير روسي/.test(t)) return 'twist';
+  if (/row|bent-?over|تجديف/.test(t)) return 'row';
   if (/lunge|step-?up|split squat|طعن|اندفاع/.test(t)) return 'lunge';
-  if (/(squat|leg|glute|quad|hamstring|deadlift|rdl|hip|kickback|thigh|bridge|سكوات|قرفصاء|رفعة|ديدليفت|جسر|فخد|فخذ|مؤخرة|رجل)/.test(t)) return 'squat';
-  if (/(plank|core|abs?|crunch|hollow|sit-?up|dead ?bug|oblique|superman|bird ?dog|twist|chop|بلانك|كرنش|طحن|سوبرمان|بطن|حطاب|لف الجذع)/.test(t)) return 'plank';
-  if (/(run|sprint|jump|burpee|jack|mountain|high ?knee|hiit|cardio|skip|rope|rowing machine|cycl|carry|farmer|جري|نط|قفز|دراجة|هيت|حمل المزارع)/.test(t)) return 'jog';
+  if (/(jump|jack|burpee|thruster|rope|skip|نط|قفز)/.test(t)) return 'jump';
+  if (/(squat|leg|quad|hamstring|hip|thigh|سكوات|قرفصاء|فخد|فخذ|رجل)/.test(t)) return 'squat';
+  if (/(plank|core|abs?|crunch|hollow|sit-?up|dead ?bug|superman|bird ?dog|بلانك|كرنش|طحن|سوبرمان|بطن)/.test(t)) return 'plank';
+  if (/(run|sprint|mountain|high ?knee|hiit|cardio|rowing machine|cycl|جري|دراجة|هيت)/.test(t)) return 'jog';
   if (/(bench|push-?up|chest|fly|pec|ضغط|بنش|تفتيح)/.test(t)) return 'pushup';
-  if (/(overhead|shoulder|press|lateral raise|front raise|delt|arnold|shrug|رفرفة|علوي بالدمبل|هز الكتف)/.test(t)) return 'press';
+  if (/(overhead|shoulder|press|delt|arnold|علوي بالدمبل)/.test(t)) return 'press';
   if (/(yoga|breath|stretch|mobility|flow|meditat|pose|cobra|warrior|pigeon|يوجا|تنفس|إطالة|تأمل|استرخاء)/.test(t)) return 'breathe';
   return 'curl';
 }

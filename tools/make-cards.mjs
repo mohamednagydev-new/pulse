@@ -102,6 +102,9 @@ const CARDS = [
   ] },
   { file: '39-tekhes-maa-sohabak', kind: 'big', bg: G.violet, emoji: '🤝', title: 'بتخس لوحدك؟ صعب', sub: 'مع صحابك؟ لعبة 😄 — سجّلوا أكلكم، اتحدوا بعض، ودوري كل أسبوع يخليكم مكملين', badge: 'ادعُ صاحبك' },
 
+  // ---- Animated move figures: show the app teaches the movement itself ----
+  { file: '41-move-figures', kind: 'feature', bg: G.blue, img: 'human-moves.png', emoji: '🤸', title: 'التطبيق بيوريك الحركة', sub: 'شخصية متحركة بتأدي التمرينة قدامك — والعضلة اللي بتشتغل مضيّة باللون — في كل تمرينة' },
+
   // ---- Install how-to: the #1 support question — no store, add from the browser ----
   { file: '40-how-to-install', kind: 'qa', bg: G.blue, title: 'إزاي تنزّل التطبيق؟ 📲', rows: [
     '1️⃣ افتح pulse.geddo.online من متصفح موبايلك — من غير متجر ومن غير تحميل',

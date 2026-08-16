@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dices, Play, RefreshCw, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { tapFeedback } from '../lib/haptics';
+import HumanMove, { patternFor } from './HumanMove';
 
 interface Roll {
   group: { id: string; name: string; nameAr?: string | null } | null;
@@ -99,6 +100,9 @@ export default function WorkoutRoulette() {
                       >
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-[11px] font-bold text-orange-600">
                           {i + 1}
+                        </span>
+                        <span className="h-10 w-10 shrink-0 text-gray-400">
+                          <HumanMove pattern={patternFor(e.name)} className="h-10 w-10" />
                         </span>
                         <span className="min-w-0 flex-1 truncate text-sm font-semibold">{(isAr && e.nameAr) || e.name}</span>
                         <span className="shrink-0 text-[11px] font-bold tabular-nums text-gray-400">{e.sets}×{e.reps}</span>

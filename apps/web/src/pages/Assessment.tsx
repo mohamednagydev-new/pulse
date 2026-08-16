@@ -12,6 +12,7 @@ import { Loader } from '../components/ui';
 import TopBar from '../components/TopBar';
 import AmbientBg from '../components/AmbientBg';
 import Confetti from '../components/Confetti';
+import HumanMove, { PatternName } from '../components/HumanMove';
 import { toast } from '../lib/toast';
 import { celebrateFeedback, tapFeedback } from '../lib/haptics';
 import { useAuth } from '../store/auth';
@@ -495,6 +496,12 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
+/** The goal step gets a tiny person acting each goal out — the first "the app
+ *  shows me the movement" moment, before a single workout is opened. */
+const GOAL_PATTERNS: Record<string, PatternName> = {
+  lose_weight: 'jog', build_muscle: 'curl', get_strong: 'deadlift', stay_fit: 'jump', more_energy: 'breathe',
+};
+
 function Choices({
   options, value, onPick, t, group,
 }: { options: string[]; value: string; onPick: (v: string) => void; t: (k: string) => string; group: string }) {
@@ -508,7 +515,12 @@ function Choices({
             value === o ? 'bg-white text-ink' : 'bg-white/10 text-white'
           }`}
         >
-          <span className="min-w-0">
+          {group === 'goal' && GOAL_PATTERNS[o] && (
+            <span className={`h-11 w-11 shrink-0 ${value === o ? 'text-gray-500' : 'text-white/70'}`}>
+              <HumanMove pattern={GOAL_PATTERNS[o]} className="h-11 w-11" />
+            </span>
+          )}
+          <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold">{t(`assess.${group}.${o}`)}</span>
             <span className={`block text-xs ${value === o ? 'text-gray-500' : 'text-white/60'}`}>
               {t(`assess.${group}Sub.${o}`)}

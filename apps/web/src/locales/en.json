@@ -347,7 +347,8 @@
     "finish": "Finish workout",
     "enterFirst": "Enter weight and reps first",
     "nextTrack": "Next track",
-    "moveGuide": "The move"
+    "moveGuide": "The move",
+    "moveGuideHint": "The glowing parts are the muscles this move works — that is where you should feel it."
   },
   "today": {
     "chipWeekZero": "New? Week Zero",

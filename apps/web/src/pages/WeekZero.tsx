@@ -5,8 +5,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { CalendarDays, ClipboardList, Lock, Check } from 'lucide-react';
 import TopBar from '../components/TopBar';
-import { BreatheAnim, SquatAnim, PlankAnim, JumpAnim } from '../components/TrainingAnim';
-import { WalkAnim, StretchAnim, TrophyAnim } from '../components/MicroAnims';
+import HumanMove, { PatternName } from '../components/HumanMove';
+import { TrophyAnim } from '../components/MicroAnims';
 import { api } from '../lib/api';
 import { toast } from '../lib/toast';
 
@@ -14,7 +14,7 @@ const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 const STORE_KEY = 'pulse_weekzero';
 
 type DayText = { title: string; sub: string; items: [string, string, string] };
-type Day = { Anim: (p: { className?: string }) => JSX.Element; en: DayText; ar: DayText };
+type Day = { Anim?: (p: { className?: string }) => JSX.Element; pattern?: PatternName; en: DayText; ar: DayText };
 
 /**
  * The 7-day on-ramp for absolute beginners. Editorial content lives here, not in
@@ -22,7 +22,7 @@ type Day = { Anim: (p: { className?: string }) => JSX.Element; en: DayText; ar: 
  */
 const DAYS: Day[] = [
   {
-    Anim: BreatheAnim,
+    pattern: 'breathe',
     en: {
       title: 'Gentle full-body mobility',
       sub: 'Wake the joints up — nothing should hurt today.',
@@ -43,7 +43,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    Anim: SquatAnim,
+    pattern: 'squat',
     en: {
       title: 'Learn the squat pattern',
       sub: 'Bodyweight only — sit back, chest up, heels down.',
@@ -64,7 +64,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    Anim: WalkAnim,
+    pattern: 'carry',
     en: {
       title: 'Walk + water day',
       sub: 'The most underrated workout there is.',
@@ -85,7 +85,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    Anim: PlankAnim,
+    pattern: 'plank',
     en: {
       title: 'Core basics',
       sub: 'A strong middle makes everything else easier.',
@@ -106,7 +106,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    Anim: StretchAnim,
+    pattern: 'twist',
     en: {
       title: 'Stretch + breathe',
       sub: 'Recovery is training too.',
@@ -127,7 +127,7 @@ const DAYS: Day[] = [
     },
   },
   {
-    Anim: JumpAnim,
+    pattern: 'jump',
     en: {
       title: 'Light full-body circuit',
       sub: 'Put the week together — 2 easy rounds.',
@@ -252,7 +252,11 @@ export default function WeekZero() {
                   }`}
                   aria-hidden
                 >
-                  <day.Anim className={`h-11 w-11 ${complete ? 'opacity-40' : ''}`} />
+                  {day.pattern ? (
+                    <HumanMove pattern={day.pattern} className={`h-12 w-12 ${complete ? 'opacity-40' : ''}`} />
+                  ) : day.Anim ? (
+                    <day.Anim className={`h-11 w-11 ${complete ? 'opacity-40' : ''}`} />
+                  ) : null}
                   {complete && (
                     <span className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-green text-white">
                       <Check size={13} strokeWidth={3.5} />

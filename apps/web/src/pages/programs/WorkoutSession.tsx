@@ -547,6 +547,18 @@ export default function WorkoutSession() {
             );
           })()}
 
+          {/* Rest hero: the NEXT move performed large — mental rehearsal while resting. */}
+          {next && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 24, delay: 0.1 }}
+              className="text-white/75"
+            >
+              <HumanMove pattern={patternFor(next.name)} className="h-32 w-32" />
+            </motion.div>
+          )}
+
           {/* Next up — with the next exercise's figure */}
           {next && (
             <motion.div
@@ -793,6 +805,11 @@ export default function WorkoutSession() {
                 </button>
               </div>
               <ContentVideo videoId={current?.videoId} videoUrl={current?.videoUrl} label={current?.name} />
+              {/* The figure answers "which muscle should I feel?" while watching. */}
+              <div className="mt-2 flex items-center gap-3 rounded-2xl bg-white/10 p-2 text-white/75">
+                <HumanMove pattern={patternFor(current?.name)} className="h-20 w-20 shrink-0" />
+                <p className="min-w-0 flex-1 text-xs leading-relaxed text-white/60">{t('session.moveGuideHint')}</p>
+              </div>
               {/* A coach types names freely, so the demo may be the closest match
                   rather than the exact lift. Say so instead of implying it is the same. */}
               {current?.matchedExercise && current.matchedExercise !== current.name && (
