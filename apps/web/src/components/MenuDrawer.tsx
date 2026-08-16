@@ -7,7 +7,7 @@ import {
   Menu, X, CalendarDays, Dumbbell, Music, TrendingUp, Flame, Medal,
   Settings, Shield, LogOut, Moon, Sun, MessagesSquare, ClipboardList, ChevronDown,
   Award, Trophy, UserPlus, Users, HeartHandshake, ShoppingBag, HelpCircle, Ticket,
-  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, Bell, type LucideIcon,
+  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, Bell, Gem, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
@@ -56,6 +56,7 @@ const GROUPS: Group[] = [
   {
     en: 'Discover', ar: 'اكتشف',
     items: [
+      { to: '/features', en: 'PULSE treasures', ar: 'كنوز PULSE', icon: Gem },
       { to: '/gyms', en: 'Find a gym', ar: 'دوّر على جيم', icon: Building2 },
       { to: '/store', en: 'Store', ar: 'المتجر', icon: ShoppingBag },
       { to: '/deals', en: 'Deals', ar: 'العروض', icon: Ticket },

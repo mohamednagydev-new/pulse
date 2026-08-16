@@ -20,6 +20,9 @@ export default function GettingStarted() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(DISMISS_KEY) === '1');
+  // Collapsed by default — a one-line summary bar. The full checklist was the
+  // single biggest block on Home; opening it is now the user's decision.
+  const [open, setOpen] = useState(false);
 
   // All signals are queries other cards already keep warm.
   const { data: plan } = useQuery({ queryKey: ['assessment'], queryFn: () => api.get('/api/assessment'), staleTime: 5 * 60_000 });
@@ -60,52 +63,56 @@ export default function GettingStarted() {
       transition={spring}
       className="mx-4 mt-4 overflow-hidden rounded-2xl bg-white shadow-sm"
     >
-      <div className="flex items-start justify-between gap-2 p-4 pb-2">
-        <div className="min-w-0">
-          <h2 className="text-base font-bold">{t('gs.title')}</h2>
-          <p className="mt-0.5 text-xs text-gray-400">{t('gs.sub')}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <span className="font-display rounded-full bg-orange-100 px-2.5 py-1 text-xs font-extrabold text-orange-600">
+      <div className="flex items-center justify-between gap-2 p-4 py-3">
+        <button onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-start">
+          <span aria-hidden>🚀</span>
+          <span className="min-w-0 flex-1 truncate text-base font-bold">{t('gs.title')}</span>
+          <span className="font-display shrink-0 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-extrabold text-orange-600">
             {doneCount}/{steps.length}
           </span>
-          <button onClick={dismiss} aria-label={t('common.close', { defaultValue: 'Close' })} className="text-gray-300">
-            <X size={16} />
-          </button>
-        </div>
+          <ChevronRight size={17} className={`shrink-0 text-gray-300 transition-transform ${open ? 'rotate-90' : 'rtl:rotate-180'}`} />
+        </button>
+        <button onClick={dismiss} aria-label={t('common.close', { defaultValue: 'Close' })} className="shrink-0 p-1 text-gray-300">
+          <X size={16} />
+        </button>
       </div>
 
-      <div className="px-2 pb-2">
-        {steps.map(({ key, icon: Icon, done, action, label }, i) => (
+      {open && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.25 }}>
+          <p className="px-4 pb-1 text-xs text-gray-400">{t('gs.sub')}</p>
+          <div className="px-2 pb-2">
+            {steps.map(({ key, icon: Icon, done, action, label }, i) => (
+              <button
+                key={key}
+                onClick={() => !done && action()}
+                disabled={done}
+                className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-start transition active:bg-gray-50"
+              >
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
+                    done ? 'bg-emerald-500 text-white' : 'bg-orange-100 text-orange-600'
+                  }`}
+                >
+                  {done ? <Check size={15} strokeWidth={3} /> : i + 1}
+                </span>
+                <Icon size={17} className={`shrink-0 ${done ? 'text-gray-300' : 'text-gray-500'}`} />
+                <span className={`min-w-0 flex-1 truncate text-sm font-semibold ${done ? 'text-gray-400 line-through' : ''}`}>
+                  {label}
+                </span>
+                {!done && <ChevronRight size={16} className="shrink-0 text-gray-300 rtl:rotate-180" />}
+              </button>
+            ))}
+          </div>
+
+          {/* "What is all this?" — the full guide, one tap, for the still-lost. */}
           <button
-            key={key}
-            onClick={() => !done && action()}
-            disabled={done}
-            className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-start transition active:bg-gray-50"
+            onClick={() => navigate('/help')}
+            className="flex min-h-[42px] w-full items-center justify-center gap-1.5 border-t border-gray-100 text-xs font-bold text-brand-blue"
           >
-            <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
-                done ? 'bg-emerald-500 text-white' : 'bg-orange-100 text-orange-600'
-              }`}
-            >
-              {done ? <Check size={15} strokeWidth={3} /> : i + 1}
-            </span>
-            <Icon size={17} className={`shrink-0 ${done ? 'text-gray-300' : 'text-gray-500'}`} />
-            <span className={`min-w-0 flex-1 truncate text-sm font-semibold ${done ? 'text-gray-400 line-through' : ''}`}>
-              {label}
-            </span>
-            {!done && <ChevronRight size={16} className="shrink-0 text-gray-300 rtl:rotate-180" />}
+            <HelpCircle size={14} /> {t('gs.whatIsThis')}
           </button>
-        ))}
-      </div>
-
-      {/* "What is all this?" — the full guide, one tap, for the still-lost. */}
-      <button
-        onClick={() => navigate('/help')}
-        className="flex min-h-[42px] w-full items-center justify-center gap-1.5 border-t border-gray-100 text-xs font-bold text-brand-blue"
-      >
-        <HelpCircle size={14} /> {t('gs.whatIsThis')}
-      </button>
+        </motion.div>
+      )}
     </motion.section>
   );
 }

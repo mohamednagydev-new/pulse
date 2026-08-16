@@ -83,7 +83,11 @@ export default function TodayStrip() {
                     : t('today.todayFocus', { focus: today.focus })
                   : t('today.goal')}
           </p>
-          <p className="text-xs text-gray-400">{todayCount}/{goal} {t('today.workouts', { count: goal })}</p>
+          <p className="truncate text-xs text-gray-400">
+            {path?.enrolled && path.total
+              ? t('path.dayOf', { n: Math.min((path.completed ?? 0) + 1, path.total), total: path.total })
+              : `${todayCount}/${goal} ${t('today.workouts', { count: goal })}`}
+          </p>
           <div className="mt-1.5 flex items-center gap-3 text-xs">
             <span className="flex items-center gap-1 font-semibold text-orange-500"><Flame size={13} /> {t('today.streakDays', { n: streak })}</span>
             <span className="flex items-center gap-1.5 text-brand-green">

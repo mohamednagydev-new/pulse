@@ -17,7 +17,6 @@ import DailyQuests from '../components/DailyQuests';
 import WaterCard from '../components/WaterCard';
 import SpinWheel from '../components/SpinWheel';
 import HallOfFame from '../components/HallOfFame';
-import { LeagueCard } from './Leagues';
 import PathCard from '../components/PathCard';
 import CheckInCard from '../components/CheckInCard';
 import MenuDrawer from '../components/MenuDrawer';
@@ -202,15 +201,14 @@ export default function Home() {
           </>
         );
 
-        const OPTIONAL: { key: string; emoji: string; label: string; node: React.ReactNode }[] = [
-          { key: 'water', emoji: '💧', label: t('homeSlim.water'), node: <WaterCard /> },
-          { key: 'spin', emoji: '🎁', label: t('homeSlim.spin'), node: <SpinWheel /> },
-          { key: 'league', emoji: '🏅', label: t('homeSlim.league'), node: <LeagueCard /> },
-          { key: 'week', emoji: '📊', label: t('homeSlim.week'), node: <WeekActivityCard /> },
-          { key: 'reset', emoji: '🧘', label: t('homeSlim.reset'), node: <DailyReset /> },
-          ...(challengesNode ? [{ key: 'challenges', emoji: '🏆', label: t('homeSlim.challenges'), node: challengesNode }] : []),
-          { key: 'fame', emoji: '👑', label: t('homeSlim.fame'), node: <HallOfFame /> },
-          { key: 'discover', emoji: '🎬', label: t('homeSlim.discover'), node: discoverNode },
+        const OPTIONAL: { key: string; emoji: string; label: string; grad: string; node: React.ReactNode }[] = [
+          { key: 'water', emoji: '💧', label: t('homeSlim.water'), grad: 'from-sky-400 to-blue-600', node: <WaterCard /> },
+          { key: 'spin', emoji: '🎁', label: t('homeSlim.spin'), grad: 'from-fuchsia-500 to-pink-600', node: <SpinWheel /> },
+          { key: 'week', emoji: '📊', label: t('homeSlim.week'), grad: 'from-teal-500 to-cyan-600', node: <WeekActivityCard /> },
+          { key: 'reset', emoji: '🧘', label: t('homeSlim.reset'), grad: 'from-emerald-500 to-green-600', node: <DailyReset /> },
+          ...(challengesNode ? [{ key: 'challenges', emoji: '🏆', label: t('homeSlim.challenges'), grad: 'from-amber-500 to-orange-600', node: challengesNode }] : []),
+          { key: 'fame', emoji: '👑', label: t('homeSlim.fame'), grad: 'from-violet-500 to-purple-700', node: <HallOfFame /> },
+          { key: 'discover', emoji: '🎬', label: t('homeSlim.discover'), grad: 'from-rose-500 to-red-600', node: discoverNode },
         ];
         const pinned = OPTIONAL.filter((s) => pins.includes(s.key));
         const unpinned = OPTIONAL.filter((s) => !pins.includes(s.key));
@@ -232,18 +230,20 @@ export default function Home() {
               <div className="mt-5 px-4">
                 <p className="px-1 text-xs font-bold uppercase tracking-wide text-gray-400">{t('homeSlim.more')}</p>
                 <div className="mt-2 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {/* Direct door to the weekly leaderboard — competition is a
+                      destination, not a preview to expand. */}
                   <button
-                    onClick={() => navigate('/features')}
-                    className="flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 to-purple-700 px-4 py-2.5 text-sm font-bold text-white"
+                    onClick={() => navigate('/leagues')}
+                    className="flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30"
                   >
-                    💎 {t('feat.title')}
+                    🏅 {t('homeSlim.ranks')}
                   </button>
                   {unpinned.map((s) => (
                     <button
                       key={s.key}
                       onClick={() => setExpanded(expanded === s.key ? null : s.key)}
-                      className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition ${
-                        expanded === s.key ? 'bg-ink text-white' : 'bg-white text-gray-600 shadow-sm'
+                      className={`flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-br px-4 py-2.5 text-sm font-bold text-white shadow-md transition ${s.grad} ${
+                        expanded === s.key ? 'ring-2 ring-white ring-offset-2 ring-offset-transparent' : 'opacity-90'
                       }`}
                     >
                       {s.emoji} {s.label}
