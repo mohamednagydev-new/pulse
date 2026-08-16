@@ -1247,5 +1247,24 @@
     "prs": "Records",
     "badges": "Badges",
     "ranks": "Leaderboard"
+  },
+  "dietProg": {
+    "title": "Diet programs",
+    "sub": "Shared commitments, tracked for real — a day counts only when you actually log your food.",
+    "trackerHook": "Join a tracked commitment — 14, 21 or 30 days",
+    "days": "{{n}} days",
+    "join": "Join the program",
+    "restart": "Do it again",
+    "leave": "Leave",
+    "joined": "You are in! Log your food today and mark the day ✅",
+    "left": "Left the program",
+    "progress": "{{done}} of {{total}} days",
+    "markToday": "Mark today done",
+    "todayDone": "Today counted ✓",
+    "dayDone": "Day counted! See you tomorrow 💪",
+    "logFirst": "Log at least one meal first — that is the whole point 🥗",
+    "finished": "PROGRAM COMPLETE! +250 XP 🏆",
+    "completed": "Completed",
+    "oneAtATime": "One active program at a time — commitments compete, they don't stack."
   }
 }

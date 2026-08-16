@@ -235,8 +235,10 @@ async function runCheck() {
   // into this by starting a journey — no nagging for casual trackers. ----
   // 15:00 — nothing logged yet today → lunch nudge.
   if (hour === 15 && (await claimJob(`dietlog:${day}`))) {
+    // Journey users AND active diet-program enrollees — both opted into food accountability.
+    const enrolled = await prisma.dietEnrollment.findMany({ where: { finishedAt: null }, select: { userId: true } });
     const journeyers = await prisma.user.findMany({
-      where: { dietStartedAt: { not: null } },
+      where: { OR: [{ dietStartedAt: { not: null } }, { id: { in: enrolled.map((e) => e.userId) } }] },
       select: { id: true, firstName: true },
     });
     for (const u of journeyers) {

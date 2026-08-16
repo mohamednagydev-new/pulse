@@ -16,11 +16,10 @@ const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
 type Category = { id: string; title: string; image?: string | null; kind?: string };
 
-const cards = [
-  { to: '/wellness/initiatives', titleKey: 'wellness.initiatives', icon: HeartPulse, hero: 'hero-green' },
-  { to: '/wellness/kitchen', titleKey: 'wellness.kitchen', icon: Salad, hero: 'hero-pink' },
-  { to: '/wellness/articles', titleKey: 'wellness.articles', icon: BookOpen, hero: 'hero-blue' },
-];
+type DailyPick = {
+  article?: { id: string; title: string; excerpt?: string | null; coverImage?: string | null } | null;
+  recipe?: { id: string; title: string; coverImage?: string | null; calories?: number | null; prepTimeMin?: number | null } | null;
+};
 
 export default function WellnessHome() {
   const { t, i18n } = useTranslation();
@@ -39,6 +38,11 @@ export default function WellnessHome() {
   const recipes = useCats('recipe');
   const articles = useCats('article');
   const initiatives = useCats('initiative');
+  const { data: pick } = useQuery<DailyPick>({
+    queryKey: ['daily-pick'],
+    queryFn: () => api.get('/api/daily-pick'),
+    staleTime: 30 * 60 * 1000,
+  });
 
   const loading = recipes.isLoading && articles.isLoading && initiatives.isLoading;
   const recipeCats = recipes.data ?? [];
@@ -113,26 +117,54 @@ export default function WellnessHome() {
         ))}
       </div>
 
-      {/* Hero navigation cards */}
-      <p className="mt-6 px-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">{L('Explore', 'استكشف')}</p>
-      <div className="mt-2 space-y-4 px-4">
-        {cards.map(({ to, titleKey, icon: Icon, hero }, i) => (
-          <MotionLink
-            key={to}
-            to={to}
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '0px 0px -40px 0px' }}
-            transition={{ ...spring, delay: 0.05 + i * 0.07 }}
-            whileTap={{ scale: 0.96 }}
-            className={`${hero} card-hover flex items-center gap-4 rounded-2xl p-6 text-white shadow-lg`}
-          >
-            <Icon size={40} className="shrink-0" />
-            <p className="min-w-0 flex-1 truncate text-lg font-bold">{t(titleKey)}</p>
-            <ChevronRight className="shrink-0 rtl:rotate-180" />
-          </MotionLink>
-        ))}
-      </div>
+      {/* The daily pick — WHY this tab is worth opening today. One article, one
+          recipe, rotating every day. (The old "Explore" hero cards duplicated
+          the quick tiles above 1:1 and are gone.) */}
+      {(pick?.article || pick?.recipe) && (
+        <>
+          <p className="mt-6 px-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">✨ {L("Today's pick", 'اختيار النهارده')}</p>
+          <div className="mt-2 grid grid-cols-2 gap-3 px-4">
+            {pick.article && (
+              <MotionLink
+                to={`/article/${pick.article.id}`}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={spring}
+                whileTap={{ scale: 0.96 }}
+                className="card-hover min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm"
+              >
+                <MediaImage path={pick.article.coverImage} label={pick.article.title} className="h-28 w-full" />
+                <div className="p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-brand-blue">📖 {L('Read today', 'اقرا النهارده')}</p>
+                  <p className="mt-1 line-clamp-2 text-sm font-bold leading-snug">{pick.article.title}</p>
+                </div>
+              </MotionLink>
+            )}
+            {pick.recipe && (
+              <MotionLink
+                to={`/recipe/${pick.recipe.id}`}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ ...spring, delay: 0.06 }}
+                whileTap={{ scale: 0.96 }}
+                className="card-hover min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm"
+              >
+                <MediaImage path={pick.recipe.coverImage} label={pick.recipe.title} className="h-28 w-full" />
+                <div className="p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-brand-green">🍳 {L('Cook today', 'اطبخ النهارده')}</p>
+                  <p className="mt-1 line-clamp-2 text-sm font-bold leading-snug">{pick.recipe.title}</p>
+                  <p className="mt-1 text-[11px] text-gray-400">
+                    {pick.recipe.calories ? `${pick.recipe.calories} kcal` : ''}
+                    {pick.recipe.prepTimeMin ? ` · ${pick.recipe.prepTimeMin} ${L('min', 'دقيقة')}` : ''}
+                  </p>
+                </div>
+              </MotionLink>
+            )}
+          </div>
+        </>
+      )}
 
       {loading && <Loader label={t('common.loading')} />}
 

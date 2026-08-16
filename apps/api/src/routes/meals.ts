@@ -4,7 +4,8 @@ import { prisma } from '../lib/prisma';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { localizeResponse } from '../lib/localize';
 import { touchStreak } from '../lib/gamify';
-import { bumpChallenges } from '../lib/social';
+import { bumpChallenges, awardXp } from '../lib/social';
+import { notifyUser } from './push';
 import { dayString, weekStart, localDow } from '../lib/time';
 import { computeTargets, type Targets } from '../lib/nutrition';
 import { buildMealPlan, swapsFor, slotLabel, type DietPref, type PlanRecipe, type Slot } from '../lib/mealplan';
@@ -628,4 +629,108 @@ mealsRouter.patch('/prefs', async (req: AuthedRequest, res) => {
     select: { dietPref: true, avoidFoods: true },
   });
   res.json(user);
+});
+
+/* ------------------------------------------------------------------ *
+ * Global diet programs — structured commitments anyone can join.
+ * A day only counts if food was LOGGED that day (tracked, not vibes).
+ * ------------------------------------------------------------------ */
+
+const parseDays = (json: string): number[] => {
+  try {
+    const v = JSON.parse(json);
+    return Array.isArray(v) ? v.filter((n) => Number.isInteger(n)) : [];
+  } catch {
+    return [];
+  }
+};
+
+function shapeEnrollment(e: { completedDays: string; startedAt: Date; finishedAt: Date | null }, days: number) {
+  const done = parseDays(e.completedDays);
+  const dayIndex = Math.max(0, Math.min(Math.floor((Date.now() - e.startedAt.getTime()) / 86400000), days - 1));
+  return {
+    startedAt: e.startedAt,
+    finishedAt: e.finishedAt,
+    doneCount: done.length,
+    dayIndex,
+    todayDone: done.includes(dayIndex),
+    pct: Math.round((done.length / days) * 100),
+  };
+}
+
+mealsRouter.get('/diet-programs', async (req: AuthedRequest, res) => {
+  const [programs, mine] = await Promise.all([
+    prisma.dietProgram.findMany({ orderBy: { order: 'asc' } }),
+    prisma.dietEnrollment.findMany({ where: { userId: req.userId! } }),
+  ]);
+  const mineMap = new Map(mine.map((e) => [e.programId, e]));
+  const counts = await prisma.dietEnrollment.groupBy({ by: ['programId'], _count: true });
+  const countMap = new Map(counts.map((c) => [c.programId, c._count]));
+  res.json(
+    programs.map((p) => {
+      const e = mineMap.get(p.id);
+      let tips: { en: string; ar: string }[] = [];
+      try { tips = JSON.parse(p.tipsJson); } catch { /* fine */ }
+      const shaped = e ? shapeEnrollment(e, p.days) : null;
+      return {
+        id: p.id, title: p.title, titleAr: p.titleAr, description: p.description, descriptionAr: p.descriptionAr,
+        days: p.days, kind: p.kind, emoji: p.emoji,
+        participants: countMap.get(p.id) ?? 0,
+        enrollment: shaped,
+        todayTip: shaped && tips.length ? tips[shaped.dayIndex % tips.length] : null,
+      };
+    }),
+  );
+});
+
+mealsRouter.post('/diet-programs/:id/join', async (req: AuthedRequest, res) => {
+  const program = await prisma.dietProgram.findUnique({ where: { id: req.params.id } });
+  if (!program) return res.status(404).json({ error: 'Not found' });
+  // One ACTIVE diet program at a time — commitments compete, they don't stack.
+  const active = await prisma.dietEnrollment.findFirst({ where: { userId: req.userId!, finishedAt: null } });
+  if (active && active.programId !== program.id) return res.status(409).json({ error: 'Finish or leave your current program first' });
+  const e = await prisma.dietEnrollment.upsert({
+    where: { userId_programId: { userId: req.userId!, programId: program.id } },
+    create: { userId: req.userId!, programId: program.id },
+    // Re-joining a finished program restarts it fresh.
+    update: { completedDays: '[]', startedAt: new Date(), finishedAt: null },
+  });
+  res.status(201).json(shapeEnrollment(e, program.days));
+});
+
+mealsRouter.post('/diet-programs/:id/day-done', async (req: AuthedRequest, res) => {
+  const program = await prisma.dietProgram.findUnique({ where: { id: req.params.id } });
+  if (!program) return res.status(404).json({ error: 'Not found' });
+  const e = await prisma.dietEnrollment.findUnique({
+    where: { userId_programId: { userId: req.userId!, programId: program.id } },
+  });
+  if (!e || e.finishedAt) return res.status(400).json({ error: 'Not enrolled' });
+  // The tracked part: today only counts when food was actually logged today.
+  const logged = await prisma.calorieEntry.count({ where: { userId: req.userId!, date: dayString() } });
+  if (logged === 0) return res.status(400).json({ error: 'Log at least one meal first', code: 'log-first' });
+  const days = parseDays(e.completedDays);
+  const dayIndex = Math.max(0, Math.min(Math.floor((Date.now() - e.startedAt.getTime()) / 86400000), program.days - 1));
+  if (!days.includes(dayIndex)) days.push(dayIndex);
+  const finished = days.length >= program.days;
+  const updated = await prisma.dietEnrollment.update({
+    where: { id: e.id },
+    data: { completedDays: JSON.stringify(days), finishedAt: finished ? new Date() : null },
+  });
+  if (finished) {
+    await awardXp(req.userId!, 250, 'diet-program-complete');
+    notifyUser(req.userId!, {
+      title: 'Diet program complete! 🏆',
+      titleAr: 'خلّصت برنامج الدايت! 🏆',
+      body: `${program.title} — ${program.days} days of commitment. +250 XP.`,
+      bodyAr: `«${program.titleAr ?? program.title}» — ${program.days} يوم التزام. +٢٥٠ نقطة.`,
+      url: '/diet-programs',
+      type: 'milestone',
+    }).catch(() => {});
+  }
+  res.json({ ...shapeEnrollment(updated, program.days), finished });
+});
+
+mealsRouter.post('/diet-programs/:id/leave', async (req: AuthedRequest, res) => {
+  await prisma.dietEnrollment.deleteMany({ where: { userId: req.userId!, programId: req.params.id, finishedAt: null } });
+  res.json({ ok: true });
 });

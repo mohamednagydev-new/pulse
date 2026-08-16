@@ -23,6 +23,7 @@ const TILES: Tile[] = [
   { key: 'scan', emoji: '📷', ar: 'ماسح الباركود', en: 'Barcode scanner', hookAr: 'أي منتج بتقييم من ١٠ لهدفك', hookEn: 'Any product, scored 1-10 for your goal', to: '/tracker' },
   { key: 'photo', emoji: '✨', ar: 'صورة الطبق', en: 'Meal photo', hookAr: 'صوّر أكلك والسعرات تتحسب', hookEn: 'Snap your plate — calories estimated', to: '/tracker' },
   { key: 'journey', emoji: '🎯', ar: 'رحلة الدايت', en: 'Diet journey', hookAr: 'هدف وزن وشريط تقدم وتفكيرات', hookEn: 'Weight target, progress bar, nudges', to: '/progress' },
+  { key: 'dietprog', emoji: '🥗', ar: 'برامج الدايت', en: 'Diet programs', hookAr: 'التزامات جماعية متتبعة — انضم وكمّل', hookEn: 'Tracked group commitments — join and finish', to: '/diet-programs' },
   { key: 'recipes', emoji: '👨‍🍳', ar: 'وصفاتي', en: 'My recipes', hookAr: 'اعمل وصفتك محسوبة بالماكروز', hookEn: 'Build your recipe, macros included', to: '/tracker' },
   { key: 'mealplan', emoji: '🥗', ar: 'خطة الوجبات', en: 'Meal plan', hookAr: 'بتشرح نفسها وبتزود يوم التمرين', hookEn: 'Explains itself, boosts training days', to: '/meals' },
   { key: 'muscle', emoji: '💪', ar: 'خريطة العضلات', en: 'Muscle map', hookAr: 'دوس على العضلة وخد جلسة كاملة', hookEn: 'Tap a muscle, get a full session', to: '/exercises' },

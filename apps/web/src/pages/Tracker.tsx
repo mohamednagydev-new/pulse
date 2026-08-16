@@ -151,6 +151,18 @@ export default function Tracker() {
         </Link>
       )}
 
+      {/* Global diet programs — shared commitments, one tap away from the tracker. */}
+      <Link
+        to="/diet-programs"
+        className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-white p-3.5 shadow-sm transition active:scale-[0.98]"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-lg">🥗</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold">{t('dietProg.title')}</span>
+          <span className="block truncate text-xs text-gray-400">{t('dietProg.trackerHook')}</span>
+        </span>
+      </Link>
+
       {/* The primary way in: pick from the Egyptian food table. Always works. */}
       <motion.button
         initial={{ opacity: 0, y: 14 }}

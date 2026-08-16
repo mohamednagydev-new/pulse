@@ -7,7 +7,7 @@ import {
   Menu, X, CalendarDays, Dumbbell, Music, TrendingUp, Flame, Medal,
   Settings, Shield, LogOut, Moon, Sun, MessagesSquare, ClipboardList, ChevronDown,
   Award, Trophy, UserPlus, Users, HeartHandshake, ShoppingBag, HelpCircle, Ticket,
-  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, Bell, Gem, type LucideIcon,
+  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, Bell, Gem, Salad, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
@@ -39,6 +39,7 @@ const GROUPS: Group[] = [
       { to: '/progress', en: 'Progress', ar: 'تقدمي', icon: TrendingUp },
       { to: '/tracker', en: 'Calories', ar: 'السعرات', icon: Flame },
       { to: '/meals', en: 'Meal plan', ar: 'خطة الأكل', icon: UtensilsCrossed },
+      { to: '/diet-programs', en: 'Diet programs', ar: 'برامج الدايت', icon: Salad },
       { to: '/achievements', en: 'Challenges', ar: 'التحديات', icon: Medal },
       { to: '/leagues', en: 'League', ar: 'الدوري', icon: Trophy },
     ],

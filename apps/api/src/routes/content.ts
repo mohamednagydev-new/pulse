@@ -205,6 +205,30 @@ contentRouter.get('/categories/:id', async (req, res) => {
   res.json(category);
 });
 
+/** The daily pick: one article + one recipe, deterministic per calendar day —
+ *  the reason the Wellness tab is worth opening TODAY, not a menu of menus. */
+contentRouter.get('/daily-pick', async (_req, res) => {
+  const day = new Date().toISOString().slice(0, 10);
+  let h = 0;
+  for (let i = 0; i < day.length; i++) h = (h * 31 + day.charCodeAt(i)) >>> 0;
+  const [aCount, rCount] = await Promise.all([prisma.article.count(), prisma.recipe.count()]);
+  const [article, recipe] = await Promise.all([
+    aCount
+      ? prisma.article.findFirst({
+          skip: h % aCount,
+          select: { id: true, title: true, titleAr: true, excerpt: true, excerptAr: true, coverImage: true },
+        })
+      : null,
+    rCount
+      ? prisma.recipe.findFirst({
+          skip: (h * 7 + 3) % rCount,
+          select: { id: true, title: true, titleAr: true, coverImage: true, calories: true, prepTimeMin: true },
+        })
+      : null,
+  ]);
+  res.json({ day, article, recipe });
+});
+
 contentRouter.get('/articles/:id', async (req, res) => {
   const article = await prisma.article.findUnique({
     where: { id: req.params.id },
