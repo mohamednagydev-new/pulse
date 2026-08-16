@@ -1171,3 +1171,129 @@ adminRouter.post('/upload/image', upload.single('file'), async (req, res) => {
   fs.renameSync(req.file.path, path.join(imagesDir, name));
   res.status(201).json({ path: `images/${name}`, url: `/media/image/${name}` });
 });
+
+/* ------------------------------------------------------------------ *
+ * Email blast — targeted re-engagement email from the admin, with an
+ * AI drafter. Audiences are pre-defined segments (never raw SQL from
+ * the client), the send is capped per run, every mail carries the
+ * signed unsubscribe link, and opted-out users are always excluded.
+ * ------------------------------------------------------------------ */
+
+const EMAIL_SEND_CAP = 150;
+
+function audienceWhere(seg: string): Prisma.UserWhereInput {
+  const base: Prisma.UserWhereInput = {
+    emailOptOut: false,
+    email: { not: { endsWith: '@test.local' } },
+  };
+  const cutoff = (days: number) => new Date(Date.now() - days * 86400000);
+  switch (seg) {
+    case 'inactive3':
+      return { ...base, OR: [{ lastSeenAt: { lt: cutoff(3) } }, { lastSeenAt: null }] };
+    case 'inactive7':
+      return { ...base, OR: [{ lastSeenAt: { lt: cutoff(7) } }, { lastSeenAt: null }] };
+    case 'nopush':
+      return { ...base, pushSubs: { none: {} } };
+    case 'all':
+    default:
+      return base;
+  }
+}
+
+adminRouter.get('/email/audience', async (req, res) => {
+  const seg = String(req.query.seg || 'inactive3');
+  const count = await prisma.user.count({ where: audienceWhere(seg) });
+  res.json({ seg, count, cap: EMAIL_SEND_CAP });
+});
+
+adminRouter.post('/email/draft', async (req: AuthedRequest, res) => {
+  if (!aiEnabled()) return res.status(503).json({ error: 'AI is not configured' });
+  const parsed = z.object({ goal: z.string().min(3).max(400) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Describe the email goal' });
+  const raw = await chatComplete(
+    [
+      {
+        role: 'system',
+        content:
+          'You write short re-engagement emails for PULSE, a free Egyptian fitness PWA (pulse.geddo.online). ' +
+          'Write in warm spoken Egyptian Arabic (عامية مصرية). Keep it under 120 words, friendly, zero guilt-tripping. ' +
+          'Never use the phrases: "في جيبك", "خطة مخصصة", "مدعوم بالذكاء الاصطناعي", "حقق أهدافك", "كل حاجة في مكان واحد". ' +
+          'Always end the body with the link https://pulse.geddo.online on its own line. ' +
+          'Return JSON: {"subject": "...", "body": "..."} where body uses \n for line breaks. ' +
+          'The greeting must start with {name} as a placeholder for the recipient first name.',
+      },
+      { role: 'user', content: parsed.data.goal },
+    ],
+    { json: true, maxTokens: 400, temperature: 0.8 },
+  );
+  try {
+    const draft = JSON.parse(raw);
+    if (!draft.subject || !draft.body) throw new Error('bad shape');
+    // Models sometimes answer with <br/> or stray tags despite the \n instruction.
+    const body = String(draft.body)
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .slice(0, 2000);
+    res.json({ subject: String(draft.subject).slice(0, 150), body });
+  } catch {
+    res.status(502).json({ error: 'AI returned an unusable draft — try again' });
+  }
+});
+
+adminRouter.post('/email/send', async (req: AuthedRequest, res) => {
+  const parsed = z
+    .object({
+      seg: z.enum(['inactive3', 'inactive7', 'nopush', 'all']),
+      subject: z.string().min(3).max(150),
+      body: z.string().min(10).max(2000),
+      testTo: z.string().email().optional(),
+    })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Subject and body are required' });
+  const { seg, subject, body, testTo } = parsed.data;
+
+  const { sendMail } = await import('../lib/mailer');
+  const { unsubToken } = await import('../lib/digest');
+
+  const render = (firstName: string, userId: string | null) => {
+    const text = body.replaceAll('{name}', firstName);
+    const unsub = userId ? `${env.WEB_ORIGIN}/api/unsubscribe?u=${userId}&t=${unsubToken(userId)}` : '#';
+    const html =
+      `<div dir="rtl" style="font-family:sans-serif;line-height:1.7">` +
+      text
+        .split('\n')
+        .map((l) =>
+          l
+            ? `<p style="margin:4px 0">${l.replace(
+                'https://pulse.geddo.online',
+                '<a href="https://pulse.geddo.online" style="color:#f97316;font-weight:bold">pulse.geddo.online</a>',
+              )}</p>`
+            : '',
+        )
+        .join('') +
+      (userId ? `<p style="margin-top:20px;font-size:11px;color:#999"><a href="${unsub}" style="color:#999">إلغاء الاشتراك في رسائل التذكير</a></p>` : '') +
+      `</div>`;
+    return { text, html };
+  };
+
+  // Test send: one mail to the admin's chosen inbox, audience untouched.
+  if (testTo) {
+    const { text, html } = render('يا بطل', null);
+    await sendMail({ to: testTo, subject, html, text });
+    return res.json({ sent: 1, test: true });
+  }
+
+  const users = await prisma.user.findMany({
+    where: audienceWhere(seg),
+    orderBy: { lastSeenAt: 'desc' },
+    take: EMAIL_SEND_CAP,
+    select: { id: true, email: true, firstName: true },
+  });
+  let sent = 0;
+  for (const u of users) {
+    const { text, html } = render(u.firstName, u.id);
+    await sendMail({ to: u.email, subject, html, text }).catch(() => {});
+    sent++;
+  }
+  res.json({ sent, capped: users.length === EMAIL_SEND_CAP });
+});

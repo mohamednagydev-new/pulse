@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Upload, Users, LogOut, BarChart3, Clapperboard, Inbox, Film, MessagesSquare, Megaphone, ShieldCheck,
+  Upload, Users, LogOut, BarChart3, Clapperboard, Inbox, Film, MessagesSquare, Megaphone, ShieldCheck, Mail,
   type LucideIcon,
 } from 'lucide-react';
 import { RESOURCES, GROUP_LABEL, type ResourceGroup } from './adminConfig';
@@ -32,6 +32,7 @@ const TOOLS: Tool[] = [
   { to: '/admin/analytics', label: 'Analytics', hint: 'Users & screens', icon: BarChart3, tone: 'bg-ink' },
   { to: '/admin/posts', label: 'Posts', hint: 'FB page studio', icon: Megaphone, tone: 'bg-blue-600' },
   { to: '/admin/moderation', label: 'Moderation', hint: 'Feed & rooms', icon: ShieldCheck, tone: 'bg-rose-600' },
+  { to: '/admin/email', label: 'Email blast', hint: 'Re-engage by mail', icon: Mail, tone: 'bg-emerald-600' },
 ];
 
 const GROUP_ORDER: ResourceGroup[] = ['training', 'wellness', 'engagement', 'business'];

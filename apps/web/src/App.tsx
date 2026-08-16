@@ -143,6 +143,7 @@ const AdminVideoImport = lazyRoute(() => import('./pages/admin/AdminVideoImport'
 const AdminSupport = lazyRoute(() => import('./pages/admin/AdminSupport'));
 const AdminPosts = lazyRoute(() => import('./pages/admin/AdminPosts'));
 const AdminModeration = lazyRoute(() => import('./pages/admin/AdminModeration'));
+const AdminEmail = lazyRoute(() => import('./pages/admin/AdminEmail'));
 const CoachChat = lazyRoute(() => import('./pages/CoachChat'));
 const Support = lazyRoute(() => import('./pages/Support'));
 const Assessment = lazyRoute(() => import('./pages/Assessment'));
@@ -385,6 +386,7 @@ export default function App() {
           <Route path="/admin/support" element={<AdminSupport />} />
           <Route path="/admin/posts" element={<AdminPosts />} />
           <Route path="/admin/moderation" element={<AdminModeration />} />
+          <Route path="/admin/email" element={<AdminEmail />} />
           <Route path="/admin/:resource" element={<AdminResource />} />
         </Route>
 

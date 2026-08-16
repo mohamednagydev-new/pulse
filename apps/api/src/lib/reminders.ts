@@ -273,6 +273,13 @@ async function runCheck() {
     }
   }
 
+  // 11:00 daily — install/notifications email for users with no push channel.
+  // Per-user-per-month claims inside; the daily key just gates the scan.
+  if (hour === 11 && (await claimJob(`instmailscan:${day}`))) {
+    const { sendInstallNudge } = await import('./digest');
+    await sendInstallNudge(claimJob).catch((e) => console.warn('[instmail]', e?.message));
+  }
+
   // Friday 17:00 — the weekly win-back email digest for lapsed users (the ONE
   // marketing email; everything else stays push/in-app by design).
   if (localDow(now) === 5 && hour === 17 && (await claimJob(`digest:${day}`))) {
