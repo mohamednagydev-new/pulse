@@ -88,11 +88,13 @@ export default function TodayStrip() {
               ? t('path.dayOf', { n: Math.min((path.completed ?? 0) + 1, path.total), total: path.total })
               : `${todayCount}/${goal} ${t('today.workouts', { count: goal })}`}
           </p>
-          <div className="mt-1.5 flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1 font-semibold text-orange-500"><Flame size={13} /> {t('today.streakDays', { n: streak })}</span>
-            <span className="flex items-center gap-1.5 text-brand-green">
-              <span className="live-dot relative inline-block h-2 w-2 rounded-full bg-brand-green text-brand-green" />
-              {t('today.trainingNow', { n: liveOnline })}
+          {/* One line, always: smaller type + truncation — this row was wrapping
+              and pushing the hero taller (user feedback). */}
+          <div className="mt-1.5 flex items-center gap-2 text-[11px]">
+            <span className="flex shrink-0 items-center gap-1 font-semibold text-orange-500"><Flame size={12} /> {t('today.streakDays', { n: streak })}</span>
+            <span className="flex min-w-0 items-center gap-1.5 text-brand-green">
+              <span className="live-dot relative inline-block h-2 w-2 shrink-0 rounded-full bg-brand-green text-brand-green" />
+              <span className="truncate">{t('today.trainingNow', { n: liveOnline })}</span>
             </span>
           </div>
         </div>

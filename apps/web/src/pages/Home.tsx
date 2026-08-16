@@ -47,7 +47,9 @@ export default function Home() {
   const { data, isLoading, error } = useQuery({ queryKey: ['home'], queryFn: () => api.get('/api/home') });
   const [playing, setPlaying] = useState<{ videoId: string; title?: string } | null>(null);
   const [pins, setPins] = useState<string[]>(loadPins);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  // The first chip starts selected: an open example teaches the row's whole
+  // interaction model without a tutorial.
+  const [expanded, setExpanded] = useState<string | null>('week');
   const [chipScrolled, setChipScrolled] = useState(false);
 
   const togglePin = (key: string) => {
