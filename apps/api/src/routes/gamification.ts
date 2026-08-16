@@ -217,6 +217,8 @@ gamificationRouter.post('/challenges/:id/messages', async (req: AuthedRequest, r
       mediaType: z.enum(['image', 'video']).optional(),
       mediaUrl: z.string().max(500).optional(),
       isProof: z.boolean().optional(),
+      /** Consent: cross-post this proof to the community feed (default yes). */
+      shareToFeed: z.boolean().optional(),
     })
     .safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
@@ -243,9 +245,9 @@ gamificationRouter.post('/challenges/:id/messages', async (req: AuthedRequest, r
   emitToChallenge(req.params.id, 'challenge:msg', message);
 
   // Proof check-ins in GLOBAL challenges cross-post to the community feed —
-  // real people sweating is the best content this feed can carry, and the
-  // room was already public to every member.
-  if (message.isProof && message.mediaUrl) {
+  // real people sweating is the best content this feed can carry. The user
+  // consents via a checkbox on the proof composer (defaults to sharing).
+  if (message.isProof && message.mediaUrl && d.shareToFeed !== false) {
     const ch = await prisma.challenge.findUnique({
       where: { id: req.params.id },
       select: { kind: true, title: true, titleAr: true },

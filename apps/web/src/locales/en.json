@@ -995,7 +995,12 @@
     "proofBtn": "Post workout proof",
     "proofSent": "Proof posted! 📸 It counts in the winner review.",
     "proofHint": "Post photo/video proof of your workouts from the chat — proofs protect your podium spot in the review.",
-    "raffleNote": "EVERYONE who completes the goal enters the prize draw — you don't have to beat the top 3, just finish!"
+    "raffleNote": "EVERYONE who completes the goal enters the prize draw — you don't have to beat the top 3, just finish!",
+    "shareToFeed": "Share to the community feed too",
+    "shareOnHint": "Everyone sees it — your proof becomes motivation for others 💪",
+    "shareOffHint": "Stays inside this challenge room only.",
+    "proofSendBtn": "Post proof",
+    "proofSentPrivate": "Proof posted in the room 📸 (not shared to the feed)"
   },
   "community": {
     "addMedia": "Add media",

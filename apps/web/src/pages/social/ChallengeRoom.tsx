@@ -23,6 +23,9 @@ export default function ChallengeRoom() {
   const [text, setText] = useState('');
   const [meId, setMeId] = useState('');
   const [uploadingProof, setUploadingProof] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [shareToFeed, setShareToFeed] = useState(true);
   const endRef = useRef<HTMLDivElement>(null);
   const proofRef = useRef<HTMLInputElement>(null);
 
@@ -90,26 +93,39 @@ export default function ChallengeRoom() {
   };
 
   // Proof check-in: photo/video evidence of the workout — counted in the
-  // winner audit, so posting them protects your podium spot.
-  const sendProof = async (file: File) => {
+  // winner audit. Picking a file opens a preview with the community-share
+  // consent checkbox; nothing uploads until the user confirms.
+  const pickProof = (file: File) => {
+    setProofFile(file);
+    setProofPreview(URL.createObjectURL(file));
+    setShareToFeed(true);
+  };
+  const cancelProof = () => {
+    if (proofPreview) URL.revokeObjectURL(proofPreview);
+    setProofFile(null);
+    setProofPreview(null);
+    if (proofRef.current) proofRef.current.value = '';
+  };
+  const sendProof = async () => {
+    if (!proofFile) return;
     setUploadingProof(true);
     try {
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', proofFile);
       const res = await uploadWithAuth('/api/social/upload', fd);
       if (!res.ok) throw new Error('upload failed');
       const { mediaType, mediaUrl } = await res.json();
       const m = await api.post(`/api/gamification/challenges/${id}/messages`, {
-        text: text.trim(), mediaType, mediaUrl, isProof: true,
+        text: text.trim(), mediaType, mediaUrl, isProof: true, shareToFeed,
       });
       setText('');
       setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-      toast(t('challenge.proofSent'), 'success');
+      toast(shareToFeed ? t('challenge.proofSent') : t('challenge.proofSentPrivate'), 'success');
+      cancelProof();
     } catch (e: any) {
       toast(e?.message || t('common.somethingWrong'), 'error');
     } finally {
       setUploadingProof(false);
-      if (proofRef.current) proofRef.current.value = '';
     }
   };
 
@@ -257,6 +273,41 @@ export default function ChallengeRoom() {
             <div ref={endRef} />
           </div>
           <div className="sticky bottom-0 border-t glass-nav p-3">
+            {/* Proof preview + consent: nothing uploads until the user confirms. */}
+            {proofFile && proofPreview && (
+              <div className="mb-2 rounded-2xl bg-white p-3 shadow-md">
+                <div className="flex items-start gap-3">
+                  {proofFile.type.startsWith('video')
+                    ? <video src={proofPreview} muted playsInline className="h-20 w-20 shrink-0 rounded-xl object-cover" />
+                    : <img src={proofPreview} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover" />}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold">📸 {t('challenge.proofBadge')}</p>
+                    <label className="mt-2 flex items-center gap-2 text-xs font-semibold text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={shareToFeed}
+                        onChange={(e) => setShareToFeed(e.target.checked)}
+                        className="h-4 w-4 accent-emerald-500"
+                      />
+                      {t('challenge.shareToFeed')}
+                    </label>
+                    <p className="mt-1 text-[11px] text-gray-400">{shareToFeed ? t('challenge.shareOnHint') : t('challenge.shareOffHint')}</p>
+                  </div>
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <button onClick={cancelProof} className="min-h-[40px] rounded-full bg-gray-100 px-4 text-xs font-bold text-gray-500">
+                    {t('common.close')}
+                  </button>
+                  <button
+                    onClick={sendProof}
+                    disabled={uploadingProof}
+                    className="flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-full bg-emerald-500 text-sm font-extrabold text-white disabled:opacity-60"
+                  >
+                    {uploadingProof ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />} {t('challenge.proofSendBtn')}
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <input
                 className="flex-1 rounded-full bg-gray-100 px-4 py-3 outline-none"
@@ -279,7 +330,7 @@ export default function ChallengeRoom() {
                 accept="image/*,video/*"
                 capture="environment"
                 className="hidden"
-                onChange={(e) => e.target.files?.[0] && sendProof(e.target.files[0])}
+                onChange={(e) => e.target.files?.[0] && pickProof(e.target.files[0])}
               />
               <button onClick={send} className="flex h-11 w-11 items-center justify-center rounded-full btn-blue">
                 <Send size={18} />
