@@ -27,6 +27,9 @@ export default function MoreSections({ storageKey, sections }: { storageKey: str
     }
   });
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Scroll affordance: chips rows overflow, but nothing says so — a pulsing
+  // chevron + edge fade do, until the user scrolls once.
+  const [scrolled, setScrolled] = useState(false);
 
   const togglePin = (key: string) => {
     setPins((prev) => {
@@ -56,21 +59,27 @@ export default function MoreSections({ storageKey, sections }: { storageKey: str
       {unpinned.length > 0 && (
         <div className="mt-5 px-4">
           <p className="px-1 text-xs font-bold uppercase tracking-wide text-gray-400">{t('homeSlim.more')}</p>
-          <div className="mt-2 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {unpinned.map((s) => (
-              <button
-                key={s.key}
-                onClick={() => {
-                  if (expanded !== s.key) track(`chip/${s.key}/open`, storageKey);
-                  setExpanded(expanded === s.key ? null : s.key);
-                }}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition ${
-                  expanded === s.key ? 'bg-ink text-white' : 'bg-white text-gray-600 shadow-sm'
-                }`}
-              >
-                {s.emoji} {s.label}
-              </button>
-            ))}
+          <div className="relative">
+            <div
+              onScroll={() => !scrolled && setScrolled(true)}
+              className="chip-row mt-1 flex gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar"
+            >
+              {unpinned.map((s) => (
+                <button
+                  key={s.key}
+                  onClick={() => {
+                    if (expanded !== s.key) track(`chip/${s.key}/open`, storageKey);
+                    setExpanded(expanded === s.key ? null : s.key);
+                  }}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition ${
+                    expanded === s.key ? 'bg-ink text-white' : 'bg-white text-gray-600 shadow-sm'
+                  }`}
+                >
+                  {s.emoji} {s.label}
+                </button>
+              ))}
+            </div>
+            {!scrolled && unpinned.length > 3 && <span className="chip-hint" aria-hidden />}
           </div>
         </div>
       )}

@@ -48,6 +48,7 @@ export default function Home() {
   const [playing, setPlaying] = useState<{ videoId: string; title?: string } | null>(null);
   const [pins, setPins] = useState<string[]>(loadPins);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [chipScrolled, setChipScrolled] = useState(false);
 
   const togglePin = (key: string) => {
     setPins((prev) => {
@@ -204,12 +205,11 @@ export default function Home() {
         );
 
         const OPTIONAL: { key: string; emoji: string; label: string; grad: string; node: React.ReactNode }[] = [
+          { key: 'week', emoji: '📊', label: t('homeSlim.week'), grad: 'from-teal-500 to-cyan-600', node: <WeekActivityCard /> },
           { key: 'water', emoji: '💧', label: t('homeSlim.water'), grad: 'from-sky-400 to-blue-600', node: <WaterCard /> },
           { key: 'spin', emoji: '🎁', label: t('homeSlim.spin'), grad: 'from-fuchsia-500 to-pink-600', node: <SpinWheel /> },
-          { key: 'week', emoji: '📊', label: t('homeSlim.week'), grad: 'from-teal-500 to-cyan-600', node: <WeekActivityCard /> },
           { key: 'reset', emoji: '🧘', label: t('homeSlim.reset'), grad: 'from-emerald-500 to-green-600', node: <DailyReset /> },
           ...(challengesNode ? [{ key: 'challenges', emoji: '🏆', label: t('homeSlim.challenges'), grad: 'from-amber-500 to-orange-600', node: challengesNode }] : []),
-          { key: 'fame', emoji: '👑', label: t('homeSlim.fame'), grad: 'from-violet-500 to-purple-700', node: <HallOfFame /> },
           { key: 'discover', emoji: '🎬', label: t('homeSlim.discover'), grad: 'from-rose-500 to-red-600', node: discoverNode },
         ];
         const pinned = OPTIONAL.filter((s) => pins.includes(s.key));
@@ -231,29 +231,29 @@ export default function Home() {
             {unpinned.length > 0 && (
               <div className="mt-5 px-4">
                 <p className="px-1 text-xs font-bold uppercase tracking-wide text-gray-400">{t('homeSlim.more')}</p>
-                <div className="mt-2 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                  {/* Direct door to the weekly leaderboard — competition is a
-                      destination, not a preview to expand. */}
-                  <button
-                    onClick={() => { track('chip/ranks/open', 'home'); navigate('/leagues'); }}
-                    className="flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-amber-500/30"
+                {/* pt-1: the active ring draws OUTSIDE the button — without the
+                    padding the scroll container clips its top edge. */}
+                <div className="relative">
+                  <div
+                    onScroll={() => !chipScrolled && setChipScrolled(true)}
+                    className="chip-row mt-1 flex gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar"
                   >
-                    🏅 {t('homeSlim.ranks')}
-                  </button>
-                  {unpinned.map((s) => (
-                    <button
-                      key={s.key}
-                      onClick={() => {
-                        if (expanded !== s.key) track(`chip/${s.key}/open`, 'home');
-                        setExpanded(expanded === s.key ? null : s.key);
-                      }}
-                      className={`flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-br px-4 py-2.5 text-sm font-bold text-white shadow-md transition ${s.grad} ${
-                        expanded === s.key ? 'ring-2 ring-white ring-offset-2 ring-offset-transparent' : 'opacity-90'
-                      }`}
-                    >
-                      {s.emoji} {s.label}
-                    </button>
-                  ))}
+                    {unpinned.map((s) => (
+                      <button
+                        key={s.key}
+                        onClick={() => {
+                          if (expanded !== s.key) track(`chip/${s.key}/open`, 'home');
+                          setExpanded(expanded === s.key ? null : s.key);
+                        }}
+                        className={`flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-br px-4 py-2.5 text-sm font-bold text-white shadow-md transition ${s.grad} ${
+                          expanded === s.key ? 'ring-2 ring-white/90' : 'opacity-90'
+                        }`}
+                      >
+                        {s.emoji} {s.label}
+                      </button>
+                    ))}
+                  </div>
+                  {!chipScrolled && unpinned.length > 3 && <span className="chip-hint" aria-hidden />}
                 </div>
               </div>
             )}
@@ -270,6 +270,10 @@ export default function Home() {
           </>
         );
       })()}
+
+      {/* Hall of fame stays visible in the body — seeing real people at the top
+          is the motivation loop, not an optional widget (user decision). */}
+      <HallOfFame />
 
       {banner && (
         <a

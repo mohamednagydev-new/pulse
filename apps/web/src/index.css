@@ -109,6 +109,31 @@ html {
   padding-top: calc(env(safe-area-inset-top, 0px) + 2.5rem);
 }
 
+/* ---- Horizontal chip rows: scroll affordance ----
+   Edge fade says "there's more", the pulsing chevron says "slide me" (it
+   retires on first scroll). Symmetric fade so it works in LTR and RTL. */
+.chip-row {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 26px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 26px), transparent);
+}
+.chip-hint {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 20px;
+  font-weight: 900;
+  color: #9ca3af;
+  animation: chipHint 1.3s ease-in-out infinite;
+}
+[dir='ltr'] .chip-hint::after { content: '›'; }
+[dir='rtl'] .chip-hint::after { content: '‹'; }
+@keyframes chipHint {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.95; }
+}
+
 @layer components {
   /* Signature button: sheen + moving shine + press. Gives every CTA a branded feel. */
   .btn-pill {
