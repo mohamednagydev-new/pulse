@@ -9,6 +9,7 @@ import { MediaImage, HScroll, Loader, EmptyState } from '../../components/ui';
 import MenuDrawer from '../../components/MenuDrawer';
 import ScreenHeader from '../../components/ScreenHeader';
 import RelatedReels from '../../components/RelatedReels';
+import MoreSections from '../../components/MoreSections';
 
 const MotionLink = motion.create(Link);
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
@@ -143,79 +144,72 @@ export default function WellnessHome() {
         />
       )}
 
-      {/* Recipe categories */}
-      {recipeCats.length > 0 && (
-        <Section title={L('Wellness Kitchen', 'مطبخ الصحة')} onSeeAll={() => navigate('/wellness/kitchen')}>
-          <HScroll>
-            {recipeCats.map((c, i) => (
-              <RailCard key={c.id} cat={c} index={i} />
-            ))}
-          </HScroll>
-        </Section>
-      )}
-
-      {/* Article categories */}
-      {articleCats.length > 0 && (
-        <Section title={L('Health topics', 'مواضيع صحية')} onSeeAll={() => navigate('/wellness/articles')}>
-          <HScroll>
-            {articleCats.map((c, i) => (
-              <RailCard key={c.id} cat={c} index={i} />
-            ))}
-          </HScroll>
-        </Section>
-      )}
-
-      {/* Initiatives grid */}
-      {initiativeCats.length > 0 && (
-        <Section title={L('Wellness initiatives', 'مبادرات صحية')} onSeeAll={() => navigate('/wellness/initiatives')}>
-          <div className="grid grid-cols-2 gap-3 px-4">
-            {initiativeCats.map((c, i) => (
-              <MotionLink
-                key={c.id}
-                to={`/category/${c.id}`}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '0px 0px -40px 0px' }}
-                transition={{ ...spring, delay: (i % 2) * 0.06 }}
-                whileTap={{ scale: 0.95 }}
-                className="card-hover min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm"
-              >
-                <MediaImage path={c.image} label={c.title} className="h-24 w-full" />
-                <p className="truncate p-2 text-xs font-semibold text-gray-700">{c.title}</p>
-              </MotionLink>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* Curated short videos — renders nothing when there's no match */}
-      <RelatedReels keyword="healthy recipes" className="mt-6 px-4" />
-
-      {/* Track your day */}
-      <Section title={L('Track your day', 'تابع يومك')}>
-        <div className="px-4">
-          <MotionLink
-            to="/tracker"
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '0px 0px -40px 0px' }}
-            transition={spring}
-            whileTap={{ scale: 0.97 }}
-            className="card-hover flex items-center gap-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 p-5 text-white shadow-lg"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
-              <Flame size={24} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-base font-extrabold">{L('Calorie tracker', 'حاسبة السعرات')}</span>
-              <span className="block truncate text-xs text-white/80">
-                {L('Log meals and stay on target', 'سجل وجباتك والتزم بهدفك')}
-              </span>
-            </span>
-            <ChevronRight className="shrink-0 opacity-80 rtl:rotate-180" />
-          </MotionLink>
-        </div>
-      </Section>
+      {/* Content previews are opt-in — the hero cards above already reach every
+          hub; these rails are for browsing moods. "Track your day" is gone
+          entirely: it duplicated the Calories quick tile. */}
+      <MoreSections
+        storageKey="pulse-wellness-pins"
+        sections={[
+          ...(recipeCats.length > 0
+            ? [{
+                key: 'kitchen', emoji: '🍽', label: L('Kitchen', 'مطبخ الصحة'),
+                node: (
+                  <Section title={L('Wellness Kitchen', 'مطبخ الصحة')} onSeeAll={() => navigate('/wellness/kitchen')}>
+                    <HScroll>
+                      {recipeCats.map((c, i) => (
+                        <RailCard key={c.id} cat={c} index={i} />
+                      ))}
+                    </HScroll>
+                  </Section>
+                ),
+              }]
+            : []),
+          ...(articleCats.length > 0
+            ? [{
+                key: 'topics', emoji: '📖', label: L('Health topics', 'مواضيع صحية'),
+                node: (
+                  <Section title={L('Health topics', 'مواضيع صحية')} onSeeAll={() => navigate('/wellness/articles')}>
+                    <HScroll>
+                      {articleCats.map((c, i) => (
+                        <RailCard key={c.id} cat={c} index={i} />
+                      ))}
+                    </HScroll>
+                  </Section>
+                ),
+              }]
+            : []),
+          ...(initiativeCats.length > 0
+            ? [{
+                key: 'initiatives', emoji: '🌱', label: L('Initiatives', 'مبادرات'),
+                node: (
+                  <Section title={L('Wellness initiatives', 'مبادرات صحية')} onSeeAll={() => navigate('/wellness/initiatives')}>
+                    <div className="grid grid-cols-2 gap-3 px-4">
+                      {initiativeCats.map((c, i) => (
+                        <MotionLink
+                          key={c.id}
+                          to={`/category/${c.id}`}
+                          initial={{ opacity: 0, y: 14 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+                          transition={{ ...spring, delay: (i % 2) * 0.06 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="card-hover min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm"
+                        >
+                          <MediaImage path={c.image} label={c.title} className="h-24 w-full" />
+                          <p className="truncate p-2 text-xs font-semibold text-gray-700">{c.title}</p>
+                        </MotionLink>
+                      ))}
+                    </div>
+                  </Section>
+                ),
+              }]
+            : []),
+          {
+            key: 'reels', emoji: '🎬', label: L('Short videos', 'فيديوهات قصيرة'),
+            node: <RelatedReels keyword="healthy recipes" className="mt-4 px-4" />,
+          },
+        ]}
+      />
     </div>
   );
 }

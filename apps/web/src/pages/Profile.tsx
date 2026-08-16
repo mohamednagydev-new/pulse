@@ -393,7 +393,8 @@ export default function Profile() {
         </motion.button>
       )}
 
-      <div className="mt-5 space-y-5 px-5">
+      {/* Compact rows, not slabs — same information, half the visual weight. */}
+      <div className="mt-5 space-y-2 px-5">
         <MotionLink
           to="/bookmarks"
           initial={{ opacity: 0, y: 14 }}
@@ -401,12 +402,11 @@ export default function Profile() {
           viewport={{ once: true, margin: '0px 0px -40px 0px' }}
           transition={spring}
           whileTap={{ scale: 0.97 }}
-          className="card-hover block overflow-hidden rounded-2xl bg-brand-teal text-white"
+          className="card-hover flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm"
         >
-          <div className="flex items-center gap-2 px-5 py-4 font-bold uppercase"><Bookmark size={18} className="shrink-0" /> <span className="min-w-0 truncate">{t('profile.bookmarks')}</span></div>
-          <div className="flex items-center justify-center gap-1 border-t border-white/20 py-3 text-sm">
-            {t('common.seeAll')} <ChevronRight size={16} className="rtl:rotate-180" />
-          </div>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-brand-teal"><Bookmark size={20} /></span>
+          <span className="min-w-0 flex-1 text-sm font-bold">{t('profile.bookmarks')}</span>
+          <ChevronRight size={18} className="shrink-0 text-gray-300 rtl:rotate-180" />
         </MotionLink>
 
         <MotionLink
@@ -416,12 +416,11 @@ export default function Profile() {
           viewport={{ once: true, margin: '0px 0px -40px 0px' }}
           transition={{ ...spring, delay: 0.05 }}
           whileTap={{ scale: 0.97 }}
-          className="card-hover block overflow-hidden rounded-2xl bg-brand-teal text-white"
+          className="card-hover flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm"
         >
-          <div className="flex items-center gap-2 px-5 py-4 font-bold uppercase"><Dumbbell size={18} className="shrink-0" /> <span className="min-w-0 truncate">{t('profile.programsDone')}</span></div>
-          <div className="flex items-center justify-center gap-1 border-t border-white/20 py-3 text-sm">
-            {t('common.seeAll')} <ChevronRight size={16} className="rtl:rotate-180" />
-          </div>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-brand-teal"><Dumbbell size={20} /></span>
+          <span className="min-w-0 flex-1 text-sm font-bold">{t('profile.programsDone')}</span>
+          <ChevronRight size={18} className="shrink-0 text-gray-300 rtl:rotate-180" />
         </MotionLink>
       </div>
 

@@ -1241,6 +1241,10 @@
     "fame": "Hall of fame",
     "discover": "Discover content",
     "pin": "Pin to Home",
-    "unpin": "Unpin"
+    "unpin": "Unpin",
+    "calendar": "Streak calendar",
+    "body": "Body measurements",
+    "prs": "Records",
+    "badges": "Badges"
   }
 }
