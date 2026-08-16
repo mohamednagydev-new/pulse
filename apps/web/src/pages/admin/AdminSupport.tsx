@@ -29,7 +29,7 @@ export default function AdminSupport() {
   const [tab, setTab] = useState<'tickets' | 'pinned'>('tickets');
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
-      <header className="bg-ink px-5 pb-4 pt-10 text-white">
+      <header className="safe-header-tall bg-ink px-5 pb-4 text-white">
         <div className="flex items-center gap-3">
           <Link to="/admin" aria-label="Back"><ArrowLeft /></Link>
           <h1 className="flex-1 text-xl font-extrabold">Support &amp; Community</h1>

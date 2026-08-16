@@ -88,6 +88,15 @@ h3 {
   padding-bottom: calc(76px + env(safe-area-inset-bottom, 0));
 }
 
+/* Admin headers are plain <header>s, not TopBar — without this the iOS status
+   bar (standalone PWA) sits ON TOP of the back button and it can't be tapped. */
+.safe-header {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
+}
+.safe-header-tall {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 2.5rem);
+}
+
 @layer components {
   /* Signature button: sheen + moving shine + press. Gives every CTA a branded feel. */
   .btn-pill {

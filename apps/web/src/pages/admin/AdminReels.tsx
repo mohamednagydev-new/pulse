@@ -235,7 +235,7 @@ export default function AdminReels() {
 
   return (
     <div className="mx-auto min-h-screen max-w-3xl pb-10">
-      <header className="flex items-center gap-2 bg-ink px-4 py-4 text-white">
+      <header className="safe-header flex items-center gap-2 bg-ink px-4 pb-4 text-white">
         <Link to="/admin"><ChevronLeft /></Link>
         <Clapperboard size={20} />
         <h1 className="text-lg font-bold">Reels Curation</h1>

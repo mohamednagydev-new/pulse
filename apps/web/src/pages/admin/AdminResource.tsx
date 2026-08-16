@@ -30,7 +30,7 @@ export default function AdminResource() {
 
   return (
     <div className="min-h-screen pb-10">
-      <header className="flex items-center gap-2 bg-ink px-4 py-4 text-white">
+      <header className="safe-header flex items-center gap-2 bg-ink px-4 pb-4 text-white">
         <Link to="/admin"><ChevronLeft /></Link>
         <h1 className="text-lg font-bold">{conf.label}</h1>
         <button onClick={() => setEditing({})} className="ms-auto flex items-center gap-1 rounded-full bg-brand-pink px-4 py-2 text-sm">

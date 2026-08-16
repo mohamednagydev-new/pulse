@@ -42,7 +42,7 @@ export default function AdminHome() {
 
   return (
     <div className="mx-auto min-h-screen max-w-3xl pb-12">
-      <header className="bg-ink px-5 pb-5 pt-10 text-white">
+      <header className="safe-header-tall bg-ink px-5 pb-5 text-white">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-xl font-extrabold italic">PULSE Admin</h1>

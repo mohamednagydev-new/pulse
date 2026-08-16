@@ -40,7 +40,7 @@ if (typeof window !== 'undefined') {
   // window. "Script error." is the anonymized cross-origin echo of the same.
   // Reporting these buries real crashes under noise.
   // browser_declutter etc.: browser-extension scripts crashing in OUR telemetry.
-  const NOISE = /Java object is gone|navigation_performance_logger|^Script error\b|ResizeObserver loop|Failed to register a ServiceWorker|iframeBridge|browser_declutter|extension:\/\//i;
+  const NOISE = /Java object is gone|navigation_?performance_?logger|webkit\.messageHandlers|^Script error\b|ResizeObserver loop|Failed to register a ServiceWorker|iframeBridge|browser_declutter|extension:\/\//i;
   const report = (msg: string) => {
     if (reported >= 5 || NOISE.test(msg)) return;
     reported += 1;

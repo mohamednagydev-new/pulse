@@ -86,7 +86,7 @@ export default function AdminVideoImport() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
-      <header className="bg-ink px-5 pb-5 pt-10 text-white">
+      <header className="safe-header-tall bg-ink px-5 pb-5 text-white">
         <div className="flex items-center gap-3">
           <Link to="/admin" aria-label="Back"><ArrowLeft /></Link>
           <div className="min-w-0 flex-1">

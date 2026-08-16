@@ -27,7 +27,7 @@ export default function AdminPosts() {
 
   return (
     <div className="min-h-screen pb-10">
-      <header className="flex items-center gap-2 bg-ink px-4 py-4 text-white">
+      <header className="safe-header flex items-center gap-2 bg-ink px-4 pb-4 text-white">
         <Link to="/admin"><ChevronLeft /></Link>
         <h1 className="text-lg font-bold">Posts</h1>
         <span className="ms-auto text-xs text-white/60">
