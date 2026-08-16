@@ -512,7 +512,7 @@ function Choices({
           key={o}
           onClick={() => onPick(o)}
           className={`flex w-full items-center justify-between gap-3 rounded-2xl p-4 text-start transition active:scale-[0.98] ${
-            value === o ? 'bg-white text-ink' : 'bg-white/10 text-white'
+            value === o ? 'bg-white text-ink shadow-lg' : 'bg-white/15 text-white ring-1 ring-white/20'
           }`}
         >
           {group === 'goal' && GOAL_PATTERNS[o] && (

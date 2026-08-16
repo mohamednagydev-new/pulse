@@ -61,6 +61,8 @@ export function Buddies() {
     queryFn: () => api.get('/api/duels'),
   });
 
+  // Friends vs duels — the page's two jobs, one visible at a time.
+  const [view, setView] = useState<'friends' | 'duels'>('friends');
   // Challenge sheet state
   const [duelTarget, setDuelTarget] = useState<any>(null);
   const [duelMetric, setDuelMetric] = useState<DuelMetric>('workouts');
@@ -186,7 +188,33 @@ export function Buddies() {
         <Loader />
       ) : (
         <div className="space-y-3 px-4 pt-2">
-          {(buddies?.length ?? 0) > 0 && leaderboard.length > 0 && (
+          {/* Two jobs, two tabs: your PEOPLE and your BATTLES. Stacked together
+              this page read as a wall (user feedback: crowded, unorganized). */}
+          {((buddies?.length ?? 0) > 0 || hasDuels || incoming.length > 0) && (
+            <div className="flex rounded-full bg-white p-1 shadow-sm">
+              {([
+                { key: 'friends' as const, label: `👥 ${t('buddies.title')}`, badge: incoming.length },
+                { key: 'duels' as const, label: `⚔️ ${t('duels.title')}`, badge: duelIncoming.length },
+              ]).map((v) => (
+                <button
+                  key={v.key}
+                  onClick={() => setView(v.key)}
+                  className={`relative flex-1 rounded-full py-2 text-sm font-bold transition ${
+                    view === v.key ? 'bg-ink text-white' : 'text-gray-500'
+                  }`}
+                >
+                  {v.label}
+                  {v.badge > 0 && (
+                    <span className="absolute -top-1 end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-pink px-1 text-[10px] font-bold text-white">
+                      {v.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {view === 'friends' && (buddies?.length ?? 0) > 0 && leaderboard.length > 0 && (
             <div>
               <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('battle.compete')}</p>
               <h2 className="px-1 pb-2 font-bold">{t('battle.title')}</h2>
@@ -234,7 +262,7 @@ export function Buddies() {
             </div>
           )}
 
-          {(hasDuels || (buddies?.length ?? 0) > 0) && (
+          {view === 'duels' && (hasDuels || (buddies?.length ?? 0) > 0) && (
             <div>
               <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('duels.duel')}</p>
               <h2 className="px-1 pb-2 font-bold">{t('duels.title')} ⚔️</h2>
@@ -396,7 +424,7 @@ export function Buddies() {
             </div>
           )}
 
-          {incoming.length > 0 && (
+          {view === 'friends' && incoming.length > 0 && (
             <div>
               <p className="px-1 pb-2 text-sm font-bold uppercase text-gray-400">{t('buddies.requests')}</p>
               <div className="space-y-2">
@@ -436,12 +464,12 @@ export function Buddies() {
             </div>
           )}
 
-          {incoming.length > 0 && (buddies?.length ?? 0) > 0 && (
+          {view === 'friends' && incoming.length > 0 && (buddies?.length ?? 0) > 0 && (
             <p className="px-1 pt-2 text-sm font-bold uppercase text-gray-400">{t('buddies.title')}</p>
           )}
 
           <div className="space-y-2">
-            {(buddies ?? []).map((b: any) => (
+            {view === 'friends' && (buddies ?? []).map((b: any) => (
               <div key={b.id} className="rounded-2xl bg-white p-3 shadow-sm">
                 <div className="flex items-center gap-3">
                   <Link to={`/u/${b.id}`}>

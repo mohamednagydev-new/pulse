@@ -90,9 +90,9 @@ export default function Home() {
           <MenuDrawer />
           {/* Brand truly centered (logo + wordmark), independent of the uneven
               icon counts on either side. */}
-          <span className="pointer-events-none absolute inset-x-0 flex items-center justify-center gap-2">
-            <img src="/pwa-192.png" alt="" className="h-8 w-8 rounded-lg shadow" />
-            <span className="text-2xl font-extrabold italic tracking-tight">PULSE</span>
+          <span className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 flex-col items-center justify-center">
+            <img src="/pwa-192.png" alt="" className="h-7 w-7 rounded-lg shadow" />
+            <span className="mt-0.5 text-[11px] font-extrabold italic tracking-[0.2em]">PULSE</span>
           </span>
           <div className="relative flex items-center gap-3.5">
             <ThemeToggle />

@@ -57,21 +57,34 @@ export default function GroupSessions() {
 
       {me?.isCoach && (
         <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="px-4 pt-4">
-          <h2 className="mb-2 font-bold">{t('group.host')}</h2>
+          <h2 className="mb-2 font-bold">🔴 {t('group.host')}</h2>
           <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
-            <input className="input-field" placeholder={t('group.titlePh')} value={title} onChange={(e) => setTitle(e.target.value)} />
-            <input className="input-field" placeholder={t('group.focusPh')} value={focus} onChange={(e) => setFocus(e.target.value)} />
-            <input className="input-field" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
-            <select className="input-field" value={workoutId} onChange={(e) => setWorkoutId(e.target.value)}>
-              <option value="">{t('group.linkWorkout')}</option>
-              {(myWorkouts ?? []).map((w: any) => (
-                <option key={w.id} value={w.id}>{w.title}</option>
-              ))}
-            </select>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold text-gray-500">{t('group.fieldTitle')}</span>
+              <input className="input-field" placeholder={t('group.titlePh')} value={title} onChange={(e) => setTitle(e.target.value)} />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold text-gray-500">{t('group.fieldFocus')}</span>
+              <input className="input-field" placeholder={t('group.focusPh')} value={focus} onChange={(e) => setFocus(e.target.value)} />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold text-gray-500">📅 {t('group.fieldWhen')}</span>
+              <input className="input-field" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold text-gray-500">🎬 {t('group.fieldWorkout')}</span>
+              <select className="input-field" value={workoutId} onChange={(e) => setWorkoutId(e.target.value)}>
+                <option value="">{t('group.linkWorkout')}</option>
+                {(myWorkouts ?? []).map((w: any) => (
+                  <option key={w.id} value={w.id}>{w.title}</option>
+                ))}
+              </select>
+              <span className="mt-1 block text-[11px] text-gray-400">{t('group.workoutHint')}</span>
+            </label>
             <button
               onClick={() => title.trim() && scheduledAt && create.mutate()}
-              disabled={create.isPending}
-              className="btn-pill btn-primary w-full"
+              disabled={create.isPending || !title.trim() || !scheduledAt}
+              className="btn-pill btn-primary w-full disabled:opacity-50"
             >
               <Plus size={16} /> {t('group.schedule')}
             </button>

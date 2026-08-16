@@ -897,7 +897,12 @@
     "stopNote": "Send",
     "roomChat": "Room chat",
     "chatPh": "Say something to the class…",
-    "send": "Send"
+    "send": "Send",
+    "fieldTitle": "Class name",
+    "fieldFocus": "Focus",
+    "fieldWhen": "Date & time",
+    "fieldWorkout": "Attach a workout",
+    "workoutHint": "A workout with an uploaded video enables the synced class player for everyone."
   },
   "coach": {
     "programMissingHint": "It may have been removed.",
@@ -1015,7 +1020,11 @@
     "reportConfirm": "Report this post to the PULSE team?",
     "deleteConfirm": "Delete this post?",
     "postDeleted": "Post deleted",
-    "commentFailed": "Comment not sent"
+    "commentFailed": "Comment not sent",
+    "addPoll": "Add a poll",
+    "pollOption": "Option",
+    "pollAddOption": "Add option",
+    "pollVotes": "{{n}} votes"
   },
   "bookmarks": {
     "empty": "No bookmarks yet."
@@ -1031,7 +1040,11 @@
     "deleteMeasure": "Delete measurement"
   },
   "schedule": {
-    "title": "My schedule"
+    "title": "My schedule",
+    "subtitle": "Your weekly training split.",
+    "editHint": "Tap muscle groups to build each day.",
+    "focusPh": "Day name (e.g. Push day)",
+    "saved": "Schedule saved ✓"
   },
   "chat": {
     "connectFirst": "You can chat once you are connected.",

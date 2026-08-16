@@ -717,6 +717,10 @@ model FeedPost {
   pinned      Boolean      @default(false)
   pinnedUntil DateTime?
   pinnedTitle String?
+  /** Poll/survey (admin-created): JSON array of 2-4 option strings. Votes in
+   *  PollVote. The in-app channel for "which challenge next?" questions. */
+  pollJson    String?
+  pollVotes   PollVote[]
   createdAt DateTime       @default(now())
   reactions PostReaction[]
   comments  PostComment[]
@@ -1497,4 +1501,15 @@ model Subscription {
   externalId String?
   startedAt  DateTime?
   endsAt     DateTime?
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  postId    String
+  post      FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  optionIdx Int
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
 }

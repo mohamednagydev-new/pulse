@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Users, MessageSquare, Send, ImagePlus, X, Award, Clapperboard } from 'lucide-react';
+import { Users, MessageSquare, Send, ImagePlus, X, Award, Clapperboard, BarChart3 } from 'lucide-react';
 import { api, uploadWithAuth } from '../../lib/api';
 import { trackAd, pickAd } from '../../lib/ads';
 import { getSocket } from '../../lib/socket';
@@ -22,17 +22,24 @@ export default function Community() {
   const [text, setText] = useState('');
   const [media, setMedia] = useState<{ mediaType: string; mediaUrl: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  // Admin surveys: a poll rides on the post («التحدي الجاي يبقى إيه؟»).
+  const [pollOptions, setPollOptions] = useState<string[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
   const { data: feed, isLoading } = useQuery({ queryKey: FEED_KEY, queryFn: () => api.get('/api/social/feed') });
   const { data: unread } = useQuery({ queryKey: ['chat-unread'], queryFn: () => api.get('/api/chat/unread'), refetchInterval: 20000 });
   const { data: ads } = useQuery({ queryKey: ['feed-ad'], queryFn: () => api.get('/api/banners?section=feed_ad') });
   const ad = pickAd<any>(ads);
 
   const post = useMutation({
-    mutationFn: () => api.post('/api/social/posts', { text, ...(media ?? {}) }),
+    mutationFn: () => {
+      const poll = pollOptions?.map((o) => o.trim()).filter(Boolean);
+      return api.post('/api/social/posts', { text, ...(media ?? {}), ...(poll && poll.length >= 2 ? { poll } : {}) });
+    },
     onSuccess: () => {
       setText('');
       setMedia(null);
+      setPollOptions(null);
       qc.invalidateQueries({ queryKey: FEED_KEY });
     },
   });
@@ -121,12 +128,40 @@ export default function Community() {
           <button onClick={() => fileRef.current?.click()} disabled={uploading} className="text-gray-400" aria-label={t('community.addMedia')}>
             <ImagePlus size={20} />
           </button>
+          {me?.role === 'ADMIN' && (
+            <button
+              onClick={() => setPollOptions(pollOptions ? null : ['', ''])}
+              className={pollOptions ? 'text-violet-500' : 'text-gray-400'}
+              aria-label={t('community.addPoll')}
+            >
+              <BarChart3 size={20} />
+            </button>
+          )}
           <button onClick={() => (text.trim() || media) && post.mutate()} disabled={post.isPending || uploading} className="rounded-full btn-primary p-2 disabled:opacity-60">
             <Send size={16} />
           </button>
           <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
         </div>
         {uploading && <p className="mt-2 text-xs text-gray-400">Uploading…</p>}
+        {pollOptions && (
+          <div className="mt-2 space-y-1.5">
+            {pollOptions.map((opt, i) => (
+              <input
+                key={i}
+                className="w-full rounded-xl bg-gray-100 px-3 py-2 text-sm outline-none"
+                placeholder={`${t('community.pollOption')} ${i + 1}`}
+                value={opt}
+                maxLength={80}
+                onChange={(e) => setPollOptions(pollOptions.map((o, j) => (j === i ? e.target.value : o)))}
+              />
+            ))}
+            {pollOptions.length < 4 && (
+              <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-xs font-bold text-violet-500">
+                + {t('community.pollAddOption')}
+              </button>
+            )}
+          </div>
+        )}
         {media && (
           <div className="relative mt-2 w-fit">
             {media.mediaType === 'image' ? (

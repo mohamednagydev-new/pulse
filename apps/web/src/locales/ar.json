@@ -905,7 +905,12 @@
     "stopNote": "ابعت",
     "roomChat": "دردشة الحصة",
     "chatPh": "قول حاجة للحصة…",
-    "send": "ابعت"
+    "send": "ابعت",
+    "fieldTitle": "اسم الحصة",
+    "fieldFocus": "التركيز",
+    "fieldWhen": "التاريخ والمعاد",
+    "fieldWorkout": "اربط تمرين",
+    "workoutHint": "تمرين بفيديو مرفوع بيفعّل مشغل الحصة المتزامن للكل."
   },
   "coach": {
     "programMissingHint": "يمكن يكون اتشال.",
@@ -1023,7 +1028,11 @@
     "reportConfirm": "تبلّغ فريق PULSE عن المنشور ده؟",
     "deleteConfirm": "تحذف المنشور ده؟",
     "postDeleted": "المنشور اتحذف",
-    "commentFailed": "الكومنت متبعتش"
+    "commentFailed": "الكومنت متبعتش",
+    "addPoll": "ضيف استفتاء",
+    "pollOption": "اختيار",
+    "pollAddOption": "ضيف اختيار",
+    "pollVotes": "{{n}} صوت"
   },
   "bookmarks": {
     "empty": "مفيش محفوظات لسه."
@@ -1039,7 +1048,11 @@
     "deleteMeasure": "امسح القياس"
   },
   "schedule": {
-    "title": "جدولي"
+    "title": "جدولي",
+    "subtitle": "تقسيمة تمرينك الأسبوعية.",
+    "editHint": "دوس على العضلات عشان تبني كل يوم.",
+    "focusPh": "اسم اليوم (مثلاً: يوم دفع)",
+    "saved": "الجدول اتحفظ ✓"
   },
   "chat": {
     "connectFirst": "تقدر تتكلم بعد ما تتواصلوا.",

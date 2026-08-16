@@ -10,7 +10,10 @@ let ctx: AudioContext | null = null;
 export function pulseChime(volume = 1) {
   try {
     ctx = ctx || new (window.AudioContext || (window as any).webkitAudioContext)();
-    if (ctx.state === 'suspended') void ctx.resume();
+    // resume() returns a promise that REJECTS on iOS when audio is unavailable
+    // (NotSupportedError) — `void` let that rejection escape the try/catch and
+    // land in analytics as an unhandled error on random pages.
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     const beat = (t: number, freq: number, dur: number, gain: number) => {
       const o = ctx!.createOscillator();
       const g = ctx!.createGain();

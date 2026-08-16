@@ -100,6 +100,21 @@ html {
 .text-\[12px\] { font-size: 14px !important; }
 .text-\[13px\] { font-size: 15px !important; }
 
+/* Admin form sheets need a SOLID surface in both themes: the global
+   `.dark .bg-white` remap turns bg-white into a 6.5% tint, which floated the
+   create/edit form transparently over the dimmed backdrop — inputs unreadable. */
+.admin-sheet {
+  background-color: #ffffff;
+}
+.dark .admin-sheet {
+  background-color: #26242b !important;
+  color: #ececf0;
+}
+.dark .admin-sheet .input-field {
+  background-color: #1d1b22 !important;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
 /* Admin headers are plain <header>s, not TopBar — without this the iOS status
    bar (standalone PWA) sits ON TOP of the back button and it can't be tapped. */
 .safe-header {

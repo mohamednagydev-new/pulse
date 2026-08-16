@@ -135,6 +135,8 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
       )}
       {post.mediaType === 'video' && <PostVideo id={post.mediaUrl} />}
 
+      {post.poll && <PollBlock post={post} queryKey={queryKey} />}
+
       <div className="mt-3 flex items-center gap-1">
         {EMOJIS.map((e) => {
           const count = post.reactions?.[e] ?? 0;
@@ -180,6 +182,50 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Poll block: tap to vote, bars afterwards; tapping another option changes
+ *  the vote. Admin surveys («التحدي الجاي يبقى إيه؟») live right in the feed. */
+function PollBlock({ post, queryKey }: { post: any; queryKey: any[] }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const poll = post.poll as { options: string[]; counts: number[]; total: number; myVote: number | null };
+  const vote = useMutation({
+    mutationFn: (option: number) => api.post(`/api/social/posts/${post.id}/vote`, { option }),
+    onSuccess: () => qc.invalidateQueries({ queryKey }),
+    onError: (e: any) => toast(e?.message ?? 'Failed', 'error'),
+  });
+  const voted = poll.myVote !== null;
+  return (
+    <div className="mt-3 space-y-2">
+      {poll.options.map((opt, i) => {
+        const pct = poll.total ? Math.round((poll.counts[i] / poll.total) * 100) : 0;
+        const mine = poll.myVote === i;
+        return (
+          <button
+            key={i}
+            onClick={() => !vote.isPending && vote.mutate(i)}
+            disabled={vote.isPending}
+            className={`relative block w-full overflow-hidden rounded-xl border px-3 py-2.5 text-start text-sm font-semibold transition active:scale-[0.99] ${
+              mine ? 'border-violet-400 text-violet-700' : 'border-gray-200 text-gray-700'
+            }`}
+          >
+            {voted && (
+              <span
+                className={`absolute inset-y-0 start-0 ${mine ? 'bg-violet-100' : 'bg-gray-100'}`}
+                style={{ width: `${pct}%` }}
+              />
+            )}
+            <span className="relative flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate">{mine ? '✓ ' : ''}{opt}</span>
+              {voted && <span className="shrink-0 text-xs font-extrabold tabular-nums">{pct}%</span>}
+            </span>
+          </button>
+        );
+      })}
+      <p className="text-[11px] text-gray-400">🗳 {t('community.pollVotes', { n: poll.total })}</p>
     </div>
   );
 }

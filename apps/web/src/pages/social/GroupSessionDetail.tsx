@@ -167,6 +167,15 @@ export default function GroupSessionDetail() {
     return () => clearTimeout(t);
   }, [timer, remaining]);
 
+  // The signed src arrives async — re-apply the room's transport state once the
+  // player can actually honor it (covers late joiners landing mid-video).
+  // MUST live above the early returns: a hook after a conditional return crashed
+  // the whole page the moment `data` loaded ("rendered fewer hooks" — user report).
+  useEffect(() => {
+    if (syncSrc && vState) applyVideo(vState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncSrc]);
+
   if (isLoading) return <Loader />;
   if (!data) return null;
 
@@ -177,13 +186,6 @@ export default function GroupSessionDetail() {
     .map((uid) => data.participants?.find((p: any) => p.id === uid))
     .filter(Boolean) as any[];
   const unknownCount = liveMembers.length - liveHere.length;
-
-  // The signed src arrives async — re-apply the room's transport state once the
-  // player can actually honor it (covers late joiners landing mid-video).
-  useEffect(() => {
-    if (syncSrc && vState) applyVideo(vState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [syncSrc]);
 
   const emitVideo = (action: 'play' | 'pause') => {
     tapFeedback();

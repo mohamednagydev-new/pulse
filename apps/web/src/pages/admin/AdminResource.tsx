@@ -102,7 +102,7 @@ function EditDrawer({ conf, item, onClose }: { conf: any; item: any; onClose: ()
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
-      <div className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+      <div className="admin-sheet max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl p-5" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">{isNew ? 'Create' : 'Edit'} {conf.label}</h2>
           <button onClick={onClose}><X /></button>

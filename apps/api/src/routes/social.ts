@@ -134,9 +134,25 @@ fs.mkdirSync(tmpDir, { recursive: true });
 const upload = multer({ dest: tmpDir, limits: { fileSize: 300 * 1024 * 1024 } });
 
 function shapePost(p: any, me: string) {
+  // Poll shaping: options from pollJson, counts from the votes rows.
+  let poll = null;
+  if (p.pollJson) {
+    try {
+      const options: string[] = JSON.parse(p.pollJson);
+      const votes: { userId: string; optionIdx: number }[] = p.pollVotes ?? [];
+      const counts = options.map((_, i) => votes.filter((v) => v.optionIdx === i).length);
+      poll = {
+        options,
+        counts,
+        total: votes.length,
+        myVote: votes.find((v) => v.userId === me)?.optionIdx ?? null,
+      };
+    } catch { /* malformed poll — render as a plain post */ }
+  }
   return {
     id: p.id,
     kind: p.kind,
+    poll,
     text: p.text,
     textAr: p.textAr,
     mediaType: p.mediaType,
@@ -178,6 +194,7 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
     user: { select: userSelect },
     reactions: true,
     comments: { include: { user: { select: userSelect } }, orderBy: { createdAt: 'asc' as const } },
+    pollVotes: { select: { userId: true, optionIdx: true } },
   };
 
   // The pinned announcement reaches everyone, not only people you follow, and
@@ -291,10 +308,17 @@ socialRouter.post('/posts', async (req: AuthedRequest, res) => {
       text: z.string().max(500).optional(),
       mediaType: z.enum(['image', 'video']).optional(),
       mediaUrl: z.string().optional(),
+      /** Poll options — admin-only surveys/announcement questions. */
+      poll: z.array(z.string().min(1).max(80)).min(2).max(4).optional(),
     })
     .safeParse(req.body);
-  if (!parsed.success || (!parsed.data.text?.trim() && !parsed.data.mediaUrl)) {
+  if (!parsed.success || (!parsed.data.text?.trim() && !parsed.data.mediaUrl && !parsed.data.poll)) {
     return res.status(400).json({ error: 'Add a message or media' });
+  }
+  if (parsed.data.poll) {
+    const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { role: true } });
+    if (me?.role !== 'ADMIN') return res.status(403).json({ error: 'Polls are admin announcements' });
+    if (!parsed.data.text?.trim()) return res.status(400).json({ error: 'A poll needs a question in the text' });
   }
   // mediaUrl must point at a real upload — a free string would let a post embed
   // an arbitrary path (or someone else's private file) into everyone's feed.
@@ -310,11 +334,35 @@ socialRouter.post('/posts', async (req: AuthedRequest, res) => {
       return res.status(400).json({ error: 'Invalid media' });
     }
   }
-  const post = await createFeedPost(req.userId!, 'text', parsed.data.text, undefined, undefined, {
+  const post = await createFeedPost(req.userId!, parsed.data.poll ? 'poll' : 'text', parsed.data.text, undefined, undefined, {
     mediaType: parsed.data.mediaType,
     mediaUrl: parsed.data.mediaUrl,
+    pollJson: parsed.data.poll ? JSON.stringify(parsed.data.poll) : undefined,
   });
-  res.status(201).json(shapePost({ ...post, reactions: [], comments: [] }, req.userId!));
+  res.status(201).json(shapePost({ ...post, reactions: [], comments: [], pollVotes: [] }, req.userId!));
+});
+
+// ---- Poll vote (change allowed until the admin deletes the poll) ----
+socialRouter.post('/posts/:id/vote', async (req: AuthedRequest, res) => {
+  const parsed = z.object({ option: z.number().int().min(0).max(3) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid vote' });
+  const post = await prisma.feedPost.findUnique({ where: { id: req.params.id }, select: { pollJson: true } });
+  if (!post?.pollJson) return res.status(404).json({ error: 'Not a poll' });
+  let options: string[] = [];
+  try { options = JSON.parse(post.pollJson); } catch { /* below */ }
+  if (parsed.data.option >= options.length) return res.status(400).json({ error: 'Invalid option' });
+  await prisma.pollVote.upsert({
+    where: { postId_userId: { postId: req.params.id, userId: req.userId! } },
+    create: { postId: req.params.id, userId: req.userId!, optionIdx: parsed.data.option },
+    update: { optionIdx: parsed.data.option },
+  });
+  const votes = await prisma.pollVote.findMany({ where: { postId: req.params.id }, select: { userId: true, optionIdx: true } });
+  res.json({
+    options,
+    counts: options.map((_, i) => votes.filter((v) => v.optionIdx === i).length),
+    total: votes.length,
+    myVote: parsed.data.option,
+  });
 });
 
 // ---- Reactions (toggle) ----

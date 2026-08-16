@@ -14,7 +14,7 @@ const DAY_INDEX = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 
 export default function TodayStrip() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
   const { data: presence } = useQuery({ queryKey: ['presence'], queryFn: () => api.get('/api/social/presence') });
   const { data: sched } = useQuery({ queryKey: ['schedule'], queryFn: () => api.get('/api/me/schedule') });
@@ -50,6 +50,12 @@ export default function TodayStrip() {
   const todayName = DAY_INDEX[new Date().getDay()];
   const today = (sched?.schedule ?? []).find((d: any) => d.day === todayName);
   const isRest = today && today.groups.length === 0;
+  // scheduleJson stores English focus/group names — localize via the API's own
+  // localized muscle groups («Triceps» read as English inside the Arabic hero).
+  const focusLabel =
+    today && i18n.language.startsWith('ar') && today.groups?.length
+      ? today.groups.map((n: string) => (groups ?? []).find((g: any) => sameMuscle(g.name, n))?.name ?? n).join(' + ')
+      : today?.focus;
   /**
    * Start follows the path first. The schedule and the program used to be two
    * systems answering "what now" differently — this button opened a muscle-group
@@ -80,7 +86,7 @@ export default function TodayStrip() {
                 : today
                   ? isRest
                     ? t('today.restDay')
-                    : t('today.todayFocus', { focus: today.focus })
+                    : t('today.todayFocus', { focus: focusLabel })
                   : t('today.goal')}
           </p>
           <p className="truncate text-xs text-gray-400">
