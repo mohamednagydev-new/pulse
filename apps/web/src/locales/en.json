@@ -346,7 +346,8 @@
     "doneNext": "Done — rest & next",
     "finish": "Finish workout",
     "enterFirst": "Enter weight and reps first",
-    "nextTrack": "Next track"
+    "nextTrack": "Next track",
+    "moveGuide": "The move"
   },
   "today": {
     "chipWeekZero": "New? Week Zero",

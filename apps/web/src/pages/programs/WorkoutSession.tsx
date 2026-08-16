@@ -12,7 +12,8 @@ import { enqueue, postResilient } from '../../lib/offlineQueue';
 import HrMonitor from '../../components/HrMonitor';
 import { useAuth } from '../../store/auth';
 import { Loader } from '../../components/ui';
-import ExerciseVisual from '../../components/ExerciseVisual';
+import ExerciseVisual, { exercisePoster } from '../../components/ExerciseVisual';
+import HumanMove, { patternFor } from '../../components/HumanMove';
 import ContentVideo from '../../components/ContentVideo';
 import Confetti from '../../components/Confetti';
 import { signedMediaUrl } from '../../lib/media';
@@ -580,18 +581,28 @@ export default function WorkoutSession() {
           exit={{ opacity: 0, x: -26 }}
           transition={{ type: 'spring', stiffness: 380, damping: 34 }}
         >
-          <button
-            onClick={() => { if (current?.videoUrl || current?.videoId) { tapFeedback(); setShowForm(true); } }}
-            className="mx-auto my-4 block h-40 w-40 overflow-hidden rounded-3xl bg-white/5 text-brand-pink"
-          >
-            <ExerciseVisual
-              name={current?.name || group?.name}
-              videoUrl={current?.videoUrl}
-              className="h-40 w-40"
-              animClassName="h-28 w-28"
-              showPlayHint={!!(current?.videoUrl || current?.videoId)}
-            />
-          </button>
+          <div className="mx-auto my-4 flex items-center justify-center gap-3">
+            <button
+              onClick={() => { if (current?.videoUrl || current?.videoId) { tapFeedback(); setShowForm(true); } }}
+              className="block h-40 w-40 shrink-0 overflow-hidden rounded-3xl bg-white/5 text-brand-pink"
+            >
+              <ExerciseVisual
+                name={current?.name || group?.name}
+                videoUrl={current?.videoUrl}
+                className="h-40 w-40"
+                animClassName="h-28 w-28"
+                showPlayHint={!!(current?.videoUrl || current?.videoId)}
+              />
+            </button>
+            {/* Video frame shows WHAT it looks like; the figure shows HOW it moves
+                and which muscles fire — worth both when a real frame exists. */}
+            {exercisePoster(current?.videoUrl) && (
+              <div className="flex h-40 w-28 shrink-0 flex-col items-center justify-center gap-0.5 rounded-3xl bg-white/5 text-white/70">
+                <HumanMove pattern={patternFor(current?.name || group?.name)} className="h-28 w-24" />
+                <span className="text-[9px] font-bold uppercase tracking-wide text-white/35">{t('session.moveGuide')}</span>
+              </div>
+            )}
+          </div>
           <h1 className="text-2xl font-extrabold">{current?.name}</h1>
 
           {/* Every exercise has a real demo; the animation is only a shape cue. */}
