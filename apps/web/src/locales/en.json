@@ -892,7 +892,10 @@
     "videoWait": "The coach will start the video",
     "voiceNotes": "Voice notes",
     "recordNote": "Record",
-    "stopNote": "Send"
+    "stopNote": "Send",
+    "roomChat": "Room chat",
+    "chatPh": "Say something to the class…",
+    "send": "Send"
   },
   "coach": {
     "programMissingHint": "It may have been removed.",

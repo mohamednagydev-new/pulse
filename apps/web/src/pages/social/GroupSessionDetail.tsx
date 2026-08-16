@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Calendar, Play, Pause, Trash2, Dumbbell, Timer, Square, Mic, RotateCcw, RotateCw } from 'lucide-react';
+import { Users, Calendar, Play, Pause, Trash2, Dumbbell, Timer, Square, Mic, Send, RotateCcw, RotateCw } from 'lucide-react';
 import { api, uploadWithAuth } from '../../lib/api';
 import { useSignedMedia } from '../../lib/media';
 import { toast } from '../../lib/toast';
@@ -61,10 +61,12 @@ export default function GroupSessionDetail() {
   const [vPlaying, setVPlaying] = useState(false);
   const syncSrc = useSignedMedia('video', data?.coachWorkout?.videoId);
 
-  // ── Voice notes dropped into the room ──
-  const [notes, setNotes] = useState<{ key: number; audio: string; by: string; at: number }[]>([]);
+  // ── Room chat: live text + voice notes, one feed, nothing persisted ──
+  const [feed, setFeed] = useState<{ key: number; by: string; at: number; text?: string; audio?: string }[]>([]);
+  const [chatText, setChatText] = useState('');
   const [recording, setRecording] = useState(false);
   const recRef = useRef<MediaRecorder | null>(null);
+  const feedKey = useRef(0);
 
   const loaded = !!data;
 
@@ -116,7 +118,11 @@ export default function GroupSessionDetail() {
     };
     const onNote = (p: any) => {
       if (p?.id !== id) return;
-      setNotes((prev) => [{ key: p.at, audio: p.audio, by: p.by, at: p.at }, ...prev.slice(0, 4)]);
+      setFeed((prev) => [...prev.slice(-29), { key: ++feedKey.current, audio: p.audio, by: p.by, at: p.at }]);
+    };
+    const onChat = (p: any) => {
+      if (p?.id !== id) return;
+      setFeed((prev) => [...prev.slice(-29), { key: ++feedKey.current, text: p.text, by: p.by, at: p.at }]);
     };
 
     socket.on('group:members', onMembers);
@@ -124,6 +130,7 @@ export default function GroupSessionDetail() {
     socket.on('group:react', onReact);
     socket.on('group:video', onVideo);
     socket.on('group:note', onNote);
+    socket.on('group:chat', onChat);
     return () => {
       socket.emit('group:close', id);
       socket.off('group:members', onMembers);
@@ -131,6 +138,7 @@ export default function GroupSessionDetail() {
       socket.off('group:react', onReact);
       socket.off('group:video', onVideo);
       socket.off('group:note', onNote);
+      socket.off('group:chat', onChat);
     };
   }, [loaded, id]);
 
@@ -187,6 +195,14 @@ export default function GroupSessionDetail() {
     tapFeedback();
     v.currentTime = Math.max(0, v.currentTime + delta);
     getSocket().emit('group:video', { id, action: vPlaying ? 'play' : 'pause', positionSec: v.currentTime });
+  };
+
+  const sendChat = () => {
+    const text = chatText.trim();
+    if (!text) return;
+    tapFeedback();
+    getSocket().emit('group:chat', { id, text });
+    setChatText('');
   };
 
   const startNote = async () => {
@@ -386,33 +402,58 @@ export default function GroupSessionDetail() {
               ))}
             </div>
 
-            {/* Voice notes: the coach cues the room; anyone can answer. */}
+            {/* Room chat: live text + voice notes; the coach cues, anyone answers. */}
             <div className="mt-4 border-t border-gray-100 pt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500">🎙 {t('group.voiceNotes')}</span>
-                <button
-                  onClick={recording ? stopNote : startNote}
-                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ${recording ? 'animate-pulse bg-red-500 text-white' : 'bg-gray-100 text-gray-600'}`}
-                >
-                  <Mic size={13} /> {recording ? t('group.stopNote') : t('group.recordNote')}
-                </button>
-              </div>
-              {notes.length > 0 && (
-                <div className="mt-2 space-y-2">
-                  {notes.map((n) => {
+              <span className="text-xs font-bold text-gray-500">💬 {t('group.roomChat')}</span>
+              {feed.length > 0 && (
+                <div className="mt-2 max-h-44 space-y-2 overflow-y-auto">
+                  {feed.map((n) => {
                     const sender =
                       n.by === data.coachUserId
                         ? data.coach
                         : data.participants?.find((p: any) => p.id === n.by);
+                    const isCoach = n.by === data.coachUserId;
                     return (
                       <div key={n.key} className="flex items-center gap-2">
                         <MediaImage path={sender?.avatarUrl} label={sender?.firstName} className="h-7 w-7 shrink-0 rounded-full" seed={3} />
-                        <audio controls preload="metadata" src={n.audio} className="h-9 min-w-0 flex-1" />
+                        {n.audio ? (
+                          <audio controls preload="metadata" src={n.audio} className="h-9 min-w-0 flex-1" />
+                        ) : (
+                          <p className={`min-w-0 flex-1 rounded-2xl px-3 py-1.5 text-sm ${isCoach ? 'bg-orange-50 font-semibold text-orange-700' : 'bg-gray-50 text-gray-700'}`}>
+                            <span className="me-1.5 text-[10px] font-bold text-gray-400">{sender?.firstName}</span>
+                            {n.text}
+                          </p>
+                        )}
                       </div>
                     );
                   })}
                 </div>
               )}
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  className="min-w-0 flex-1 rounded-full bg-gray-100 px-4 py-2 text-sm outline-none"
+                  placeholder={t('group.chatPh')}
+                  value={chatText}
+                  maxLength={300}
+                  onChange={(e) => setChatText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && sendChat()}
+                />
+                <button
+                  onClick={sendChat}
+                  disabled={!chatText.trim()}
+                  aria-label={t('group.send')}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-blue text-white disabled:opacity-40"
+                >
+                  <Send size={15} />
+                </button>
+                <button
+                  onClick={recording ? stopNote : startNote}
+                  aria-label={recording ? t('group.stopNote') : t('group.recordNote')}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${recording ? 'animate-pulse bg-red-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  <Mic size={15} />
+                </button>
+              </div>
             </div>
 
             {/* Floating reaction bursts */}

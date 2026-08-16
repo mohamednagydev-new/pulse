@@ -130,6 +130,15 @@ export function initRealtime(server: http.Server, origin: string) {
       if (st) st.video = payload;
       io?.to(`group:${p.id}`).emit('group:video', payload);
     });
+    // Room text chat: live relay, members only, nothing persisted — class talk
+    // («جاهزين؟», «تقيل عليا 😅») belongs to the moment, like speech in a gym.
+    socket.on('group:chat', (p: { id: string; text: string }) => {
+      if (!p || typeof p.id !== 'string' || typeof p.text !== 'string') return;
+      const text = p.text.trim().slice(0, 300);
+      if (!text) return;
+      if (!groupMembers.get(p.id)?.has(userId)) return;
+      io?.to(`group:${p.id}`).emit('group:chat', { id: p.id, text, by: userId, at: Date.now() });
+    });
     // Voice notes: relay of an already-uploaded voice path (same store as DM
     // voice notes). Signed here so every member gets a playable URL — the coach
     // cues the room («آخر ١٠ ثواني!») without live-audio infrastructure.

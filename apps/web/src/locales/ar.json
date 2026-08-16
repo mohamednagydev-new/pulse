@@ -900,7 +900,10 @@
     "videoWait": "الكوتش هيشغّل الفيديو",
     "voiceNotes": "ملاحظات صوتية",
     "recordNote": "سجّل",
-    "stopNote": "ابعت"
+    "stopNote": "ابعت",
+    "roomChat": "دردشة الحصة",
+    "chatPh": "قول حاجة للحصة…",
+    "send": "ابعت"
   },
   "coach": {
     "programMissingHint": "يمكن يكون اتشال.",
