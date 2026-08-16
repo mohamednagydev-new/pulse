@@ -887,7 +887,12 @@
     "live": "Live",
     "upcoming": "Upcoming",
     "joinedShort": "Joined ✓",
-    "joinShort": "Join"
+    "joinShort": "Join",
+    "tapToSync": "Tap to join the class",
+    "videoWait": "The coach will start the video",
+    "voiceNotes": "Voice notes",
+    "recordNote": "Record",
+    "stopNote": "Send"
   },
   "coach": {
     "programMissingHint": "It may have been removed.",

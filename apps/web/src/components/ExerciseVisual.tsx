@@ -1,19 +1,17 @@
 import { useState } from 'react';
 import { PlayCircle } from 'lucide-react';
-import { exerciseAnim } from './TrainingAnim';
+import HumanMove, { patternFor } from './HumanMove';
 
 /**
  * What an exercise looks like.
  *
- * There are six stick-figure animations for eighty-five movements, so most of them
- * share a figure and roughly a quarter fall through to a generic one. A curl drawn
- * for a shrug teaches nothing.
+ * Every exercise with a video gets the honest visual: a frame from it. YouTube
+ * serves those from its own CDN, which is the same link-don't-copy arrangement
+ * as the embed — no file is stored here.
  *
- * Every exercise does have a real demo video, so the honest visual is a frame from
- * it. YouTube serves those from its own CDN, which is the same link-don't-copy
- * arrangement as the embed — no file is stored here. The animation stays as the
- * fallback for anything without a video, and for when the image can't load
- * (offline, blocked, or the video was pulled).
+ * Everything else gets HumanMove: a jointed person performing the movement with
+ * the working muscles filled in — the fallback for anything without a video and
+ * for when the image can't load (offline, blocked, or the video was pulled).
  */
 
 /** Video id from a watch URL, youtu.be link, Shorts link or embed URL. */
@@ -65,10 +63,9 @@ export default function ExerciseVisual({
     );
   }
 
-  const Anim = exerciseAnim(name);
   return (
     <span className={`flex items-center justify-center ${className}`}>
-      <Anim className={animClassName || 'h-full w-full'} />
+      <HumanMove pattern={patternFor(name)} className={animClassName || 'h-full w-full'} />
     </span>
   );
 }

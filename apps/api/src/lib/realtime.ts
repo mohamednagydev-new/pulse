@@ -2,10 +2,25 @@ import { Server } from 'socket.io';
 import type http from 'http';
 import { verifyAccessToken } from './auth';
 import { prisma } from './prisma';
+import { signMedia } from './mediaSign';
 
 let io: Server | null = null;
 const online = new Map<string, number>(); // userId -> socket count
 const groupMembers = new Map<string, Set<string>>(); // groupId -> userIds currently in the live room
+// Live room state so LATE JOINERS land mid-class, not in a blank room: the
+// running timer and the video transport survive until the room empties.
+type GroupTimer = { id: string; action: 'start'; durationSec: number; startedAt: number; by: string };
+type GroupVideo = { id: string; action: 'play' | 'pause'; positionSec: number; at: number; by: string };
+const groupState = new Map<string, { hostId: string; timer?: GroupTimer; video?: GroupVideo }>();
+
+async function groupHost(id: string): Promise<string | null> {
+  const cached = groupState.get(id);
+  if (cached) return cached.hostId;
+  const s = await prisma.groupSession.findUnique({ where: { id }, select: { coachUserId: true } }).catch(() => null);
+  if (!s) return null;
+  groupState.set(id, { hostId: s.coachUserId });
+  return s.coachUserId;
+}
 
 function addGroupMember(id: string, userId: string) {
   if (!groupMembers.has(id)) groupMembers.set(id, new Set());
@@ -15,7 +30,10 @@ function removeGroupMember(id: string, userId: string) {
   const s = groupMembers.get(id);
   if (!s) return;
   s.delete(userId);
-  if (s.size === 0) groupMembers.delete(id);
+  if (s.size === 0) {
+    groupMembers.delete(id);
+    groupState.delete(id); // empty room: drop the timer/video state too
+  }
 }
 
 export function initRealtime(server: http.Server, origin: string) {
@@ -74,6 +92,10 @@ export function initRealtime(server: http.Server, origin: string) {
       socket.join(`group:${id}`);
       addGroupMember(id, userId);
       io?.to(`group:${id}`).emit('group:members', { id, members: [...(groupMembers.get(id) ?? [])] });
+      // Replay live state to the joiner only — everyone else already has it.
+      const st = groupState.get(id);
+      if (st?.timer) socket.emit('group:timer', st.timer);
+      if (st?.video) socket.emit('group:video', st.video);
     });
     socket.on('group:close', (id: string) => {
       if (typeof id !== 'string' || !id) return;
@@ -86,9 +108,41 @@ export function initRealtime(server: http.Server, origin: string) {
       if (!p || typeof p.id !== 'string') return;
       const payload =
         p.action === 'start'
-          ? { id: p.id, action: 'start', durationSec: Math.min(Math.max(Number(p.durationSec) || 60, 10), 3600), startedAt: Date.now(), by: userId }
+          ? { id: p.id, action: 'start' as const, durationSec: Math.min(Math.max(Number(p.durationSec) || 60, 10), 3600), startedAt: Date.now(), by: userId }
           : { id: p.id, action: 'stop', by: userId };
+      const st = groupState.get(p.id);
+      if (st) st.timer = p.action === 'start' ? (payload as GroupTimer) : undefined;
       io?.to(`group:${p.id}`).emit('group:timer', payload);
+    });
+    // Host-synced video transport: the coach's play/pause/seek drives every
+    // member's player. Host-only — a participant scrubbing would scrub the class.
+    socket.on('group:video', async (p: { id: string; action: 'play' | 'pause'; positionSec?: number }) => {
+      if (!p || typeof p.id !== 'string' || (p.action !== 'play' && p.action !== 'pause')) return;
+      if ((await groupHost(p.id)) !== userId) return;
+      const payload: GroupVideo = {
+        id: p.id,
+        action: p.action,
+        positionSec: Math.max(0, Number(p.positionSec) || 0),
+        at: Date.now(),
+        by: userId,
+      };
+      const st = groupState.get(p.id);
+      if (st) st.video = payload;
+      io?.to(`group:${p.id}`).emit('group:video', payload);
+    });
+    // Voice notes: relay of an already-uploaded voice path (same store as DM
+    // voice notes). Signed here so every member gets a playable URL — the coach
+    // cues the room («آخر ١٠ ثواني!») without live-audio infrastructure.
+    socket.on('group:note', (p: { id: string; audio: string }) => {
+      if (!p || typeof p.id !== 'string' || typeof p.audio !== 'string' || !/^dm\/[\w.-]+$/.test(p.audio)) return;
+      if (!groupMembers.get(p.id)?.has(userId)) return;
+      const { exp, sig } = signMedia('voice', p.audio);
+      io?.to(`group:${p.id}`).emit('group:note', {
+        id: p.id,
+        audio: `/media/voice/${p.audio}?exp=${exp}&sig=${sig}`,
+        by: userId,
+        at: Date.now(),
+      });
     });
     // Live emoji reactions — pure relay, bursts on every member's screen.
     socket.on('group:react', (p: { id: string; emoji: string }) => {
@@ -99,7 +153,10 @@ export function initRealtime(server: http.Server, origin: string) {
     socket.on('disconnect', () => {
       for (const [gid, members] of groupMembers) {
         if (members.delete(userId)) io?.to(`group:${gid}`).emit('group:members', { id: gid, members: [...members] });
-        if (members.size === 0) groupMembers.delete(gid);
+        if (members.size === 0) {
+          groupMembers.delete(gid);
+          groupState.delete(gid);
+        }
       }
       const n = (online.get(userId) ?? 1) - 1;
       if (n <= 0) online.delete(userId);

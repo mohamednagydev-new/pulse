@@ -895,7 +895,12 @@
     "live": "لايف",
     "upcoming": "الجاي",
     "joinedShort": "داخل ✓",
-    "joinShort": "ادخل"
+    "joinShort": "ادخل",
+    "tapToSync": "دوس عشان تلحق الحصة",
+    "videoWait": "الكوتش هيشغّل الفيديو",
+    "voiceNotes": "ملاحظات صوتية",
+    "recordNote": "سجّل",
+    "stopNote": "ابعت"
   },
   "coach": {
     "programMissingHint": "يمكن يكون اتشال.",

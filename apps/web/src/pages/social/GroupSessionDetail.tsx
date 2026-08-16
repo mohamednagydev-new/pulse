@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Calendar, Play, Trash2, Dumbbell, Timer, Square } from 'lucide-react';
-import { api } from '../../lib/api';
+import { Users, Calendar, Play, Pause, Trash2, Dumbbell, Timer, Square, Mic, RotateCcw, RotateCw } from 'lucide-react';
+import { api, uploadWithAuth } from '../../lib/api';
+import { useSignedMedia } from '../../lib/media';
+import { toast } from '../../lib/toast';
 import { getSocket } from '../../lib/socket';
 import { useAuth } from '../../store/auth';
 import { tapFeedback, successFeedback } from '../../lib/haptics';
@@ -52,7 +54,32 @@ export default function GroupSessionDetail() {
   const burstKey = useRef(0);
   const timeUpFired = useRef(false);
 
+  // ── Synced class video: the host's transport drives everyone's player ──
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [vState, setVState] = useState<{ action: 'play' | 'pause'; positionSec: number; at: number } | null>(null);
+  const [vBlocked, setVBlocked] = useState(false); // autoplay refused until the user taps once
+  const [vPlaying, setVPlaying] = useState(false);
+  const syncSrc = useSignedMedia('video', data?.coachWorkout?.videoId);
+
+  // ── Voice notes dropped into the room ──
+  const [notes, setNotes] = useState<{ key: number; audio: string; by: string; at: number }[]>([]);
+  const [recording, setRecording] = useState(false);
+  const recRef = useRef<MediaRecorder | null>(null);
+
   const loaded = !!data;
+
+  const applyVideo = (p: { action: 'play' | 'pause'; positionSec: number; at: number }) => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (p.action === 'play') {
+      v.currentTime = p.positionSec + (Date.now() - p.at) / 1000;
+      v.play().then(() => { setVPlaying(true); setVBlocked(false); }).catch(() => setVBlocked(true));
+    } else {
+      v.pause();
+      v.currentTime = p.positionSec;
+      setVPlaying(false);
+    }
+  };
 
   useEffect(() => {
     if (!loaded || !id) return;
@@ -81,16 +108,34 @@ export default function GroupSessionDetail() {
       setTimeout(() => setBursts((prev) => prev.filter((b) => b.key !== k)), 1500);
     };
 
+    const onVideo = (p: any) => {
+      if (p?.id !== id) return;
+      const next = { action: p.action, positionSec: p.positionSec, at: p.at };
+      setVState(next);
+      applyVideo(next);
+    };
+    const onNote = (p: any) => {
+      if (p?.id !== id) return;
+      setNotes((prev) => [{ key: p.at, audio: p.audio, by: p.by, at: p.at }, ...prev.slice(0, 4)]);
+    };
+
     socket.on('group:members', onMembers);
     socket.on('group:timer', onTimer);
     socket.on('group:react', onReact);
+    socket.on('group:video', onVideo);
+    socket.on('group:note', onNote);
     return () => {
       socket.emit('group:close', id);
       socket.off('group:members', onMembers);
       socket.off('group:timer', onTimer);
       socket.off('group:react', onReact);
+      socket.off('group:video', onVideo);
+      socket.off('group:note', onNote);
     };
   }, [loaded, id]);
+
+  // Leaving mid-recording must release the microphone.
+  useEffect(() => () => { try { recRef.current?.stop(); } catch { /* already stopped */ } }, []);
 
   // Tick while a timer is running
   useEffect(() => {
@@ -124,6 +169,59 @@ export default function GroupSessionDetail() {
     .map((uid) => data.participants?.find((p: any) => p.id === uid))
     .filter(Boolean) as any[];
   const unknownCount = liveMembers.length - liveHere.length;
+
+  // The signed src arrives async — re-apply the room's transport state once the
+  // player can actually honor it (covers late joiners landing mid-video).
+  useEffect(() => {
+    if (syncSrc && vState) applyVideo(vState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncSrc]);
+
+  const emitVideo = (action: 'play' | 'pause') => {
+    tapFeedback();
+    getSocket().emit('group:video', { id, action, positionSec: videoRef.current?.currentTime ?? 0 });
+  };
+  const hostSkip = (delta: number) => {
+    const v = videoRef.current;
+    if (!v) return;
+    tapFeedback();
+    v.currentTime = Math.max(0, v.currentTime + delta);
+    getSocket().emit('group:video', { id, action: vPlaying ? 'play' : 'pause', positionSec: v.currentTime });
+  };
+
+  const startNote = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+      const rec = new MediaRecorder(stream, { mimeType: mime });
+      const chunks: Blob[] = [];
+      rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+      rec.onstop = () => {
+        stream.getTracks().forEach((tr) => tr.stop());
+        setRecording(false);
+        void (async () => {
+          try {
+            const blob = new Blob(chunks, { type: mime });
+            if (blob.size < 1000) return; // a tap, not a note
+            const fd = new FormData();
+            fd.append('file', new File([blob], mime === 'audio/webm' ? 'note.webm' : 'note.m4a', { type: mime }));
+            const res = await uploadWithAuth('/api/chat/voice', fd);
+            const { audio } = await res.json();
+            getSocket().emit('group:note', { id, audio });
+          } catch (e: any) {
+            toast(e?.message || t('chat.voiceFailed'), 'error');
+          }
+        })();
+      };
+      rec.start();
+      recRef.current = rec;
+      setRecording(true);
+      tapFeedback();
+    } catch {
+      toast(t('chat.micDenied'), 'error');
+    }
+  };
+  const stopNote = () => { try { recRef.current?.stop(); } catch { /* not recording */ } };
 
   const startTimer = (durationSec: number) => {
     tapFeedback();
@@ -196,6 +294,35 @@ export default function GroupSessionDetail() {
               </div>
             )}
 
+            {/* Synced class video: everyone sees the same frame; host drives. */}
+            {data.coachWorkout?.videoId && (
+              <div className="relative mt-4 overflow-hidden rounded-xl bg-black">
+                <video ref={videoRef} src={syncSrc} playsInline preload="metadata" className="aspect-video w-full" />
+                {vBlocked && (
+                  <button
+                    onClick={() => vState && applyVideo(vState)}
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 text-white"
+                  >
+                    <Play size={34} />
+                    <span className="text-sm font-bold">{t('group.tapToSync')}</span>
+                  </button>
+                )}
+                {isHost ? (
+                  <div className="absolute inset-x-2 bottom-2 flex items-center justify-center gap-2">
+                    <button onClick={() => hostSkip(-15)} aria-label="-15s" className="rounded-full bg-white/25 p-2.5 text-white backdrop-blur"><RotateCcw size={16} /></button>
+                    <button onClick={() => emitVideo(vPlaying ? 'pause' : 'play')} className="rounded-full bg-white p-3.5 text-gray-900 shadow">
+                      {vPlaying ? <Pause size={18} /> : <Play size={18} />}
+                    </button>
+                    <button onClick={() => hostSkip(15)} aria-label="+15s" className="rounded-full bg-white/25 p-2.5 text-white backdrop-blur"><RotateCw size={16} /></button>
+                  </div>
+                ) : (
+                  !vPlaying && !vBlocked && (
+                    <p className="absolute inset-x-0 bottom-2 text-center text-[11px] font-semibold text-white/80">{t('group.videoWait')}</p>
+                  )
+                )}
+              </div>
+            )}
+
             {/* Shared timer */}
             <div className="mt-4 flex flex-col items-center">
               {timer ? (
@@ -257,6 +384,35 @@ export default function GroupSessionDetail() {
                   {emoji}
                 </button>
               ))}
+            </div>
+
+            {/* Voice notes: the coach cues the room; anyone can answer. */}
+            <div className="mt-4 border-t border-gray-100 pt-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-500">🎙 {t('group.voiceNotes')}</span>
+                <button
+                  onClick={recording ? stopNote : startNote}
+                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ${recording ? 'animate-pulse bg-red-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  <Mic size={13} /> {recording ? t('group.stopNote') : t('group.recordNote')}
+                </button>
+              </div>
+              {notes.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {notes.map((n) => {
+                    const sender =
+                      n.by === data.coachUserId
+                        ? data.coach
+                        : data.participants?.find((p: any) => p.id === n.by);
+                    return (
+                      <div key={n.key} className="flex items-center gap-2">
+                        <MediaImage path={sender?.avatarUrl} label={sender?.firstName} className="h-7 w-7 shrink-0 rounded-full" seed={3} />
+                        <audio controls preload="metadata" src={n.audio} className="h-9 min-w-0 flex-1" />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Floating reaction bursts */}
