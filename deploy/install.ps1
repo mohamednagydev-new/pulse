@@ -92,6 +92,17 @@ try {
   & (Join-Path $Root 'node_modules\.bin\prisma.cmd') migrate deploy
   if ($LASTEXITCODE -ne 0) { Die 'prisma migrate deploy failed.' }
 
+  # Idempotent content seeds: safe on every deploy (upsert by title, never
+  # duplicate, never touch user data). New content ships by adding a file here.
+  Step 'Seeding content (diet programs, content paths, prize challenge)'
+  foreach ($seed in @('seed-diet-programs.ts', 'seed-paths.ts', 'seed-challenge-carrefour.ts')) {
+    $file = Join-Path $Root ('prisma\' + $seed)
+    if (Test-Path $file) {
+      & $NodeExe (Join-Path $Root 'node_modules\tsx\dist\cli.mjs') $file
+      if ($LASTEXITCODE -ne 0) { Ok ($seed + ' FAILED - continuing (content seed is non-fatal).') } else { Ok ($seed + ' done.') }
+    }
+  }
+
   Step 'Building API + web (npm run build)'
   & $npm run build
   if ($LASTEXITCODE -ne 0) { Die 'npm run build failed.' }
