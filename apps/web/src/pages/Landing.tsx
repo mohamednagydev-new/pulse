@@ -201,6 +201,10 @@ export default function Landing() {
             { e: '🔴', g: 'from-red-500 to-orange-600', ar: ['حصص لايف', 'فيديو متزامن مع الناس'], en: ['Live classes', 'synced video together'] },
             { e: '🏆', g: 'from-amber-500 to-yellow-600', ar: ['تحديات بجوايز', 'حقيقية بتتسلم فعلاً'], en: ['Prize challenges', 'real, actually delivered'] },
             { e: '⚔️', g: 'from-slate-600 to-slate-800', ar: ['تحدي ١ ضد ١', 'مع صاحبك على النقط'], en: ['1v1 duels', 'you vs your friend'] },
+            { e: '📈', g: 'from-emerald-600 to-green-700', ar: ['رسم لكل تمرينة', 'وأقصى رقم متوقع e1RM'], en: ['A chart per exercise', 'plus your e1RM trend'] },
+            { e: '📋', g: 'from-cyan-500 to-sky-700', ar: ['روتينات جاهزة', 'انسخ روتين صاحبك بضغطة'], en: ['Routines', "copy a friend's in one tap"] },
+            { e: '🚶', g: 'from-lime-500 to-emerald-600', ar: ['«تعالى نمشي؟»', 'اعزم صاحبك على مشوار'], en: ['"Walk today?"', 'invite a buddy out'] },
+            { e: '📺', g: 'from-indigo-500 to-blue-700', ar: ['شاشة الجيم', 'لوحة أبطال جيمك لايف'], en: ['Gym TV board', "your gym's champions live"] },
           ]).map((c, i) => (
             <motion.div
               key={c.e}
@@ -252,10 +256,12 @@ export default function Landing() {
             items: [
               L('Muscle map — tap a muscle, get a session', 'خريطة عضلات — دوس على العضلة وخد جلسة'),
               L('Coach programs for every level, home & gym', 'برامج مدربين لكل مستوى — بيت وجيم'),
+              L('Log every set — warmup, dropset, failure — and edit any set 🎉', 'سجّل كل مجموعة — تسخين ودروب سِت وفشل — وعدّل اللي غلطت فيه 🎉'),
+              L('Rest timer set to YOUR seconds', 'تايمر راحة على مزاجك — انت اللي بتحدد ثواني الراحة'),
+              L('A progress chart per exercise + e1RM & 1RM calculator', 'رسم لكل تمرينة + e1RM وحاسبة أقصى رقم'),
+              L("Save any session as a routine — or copy someone else's", 'احفظ تمرينتك روتين — أو انسخ روتين حد تاني بضغطة'),
               L('Week Zero: a gentle 7-day start for beginners', 'الأسبوع صفر: بداية هادية ٧ أيام للمبتدئين'),
               L('Yoga & meditation classes', 'حصص يوجا وتأمل'),
-              L('Log your sets — PR celebrations 🎉', 'سجّل أوزانك — واحتفال لما تكسر رقمك 🎉'),
-              L('Rest-day recovery: stretch, walk, breathe', 'يوم الراحة له برنامجه: إطالة ومشي وتنفس'),
             ],
           },
           {
@@ -278,6 +284,8 @@ export default function Landing() {
             items: [
               L('Feed — post your progress, react, comment', 'منشورات — شارك تقدمك وتفاعل مع الناس'),
               L('Chat with buddies — text & voice notes 🎙', 'شات مع أصحابك — كتابة ورسائل صوتية 🎙'),
+              L("Walk invites: 'walk today?' — accept and go 🚶", 'عزومة مشي: «تعالى نمشي النهارده؟» — يقبل وتنزلوا 🚶'),
+              L('Share your goal with your buddies', 'شارك هدفك مع صحابك — اللي بيتقال بيتعمل'),
               L('1v1 duels: challenge a friend, winner takes XP', 'تحدي ١ ضد ١: اتحدى صاحبك والكسبان ياخد نقط'),
               L('Live group sessions with a shared timer', 'جروبات لايف بتايمر مشترك — تتمرنوا مع بعض'),
               L('Real coaches you can follow and rate', 'مدربين حقيقيين تتابعهم وتقيّمهم'),
@@ -291,6 +299,7 @@ export default function Landing() {
             items: [
               L('Challenges with badges (join with a code!)', 'تحديات ببادجات — ادخل بكود زي PULSE14'),
               L('Weekly XP league: promotion & relegation', 'دوري أسبوعي بالنقط — صعود وهبوط'),
+              L('Walking challenges — log walks, climb the board', 'تحديات مشي — سجّل مشاويرك واطلع في الترتيب'),
               L('Streaks, daily quests & a spin wheel', 'سلسلة أيام، مهام يومية، وعجلة حظ'),
               L('Smart reminders at YOUR training hour', 'تذكيرات على معادك انت'),
               L('Hall of Fame for the week’s top movers', 'لوحة أبطال الأسبوع'),
@@ -318,6 +327,33 @@ export default function Landing() {
           );
         })}
       </div>
+
+      {/* Coaches & gyms — the compact pitch. Full story lives at /why-partner. */}
+      <motion.div {...reveal} className="mt-12 px-5">
+        <h2 className="text-center text-xl font-extrabold">{L('For coaches & gyms', 'للمدربين والجيمات')}</h2>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <button
+            onClick={() => go('/why-partner', 'funnel-partner-coach')}
+            className="scene-tex rounded-2xl bg-gradient-to-br from-blue-500/90 to-indigo-700/80 p-4 text-start shadow-lg transition active:scale-[0.98]"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+              <Dumbbell size={18} />
+            </span>
+            <p className="mt-2 text-sm font-extrabold leading-snug">{L('Coaches: bring your trainees', 'للمدربين: هات متدربينك')}</p>
+            <p className="mt-0.5 text-[11px] text-white/80">{L('One link — they land already connected to you', 'لينك واحد يوصلهم بيك على طول')}</p>
+          </button>
+          <button
+            onClick={() => go('/why-partner', 'funnel-partner-gym')}
+            className="scene-tex rounded-2xl bg-gradient-to-br from-emerald-500/90 to-teal-700/80 p-4 text-start shadow-lg transition active:scale-[0.98]"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20">
+              <Trophy size={18} />
+            </span>
+            <p className="mt-2 text-sm font-extrabold leading-snug">{L("Gyms: your champions on screen", 'للجيمات: لوحة أبطال جيمك على الشاشة')}</p>
+            <p className="mt-0.5 text-[11px] text-white/80">{L('Member code, leaderboard & a live TV board', 'كود أعضاء وترتيب وشاشة لايف')}</p>
+          </button>
+        </div>
+      </motion.div>
 
       {/* Community + free promise — over the calm yoga scene */}
       <motion.div {...reveal} className="relative mx-5 mt-12 overflow-hidden rounded-3xl">

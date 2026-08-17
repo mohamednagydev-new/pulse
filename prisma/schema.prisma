@@ -82,6 +82,20 @@ model User {
   coachSpecialties String? // JSON array
   coachVerified    Boolean @default(false)
   coachFeatured    Boolean @default(false)
+  /** Coach's shareable invite code: /invite/:code lands a trainee pre-connected
+   *  as this coach's client (the WhatsApp-funnel killer). Generated on demand. */
+  coachInviteCode  String? @unique
+
+  /** Preferred rest between sets in the session player, seconds. */
+  restSeconds   Int      @default(45)
+  /** Stated goal, shared with buddies for accountability («هخس ٨ كيلو قبل رمضان»).
+   *  Null = nothing shared. Free text on purpose — a goal is a sentence, not an enum. */
+  goalText      String?
+  goalSharedAt  DateTime?
+  /** The gym (Partner.id, type=gym) this user belongs to — set by joining with a
+   *  gym invite code. Scopes the gym leaderboard and the owner's aggregates. */
+  gymId         String?
+  gymJoinedAt   DateTime?
 
   bookmarks      Bookmark[]
   completions    LessonCompletion[]
@@ -156,6 +170,8 @@ model CoachProgramEnrollment {
   programId     String
   /** JSON array of completed day indexes, e.g. [0,1,3]. */
   completedDays String   @default("[]")
+  /** Coach userId when the coach assigned this program (vs. self-enrolled). */
+  assignedBy    String?
   startedAt     DateTime @default(now())
 
   @@unique([userId, programId])
@@ -210,6 +226,9 @@ model CoachProgram {
   description String?
   coverImage  String?
   days        String   // JSON: [{ label, workoutId }]
+  /** public = anyone can browse/enroll · clients = only this coach's accepted
+   *  clients see it (paid programming stays off the open directory). */
+  visibility  String   @default("public")
   createdAt   DateTime @default(now())
 }
 
@@ -314,6 +333,9 @@ model Partner {
   order         Int      @default(0)
   views         Int      @default(0)
   contacts      Int      @default(0) // taps on call/whatsapp/website
+  /** Member invite code (gyms): front-desk QR → /invite/g/:code tags the signup
+   *  as this gym's member and joins them to the gym leaderboard. */
+  inviteCode    String?  @unique
   createdAt     DateTime @default(now())
 
   products  PartnerProduct[]
@@ -621,6 +643,8 @@ model LiftLog {
   exercise  String
   weightKg  Float
   reps      Int
+  /** normal | warmup | dropset | failure — Hevy-style set flags. */
+  setType   String   @default("normal")
   createdAt DateTime @default(now())
 
   @@index([userId, exercise])
@@ -1515,4 +1539,41 @@ model PollVote {
   createdAt DateTime @default(now())
 
   @@unique([postId, userId])
+}
+
+// ---------------- Routines (Hevy-style shareable workout objects) ----------------
+// A saved routine: either built by hand, saved from a finished session, or
+// copied from another user. Copying is the social loop — "save athlete
+// routines to try yourself".
+model Routine {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  /** JSON: [{ name, sets, reps, weightKg? }] — same shape as CoachWorkout.exercises. */
+  exercises   String
+  muscleFocus String?
+  isPublic    Boolean  @default(true)
+  /** Routine this was copied from (provenance + "copied N times" credit). */
+  sourceId    String?
+  copies      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---------------- Activity invites (low-pressure social fitness) ----------------
+// "Walk today at 6?" — the smallest possible social commitment. whenText is
+// free text on purpose: «بعد العشا» beats a datetime picker for this audience.
+model ActivityInvite {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  kind       String   @default("walk") // walk | workout | run | other
+  note       String?
+  whenText   String?
+  status     String   @default("pending") // pending | accepted | declined | cancelled
+  createdAt  DateTime @default(now())
+
+  @@index([toUserId, status])
+  @@index([fromUserId])
 }

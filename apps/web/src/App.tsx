@@ -163,6 +163,11 @@ const CoachProgramDetail = lazyRoute(() => import('./pages/social/CoachProgramDe
 const GroupSessions = lazyRoute(() => import('./pages/social/GroupSessions'));
 const GroupSessionDetail = lazyRoute(() => import('./pages/social/GroupSessionDetail'));
 const WeekZero = lazyRoute(() => import('./pages/WeekZero'));
+const Routines = lazyRoute(() => import('./pages/Routines'));
+const InvitePage = lazyRoute(() => import('./pages/InvitePage'));
+const TvBoard = lazyRoute(() => import('./pages/TvBoard'));
+const PartnerBenefits = lazyRoute(() => import('./pages/PartnerBenefits'));
+const CoachClientDetail = lazyRoute(() => import('./pages/social/CoachClientDetail'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const status = useAuth((s) => s.status);
@@ -314,7 +319,16 @@ export default function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/gyms" element={<Venues />} />
           <Route path="/help" element={<Help />} />
+          {/* Invite landings must work signed-out: the whole point is that a
+              coach's or gym's link is a stranger's first touch with the app. */}
+          <Route path="/invite/g/:code" element={<InvitePage />} />
+          <Route path="/invite/:code" element={<InvitePage />} />
+          {/* The partner pitch — coaches, gyms, stores, sponsors, events. */}
+          <Route path="/why-partner" element={<PartnerBenefits />} />
         </Route>
+
+        {/* Fully public, no shell: runs on a gym's TV screen. */}
+        <Route path="/tv/:id" element={<TvBoard />} />
 
         <Route
           element={
@@ -328,6 +342,7 @@ export default function App() {
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/session/:groupId" element={<WorkoutSession />} />
           <Route path="/session/w/:workoutId" element={<WorkoutSession />} />
+          <Route path="/session/r/:routineId" element={<WorkoutSession />} />
           <Route path="/info" element={<Info />} />
           <Route path="/tracker" element={<Tracker />} />
           <Route path="/meals" element={<MealPlan />} />
@@ -372,6 +387,8 @@ export default function App() {
           <Route path="/group" element={<GroupSessions />} />
           <Route path="/group/:id" element={<GroupSessionDetail />} />
           <Route path="/week-zero" element={<WeekZero />} />
+          <Route path="/routines" element={<Routines />} />
+          <Route path="/coach-client/:id" element={<CoachClientDetail />} />
           {/* /setup retired — the coaching intake at /my-plan asks everything it did
               and more, and computes real calorie targets instead of flat per-goal
               numbers. Old links land on Home via the catch-all. */}

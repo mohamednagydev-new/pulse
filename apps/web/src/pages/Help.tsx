@@ -16,6 +16,7 @@ import {
   Download,
   Dumbbell,
   Flame,
+  Footprints,
   Gift,
   HeartHandshake,
   Mail,
@@ -23,6 +24,7 @@ import {
   MessageSquare,
   Music,
   PhoneCall,
+  QrCode,
   Radio,
   Salad,
   ScanLine,
@@ -31,7 +33,9 @@ import {
   Star,
   Swords,
   Target,
+  Timer,
   TrendingUp,
+  Tv,
   UsersRound,
   Globe2,
   Ticket,
@@ -274,6 +278,121 @@ const HOW_TO: Step[] = [
   },
 ];
 
+/* ------------------------------------------------------------------ *
+ * "What just shipped" how-tos. Same Step shape as HOW_TO but grouped by
+ * audience: training upgrades, buddies, coaches, gyms. Not numbered — these
+ * are features to discover, not a sequence to follow.
+ * ------------------------------------------------------------------ */
+const NEW_TRAINING: Step[] = [
+  {
+    icon: Dumbbell, to: '/workout',
+    en: 'Log sets one by one',
+    ar: 'سجّل مجموعاتك واحدة واحدة',
+    enBody: 'Inside a session every set logs on its own — weight and reps. Flag a set as warmup, dropset or to-failure, and tap any logged set to edit it if you slipped.',
+    arBody: 'جوه التمرينة كل مجموعة بتتسجل لوحدها — الوزن والعدات. علّم المجموعة تسخين أو دروب سِت أو لحد الفشل، ولو غلطت دوس على أي مجموعة اتسجلت وعدّلها عادي.',
+  },
+  {
+    icon: Timer, to: '/workout',
+    en: 'Set your own rest time',
+    ar: 'ظبط وقت الراحة على مزاجك',
+    enBody: 'The rest timer counts down between sets. Change the seconds once and it sticks — 30, 60, 90, whatever fits your training.',
+    arBody: 'تايمر الراحة بيعد لوحده بين المجموعات. غيّر الثواني مرة واحدة وهتفضل زي ما انت عايز — ٣٠ أو ٦٠ أو ٩٠ على حسب تمرينك.',
+  },
+  {
+    icon: TrendingUp, to: '/progress',
+    en: 'Read your exercise chart — and what e1RM means',
+    ar: 'اقرا رسم التمرينة — ويعني إيه e1RM',
+    enBody: 'Every exercise gets a chart of your weights over time. e1RM is the heaviest single rep you could probably lift, estimated from your weight × reps. There is a 1RM calculator too if you want to play with the numbers.',
+    arBody: 'كل تمرينة ليها رسم بيوريك أوزانك بتكبر إزاي. الـe1RM هو أتقل وزن متوقع ترفعه مرة واحدة — محسوب من وزنك وعداتك. وفيه حاسبة 1RM لو حابب تلعب بالأرقام.',
+  },
+  {
+    icon: ClipboardList, to: '/routines',
+    en: 'Save, copy and run routines',
+    ar: 'احفظ وانسخ وشغّل روتينات',
+    enBody: 'Finished a good session? Save it as a routine and start it any day with one tap. See a routine you like on someone else? Copy it — it becomes yours instantly.',
+    arBody: 'خلصت تمرينة حلوة؟ احفظها روتين وشغّلها أي يوم بضغطة. عجبك روتين حد تاني؟ انسخه — هيبقى عندك في ثانيتها.',
+  },
+];
+
+const NEW_BUDDIES: Step[] = [
+  {
+    icon: Footprints, to: '/buddies',
+    en: 'Invite a buddy to walk',
+    ar: 'اعزم صاحبك على مشوار',
+    enBody: "From your buddies page send a walk (or workout) invite — «تعالى نمشي النهارده؟». They accept or decline, and if they accept you've got a plan.",
+    arBody: 'من صفحة صحابك ابعت عزومة مشي أو تمرين — «تعالى نمشي النهارده؟». صاحبك يقبل أو يعتذر، ولو قبل يبقى اتفقتوا خلاص.',
+  },
+  {
+    icon: Target, to: '/buddies',
+    en: 'Share your goal',
+    ar: 'شارك هدفك',
+    enBody: 'Write your goal and share it with your buddies. A goal people know about is a goal you keep.',
+    arBody: 'اكتب هدفك وشاركه مع صحابك. الهدف اللي الناس عارفاه صعب تسيبه.',
+  },
+  {
+    icon: Trophy, to: '/achievements',
+    en: 'Walking challenges',
+    ar: 'تحديات المشي',
+    enBody: 'Join a walking challenge and log your walks — every walk counts on the leaderboard.',
+    arBody: 'ادخل تحدي مشي وسجّل مشاويرك — كل مشوار بيتحسب في الترتيب.',
+  },
+];
+
+const COACH_STEPS: Step[] = [
+  {
+    icon: QrCode, to: '/coach-dashboard',
+    en: 'Your invite link & QR',
+    ar: 'لينك دعوتك والـQR',
+    enBody: 'Copy your invite link or print the QR from the coach dashboard. Anyone who opens it signs up already connected to you — no requests, no waiting.',
+    arBody: 'انسخ لينك دعوتك أو اطبع الـQR من لوحة المدرب. أي متدرب يفتحه بيتسجل وهو متوصل بيك على طول — من غير طلبات ولا استنى.',
+  },
+  {
+    icon: TrendingUp, to: '/coach-dashboard',
+    en: 'Client progress dashboard',
+    ar: 'لوحة تقدم عملاءك',
+    enBody: "One screen shows every client's progress. Anyone who's gone quiet gets a gentle flag — so you check on them before they disappear.",
+    arBody: 'شاشة واحدة بتوريك تقدم كل عميل. واللي اختفى بقاله مدة بيظهر عليه علامة هادية — عشان تسأل عليه قبل ما يسيب خالص.',
+  },
+  {
+    icon: Megaphone, to: '/coach-dashboard',
+    en: 'Broadcast to all your clients',
+    ar: 'رسالة لكل عملاءك مرة واحدة',
+    enBody: 'Write one message and it reaches every client — schedule changes, motivation, announcements.',
+    arBody: 'اكتب رسالة واحدة توصل لكل عملاءك — تغيير معاد أو تحفيز أو إعلان.',
+  },
+  {
+    icon: ClipboardList, to: '/coach-dashboard',
+    en: 'Assign programs — public or clients-only',
+    ar: 'عيّن برامج — عامة أو لعملاءك بس',
+    enBody: 'Build a program, set it to clients-only if you want it private, and assign it to any client with one tap — it shows up on their side immediately.',
+    arBody: 'اعمل برنامج، وخليه «للعملاء بس» لو عايزه خاص، وعيّنه لأي عميل بضغطة — هيلاقيه عنده في ثانيتها.',
+  },
+];
+
+const GYM_STEPS: Step[] = [
+  {
+    icon: Ticket, to: '/gyms',
+    en: 'Your gym invite code',
+    ar: 'كود جيمك',
+    enBody: 'Every gym gets an invite code. Members enter it once and they count for your gym from then on.',
+    arBody: 'كل جيم ليه كود دعوة. أعضاءك يدخلوه مرة واحدة ويبقوا محسوبين على جيمك من ساعتها.',
+  },
+  {
+    icon: Tv, to: '/gyms',
+    en: 'The TV champions board',
+    ar: 'شاشة أبطال الجيم',
+    enBody: "Open your gym's /tv link on any screen at the front desk — a live champions board that refreshes itself in front of your members.",
+    arBody: 'افتح لينك الـ/tv بتاع جيمك على أي شاشة عند الاستقبال — لوحة أبطال لايف بتتحدث لوحدها قدام أعضاءك.',
+  },
+  {
+    icon: TrendingUp, to: '/gyms',
+    en: 'Member leaderboard & owner analytics',
+    ar: 'ترتيب الأعضاء وأرقام صاحب الجيم',
+    enBody: "A leaderboard just for your gym's members, plus analytics for the owner — who shows up, who's fading, and how active the gym really is.",
+    arBody: 'لوحة ترتيب لأعضاء جيمك بس، وإحصائيات لصاحب الجيم — مين بييجي ومين بيكسل والجيم نشيط قد إيه فعلاً.',
+  },
+];
+
 type Tone = 'orange' | 'blue' | 'green' | 'teal';
 
 const TONE_TILE: Record<Tone, string> = {
@@ -409,6 +528,12 @@ export default function Help() {
                 </motion.li>
               ))}
             </ol>
+            <SectionHead title={isAr ? 'جديد في التمرين' : 'New in training'} chips={[isAr ? 'وصل حالاً' : 'Just shipped']} />
+            <StepCards steps={NEW_TRAINING} isAr={isAr} onGo={navigate} />
+
+            <SectionHead title={isAr ? 'انت وصحابك' : 'You & your buddies'} chips={[isAr ? 'وصل حالاً' : 'Just shipped']} />
+            <StepCards steps={NEW_BUDDIES} isAr={isAr} onGo={navigate} />
+
             <p className="px-1 pt-1 text-center text-xs leading-relaxed text-gray-400">{t('help.howToFooter')}</p>
           </>
         )}
@@ -417,6 +542,13 @@ export default function Help() {
           <>
             <SectionHead title={t('help.coachTitle')} chips={[t('help.noFees')]} />
             <CardList items={COACH_BENEFITS} pick={pick} tone="blue" />
+
+            <SectionHead
+              title={isAr ? 'أدوات المدرب الجديدة — بتشتغل إزاي' : 'New coach tools — how they work'}
+              chips={[isAr ? 'وصل حالاً' : 'Just shipped']}
+            />
+            <StepCards steps={COACH_STEPS} isAr={isAr} onGo={navigate} />
+
             <motion.button
               whileTap={{ scale: 0.98 }}
               transition={tapSpring}
@@ -427,6 +559,13 @@ export default function Help() {
               {isAr ? 'ابقى مدرب على PULSE' : 'Become a coach'}
               <ArrowRight size={16} className="rtl:rotate-180" />
             </motion.button>
+            <button
+              onClick={() => rawNavigate('/why-partner')}
+              className="flex w-full items-center justify-center gap-2 py-2 text-sm font-bold text-brand-blue"
+            >
+              {isAr ? 'اعرف كل مميزات الشراكة' : 'See every partner benefit'}
+              <ArrowRight size={15} className="rtl:rotate-180" />
+            </button>
           </>
         )}
 
@@ -440,6 +579,16 @@ export default function Help() {
 
             <GroupHead icon={Building2} title={t('help.gymTitle')} tone="green" />
             <CardList items={GYM_BENEFITS} pick={pick} tone="green" />
+
+            <GroupHead icon={Tv} title={isAr ? 'جديد للجيمات — بيشتغل إزاي' : 'New for gyms — how it works'} tone="green" />
+            <StepCards steps={GYM_STEPS} isAr={isAr} onGo={navigate} />
+            <button
+              onClick={() => rawNavigate('/why-partner')}
+              className="flex w-full items-center justify-center gap-2 py-2 text-sm font-bold text-brand-green"
+            >
+              {isAr ? 'اعرف كل مميزات الشراكة' : 'See every partner benefit'}
+              <ArrowRight size={15} className="rtl:rotate-180" />
+            </button>
 
             {/* Prominent partner CTA */}
             <motion.div
@@ -527,6 +676,41 @@ function WhyDifferent({ isAr }: { isAr: boolean }) {
           : 'No app store, no download — tap "Add to Home Screen" and it becomes an app, smaller than a single photo.'}
       </p>
     </motion.section>
+  );
+}
+
+/** Un-numbered how-to cards — same shape as the HOW_TO steps but for feature
+ *  groups (new training tools, buddies, coaches, gyms) where order is not a
+ *  sequence. Tapping a card deep-links into the feature itself. */
+function StepCards({ steps, isAr, onGo }: { steps: Step[]; isAr: boolean; onGo: (to: string) => void }) {
+  return (
+    <ul className="space-y-2.5">
+      {steps.map((step, i) => (
+        <motion.li
+          key={step.en}
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+          transition={{ type: 'spring', stiffness: 260, damping: 24, delay: Math.min(i, 6) * 0.04 }}
+        >
+          <button
+            onClick={() => step.to && onGo(step.to)}
+            className="flex w-full items-start gap-3 rounded-2xl bg-white p-4 text-start shadow-sm transition active:scale-[0.98]"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-100 text-brand-pink">
+              <step.icon size={18} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold">{isAr ? step.ar : step.en}</span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-gray-500">
+                {isAr ? step.arBody : step.enBody}
+              </span>
+            </span>
+            {step.to && <ArrowRight size={15} className="mt-1 shrink-0 text-gray-300 rtl:rotate-180" />}
+          </button>
+        </motion.li>
+      ))}
+    </ul>
   );
 }
 

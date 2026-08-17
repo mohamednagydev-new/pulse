@@ -6,7 +6,10 @@ import fs from 'fs';
 import { prisma } from '../lib/prisma';
 import { env } from '../env';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
-import { createFeedPost, areConnected } from '../lib/social';
+import { createFeedPost, areConnected, awardXp } from '../lib/social';
+import { touchStreak } from '../lib/gamify';
+import { bumpWalkChallenges } from '../lib/walks';
+import { dayString, startOfDayTz } from '../lib/time';
 import { processVideo } from '../lib/video';
 import { emitToUser, onlineCount, isOnline } from '../lib/realtime';
 import { notifyUser } from './push';
@@ -662,7 +665,7 @@ socialRouter.get('/buddies', async (req: AuthedRequest, res) => {
   const [users, xp, completions] = await Promise.all([
     prisma.user.findMany({
       where: { id: { in: ids } },
-      select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true, currentStreak: true, longestStreak: true, lastActiveOn: true, lastSeenAt: true },
+      select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true, currentStreak: true, longestStreak: true, lastActiveOn: true, lastSeenAt: true, goalText: true },
     }),
     prisma.xpEvent.groupBy({ by: ['userId'], where: { userId: { in: ids }, createdAt: { gte: since } }, _sum: { amount: true } }),
     prisma.lessonCompletion.groupBy({ by: ['userId'], where: { userId: { in: ids } }, _count: { _all: true } }),
@@ -680,6 +683,7 @@ socialRouter.get('/buddies', async (req: AuthedRequest, res) => {
       longestStreak: u.longestStreak,
       weeklyXp: xpMap.get(u.id) ?? 0,
       completions: compMap.get(u.id) ?? 0,
+      goalText: u.goalText,
       lastActiveOn: u.lastActiveOn,
       lastSeenAt: u.lastSeenAt,
       online: isOnline(u.id),
@@ -706,4 +710,178 @@ socialRouter.post('/buddies/:userId/cheer', async (req: AuthedRequest, res) => {
   emitToUser(other, 'notify', { type: 'cheer' });
   notifyUser(other, { title: 'Cheer', titleAr: 'تشجيع', body: `${meUser?.firstName ?? 'Someone'} is cheering you on! 💪`, bodyAr: `${meUser?.firstName ?? 'حد'} بيشجعك! 💪`, url: '/buddies', type: 'cheer' });
   res.json({ ok: true });
+});
+
+/* ------------------------------------------------------------------ *
+ * Activity invites — the low-pressure alternative to a duel:
+ * "تعالى نتمشى النهارده" instead of a scored competition.
+ * ------------------------------------------------------------------ */
+const INVITE_KINDS = ['walk', 'workout', 'run', 'other'] as const;
+const inviteKindCopy: Record<string, { en: string; ar: string; emoji: string }> = {
+  walk: { en: 'a walk', ar: 'مشوار مشي', emoji: '🚶' },
+  workout: { en: 'a workout', ar: 'تمرين', emoji: '🏋️' },
+  run: { en: 'a run', ar: 'جري', emoji: '🏃' },
+  other: { en: 'an activity', ar: 'نشاط', emoji: '✨' },
+};
+
+socialRouter.post('/invites', async (req: AuthedRequest, res) => {
+  const parsed = z
+    .object({
+      toUserId: z.string().min(1),
+      kind: z.enum(INVITE_KINDS).default('walk'),
+      whenText: z.string().max(60).optional(),
+      note: z.string().max(200).optional(),
+    })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid invite' });
+  const { toUserId, kind, whenText, note } = parsed.data;
+  const me = req.userId!;
+  if (toUserId === me) return res.status(400).json({ error: "Can't invite yourself" });
+  // Invites only travel between accepted buddies — this is a nudge for friends,
+  // not a DM channel to strangers.
+  if (!(await areConnected(me, toUserId))) return res.status(403).json({ error: 'Connect with this person first' });
+
+  // One pending invite per pair+kind — resending just refreshes the details.
+  const existing = await prisma.activityInvite.findFirst({
+    where: { fromUserId: me, toUserId, kind, status: 'pending' },
+  });
+  const invite = existing
+    ? await prisma.activityInvite.update({ where: { id: existing.id }, data: { whenText: whenText ?? null, note: note ?? null, createdAt: new Date() } })
+    : await prisma.activityInvite.create({ data: { fromUserId: me, toUserId, kind, whenText: whenText ?? null, note: note ?? null } });
+
+  const meUser = await prisma.user.findUnique({ where: { id: me }, select: { firstName: true } });
+  const k = inviteKindCopy[kind] ?? inviteKindCopy.other;
+  emitToUser(toUserId, 'notify', { type: 'invite' });
+  notifyUser(toUserId, {
+    title: `${k.emoji} ${meUser?.firstName ?? 'A buddy'} invites you for ${k.en}`,
+    titleAr: `${k.emoji} ${meUser?.firstName ?? 'صاحبك'} عازمك على ${k.ar}`,
+    body: whenText ? `When: ${whenText}` : 'Open the app to accept',
+    bodyAr: whenText ? `إمتى: ${whenText}` : 'افتح التطبيق واقبل العزومة',
+    url: '/buddies',
+    type: 'general',
+  }).catch(() => {});
+  res.status(201).json(invite);
+});
+
+socialRouter.get('/invites', async (req: AuthedRequest, res) => {
+  const me = req.userId!;
+  const since = new Date(Date.now() - 7 * 86400000);
+  const rows = await prisma.activityInvite.findMany({
+    where: {
+      OR: [
+        { toUserId: me, status: 'pending' },
+        { fromUserId: me, status: 'pending' },
+        { status: 'accepted', createdAt: { gte: since }, OR: [{ fromUserId: me }, { toUserId: me }] },
+      ],
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 60,
+  });
+  const ids = Array.from(new Set(rows.flatMap((r) => [r.fromUserId, r.toUserId]))).filter((id) => id !== me);
+  const users = await prisma.user.findMany({ where: { id: { in: ids } }, select: userSelect });
+  const byId = new Map(users.map((u) => [u.id, u]));
+  const shape = (r: (typeof rows)[number]) => ({
+    id: r.id,
+    kind: r.kind,
+    note: r.note,
+    whenText: r.whenText,
+    status: r.status,
+    createdAt: r.createdAt,
+    fromMe: r.fromUserId === me,
+    other: byId.get(r.fromUserId === me ? r.toUserId : r.fromUserId) ?? null,
+  });
+  const shaped = rows.map(shape).filter((r) => r.other);
+  res.json({
+    incoming: shaped.filter((r) => r.status === 'pending' && !r.fromMe),
+    outgoing: shaped.filter((r) => r.status === 'pending' && r.fromMe),
+    accepted: shaped.filter((r) => r.status === 'accepted'),
+  });
+});
+
+socialRouter.post('/invites/:id/accept', async (req: AuthedRequest, res) => {
+  const invite = await prisma.activityInvite.findUnique({ where: { id: req.params.id } });
+  if (!invite || invite.toUserId !== req.userId) return res.status(404).json({ error: 'Not found' });
+  if (invite.status !== 'pending') return res.status(410).json({ error: 'Invite no longer pending' });
+  await prisma.activityInvite.update({ where: { id: invite.id }, data: { status: 'accepted' } });
+  const meUser = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } });
+  const k = inviteKindCopy[invite.kind] ?? inviteKindCopy.other;
+  emitToUser(invite.fromUserId, 'notify', { type: 'invite' });
+  notifyUser(invite.fromUserId, {
+    title: `${k.emoji} It's on!`,
+    titleAr: `${k.emoji} اتفقنا!`,
+    body: `${meUser?.firstName ?? 'Your buddy'} accepted your invite${invite.whenText ? ` — ${invite.whenText}` : ''}`,
+    bodyAr: `${meUser?.firstName ?? 'صاحبك'} قبل العزومة${invite.whenText ? ` — ${invite.whenText}` : ''}`,
+    url: '/buddies',
+    type: 'general',
+  }).catch(() => {});
+  res.json({ ok: true });
+});
+
+socialRouter.post('/invites/:id/decline', async (req: AuthedRequest, res) => {
+  const invite = await prisma.activityInvite.findUnique({ where: { id: req.params.id } });
+  if (!invite || invite.toUserId !== req.userId) return res.status(404).json({ error: 'Not found' });
+  if (invite.status !== 'pending') return res.status(410).json({ error: 'Invite no longer pending' });
+  await prisma.activityInvite.update({ where: { id: invite.id }, data: { status: 'declined' } });
+  const meUser = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } });
+  notifyUser(invite.fromUserId, {
+    title: 'Maybe next time',
+    titleAr: 'المرة الجاية إن شاء الله',
+    body: `${meUser?.firstName ?? 'Your buddy'} can't make it this time`,
+    bodyAr: `${meUser?.firstName ?? 'صاحبك'} مش هيعرف المرة دي`,
+    url: '/buddies',
+    type: 'general',
+  }).catch(() => {});
+  res.json({ ok: true });
+});
+
+socialRouter.post('/invites/:id/cancel', async (req: AuthedRequest, res) => {
+  const invite = await prisma.activityInvite.findUnique({ where: { id: req.params.id } });
+  if (!invite || invite.fromUserId !== req.userId) return res.status(404).json({ error: 'Not found' });
+  // Cancelling an accepted plan is allowed too — plans change.
+  if (invite.status === 'cancelled' || invite.status === 'declined') return res.json({ ok: true });
+  await prisma.activityInvite.update({ where: { id: invite.id }, data: { status: 'cancelled' } });
+  res.json({ ok: true });
+});
+
+/* ------------------------------------------------------------------ *
+ * Shared goal — one line on my profile my buddies can see ("🎯 هدفي").
+ * ------------------------------------------------------------------ */
+socialRouter.get('/goal', async (req: AuthedRequest, res) => {
+  const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { goalText: true, goalSharedAt: true } });
+  res.json({ goalText: me?.goalText ?? null, goalSharedAt: me?.goalSharedAt ?? null });
+});
+
+socialRouter.post('/goal', async (req: AuthedRequest, res) => {
+  const parsed = z.object({ goalText: z.string().max(120).nullable() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid goal' });
+  const text = parsed.data.goalText?.trim() || null;
+  await prisma.user.update({
+    where: { id: req.userId! },
+    data: { goalText: text, goalSharedAt: text ? new Date() : null },
+  });
+  res.json({ goalText: text });
+});
+
+/* ------------------------------------------------------------------ *
+ * Walk log — a tiny manual "I went for a walk" entry. Small XP, touches
+ * the streak, and advances 'walk' challenges. Capped per day so a tap
+ * spree can't farm XP or fake a walking challenge.
+ * ------------------------------------------------------------------ */
+const WALK_XP = 15;
+const WALKS_CREDIT_CAP_PER_DAY = 3;
+
+socialRouter.post('/walks', async (req: AuthedRequest, res) => {
+  const parsed = z.object({ minutes: z.number().int().min(10).max(240) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Walks are 10–240 minutes' });
+  const me = req.userId!;
+  const loggedToday = await prisma.xpEvent.count({
+    where: { userId: me, reason: 'walk_log', createdAt: { gte: startOfDayTz(dayString()) } },
+  });
+  if (loggedToday >= WALKS_CREDIT_CAP_PER_DAY) {
+    return res.json({ ok: true, credited: false, xp: 0 });
+  }
+  await touchStreak(me).catch(() => {});
+  await awardXp(me, WALK_XP, 'walk_log').catch(() => {});
+  await bumpWalkChallenges(me).catch(() => {});
+  res.json({ ok: true, credited: true, xp: WALK_XP, minutes: parsed.data.minutes });
 });

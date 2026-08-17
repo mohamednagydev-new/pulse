@@ -2,7 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { CalendarDays, ScanLine, ChevronRight } from 'lucide-react';
+import { CalendarDays, ScanLine, ChevronRight, ListChecks } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Loader, MediaImage } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -13,7 +13,9 @@ const MotionLink = motion.create(Link);
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
 export default function WorkoutHub() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
   const navigate = useNavigate();
   const { data: groups, isLoading } = useQuery({ queryKey: ['muscle-groups'], queryFn: () => api.get('/api/muscle-groups') });
   const { data: coaches } = useQuery({ queryKey: ['coaches', 'WORKOUT'], queryFn: () => api.get('/api/coaches?type=WORKOUT') });
@@ -48,6 +50,20 @@ export default function WorkoutHub() {
           className="card-hover flex min-h-[56px] items-center gap-3 rounded-2xl bg-white p-4 shadow-sm"
         >
           <ScanLine className="shrink-0 text-brand-pink" /> <span className="min-w-0 truncate text-start font-semibold">{t('workout.muscleMap')}</span>
+        </motion.button>
+        {/* My saved routines — sessions replayed with the weights actually lifted. */}
+        <motion.button
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...spring, delay: 0.1 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate('/routines')}
+          className="card-hover col-span-2 flex min-h-[56px] items-center gap-3 rounded-2xl bg-white p-4 shadow-sm"
+        >
+          <ListChecks className="shrink-0 text-brand-green" />
+          <span className="min-w-0 flex-1 truncate text-start font-semibold">{L('My Routines', 'روتيناتي')}</span>
+          <span className="truncate text-xs text-gray-400">{L('Saved workouts, ready to go', 'تماريتك المحفوظة جاهزة')}</span>
+          <ChevronRight size={16} className="shrink-0 text-gray-300 rtl:rotate-180" />
         </motion.button>
       </div>
 

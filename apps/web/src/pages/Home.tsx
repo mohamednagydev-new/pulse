@@ -382,16 +382,17 @@ function Greeting() {
 }
 
 /** Four one-tap shortcuts to the most-used corners of the app.
- *  Gradient icon tiles with a soft matching glow — flat pastel squares read
- *  as placeholders next to the rest of the design language. */
+ *  Same tile language as the Wellness quick tiles: the whole card wears its
+ *  gradient (scene texture blended in), icon on a white/20 chip. Tracker keeps
+ *  the exact Calories gradient so the same feature reads the same everywhere. */
 function QuickActions() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const actions = [
-    { label: t('home2.tracker'), icon: <Flame size={22} />, to: '/tracker', g: 'from-orange-500 to-amber-500', glow: 'shadow-orange-500/30' },
-    { label: t('home2.reels'), icon: <Clapperboard size={22} />, to: '/reels', g: 'from-fuchsia-500 to-pink-500', glow: 'shadow-fuchsia-500/30' },
-    { label: t('home2.buddies'), icon: <HeartHandshake size={22} />, to: '/buddies', g: 'from-emerald-500 to-teal-500', glow: 'shadow-emerald-500/30' },
-    { label: t('home2.muscleMap'), icon: <ScanLine size={22} />, to: '/exercises', g: 'from-sky-500 to-blue-500', glow: 'shadow-sky-500/30' },
+    { label: t('home2.tracker'), icon: <Flame size={22} />, to: '/tracker', g: 'from-orange-500/90 to-amber-600/80' },
+    { label: t('home2.reels'), icon: <Clapperboard size={22} />, to: '/reels', g: 'from-fuchsia-500/90 to-pink-700/80' },
+    { label: t('home2.buddies'), icon: <HeartHandshake size={22} />, to: '/buddies', g: 'from-emerald-500/90 to-teal-700/80' },
+    { label: t('home2.muscleMap'), icon: <ScanLine size={22} />, to: '/exercises', g: 'from-sky-500/90 to-blue-700/80' },
   ];
   return (
     <div className="mx-4 mt-4 grid grid-cols-4 gap-2">
@@ -402,14 +403,12 @@ function QuickActions() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ ...spring, delay: i * 0.05 }}
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.92 }}
           onClick={() => navigate(a.to)}
-          className="flex min-w-0 flex-col items-center gap-1.5 rounded-2xl bg-white py-3.5 shadow-sm transition-shadow active:shadow-none"
+          className={`scene-tex flex min-w-0 flex-col items-center gap-1.5 rounded-2xl bg-gradient-to-br ${a.g} py-3.5 text-white shadow-md`}
         >
-          <span className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${a.g} text-white shadow-lg ${a.glow}`}>
-            {a.icon}
-          </span>
-          <span className="w-full truncate px-1 text-center text-[11px] font-bold text-gray-700">{a.label}</span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">{a.icon}</span>
+          <span className="w-full truncate px-1 text-center text-[11px] font-bold">{a.label}</span>
         </motion.button>
       ))}
     </div>

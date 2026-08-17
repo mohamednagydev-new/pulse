@@ -7,7 +7,7 @@ import {
   Menu, X, CalendarDays, Dumbbell, Music, TrendingUp, Flame, Medal,
   Settings, Shield, LogOut, Moon, Sun, MessagesSquare, ClipboardList, ChevronDown,
   Award, Trophy, UserPlus, Users, HeartHandshake, ShoppingBag, HelpCircle, Ticket,
-  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, Bell, Gem, Salad, type LucideIcon,
+  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, Bell, Gem, Salad, ListChecks, Handshake, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
@@ -30,6 +30,7 @@ const GROUPS: Group[] = [
       { to: '/schedule', en: 'Schedule', ar: 'جدولي', icon: CalendarDays },
       { to: '/workout', en: 'Workout', ar: 'تمرين', icon: Dumbbell },
       { to: '/exercises', en: 'Muscle map', ar: 'خريطة العضلات', icon: ScanLine },
+      { to: '/routines', en: 'My routines', ar: 'روتيناتي', icon: ListChecks },
       { to: '/music', en: 'My music', ar: 'مزيكتي', icon: Music },
     ],
   },
@@ -62,6 +63,7 @@ const GROUPS: Group[] = [
       { to: '/store', en: 'Store', ar: 'المتجر', icon: ShoppingBag },
       { to: '/deals', en: 'Deals', ar: 'العروض', icon: Ticket },
       { to: '/events', en: 'Events', ar: 'الفعاليات', icon: CalendarDays },
+      { to: '/why-partner', en: 'Partner with us', ar: 'اعرض بيزنس معانا', icon: Handshake },
       { to: '/support', en: 'Contact us', ar: 'كلّمنا', icon: MessagesSquare },
     ],
   },

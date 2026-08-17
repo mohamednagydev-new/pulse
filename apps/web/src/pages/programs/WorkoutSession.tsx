@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, SkipForward, Music, Play, Pause, X, Timer, ChevronRight, Trophy, Dumbbell, Share2, Volume2, VolumeX, AlertTriangle, PlayCircle } from 'lucide-react';
+import { Check, SkipForward, Music, Play, Pause, X, Timer, ChevronRight, Trophy, Dumbbell, Share2, Volume2, VolumeX, AlertTriangle, PlayCircle, Pencil, Trash2, ListChecks, Bookmark } from 'lucide-react';
 import { api } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { shareMilestone } from '../../lib/shareCard';
@@ -24,9 +24,22 @@ import { getRestTip } from '../../lib/restTips';
 /** Easier/harder progression link — present only on muscle-group exercises. */
 type ProgressionLink = { id: string; name: string; nameAr?: string | null } | null | undefined;
 
-const REST_SECONDS = 45;
+const DEFAULT_REST_SECONDS = 45;
+const REST_CHOICES = [30, 45, 60, 90, 120];
 const RING_R = 54;
 const RING_C = 2 * Math.PI * RING_R;
+
+/** Hevy-style set flavors — warm-ups never count toward PRs (server-enforced). */
+type SetType = 'normal' | 'warmup' | 'dropset' | 'failure';
+const SET_TYPE_OPTS: { v: SetType; en: string; ar: string; cls: string }[] = [
+  { v: 'normal', en: 'Normal', ar: 'عادي', cls: 'bg-white/15 text-white' },
+  { v: 'warmup', en: 'Warm-up', ar: 'تسخين', cls: 'bg-sky-400/25 text-sky-200' },
+  { v: 'dropset', en: 'Drop', ar: 'دروب', cls: 'bg-violet-400/25 text-violet-200' },
+  { v: 'failure', en: 'Failure', ar: 'للفشل', cls: 'bg-red-400/25 text-red-200' },
+];
+
+/** A set logged in THIS session (offline-queued ones have no server id yet). */
+type SessionSet = { id?: string; weightKg: number; reps: number; setType: SetType; offline?: boolean };
 
 /** Buddy talk — rotates per exercise so every screen feels like someone's cheering. */
 const HYPE: { en: string; ar: string }[] = [
@@ -103,7 +116,7 @@ function AmbientGlow({ active }: { active: boolean }) {
 }
 
 export default function WorkoutSession() {
-  const { groupId, workoutId } = useParams();
+  const { groupId, workoutId, routineId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   // Comeback mode — Home's comeback card links here with ?short=1 for a
@@ -112,8 +125,15 @@ export default function WorkoutSession() {
   const { t, i18n } = useTranslation();
   const isAr = i18n.language.startsWith('ar');
   const { data: source, isLoading } = useQuery({
-    queryKey: workoutId ? ['coach-workout', workoutId] : ['muscle-group', groupId],
-    queryFn: () => api.get(workoutId ? `/api/coach/workouts/${workoutId}` : `/api/muscle-groups/${groupId}`),
+    queryKey: routineId ? ['routine', routineId] : workoutId ? ['coach-workout', workoutId] : ['muscle-group', groupId],
+    queryFn: () =>
+      api.get(
+        routineId
+          ? `/api/routines/${routineId}`
+          : workoutId
+            ? `/api/coach/workouts/${workoutId}`
+            : `/api/muscle-groups/${groupId}`,
+      ),
   });
   const group = source ? { name: source.name ?? source.title, exercises: source.exercises ?? [] } : undefined;
   const { data: tracks } = useQuery({ queryKey: ['music'], queryFn: () => api.get('/api/music') });
@@ -127,17 +147,23 @@ export default function WorkoutSession() {
   // Form demo opens on demand: a video autoplaying mid-set would fight the timer,
   // but not being able to check the movement at all is worse.
   const [showForm, setShowForm] = useState(false);
-  const [rest, setRest] = useState(REST_SECONDS);
+  const [rest, setRest] = useState(DEFAULT_REST_SECONDS);
   const [doneList, setDoneList] = useState<string[]>([]);
   const [musicOn, setMusicOn] = useState(false);
   const [trackIdx, setTrackIdx] = useState<number | null>(null);
   // Set logging — entries keyed by exercise name so next/prev doesn't wipe them
-  const [entries, setEntries] = useState<Record<string, { kg: string; reps: string }>>({});
+  const [entries, setEntries] = useState<Record<string, { kg: string; reps: string; setType?: SetType }>>({});
+  // Sets already logged THIS session, per exercise — the Hevy-style numbered list.
+  const [sessionSets, setSessionSets] = useState<Record<string, SessionSet[]>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [logging, setLogging] = useState(false);
   const [voiceOn, setVoiceOn] = useState(voiceEnabled());
   const [prWeight, setPrWeight] = useState<number | null>(null);
   const [startedAt] = useState(() => Date.now());
   const [sessionSecs, setSessionSecs] = useState(0);
+  // Save-as-routine on the done screen — one shot per session.
+  const [routineSaved, setRoutineSaved] = useState(false);
+  const [savingRoutine, setSavingRoutine] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const timer = useRef<ReturnType<typeof setInterval>>();
   // One auto-opened share sheet per session, max — a dismissed sheet stays dismissed.
@@ -195,14 +221,33 @@ export default function WorkoutSession() {
     staleTime: 60_000,
   });
   const lastLift = Array.isArray(liftHistory) && liftHistory.length ? liftHistory[0] : null;
-  const bestLift = Array.isArray(liftHistory) && liftHistory.length
-    ? liftHistory.reduce((a: any, b: any) => (b.weightKg > a.weightKg ? b : a))
+  // Best excludes warm-ups — same rule the server applies to PRs.
+  const workLifts = Array.isArray(liftHistory) ? liftHistory.filter((l: any) => l.setType !== 'warmup') : [];
+  const bestLift = workLifts.length
+    ? workLifts.reduce((a: any, b: any) => (b.weightKg > a.weightKg ? b : a))
     : null;
+
+  // Configurable rest — the user's saved preference, overridable mid-session.
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me'), staleTime: 60_000 });
+  const [restOverride, setRestOverride] = useState<number | null>(null);
+  const restTotal = restOverride ?? (typeof me?.restSeconds === 'number' && me.restSeconds >= 15 ? me.restSeconds : DEFAULT_REST_SECONDS);
+  const restTotalRef = useRef(restTotal);
+  restTotalRef.current = restTotal;
+
+  /** Pick a new rest length: applies to the running countdown NOW and persists. */
+  const pickRest = (v: number) => {
+    tapFeedback();
+    setRestOverride(v);
+    setRest(v); // the ticking interval simply continues from the new value
+    api.patch('/api/me', { restSeconds: v })
+      .then(() => queryClient.invalidateQueries({ queryKey: ['me'] }))
+      .catch(() => {}); // preference save is best-effort; the session keeps the override
+  };
 
   // Rest countdown — with spoken cues when the voice coach is on.
   useEffect(() => {
     if (phase !== 'rest') return;
-    setRest(REST_SECONDS);
+    setRest(restTotalRef.current);
     coach('rest', i18n.language);
     timer.current = setInterval(() => {
       setRest((r) => {
@@ -229,13 +274,27 @@ export default function WorkoutSession() {
   // Stop any speech when leaving the session.
   useEffect(() => () => cancelVoice(), []);
 
+  // Moving to another exercise must drop any in-flight edit — otherwise the
+  // Save button would patch the previous exercise's set with the new one's numbers.
+  useEffect(() => { setEditingId(null); }, [i]);
+
   const entry = (current && entries[current.name]) ?? { kg: '', reps: '' };
-  const setEntry = (patch: Partial<{ kg: string; reps: string }>) => {
+  const setType: SetType = entry.setType ?? 'normal';
+  const setEntry = (patch: Partial<{ kg: string; reps: string; setType: SetType }>) => {
     if (!current) return;
     setEntries((e) => {
       const prev = e[current.name] ?? { kg: '', reps: '' };
       return { ...e, [current.name]: { ...prev, ...patch } };
     });
+  };
+  const currentSets: SessionSet[] = (current && sessionSets[current.name]) ?? [];
+  const pushSessionSet = (name: string, s: SessionSet) =>
+    setSessionSets((m) => ({ ...m, [name]: [...(m[name] ?? []), s] }));
+
+  /** After any server-side change, the history strip + PR list must not go stale. */
+  const refreshLiftQueries = (name: string) => {
+    queryClient.invalidateQueries({ queryKey: ['lifts', name] });
+    queryClient.invalidateQueries({ queryKey: ['prs'] });
   };
 
   const logSet = async () => {
@@ -248,8 +307,24 @@ export default function WorkoutSession() {
     }
     setLogging(true);
     try {
-      const res = await api.post('/api/tracker/lifts', { exercise: current.name, weightKg, reps });
+      if (editingId) {
+        // Fixing a just-logged set — no PR fanfare on an edit.
+        const name = current.name;
+        await api.patch(`/api/tracker/lifts/${editingId}`, { weightKg, reps, setType });
+        setSessionSets((m) => ({
+          ...m,
+          [name]: (m[name] ?? []).map((s) => (s.id === editingId ? { ...s, weightKg, reps, setType } : s)),
+        }));
+        setEditingId(null);
+        setEntry({ reps: '' });
+        refreshLiftQueries(name);
+        toast(isAr ? 'اتعدلت ✔' : 'Set updated ✔', 'success');
+        return;
+      }
+      const res = await api.post('/api/tracker/lifts', { exercise: current.name, weightKg, reps, setType });
+      pushSessionSet(current.name, { id: res?.id, weightKg, reps, setType });
       setEntry({ reps: '' }); // clear reps; keep weight handy for the next set
+      refreshLiftQueries(current.name);
       if (res?.isPR) {
         celebrateFeedback();
         coach('pr', i18n.language);
@@ -268,13 +343,38 @@ export default function WorkoutSession() {
       // it and move on; the set syncs when the signal comes back.
       if (e?.status && e.status >= 400 && e.status < 500) {
         toast(e?.message || 'Could not log set', 'error');
+      } else if (editingId) {
+        // Edits can't be queued offline (no id-independent replay) — ask to retry.
+        toast(isAr ? 'النت قطع — جرب تاني' : 'No connection — try again', 'error');
       } else {
-        enqueue('/api/tracker/lifts', { exercise: current.name, weightKg, reps });
+        enqueue('/api/tracker/lifts', { exercise: current.name, weightKg, reps, setType });
+        pushSessionSet(current.name, { weightKg, reps, setType, offline: true });
         setEntry({ reps: '' });
         toast(t('session.savedOffline'), 'info');
       }
     } finally {
       setLogging(false);
+    }
+  };
+
+  const startEditSet = (s: SessionSet) => {
+    if (!s.id) return; // offline-queued: not on the server yet
+    tapFeedback();
+    setEditingId(s.id);
+    setEntry({ kg: String(s.weightKg), reps: String(s.reps), setType: s.setType });
+  };
+
+  const deleteSet = async (s: SessionSet) => {
+    if (!current || !s.id) return;
+    const name = current.name;
+    try {
+      await api.del(`/api/tracker/lifts/${s.id}`);
+      setSessionSets((m) => ({ ...m, [name]: (m[name] ?? []).filter((x) => x.id !== s.id) }));
+      if (editingId === s.id) { setEditingId(null); setEntry({ reps: '' }); }
+      refreshLiftQueries(name);
+      toast(isAr ? 'اتشالت' : 'Set removed', 'success');
+    } catch {
+      toast(isAr ? 'معرفناش نشيلها — جرب تاني' : 'Could not remove — try again', 'error');
     }
   };
 
@@ -323,6 +423,47 @@ export default function WorkoutSession() {
           void shareMilestone({ kind: 'streak', title: isAr ? 'سلسلة مولعة 🔥' : 'Streak unlocked!', value: `${streak} ${isAr ? 'يوم' : 'DAYS'}`, subtitle: group?.name, userName: firstName, emoji: '🔥', savedMsg: t('share.saved') });
         }
       } catch { /* best effort — never block the celebration */ }
+    }
+  };
+
+  /** Turn what actually happened this session into a reusable routine:
+   *  per exercise, sets = how many were logged, weight/reps = the best
+   *  working set (warm-ups excluded, same rule as PRs). Falls back to the
+   *  plan as written when nothing was logged (bodyweight sessions). */
+  const saveAsRoutine = async () => {
+    if (savingRoutine || routineSaved) return;
+    const logged = Object.entries(sessionSets).filter(([, sets]) => sets.length > 0);
+    const fromSets = logged.map(([name, sets]) => {
+      const work = sets.filter((s) => s.setType !== 'warmup');
+      const pool = work.length ? work : sets;
+      const best = pool.reduce((a, b) => (b.weightKg > a.weightKg ? b : a));
+      return { name, sets: sets.length, reps: best.reps, ...(best.weightKg > 0 ? { weightKg: best.weightKg } : {}) };
+    });
+    const exs = fromSets.length
+      ? fromSets
+      : exercises.map((e: any) => ({
+          name: String(e.name ?? ''),
+          sets: parseInt(String(e.sets ?? '').match(/\d+/)?.[0] ?? '3', 10),
+          reps: parseInt(String(e.reps ?? '').match(/\d+/)?.[0] ?? '10', 10),
+        })).filter((e) => e.name);
+    if (!exs.length) {
+      toast(isAr ? 'مفيش تمارين نحفظها' : 'Nothing to save yet', 'error');
+      return;
+    }
+    setSavingRoutine(true);
+    try {
+      await api.post('/api/routines', {
+        title: group?.name || (isAr ? 'روتيني' : 'My routine'),
+        exercises: exs.slice(0, 15),
+        ...(group?.name ? { muscleFocus: group.name } : {}),
+      });
+      setRoutineSaved(true);
+      queryClient.invalidateQueries({ queryKey: ['routines'] });
+      toast(isAr ? 'اتحفظ روتين — تلاقيه في روتيناتك 📌' : 'Saved — find it in My Routines 📌', 'success');
+    } catch (e: any) {
+      toast(e?.message || (isAr ? 'معرفناش نحفظه — جرب تاني' : 'Could not save — try again'), 'error');
+    } finally {
+      setSavingRoutine(false);
     }
   };
 
@@ -432,6 +573,24 @@ export default function WorkoutSession() {
             <div key={idx} className="flex items-center gap-2 text-sm text-white/80"><Check size={14} className="text-brand-green" /> {n}</div>
           ))}
         </div>
+        {/* Keep tonight's numbers as a repeatable routine — the sets/weights
+            actually lifted, not the plan as written. */}
+        {routineSaved ? (
+          <button
+            onClick={() => navigate('/routines')}
+            className="mt-6 flex min-h-[44px] w-full max-w-xs items-center justify-center gap-2 rounded-full bg-white/15 text-sm font-bold text-white transition active:scale-[0.97]"
+          >
+            <ListChecks size={16} /> {isAr ? 'شوف روتيناتك ←' : 'View my routines →'}
+          </button>
+        ) : (
+          <button
+            onClick={() => void saveAsRoutine()}
+            disabled={savingRoutine}
+            className="mt-6 flex min-h-[44px] w-full max-w-xs items-center justify-center gap-2 rounded-full bg-white/15 text-sm font-bold text-white transition active:scale-[0.97] disabled:opacity-50"
+          >
+            <Bookmark size={16} /> {isAr ? 'احفظه روتين 📌' : 'Save as routine 📌'}
+          </button>
+        )}
         {/* Peak-pride moment = referral moment. One tap sends the brag + the
             invite link to WhatsApp, where Egyptian invites actually travel. */}
         <button
@@ -525,7 +684,7 @@ export default function WorkoutSession() {
                 className="text-brand-pink"
                 style={{
                   strokeDasharray: RING_C,
-                  strokeDashoffset: RING_C * (1 - Math.max(0, rest) / REST_SECONDS),
+                  strokeDashoffset: RING_C * (1 - Math.max(0, Math.min(rest, restTotal)) / restTotal),
                   transition: 'stroke-dashoffset 1s linear',
                 }}
               />
@@ -535,6 +694,21 @@ export default function WorkoutSession() {
               <p className="font-display text-4xl font-extrabold tabular-nums leading-tight">{rest}</p>
               <p className="text-[11px] uppercase tracking-widest text-white/40">{isAr ? 'ثانية' : 'sec'}</p>
             </div>
+          </div>
+
+          {/* Rest length chips — change applies to THIS countdown and is saved. */}
+          <div className="flex items-center gap-1.5">
+            {REST_CHOICES.map((v) => (
+              <button
+                key={v}
+                onClick={() => pickRest(v)}
+                className={`rounded-full px-3 py-1 text-xs font-bold tabular-nums transition active:scale-95 ${
+                  restTotal === v ? 'bg-brand-pink text-white' : 'bg-white/10 text-white/60'
+                }`}
+              >
+                {v}{isAr ? 'ث' : 's'}
+              </button>
+            ))}
           </div>
 
           {/* One micro-lesson per rest — rotates with the exercise index */}
@@ -643,6 +817,10 @@ export default function WorkoutSession() {
             )}
             {current?.reps && <span className="rounded-full bg-white/10 px-3 py-1">{meta(current.reps)}</span>}
             {current?.level && <span className="rounded-full bg-white/10 px-3 py-1">{meta(current.level)}</span>}
+            {/* Routine sessions carry the weight it was saved at — the target to beat. */}
+            {typeof current?.weightKg === 'number' && current.weightKg > 0 && (
+              <span className="rounded-full bg-white/10 px-3 py-1 tabular-nums">🎯 {current.weightKg} {t('session.kg')}</span>
+            )}
           </div>
 
           {/* Progression ladder — muscle-group sessions only (coach workouts don't carry these) */}
@@ -685,6 +863,20 @@ export default function WorkoutSession() {
                 )}
               </p>
             )}
+            {/* Set-type chips — warm-ups won't count toward your PR */}
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {SET_TYPE_OPTS.map((o) => (
+                <button
+                  key={o.v}
+                  onClick={() => { tapFeedback(); setEntry({ setType: o.v }); }}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition active:scale-95 ${
+                    setType === o.v ? 'bg-brand-pink text-white' : 'bg-white/10 text-white/55'
+                  }`}
+                >
+                  {isAr ? o.ar : o.en}
+                </button>
+              ))}
+            </div>
             <div className="mt-2 flex items-center gap-2">
               <input
                 type="text"
@@ -709,9 +901,63 @@ export default function WorkoutSession() {
                 disabled={logging}
                 className="btn-pill btn-primary h-11 shrink-0 px-5 disabled:opacity-50"
               >
-                {t('session.log')}
+                {editingId ? (isAr ? 'حفظ' : 'Save') : t('session.log')}
               </button>
             </div>
+            {editingId && (
+              <button
+                onClick={() => { setEditingId(null); setEntry({ reps: '' }); }}
+                className="mt-1.5 text-[11px] font-bold text-white/50 underline"
+              >
+                {isAr ? 'إلغاء التعديل' : 'Cancel edit'}
+              </button>
+            )}
+
+            {/* This session's sets for this exercise — numbered, editable */}
+            {currentSets.length > 0 && (
+              <div className="mt-3 space-y-1">
+                {currentSets.map((s, k) => {
+                  const opt = SET_TYPE_OPTS.find((o) => o.v === s.setType);
+                  const beingEdited = !!s.id && editingId === s.id;
+                  return (
+                    <div
+                      key={s.id ?? `off-${k}`}
+                      className={`flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-sm ${beingEdited ? 'bg-brand-pink/20 ring-1 ring-brand-pink/50' : 'bg-white/5'}`}
+                    >
+                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/10 text-[10px] font-bold tabular-nums text-white/60">{k + 1}</span>
+                      <span className="min-w-0 flex-1 truncate font-semibold tabular-nums">
+                        {s.weightKg} {t('session.kg')} × {s.reps}
+                      </span>
+                      {s.setType !== 'normal' && opt && (
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${opt.cls}`}>{isAr ? opt.ar : opt.en}</span>
+                      )}
+                      {s.offline ? (
+                        <span className="shrink-0 rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold text-amber-200">
+                          {isAr ? 'هتتسجل لما النت يرجع' : 'syncs later'}
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => startEditSet(s)}
+                            aria-label={isAr ? 'عدّل المجموعة' : 'Edit set'}
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-white/50 transition active:scale-90"
+                          >
+                            <Pencil size={13} />
+                          </button>
+                          <button
+                            onClick={() => void deleteSet(s)}
+                            aria-label={isAr ? 'امسح المجموعة' : 'Delete set'}
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-red-300/70 transition active:scale-90"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* How-to folded away: native <details> resets per exercise since the

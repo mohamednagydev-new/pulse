@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, Star, Play, Dumbbell, CalendarDays, UserPlus, Check, Clock, Zap, HeartHandshake, ArrowLeft, Users, Activity, Ban } from 'lucide-react';
+import { MessageSquare, Star, Play, Dumbbell, CalendarDays, UserPlus, Check, Clock, Zap, HeartHandshake, ArrowLeft, Users, Activity, Ban, Copy, ListChecks } from 'lucide-react';
 import { api } from '../../lib/api';
 import { MediaImage, Loader, ErrorMsg } from '../../components/ui';
 import Sheet from '../../components/Sheet';
@@ -273,6 +273,8 @@ export default function UserProfile() {
 
       {user.isCoach && <CoachSection userId={user.id} />}
 
+      <PublicRoutines userId={user.id} firstName={user.firstName} />
+
       <div className="mt-6 px-4">
         <h3 className="mb-2.5 flex items-center gap-1.5 px-1 text-base font-extrabold">
           <Activity size={16} className="text-brand-pink" /> {t('social2.activity', { defaultValue: 'Activity' })}
@@ -427,6 +429,72 @@ function CoachSection({ userId }: { userId: string }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** This user's public routines — one tap clones them into my list. */
+function PublicRoutines({ userId, firstName }: { userId: string; firstName: string }) {
+  const navigate = useNavigate();
+  const { i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
+  const [copiedIds, setCopiedIds] = useState<string[]>([]);
+  const { data } = useQuery({
+    queryKey: ['user-routines', userId],
+    queryFn: () => api.get(`/api/routines/user/${userId}`),
+  });
+  const copy = useMutation({
+    mutationFn: (id: string) => api.post(`/api/routines/${id}/copy`),
+    onSuccess: (_res: any, id: string) => {
+      setCopiedIds((ids) => [...ids, id]);
+      toast(L('Copied to your routines 💪', 'اتنسخ في روتيناتك 💪'), 'success');
+    },
+    onError: (e: any) => toast(e?.message || L('Could not copy', 'معرفناش ننسخه'), 'error'),
+  });
+
+  const routines: any[] = Array.isArray(data) ? data : [];
+  if (!routines.length) return null;
+
+  return (
+    <div className="mt-6 px-4">
+      <h3 className="mb-2.5 flex items-center gap-1.5 px-1 text-base font-extrabold">
+        <ListChecks size={16} className="text-brand-green" /> {L(`${firstName}'s routines`, `روتينات ${firstName}`)}
+      </h3>
+      <div className="space-y-2">
+        {routines.map((r: any) => (
+          <div key={r.id} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm">
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold">{r.title}</p>
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-gray-400">
+                {r.muscleFocus && <span className="font-semibold text-brand-pink">{r.muscleFocus}</span>}
+                <span>{(r.exercises ?? []).length} {L('exercises', 'تمرين')}</span>
+                {r.copies > 0 && (
+                  <span className="flex items-center gap-0.5"><Copy size={11} /> {r.copies}</span>
+                )}
+              </p>
+            </div>
+            {copiedIds.includes(r.id) ? (
+              <button
+                onClick={() => navigate('/routines')}
+                className="flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 text-xs font-bold text-emerald-600 transition active:scale-95"
+              >
+                <Check size={13} /> {L('In my routines →', 'في روتيناتك ←')}
+              </button>
+            ) : (
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                transition={tapSpring}
+                onClick={() => copy.mutate(r.id)}
+                disabled={copy.isPending}
+                className="btn-pill btn-primary flex min-h-[36px] shrink-0 items-center gap-1.5 px-4 text-xs disabled:opacity-60"
+              >
+                <Copy size={13} /> {L('Copy it', 'انسخه')}
+              </motion.button>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

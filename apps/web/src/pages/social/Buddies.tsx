@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Flame, Zap, Dumbbell, Crown, Swords, Megaphone, MessageSquare, X } from 'lucide-react';
+import { Flame, Zap, Dumbbell, Crown, Swords, Megaphone, MessageSquare, X, Footprints, Target, Pencil, Check, CalendarClock } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../store/auth';
 import { MediaImage, Loader } from '../../components/ui';
@@ -31,11 +31,30 @@ type Duel = {
 
 const tapSpring = { type: 'spring', stiffness: 500, damping: 30 } as const;
 
+type InviteKind = 'walk' | 'workout' | 'run' | 'other';
+const INVITE_EMOJI: Record<InviteKind, string> = { walk: '🚶', workout: '🏋️', run: '🏃', other: '✨' };
+
+type ActivityInvite = {
+  id: string;
+  kind: InviteKind;
+  note: string | null;
+  whenText: string | null;
+  status: string;
+  createdAt: string;
+  fromMe: boolean;
+  other: { id: string; firstName: string; lastName: string; avatarUrl: string | null; level: number };
+};
+
 export function Buddies() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
   const authUser = useAuth((s) => s.user);
+
+  const inviteKindLabel = (k: InviteKind) =>
+    k === 'walk' ? L('Walk', 'مشي') : k === 'workout' ? L('Workout', 'تمرين') : k === 'run' ? L('Run', 'جري') : L('Something else', 'حاجة تانية');
 
   const metricLabel = (m: DuelMetric) => (m === 'xp' ? t('duels.metricXp') : t('duels.metricWorkouts'));
 
@@ -80,6 +99,94 @@ export function Buddies() {
     setDuelWager(0);
     setDuelTarget(b);
   };
+
+  // ---- Low-pressure invites («اعزمه») + shared goal + walk log ----
+  const { data: invites } = useQuery({
+    queryKey: ['activity-invites'],
+    queryFn: () => api.get('/api/social/invites'),
+  });
+  const { data: myGoal } = useQuery({
+    queryKey: ['my-goal'],
+    queryFn: () => api.get('/api/social/goal'),
+  });
+
+  const [inviteTarget, setInviteTarget] = useState<any>(null);
+  const [inviteKind, setInviteKind] = useState<InviteKind>('walk');
+  const [inviteWhen, setInviteWhen] = useState('');
+  const [inviteNote, setInviteNote] = useState('');
+  const lastInviteTarget = useRef<any>(null);
+  if (inviteTarget) lastInviteTarget.current = inviteTarget;
+  const inviteShown = inviteTarget ?? lastInviteTarget.current;
+
+  const openInviteSheet = (b: any) => {
+    setInviteKind('walk');
+    setInviteWhen('');
+    setInviteNote('');
+    setInviteTarget(b);
+  };
+
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalDraft, setGoalDraft] = useState('');
+
+  const invalidateInvites = () => qc.invalidateQueries({ queryKey: ['activity-invites'] });
+
+  const sendInvite = useMutation({
+    mutationFn: () =>
+      api.post('/api/social/invites', {
+        toUserId: inviteTarget.id,
+        kind: inviteKind,
+        whenText: inviteWhen.trim() || undefined,
+        note: inviteNote.trim() || undefined,
+      }),
+    onSuccess: () => {
+      tapFeedback();
+      invalidateInvites();
+      setInviteTarget(null);
+      toast(L('Invite sent 🎉', 'العزومة اتبعتت 🎉'), 'success');
+    },
+    onError: (e: any) => toast(e?.message || L('Could not send invite', 'العزومة موصلتش'), 'error'),
+  });
+  const acceptInvite = useMutation({
+    mutationFn: (id: string) => api.post(`/api/social/invites/${id}/accept`),
+    onSuccess: () => {
+      tapFeedback();
+      invalidateInvites();
+      toast(L("It's a plan! 🤝", 'اتفقنا! 🤝'), 'success');
+    },
+    onError: (e: any) => toast(e?.message || 'Error', 'error'),
+  });
+  const declineInvite = useMutation({
+    mutationFn: (id: string) => api.post(`/api/social/invites/${id}/decline`),
+    onSuccess: () => invalidateInvites(),
+    onError: (e: any) => toast(e?.message || 'Error', 'error'),
+  });
+  const cancelInvite = useMutation({
+    mutationFn: (id: string) => api.post(`/api/social/invites/${id}/cancel`),
+    onSuccess: () => invalidateInvites(),
+    onError: (e: any) => toast(e?.message || 'Error', 'error'),
+  });
+
+  const saveGoal = useMutation({
+    mutationFn: (text: string) => api.post('/api/social/goal', { goalText: text.trim() || null }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-goal'] });
+      setEditingGoal(false);
+      toast(L('Goal saved 🎯', 'هدفك اتسجل 🎯'), 'success');
+    },
+    onError: (e: any) => toast(e?.message || 'Error', 'error'),
+  });
+
+  const logWalk = useMutation({
+    mutationFn: (minutes: number) => api.post('/api/social/walks', { minutes }),
+    onSuccess: (r: any) => {
+      tapFeedback();
+      qc.invalidateQueries({ queryKey: ['me'] });
+      qc.invalidateQueries({ queryKey: ['challenges'] });
+      if (r?.credited === false) toast(L('Walks logged for today — see you tomorrow 😄', 'سجلت مشي كفاية النهارده — نكمل بكرة 😄'), 'info');
+      else toast(L(`Walk logged! +${r?.xp ?? 15} XP 🚶`, `تسجّل المشوار! +${r?.xp ?? 15} XP 🚶`), 'success');
+    },
+    onError: (e: any) => toast(e?.message || 'Error', 'error'),
+  });
 
   const accept = useMutation({
     mutationFn: (id: string) => api.post(`/api/social/connections/${id}/accept`),
@@ -212,6 +319,170 @@ export function Buddies() {
                   )}
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* ── Incoming activity invites — someone wants YOU, answer first. ── */}
+          {view === 'friends' && (invites?.incoming?.length ?? 0) > 0 && (
+            <div className="space-y-2">
+              {(invites.incoming as ActivityInvite[]).map((inv) => (
+                <motion.div
+                  key={inv.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+                  className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-emerald-400/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xl" aria-hidden>
+                      {INVITE_EMOJI[inv.kind] ?? '✨'}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-semibold text-ink">{inv.other.firstName} {inv.other.lastName}</span>{' '}
+                        {L('invites you:', 'عازمك:')}{' '}
+                        <span className="font-semibold">{inviteKindLabel(inv.kind)}</span>
+                        {inv.whenText ? ` · ${inv.whenText}` : ''}
+                      </p>
+                      {inv.note && <p className="truncate text-xs text-gray-400">{inv.note}</p>}
+                    </div>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <motion.button
+                      whileTap={{ scale: 0.92 }}
+                      transition={tapSpring}
+                      onClick={() => { tapFeedback(); acceptInvite.mutate(inv.id); }}
+                      disabled={acceptInvite.isPending}
+                      className="flex min-h-[32px] flex-1 items-center justify-center gap-1.5 rounded-full bg-emerald-500 py-1 text-xs font-bold text-white disabled:opacity-60"
+                    >
+                      <Check size={15} /> {L('I\'m in', 'ماشي، جاي')}
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.92 }}
+                      transition={tapSpring}
+                      onClick={() => declineInvite.mutate(inv.id)}
+                      disabled={declineInvite.isPending}
+                      className="btn-pill btn-ghost flex min-h-[32px] flex-1 items-center justify-center py-1 text-xs disabled:opacity-60"
+                    >
+                      {L('Another time', 'مرة تانية')}
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* ── My shared goal — one honest line my buddies can see. ── */}
+          {view === 'friends' && (
+            <div className="rounded-2xl bg-white p-3 shadow-sm">
+              {editingGoal ? (
+                <div className="flex items-center gap-2">
+                  <Target size={16} className="shrink-0 text-brand-pink" />
+                  <input
+                    value={goalDraft}
+                    onChange={(e) => setGoalDraft(e.target.value)}
+                    maxLength={120}
+                    autoFocus
+                    placeholder={L('e.g. lose 5kg before summer', 'مثلا: أخس ٥ كيلو قبل الصيف')}
+                    className="min-w-0 flex-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-brand-pink"
+                  />
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    transition={tapSpring}
+                    onClick={() => saveGoal.mutate(goalDraft)}
+                    disabled={saveGoal.isPending}
+                    aria-label={L('Save goal', 'احفظ هدفي')}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-pink text-white disabled:opacity-60"
+                  >
+                    <Check size={15} />
+                  </motion.button>
+                  <button
+                    onClick={() => setEditingGoal(false)}
+                    aria-label={t('common.cancel')}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setGoalDraft(myGoal?.goalText ?? ''); setEditingGoal(true); }}
+                  className="flex w-full items-center gap-2 text-start"
+                >
+                  <span className="text-lg" aria-hidden>🎯</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wide text-gray-400">{L('My goal', 'هدفي')}</span>
+                    <span className={`block truncate text-sm ${myGoal?.goalText ? 'font-semibold text-ink' : 'text-gray-400'}`}>
+                      {myGoal?.goalText || L('Share a goal your buddies can push you on', 'اكتب هدفك وخلي صحابك يشدوا معاك')}
+                    </span>
+                  </span>
+                  <Pencil size={14} className="shrink-0 text-gray-400" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* ── Accepted upcoming plans — a reminder strip, not a scoreboard. ── */}
+          {view === 'friends' && ((invites?.accepted?.length ?? 0) + (invites?.outgoing?.length ?? 0)) > 0 && (
+            <div>
+              <p className="flex items-center gap-1 px-1 pb-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                <CalendarClock size={12} /> {L('Plans together', 'خطط مع صحابك')}
+              </p>
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                {([...(invites?.accepted ?? []), ...(invites?.outgoing ?? [])] as ActivityInvite[]).map((inv) => (
+                  <div
+                    key={inv.id}
+                    className={`flex shrink-0 items-center gap-2 rounded-full bg-white py-1.5 pe-2 ps-1.5 shadow-sm ${inv.status === 'pending' ? 'opacity-60' : ''}`}
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-sm" aria-hidden>
+                      {INVITE_EMOJI[inv.kind] ?? '✨'}
+                    </span>
+                    <span className="max-w-[180px] truncate text-xs font-semibold">
+                      {inviteKindLabel(inv.kind)} {L('with', 'مع')} {inv.other.firstName}
+                      {inv.whenText ? ` · ${inv.whenText}` : ''}
+                      {inv.status === 'pending' ? ` · ${L('waiting', 'مستني رد')}` : ''}
+                    </span>
+                    {inv.fromMe && (
+                      <button
+                        onClick={() => cancelInvite.mutate(inv.id)}
+                        aria-label={t('common.cancel')}
+                        className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-gray-400"
+                      >
+                        <X size={11} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Quick walk log — the lowest-pressure workout there is. ── */}
+          {view === 'friends' && (
+            <div className="scene-tex rounded-2xl bg-gradient-to-br from-emerald-500/90 to-teal-700/80 p-3.5 text-white shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20" aria-hidden>
+                  <Footprints size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold leading-tight">{L('Log a walk', 'سجل مشوار مشي')} 🚶</p>
+                  <p className="text-[11px] text-white/80">{L('Counts for streaks and walk challenges', 'بيحسب في السلسلة وتحديات المشي')}</p>
+                </div>
+              </div>
+              <div className="mt-2.5 flex gap-2">
+                {[15, 30, 45, 60].map((m) => (
+                  <motion.button
+                    key={m}
+                    whileTap={{ scale: 0.92 }}
+                    transition={tapSpring}
+                    onClick={() => logWalk.mutate(m)}
+                    disabled={logWalk.isPending}
+                    className="min-h-[36px] flex-1 rounded-full bg-white/20 text-sm font-bold text-white backdrop-blur transition active:bg-white/30 disabled:opacity-60"
+                  >
+                    {m} {L('min', 'دقيقة')}
+                  </motion.button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -489,7 +760,19 @@ export function Buddies() {
                     <span className="flex items-center gap-0.5"><Zap size={11} className="text-amber-500" /> {b.weeklyXp}</span>
                     <span className="flex items-center gap-0.5"><Dumbbell size={11} /> {b.completions}</span>
                   </p>
+                  {/* The buddy's shared goal — knowing what a friend is chasing is
+                      the whole point of sharing it. */}
+                  {b.goalText && <p className="truncate text-[11px] text-gray-400">🎯 {b.goalText}</p>}
                 </Link>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  transition={tapSpring}
+                  onClick={() => openInviteSheet(b)}
+                  aria-label={L(`Invite ${b.firstName}`, `اعزم ${b.firstName}`)}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 active:scale-90"
+                >
+                  <Footprints size={15} />
+                </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.85, rotate: -6 }}
                   transition={tapSpring}
@@ -611,6 +894,73 @@ export function Buddies() {
               >
                 {createDuel.isPending ? t('common.loading') : t('duels.send')}
               </motion.button>
+          </div>
+        )}
+      </Sheet>
+
+      {/* ── «اعزمه» — low-pressure activity invite sheet ── */}
+      <Sheet
+        open={!!inviteTarget}
+        onClose={() => setInviteTarget(null)}
+        label={inviteShown ? L(`Invite ${inviteShown.firstName}`, `اعزم ${inviteShown.firstName}`) : L('Invite', 'اعزمه')}
+      >
+        {inviteShown && (
+          <div className="p-5 pb-8 text-ink">
+            <div className="flex items-center gap-3">
+              <MediaImage
+                path={inviteShown.avatarUrl}
+                label={inviteShown.firstName}
+                className="h-12 w-12 shrink-0 rounded-full"
+                seed={inviteShown.id?.length}
+              />
+              <div>
+                <h2 className="text-lg font-bold">{L(`Invite ${inviteShown.firstName}`, `اعزم ${inviteShown.firstName}`)} 🤝</h2>
+                <p className="text-xs text-gray-400">{L('No scores, no pressure — just company', 'من غير نقط ولا منافسة — رفقة وبس')}</p>
+              </div>
+            </div>
+
+            <p className="mt-5 text-[11px] font-bold uppercase tracking-wide text-gray-400">{L('What are we doing?', 'نعمل إيه؟')}</p>
+            <div className="mt-2 flex gap-2">
+              {(['walk', 'workout', 'run', 'other'] as InviteKind[]).map((k) => (
+                <button
+                  key={k}
+                  onClick={() => setInviteKind(k)}
+                  className={`min-h-[40px] flex-1 truncate rounded-full px-2 py-2 text-xs font-semibold transition-colors ${
+                    inviteKind === k ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {INVITE_EMOJI[k]} {inviteKindLabel(k)}
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">{L('When?', 'إمتى؟')}</p>
+            <input
+              value={inviteWhen}
+              onChange={(e) => setInviteWhen(e.target.value)}
+              maxLength={60}
+              placeholder={L('Today at 6, for example', 'النهارده ٦ مثلا')}
+              className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-emerald-500"
+            />
+
+            <p className="mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">{L('Note (optional)', 'ملاحظة (اختياري)')}</p>
+            <input
+              value={inviteNote}
+              onChange={(e) => setInviteNote(e.target.value)}
+              maxLength={200}
+              placeholder={L('Meet at the club gate?', 'نتقابل عند باب النادي؟')}
+              className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-emerald-500"
+            />
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              transition={tapSpring}
+              onClick={() => { tapFeedback(); sendInvite.mutate(); }}
+              disabled={sendInvite.isPending}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 py-3 font-bold text-white transition active:scale-[0.97] disabled:opacity-60"
+            >
+              {sendInvite.isPending ? t('common.loading') : `${L('Send the invite', 'ابعت العزومة')} 🚀`}
+            </motion.button>
           </div>
         )}
       </Sheet>

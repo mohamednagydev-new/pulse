@@ -18,11 +18,13 @@ async function myPartner(userId: string) {
 partnerPortalRouter.get('/me', async (req: AuthedRequest, res) => {
   const partner = await myPartner(req.userId!);
   if (!partner) return res.json({ partner: null });
-  const [newLeads, totalLeads] = await Promise.all([
+  const [newLeads, totalLeads, gymMembers] = await Promise.all([
     prisma.lead.count({ where: { form: { partnerId: partner.id }, status: 'new' } }),
     prisma.lead.count({ where: { form: { partnerId: partner.id } } }),
+    // Gyms get a member count up front — the hub shows their gym toolkit.
+    partner.type === 'gym' ? prisma.user.count({ where: { gymId: partner.id } }) : Promise.resolve(0),
   ]);
-  res.json({ partner, newLeads, totalLeads });
+  res.json({ partner, newLeads, totalLeads, gymMembers });
 });
 
 // The manager edits presentation + contact — never type/active/city-scoping,

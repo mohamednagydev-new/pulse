@@ -60,6 +60,8 @@ meRouter.patch('/', async (req: AuthedRequest, res) => {
     // Pushes, reminders and gamification copy follow this — synced by the client
     // whenever the UI language toggles or drifts from the account.
     preferredLang: z.enum(['en', 'ar']).optional(),
+    // Rest timer between exercises in a workout session (seconds).
+    restSeconds: z.number().int().min(15).max(300).optional(),
   });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });

@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import { awardXp, createFeedPost, bumpChallenges } from './social';
+import { bumpWalkChallenges } from './walks';
 import { touchStreak } from './gamify';
 import { dayString, startOfDayTz } from './time';
 
@@ -152,6 +153,11 @@ export async function importActivity(userId: string, a: StravaActivity): Promise
     await touchStreak(userId);
     await awardXp(userId, XP_PER_IMPORT, 'wearable_import').catch(() => {});
     await bumpChallenges(userId, 'workout').catch(() => {});
+    // Walk-type imports also advance 'walk' challenges — a wearable walk counts
+    // the same as a manually-logged one.
+    if (/walk|hike/i.test(a.sport_type ?? a.type ?? '')) {
+      await bumpWalkChallenges(userId).catch(() => {});
+    }
     const km = a.distance ? ` · ${(a.distance / 1000).toFixed(1)}km` : '';
     const mins = Math.round(durationSec / 60);
     await createFeedPost(userId, 'completion', `⌚ ${a.sport_type ?? a.type ?? 'Workout'} — ${mins} min${km}`, undefined, undefined, {

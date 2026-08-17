@@ -16,6 +16,32 @@ const pubUser = {
   isCoach: true, coachVerified: true, coachHeadline: true,
 } as const;
 
+/** Days since a YYYY-MM-DD lastActiveOn — the "quiet" signal a coach acts on. */
+function daysSince(ymd: string | null | undefined): number | null {
+  if (!ymd) return null;
+  const then = Date.parse(`${ymd}T00:00:00`);
+  if (Number.isNaN(then)) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.round((today.getTime() - then) / 86_400_000));
+}
+
+/** Local YYYY-MM-DD (matches how lastActiveOn is written). */
+function ymdLocal(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** clients-only programs are visible to the coach themself and their accepted
+ *  clients — nobody else (paid programming stays off the open directory). */
+async function canSeeClientPrograms(viewerId: string | undefined, coachUserId: string): Promise<boolean> {
+  if (!viewerId) return false;
+  if (viewerId === coachUserId) return true;
+  const rel = await prisma.coachRequest.findUnique({
+    where: { clientId_coachUserId: { clientId: viewerId, coachUserId } },
+    select: { status: true },
+  });
+  return rel?.status === 'accepted';
+}
+
 // ---- Coach-authored workouts ----
 coachRouter.post('/workouts', async (req: AuthedRequest, res) => {
   const me = await prisma.user.findUnique({ where: { id: req.userId! } });
@@ -88,24 +114,50 @@ coachRouter.post('/programs', async (req: AuthedRequest, res) => {
     title: z.string().min(1),
     description: z.string().optional(),
     coverImage: z.string().optional(),
+    visibility: z.enum(['public', 'clients']).optional(),
     days: z.array(z.object({ label: z.string().min(1), workoutId: z.string().min(1) })).min(1),
   });
   const p = schema.safeParse(req.body);
   if (!p.success) return res.status(400).json({ error: 'Add a title and at least one day with a workout' });
   const prog = await prisma.coachProgram.create({
-    data: { coachUserId: req.userId!, title: p.data.title, description: p.data.description, coverImage: p.data.coverImage, days: JSON.stringify(p.data.days) },
+    data: { coachUserId: req.userId!, title: p.data.title, description: p.data.description, coverImage: p.data.coverImage, visibility: p.data.visibility ?? 'public', days: JSON.stringify(p.data.days) },
   });
   res.status(201).json(prog);
 });
 
-coachRouter.get('/:userId/programs', async (req, res) => {
-  const list = await prisma.coachProgram.findMany({ where: { coachUserId: req.params.userId }, orderBy: { createdAt: 'desc' } });
+// Update (owner only) — today mainly the public/clients visibility toggle.
+coachRouter.patch('/programs/:id', async (req: AuthedRequest, res) => {
+  const schema = z.object({
+    title: z.string().min(1).optional(),
+    description: z.string().optional(),
+    visibility: z.enum(['public', 'clients']).optional(),
+  });
+  const p = schema.safeParse(req.body ?? {});
+  if (!p.success) return res.status(400).json({ error: 'Invalid input' });
+  const { count } = await prisma.coachProgram.updateMany({
+    where: { id: req.params.id, coachUserId: req.userId! },
+    data: p.data,
+  });
+  if (!count) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+});
+
+coachRouter.get('/:userId/programs', async (req: AuthedRequest, res) => {
+  const seesPrivate = await canSeeClientPrograms(req.userId, req.params.userId);
+  const list = await prisma.coachProgram.findMany({
+    where: { coachUserId: req.params.userId, ...(seesPrivate ? {} : { visibility: 'public' }) },
+    orderBy: { createdAt: 'desc' },
+  });
   res.json(list.map((p) => ({ ...p, days: parseArray(p.days) })));
 });
 
 coachRouter.get('/programs/:id', async (req: AuthedRequest, res) => {
   const prog = await prisma.coachProgram.findUnique({ where: { id: req.params.id } });
   if (!prog) return res.status(404).json({ error: 'Not found' });
+  // clients-only programs 404 for outsiders — existence is part of the secret.
+  if (prog.visibility === 'clients' && !(await canSeeClientPrograms(req.userId, prog.coachUserId))) {
+    return res.status(404).json({ error: 'Not found' });
+  }
   const days = parseArray(prog.days) as { label: string; workoutId: string }[];
   const workouts = await prisma.coachWorkout.findMany({ where: { id: { in: days.map((d) => d.workoutId) } } });
   const wmap = new Map(workouts.map((w) => [w.id, w]));
@@ -124,8 +176,11 @@ coachRouter.get('/programs/:id', async (req: AuthedRequest, res) => {
 
 // Enroll (idempotent) — creates the memory the detail page reads back.
 coachRouter.post('/programs/:id/enroll', async (req: AuthedRequest, res) => {
-  const prog = await prisma.coachProgram.findUnique({ where: { id: req.params.id }, select: { id: true } });
+  const prog = await prisma.coachProgram.findUnique({ where: { id: req.params.id }, select: { id: true, visibility: true, coachUserId: true } });
   if (!prog) return res.status(404).json({ error: 'Not found' });
+  if (prog.visibility === 'clients' && !(await canSeeClientPrograms(req.userId, prog.coachUserId))) {
+    return res.status(404).json({ error: 'Not found' });
+  }
   const row = await prisma.coachProgramEnrollment.upsert({
     where: { userId_programId: { userId: req.userId!, programId: prog.id } },
     create: { userId: req.userId!, programId: prog.id },
@@ -218,8 +273,13 @@ coachRouter.post('/requests/:id/:action', async (req: AuthedRequest, res) => {
 
 coachRouter.get('/clients', async (req: AuthedRequest, res) => {
   const rows = await prisma.coachRequest.findMany({ where: { coachUserId: req.userId!, status: 'accepted' } });
-  const clients = await prisma.user.findMany({ where: { id: { in: rows.map((r) => r.clientId) } }, select: { ...pubUser, currentStreak: true } });
-  res.json(clients);
+  const clients = await prisma.user.findMany({
+    where: { id: { in: rows.map((r) => r.clientId) } },
+    select: { ...pubUser, currentStreak: true, lastActiveOn: true },
+  });
+  // quietDays rides along so the dashboard can flag ghosting clients without
+  // fetching every detail page.
+  res.json(clients.map(({ lastActiveOn, ...c }) => ({ ...c, quietDays: daysSince(lastActiveOn) })));
 });
 
 coachRouter.get('/my-coaches', async (req: AuthedRequest, res) => {
@@ -276,4 +336,159 @@ coachRouter.get('/:userId/rating', async (req: AuthedRequest, res) => {
     mine: mine?.stars ?? null,
     reviews: reviews.map((r) => ({ stars: r.stars, comment: r.comment, by: nameMap.get(r.clientId) ?? '—', createdAt: r.createdAt })),
   });
+});
+
+// ---- Client progress dashboard ----
+// Everything a coach may see about one accepted client on a single screen.
+// Deliberately NO calorie / food data — meals stay private to the member.
+coachRouter.get('/clients/:id/detail', async (req: AuthedRequest, res) => {
+  const rel = await prisma.coachRequest.findUnique({
+    where: { clientId_coachUserId: { clientId: req.params.id, coachUserId: req.userId! } },
+    select: { status: true },
+  });
+  if (rel?.status !== 'accepted') return res.status(403).json({ error: 'Not your client' });
+
+  const client = await prisma.user.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true, currentStreak: true, goalText: true, lastActiveOn: true },
+  });
+  if (!client) return res.status(404).json({ error: 'Not found' });
+
+  const since = new Date(); since.setHours(0, 0, 0, 0); since.setDate(since.getDate() - 13);
+  const [lastXp, lastLesson, xpEvents, weightTrend, prGroups, myPrograms] = await Promise.all([
+    prisma.xpEvent.findFirst({ where: { userId: client.id, reason: 'workout-session' }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } }),
+    prisma.lessonCompletion.findFirst({ where: { userId: client.id }, orderBy: { completedAt: 'desc' }, select: { completedAt: true } }),
+    prisma.xpEvent.findMany({ where: { userId: client.id, createdAt: { gte: since } }, select: { createdAt: true } }),
+    prisma.weightLog.findMany({ where: { userId: client.id }, orderBy: { date: 'desc' }, take: 10, select: { date: true, weightKg: true } }),
+    prisma.liftLog.groupBy({
+      by: ['exercise'],
+      where: { userId: client.id, setType: { not: 'warmup' } },
+      _max: { weightKg: true },
+      orderBy: { _max: { weightKg: 'desc' } },
+      take: 5,
+    }),
+    prisma.coachProgram.findMany({ where: { coachUserId: req.userId! }, orderBy: { createdAt: 'desc' } }),
+  ]);
+
+  // Best set per exercise — the reps that go with the max weight.
+  const prs = await Promise.all(
+    prGroups.map(async (g) => {
+      const best = await prisma.liftLog.findFirst({
+        where: { userId: client.id, exercise: g.exercise, setType: { not: 'warmup' }, weightKg: g._max.weightKg ?? undefined },
+        orderBy: { reps: 'desc' },
+        select: { reps: true, createdAt: true },
+      });
+      return { exercise: g.exercise, weightKg: g._max.weightKg ?? 0, reps: best?.reps ?? null, at: best?.createdAt ?? null };
+    }),
+  );
+
+  // 14-day activity histogram: XP events bucketed by local day.
+  const counts = new Map<string, number>();
+  for (const e of xpEvents) {
+    const key = ymdLocal(new Date(e.createdAt));
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const week: { day: string; count: number }[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+    const key = ymdLocal(d);
+    week.push({ day: key, count: counts.get(key) ?? 0 });
+  }
+
+  const enrollments = await prisma.coachProgramEnrollment.findMany({
+    where: { userId: client.id, programId: { in: myPrograms.map((p) => p.id) } },
+  });
+  const emap = new Map(enrollments.map((e) => [e.programId, e]));
+
+  const lastWorkoutAt =
+    [lastXp?.createdAt, lastLesson?.completedAt]
+      .filter((d): d is Date => Boolean(d))
+      .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+
+  const { lastActiveOn, ...profile } = client;
+  res.json({
+    profile,
+    lastWorkoutAt,
+    quietDays: daysSince(lastActiveOn),
+    week,
+    weightTrend: weightTrend.reverse(),
+    prs,
+    myPrograms: myPrograms.map((p) => {
+      const e = emap.get(p.id);
+      const daysCount = (parseArray(p.days) as unknown[]).length;
+      return {
+        id: p.id,
+        title: p.title,
+        visibility: p.visibility,
+        daysCount,
+        completedCount: e ? (parseArray(e.completedDays) as unknown[]).length : 0,
+        enrolled: Boolean(e),
+        assignedBy: e?.assignedBy ?? null,
+      };
+    }),
+  });
+});
+
+// ---- Broadcast to all clients (1 per 24h) ----
+coachRouter.post('/broadcast', async (req: AuthedRequest, res) => {
+  const p = z.object({ text: z.string().min(1).max(300) }).safeParse(req.body);
+  if (!p.success) return res.status(400).json({ error: 'Write a message (max 300 chars)' });
+  const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { isCoach: true, firstName: true } });
+  if (!me?.isCoach) return res.status(403).json({ error: 'Coaches only' });
+
+  const rows = await prisma.coachRequest.findMany({ where: { coachUserId: req.userId!, status: 'accepted' }, select: { clientId: true } });
+  if (!rows.length) return res.status(400).json({ error: 'No clients yet' });
+
+  // Rate limit via the notification rows the last broadcast wrote: broadcasts
+  // are the only coach-type notifications deep-linking to /u/<me>.
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const recent = await prisma.notification.findFirst({
+    where: { type: 'coach', url: `/u/${req.userId!}`, userId: { in: rows.map((r) => r.clientId) }, createdAt: { gte: dayAgo } },
+    select: { id: true },
+  });
+  if (recent) return res.status(429).json({ error: 'You can broadcast once every 24 hours' });
+
+  await Promise.all(
+    rows.map((r) => {
+      emitToUser(r.clientId, 'notify', { type: 'coach' });
+      return notifyUser(r.clientId, {
+        title: `Coach ${me.firstName ?? ''} 📣`.trim(),
+        titleAr: `الكوتش ${me.firstName ?? ''} 📣`.trim(),
+        body: p.data.text,
+        bodyAr: p.data.text,
+        url: `/u/${req.userId!}`,
+        type: 'coach',
+      }).catch(() => {});
+    }),
+  );
+  res.json({ ok: true, sent: rows.length });
+});
+
+// ---- Assign one of my programs to an accepted client ----
+coachRouter.post('/programs/:id/assign', async (req: AuthedRequest, res) => {
+  const p = z.object({ clientId: z.string().min(1) }).safeParse(req.body);
+  if (!p.success) return res.status(400).json({ error: 'Invalid input' });
+  const prog = await prisma.coachProgram.findFirst({ where: { id: req.params.id, coachUserId: req.userId! } });
+  if (!prog) return res.status(404).json({ error: 'Not found' });
+  const rel = await prisma.coachRequest.findUnique({
+    where: { clientId_coachUserId: { clientId: p.data.clientId, coachUserId: req.userId! } },
+    select: { status: true },
+  });
+  if (rel?.status !== 'accepted') return res.status(403).json({ error: 'Not your client' });
+
+  await prisma.coachProgramEnrollment.upsert({
+    where: { userId_programId: { userId: p.data.clientId, programId: prog.id } },
+    create: { userId: p.data.clientId, programId: prog.id, assignedBy: req.userId! },
+    update: { assignedBy: req.userId! },
+  });
+  emitToUser(p.data.clientId, 'notify', { type: 'coach' });
+  notifyUser(p.data.clientId, {
+    title: 'Your coach sent you a program 🏋️',
+    titleAr: 'مدربك بعتلك برنامج 🏋️',
+    body: prog.title,
+    bodyAr: prog.title,
+    url: `/coach-program/${prog.id}`,
+    type: 'coach',
+  }).catch(() => {});
+  res.json({ ok: true });
 });

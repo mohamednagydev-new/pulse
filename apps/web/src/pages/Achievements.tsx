@@ -32,10 +32,11 @@ const GOAL_ANIM: Record<string, (p: { className?: string }) => JSX.Element> = {
   xp: TrophyAnim,
   calories: FlameAnim,
   lifts: CarryAnim,
+  walk: CarryAnim,
 };
 
 type ChallengeKind = 'global' | 'personal' | 'group';
-type GoalType = 'lessons' | 'streak' | 'calories' | 'water' | 'lifts' | 'xp';
+type GoalType = 'lessons' | 'streak' | 'calories' | 'water' | 'lifts' | 'xp' | 'walk';
 
 type Challenge = {
   id: string;
@@ -65,6 +66,8 @@ const GOAL_OPTIONS: { value: GoalType; emoji: string; labelKey: string; def: num
   { value: 'water', emoji: '💧', labelKey: 'challenges.waterGlasses', def: 40 },
   { value: 'lifts', emoji: '🏋️', labelKey: 'challenges.liftSets', def: 15 },
   { value: 'xp', emoji: '🎯', labelKey: 'challenges.xpPoints', def: 300 },
+  // labelKey '' → bilingual inline label (locale JSON is frozen; see goalLabel).
+  { value: 'walk', emoji: '🚶', labelKey: '', def: 10 },
 ];
 
 const DURATIONS = [7, 14, 30, 60, 90];
@@ -78,7 +81,9 @@ function daysLeftOf(endsOn?: string | null): number | null {
 }
 
 export default function Achievements() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
   const qc = useQueryClient();
   const navigate = useNavigate();
 
@@ -101,7 +106,10 @@ export default function Achievements() {
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['challenges'] });
 
-  const goalLabel = (g: GoalType) => t(GOAL_OPTIONS.find((o) => o.value === g)?.labelKey ?? 'challenges.workouts');
+  const goalLabel = (g: GoalType) => {
+    if (g === 'walk') return L('walks', 'مشاوير مشي');
+    return t(GOAL_OPTIONS.find((o) => o.value === g)?.labelKey || 'challenges.workouts');
+  };
 
   const openCreate = () => {
     setKind('personal');
@@ -534,16 +542,17 @@ export default function Achievements() {
                   />
 
                   <p className="mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('challenges.goal')}</p>
-                  <div className="mt-2 flex gap-2">
+                  {/* Wrap: 7 goal types no longer fit one flex row. */}
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {GOAL_OPTIONS.map((g) => (
                       <button
                         key={g.value}
                         onClick={() => { setGoalType(g.value); setGoalValue(g.def); }}
-                        className={`min-h-[40px] flex-1 truncate rounded-full px-2 py-2 text-xs font-semibold transition-colors ${
+                        className={`min-h-[40px] flex-1 basis-[30%] truncate rounded-full px-2 py-2 text-xs font-semibold transition-colors ${
                           goalType === g.value ? 'bg-brand-pink text-white' : 'bg-gray-100 text-gray-500'
                         }`}
                       >
-                        {g.emoji} {t(g.labelKey)}
+                        {g.emoji} {g.value === 'walk' ? L('Walk', 'مشي') : t(g.labelKey)}
                       </button>
                     ))}
                   </div>

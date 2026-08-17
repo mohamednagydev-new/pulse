@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Camera, ExternalLink, Loader2, Phone, Save } from 'lucide-react';
+import { Camera, Copy, Dumbbell, ExternalLink, Loader2, MessageCircle, Phone, QrCode, Save, Tv, Users } from 'lucide-react';
 import { api, uploadWithAuth } from '../lib/api';
 import { toast } from '../lib/toast';
 import { Loader, MediaImage, EmptyState } from '../components/ui';
@@ -25,7 +25,10 @@ const STATUS_TONE: Record<string, string> = {
  * and work the leads pipeline — without going through the PULSE admin.
  */
 export default function PartnerHub() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  /** Inline bilingual label for the new gym toolkit — no locale-file edits. */
+  const L = (en: string, ar: string) => (isAr ? ar : en);
   const qc = useQueryClient();
   const [form, setForm] = useState<any>(null);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -38,6 +41,31 @@ export default function PartnerHub() {
     queryFn: () => api.get('/api/partner-portal/leads'),
     enabled: !!data?.partner,
   });
+
+  // ---- Gym toolkit (only for type=gym partners) ----
+  const isGym = data?.partner?.type === 'gym';
+  // POST is get-or-create and idempotent, so it is safe as a query fn.
+  const { data: invite } = useQuery({
+    queryKey: ['gym-invite-code'],
+    queryFn: () => api.post('/api/org/gym/code'),
+    enabled: isGym,
+    staleTime: Infinity,
+  });
+  const { data: gymStats } = useQuery({
+    queryKey: ['gym-analytics'],
+    queryFn: () => api.get('/api/org/gym/mine/analytics'),
+    enabled: isGym,
+  });
+
+  const copyInvite = async () => {
+    if (!invite?.url) return;
+    try {
+      await navigator.clipboard.writeText(invite.url);
+      toast(L('Link copied!', 'اتنسخ اللينك!'), 'success');
+    } catch {
+      toast(invite.url, 'info');
+    }
+  };
 
   useEffect(() => {
     if (data?.partner && !form) {
@@ -141,6 +169,130 @@ export default function PartnerHub() {
         <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage('logo', e.target.files[0])} />
         <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage('cover', e.target.files[0])} />
       </motion.section>
+
+      {/* ---- Gym toolkit: invite card, analytics, TV board ---- */}
+      {isGym && (
+        <>
+          {/* Invite-code card */}
+          <motion.section
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.03 }}
+            className="scene-tex mx-4 mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500/90 to-indigo-700/80 p-4 text-white shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20"><QrCode size={18} /></span>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-extrabold">{L('Your gym invite link', 'لينك دعوة الجيم بتاعك')}</h2>
+                <p className="text-[11px] text-white/70">
+                  {L('Members who scan it join your gym board', 'اللي يعمل سكان بينضم للوحة جيمك على طول')}
+                </p>
+              </div>
+            </div>
+            {invite?.url ? (
+              <>
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(invite.url)}`}
+                    alt="QR"
+                    className="h-24 w-24 shrink-0 rounded-xl bg-white p-1.5"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate rounded-xl bg-black/25 px-3 py-2 text-[11px] font-bold" dir="ltr">{invite.url}</p>
+                    <div className="mt-2 flex gap-2">
+                      <button onClick={copyInvite} className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/20 px-3 py-2 text-xs font-bold">
+                        <Copy size={13} /> {L('Copy', 'انسخ')}
+                      </button>
+                      <a
+                        href={`https://wa.me/?text=${encodeURIComponent(L(`Join our gym on PULSE: ${invite.url}`, `انضم لجيمنا على PULSE: ${invite.url}`))}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex flex-1 items-center justify-center gap-1 rounded-full bg-emerald-500 px-3 py-2 text-xs font-bold"
+                      >
+                        <MessageCircle size={13} /> {L('WhatsApp', 'واتساب')}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-2 text-[11px] font-semibold text-white/70">
+                  {L('Print the QR and put it at the front desk 🖨️', 'اطبع الـQR وحطها على الاستقبال 🖨️')}
+                </p>
+              </>
+            ) : (
+              <div className="mt-3 flex items-center gap-2 text-xs text-white/70"><Loader2 size={14} className="animate-spin" /> …</div>
+            )}
+          </motion.section>
+
+          {/* Analytics tiles */}
+          <motion.section
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.05 }}
+            className="mx-4 mt-4 rounded-2xl bg-white p-4 shadow-sm"
+          >
+            <h2 className="flex items-center gap-1.5 text-sm font-bold text-gray-700">
+              <Users size={15} /> {L('Your members this week', 'أعضاءك الأسبوع ده')}
+            </h2>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {[
+                { v: gymStats?.members, label: L('Members', 'الأعضاء'), tone: 'text-brand-blue bg-blue-50' },
+                { v: gymStats?.joinedThisMonth, label: L('Joined this month', 'انضموا الشهر ده'), tone: 'text-violet-600 bg-violet-50' },
+                {
+                  v: gymStats != null ? `${gymStats.active7d} (${gymStats.active7dPct}%)` : undefined,
+                  label: L('Active last 7 days', 'نشطين آخر ٧ أيام'),
+                  tone: 'text-emerald-600 bg-emerald-50',
+                },
+                { v: gymStats?.workoutsThisWeek, label: L('Workouts this week', 'تمرينات الأسبوع ده'), tone: 'text-orange-600 bg-orange-50' },
+              ].map((tile, i) => (
+                <div key={i} className={`rounded-xl p-3 ${tile.tone.split(' ')[1]}`}>
+                  <p className={`text-xl font-extrabold tabular-nums ${tile.tone.split(' ')[0]}`} dir="ltr">{tile.v ?? '—'}</p>
+                  <p className="mt-0.5 text-[11px] font-bold text-gray-500">{tile.label}</p>
+                </div>
+              ))}
+            </div>
+            {(gymStats?.atRisk?.length ?? 0) > 0 && (
+              <div className="mt-4">
+                <h3 className="text-xs font-extrabold text-rose-600">
+                  {L('Gone quiet — give them a call 📞', 'ناس مختفية — كلمهم 📞')}
+                </h3>
+                <div className="mt-2 space-y-1.5">
+                  {gymStats.atRisk.map((m: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2.5 rounded-xl border border-gray-100 px-3 py-2">
+                      <MediaImage path={m.avatarUrl} label={`${m.firstName} ${m.lastName}`} className="h-8 w-8 rounded-full" />
+                      <p className="min-w-0 flex-1 truncate text-sm font-bold">{m.firstName} {m.lastName}</p>
+                      <span className="shrink-0 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-600">
+                        {isAr ? `غايب ${m.daysQuiet} يوم` : `${m.daysQuiet}d quiet`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.section>
+
+          {/* TV board card */}
+          <motion.section
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.07 }}
+            className="mx-4 mt-4"
+          >
+            <Link
+              to={`/tv/${p.id}`}
+              className="scene-tex flex items-center gap-3 rounded-2xl bg-gradient-to-br from-slate-700/95 to-slate-900/90 p-4 text-white shadow-sm"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20"><Tv size={20} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-extrabold">{L('Show the board on your gym TV', 'اعرض اللوحة على شاشة الجيم')}</span>
+                <span className="mt-0.5 block text-[11px] text-white/70">
+                  {L('Weekly champions, live — opens in any TV browser, no login', 'أبطال الأسبوع لايف — بتشتغل على أي متصفح تلفزيون من غير تسجيل دخول')}
+                </span>
+              </span>
+              <Dumbbell size={18} className="shrink-0 text-white/50" />
+            </Link>
+          </motion.section>
+        </>
+      )}
 
       {/* Page content */}
       {form && (

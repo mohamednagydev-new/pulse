@@ -1,26 +1,31 @@
-import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { HeartPulse, Salad, BookOpen, ChevronRight, Search, Flame } from 'lucide-react';
+import { HeartPulse, Salad, BookOpen, Search, Flame, Footprints, Users, CalendarDays, ChevronRight } from 'lucide-react';
 import { api } from '../../lib/api';
-import { MediaImage, HScroll, Loader, EmptyState } from '../../components/ui';
+import { MediaImage } from '../../components/ui';
 import MenuDrawer from '../../components/MenuDrawer';
 import ScreenHeader from '../../components/ScreenHeader';
 import RelatedReels from '../../components/RelatedReels';
 import MoreSections from '../../components/MoreSections';
+import WaterCard from '../../components/WaterCard';
+import DailyReset from '../../components/DailyReset';
 
 const MotionLink = motion.create(Link);
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
-
-type Category = { id: string; title: string; image?: string | null; kind?: string };
 
 type DailyPick = {
   article?: { id: string; title: string; excerpt?: string | null; coverImage?: string | null } | null;
   recipe?: { id: string; title: string; coverImage?: string | null; calories?: number | null; prepTimeMin?: number | null } | null;
 };
 
+/* The old category rails (Kitchen / Health topics / Initiatives) are gone:
+ * they reached the exact same three hubs as the quick tiles above them —
+ * pure redundancy. In their place: wellness ACTIONS. Reading about health is
+ * step one; this screen now also offers the doing — water, a 2-minute reset,
+ * and the social moves (walk with a buddy, group session, events) that make
+ * healthy habits stick. */
 export default function WellnessHome() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -28,28 +33,11 @@ export default function WellnessHome() {
   /** Inline bilingual label — new headings only, no locale-file edits. */
   const L = (en: string, ar: string) => (isAr ? ar : en);
 
-  const useCats = (kind: string) =>
-    useQuery<Category[]>({
-      queryKey: ['categories', kind],
-      queryFn: () => api.get(`/api/categories?kind=${kind}`),
-      staleTime: 5 * 60 * 1000,
-    });
-
-  const recipes = useCats('recipe');
-  const articles = useCats('article');
-  const initiatives = useCats('initiative');
   const { data: pick } = useQuery<DailyPick>({
     queryKey: ['daily-pick'],
     queryFn: () => api.get('/api/daily-pick'),
     staleTime: 30 * 60 * 1000,
   });
-
-  const loading = recipes.isLoading && articles.isLoading && initiatives.isLoading;
-  const recipeCats = recipes.data ?? [];
-  const articleCats = articles.data ?? [];
-  const initiativeCats = (initiatives.data ?? []).slice(0, 4);
-  const nothing =
-    !loading && recipeCats.length === 0 && articleCats.length === 0 && initiativeCats.length === 0;
 
   // Each tile wears its tone as a gradient with the scene texture blended in —
   // the same photo-glass language as the headers, per the owner's request.
@@ -60,11 +48,34 @@ export default function WellnessHome() {
     { to: '/tracker', label: L('Calories', 'السعرات'), icon: <Flame size={22} />, grad: 'from-orange-500/90 to-amber-600/80' },
   ];
 
+  // Social wellness actions — connection makes habits stick, so the library
+  // links straight to the doing: walk with a buddy, train together, show up.
+  const actions = [
+    {
+      to: '/buddies',
+      icon: <Footprints size={20} />,
+      title: L('Walk & talk', 'امشي واتكلم'),
+      sub: L('Invite a buddy for an easy walk', 'اعزم صاحبك على مشوار مشي خفيف'),
+      grad: 'from-emerald-500/90 to-teal-700/80',
+    },
+    {
+      to: '/group',
+      icon: <Users size={20} />,
+      title: L('Group session', 'تمرين جماعي'),
+      sub: L('Training together keeps you consistent', 'التمرين مع ناس بيخليك مستمر'),
+      grad: 'from-violet-500/90 to-purple-700/80',
+    },
+    {
+      to: '/events',
+      icon: <CalendarDays size={20} />,
+      title: L('Wellness events', 'فعاليات صحية'),
+      sub: L('Classes, walks & meetups near you', 'كلاسات ومشاوير ولقاءات قريبة منك'),
+      grad: 'from-rose-500/90 to-pink-700/80',
+    },
+  ];
+
   return (
     <div className="relative overflow-x-hidden pb-6">
-      {/* AmbientBg removed: its edge-hugging blur blobs read as dirty grey
-          shadows on the screen sides, not as ambience. */}
-
       {/* Section tone: Wellness owns green. */}
       <ScreenHeader tone="green" padBottom="pb-8">
         {/* Burger INLINE with the title — the stacked version wasted a full row. */}
@@ -118,8 +129,7 @@ export default function WellnessHome() {
       </div>
 
       {/* The daily pick — WHY this tab is worth opening today. One article, one
-          recipe, rotating every day. (The old "Explore" hero cards duplicated
-          the quick tiles above 1:1 and are gone.) */}
+          recipe, rotating every day. */}
       {(pick?.article || pick?.recipe) && (
         <>
           <p className="mt-6 px-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">✨ {L("Today's pick", 'اختيار النهارده')}</p>
@@ -166,76 +176,38 @@ export default function WellnessHome() {
         </>
       )}
 
-      {loading && <Loader label={t('common.loading')} />}
+      {/* From reading to doing — wellness together beats wellness alone. */}
+      <p className="mt-6 px-4 text-[11px] font-bold uppercase tracking-wide text-gray-400">🤝 {L('Turn it into action', 'حوّل الكلام لفعل')}</p>
+      <div className="mt-2 space-y-2 px-4">
+        {actions.map((a, i) => (
+          <MotionLink
+            key={a.to}
+            to={a.to}
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ ...spring, delay: i * 0.05 }}
+            whileTap={{ scale: 0.97 }}
+            className={`scene-tex flex items-center gap-3 rounded-2xl bg-gradient-to-br ${a.grad} px-4 py-3 text-white shadow-md`}
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">{a.icon}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-extrabold">{a.title}</span>
+              <span className="block truncate text-[11px] text-white/85">{a.sub}</span>
+            </span>
+            <ChevronRight size={18} className="shrink-0 text-white/70 rtl:rotate-180" />
+          </MotionLink>
+        ))}
+      </div>
 
-      {nothing && (
-        <EmptyState
-          icon={<Salad size={40} />}
-          title={L('Nothing here yet', 'لا يوجد محتوى بعد')}
-          hint={L('New recipes and articles are on the way.', 'وصفات ومقالات جديدة في الطريق.')}
-        />
-      )}
-
-      {/* Content previews are opt-in — the hero cards above already reach every
-          hub; these rails are for browsing moods. "Track your day" is gone
-          entirely: it duplicated the Calories quick tile. */}
+      {/* Opt-in extras: the daily habits that belong to wellness (water, a
+          2-minute reset) plus short videos — interactive, not more links to
+          the same hubs the tiles already reach. */}
       <MoreSections
         storageKey="pulse-wellness-pins"
         sections={[
-          ...(recipeCats.length > 0
-            ? [{
-                key: 'kitchen', emoji: '🍽', label: L('Kitchen', 'مطبخ الصحة'),
-                node: (
-                  <Section title={L('Wellness Kitchen', 'مطبخ الصحة')} onSeeAll={() => navigate('/wellness/kitchen')}>
-                    <HScroll>
-                      {recipeCats.map((c, i) => (
-                        <RailCard key={c.id} cat={c} index={i} />
-                      ))}
-                    </HScroll>
-                  </Section>
-                ),
-              }]
-            : []),
-          ...(articleCats.length > 0
-            ? [{
-                key: 'topics', emoji: '📖', label: L('Health topics', 'مواضيع صحية'),
-                node: (
-                  <Section title={L('Health topics', 'مواضيع صحية')} onSeeAll={() => navigate('/wellness/articles')}>
-                    <HScroll>
-                      {articleCats.map((c, i) => (
-                        <RailCard key={c.id} cat={c} index={i} />
-                      ))}
-                    </HScroll>
-                  </Section>
-                ),
-              }]
-            : []),
-          ...(initiativeCats.length > 0
-            ? [{
-                key: 'initiatives', emoji: '🌱', label: L('Initiatives', 'مبادرات'),
-                node: (
-                  <Section title={L('Wellness initiatives', 'مبادرات صحية')} onSeeAll={() => navigate('/wellness/initiatives')}>
-                    <div className="grid grid-cols-2 gap-3 px-4">
-                      {initiativeCats.map((c, i) => (
-                        <MotionLink
-                          key={c.id}
-                          to={`/category/${c.id}`}
-                          initial={{ opacity: 0, y: 14 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true, margin: '0px 0px -40px 0px' }}
-                          transition={{ ...spring, delay: (i % 2) * 0.06 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="card-hover min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm"
-                        >
-                          <MediaImage path={c.image} label={c.title} className="h-24 w-full" />
-                          <p className="truncate p-2 text-xs font-semibold text-gray-700">{c.title}</p>
-                        </MotionLink>
-                      ))}
-                    </div>
-                  </Section>
-                ),
-              }]
-            : []),
+          { key: 'water', emoji: '💧', label: L('Water', 'المياه'), node: <WaterCard /> },
+          { key: 'reset', emoji: '🧘', label: L('Daily reset', 'استرخاء يومي'), node: <DailyReset /> },
           {
             key: 'reels', emoji: '🎬', label: L('Short videos', 'فيديوهات قصيرة'),
             node: <RelatedReels keyword="healthy recipes" className="mt-4 px-4" />,
@@ -243,40 +215,5 @@ export default function WellnessHome() {
         ]}
       />
     </div>
-  );
-}
-
-/** Rail card: themed cover art (or upload) + title, links to the category listing. */
-function RailCard({ cat, index }: { cat: Category; index: number }) {
-  return (
-    <MotionLink
-      to={`/category/${cat.id}`}
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '0px 0px -40px 0px' }}
-      transition={{ ...spring, delay: Math.min(index, 4) * 0.05 }}
-      whileTap={{ scale: 0.95 }}
-      className="w-40 shrink-0 text-start"
-      style={{ scrollSnapAlign: 'start' }}
-    >
-      <MediaImage path={cat.image} label={cat.title} className="h-28 w-40 rounded-2xl" />
-      <p className="mt-2 truncate text-sm font-semibold text-gray-700">{cat.title}</p>
-    </MotionLink>
-  );
-}
-
-function Section({ title, children, onSeeAll }: { title: string; children: ReactNode; onSeeAll?: () => void }) {
-  return (
-    <section className="mt-6">
-      <div className="mb-3 flex items-center justify-between px-4">
-        <h2 className="min-w-0 truncate text-lg font-bold">{title}</h2>
-        {onSeeAll && (
-          <button onClick={onSeeAll} aria-label={title} className="shrink-0 text-gray-400">
-            <ChevronRight size={22} className="rtl:rotate-180" />
-          </button>
-        )}
-      </div>
-      {children}
-    </section>
   );
 }

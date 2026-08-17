@@ -28,13 +28,21 @@ const TILES: Tile[] = [
   { key: 'recipes', emoji: '👨‍🍳', ar: 'وصفاتي', en: 'My recipes', hookAr: 'اعمل وصفتك محسوبة بالماكروز', hookEn: 'Build your recipe, macros included', to: '/tracker' },
   { key: 'mealplan', emoji: '🥗', ar: 'خطة الوجبات', en: 'Meal plan', hookAr: 'بتشرح نفسها وبتزود يوم التمرين', hookEn: 'Explains itself, boosts training days', to: '/meals' },
   { key: 'muscle', emoji: '💪', ar: 'خريطة العضلات', en: 'Muscle map', hookAr: 'دوس على العضلة وخد جلسة كاملة', hookEn: 'Tap a muscle, get a full session', to: '/exercises' },
+  { key: 'sets', emoji: '🏋️', ar: 'تسجيل المجموعات', en: 'Set-by-set logging', hookAr: 'تسخين ودروب سِت وفشل — وعدّل أي مجموعة', hookEn: 'Warmup, dropset, failure — edit any set', to: '/workout' },
+  { key: 'charts', emoji: '📈', ar: 'رسم لكل تمرينة', en: 'Exercise charts', hookAr: 'شوف وزنك بيكبر + e1RM وحاسبة أقصى رقم', hookEn: 'Watch your weights climb + e1RM & 1RM calc', to: '/progress' },
+  { key: 'routines', emoji: '📋', ar: 'الروتينات', en: 'Routines', hookAr: 'احفظ تمرينتك — وانسخ روتينات الناس بضغطة', hookEn: "Save your session — copy others' in one tap", to: '/routines' },
   { key: 'live', emoji: '🔴', ar: 'حصص لايف', en: 'Live classes', hookAr: 'فيديو متزامن وتايمر مشترك مع الكل', hookEn: 'Synced video + shared timer together', to: '/group' },
   { key: 'duels', emoji: '⚔️', ar: 'تحدي ١ ضد ١', en: '1v1 duels', hookAr: 'اتحدى صاحبك على الأيام والنقط', hookEn: 'Challenge a friend on days and XP', to: '/buddies' },
+  { key: 'walk', emoji: '🚶', ar: 'عزومة مشي', en: 'Walk invites', hookAr: '«تعالى نمشي النهارده؟» — اعزم صاحبك', hookEn: '"Walk today?" — invite a buddy out', to: '/buddies' },
+  { key: 'goals', emoji: '🤝', ar: 'هدف مشترك', en: 'Shared goals', hookAr: 'شارك هدفك مع صحابك وكمّلوا مع بعض', hookEn: 'Share your goal with your buddies', to: '/buddies' },
+  { key: 'walkchal', emoji: '👟', ar: 'تحديات المشي', en: 'Walking challenges', hookAr: 'سجّل مشاويرك ونافس على الترتيب', hookEn: 'Log walks, race the leaderboard', to: '/achievements' },
   { key: 'leagues', emoji: '🏅', ar: 'الدوري الأسبوعي', en: 'Weekly league', hookAr: 'اجمع نقط واصعد الدرجات', hookEn: 'Earn XP, climb the divisions', to: '/leagues' },
   { key: 'champions', emoji: '👑', ar: 'أبطال التحديات', en: 'Wall of champions', hookAr: 'الفايزين بجوايز حقيقية — ممكن تبقى منهم', hookEn: 'Real prize winners — you could be next', to: '/champions' },
   { key: 'reels', emoji: '🎬', ar: 'ريلز', en: 'Reels', hookAr: 'مقاطع تمارين سريعة تتحمس بيها', hookEn: 'Quick workout clips to get you going', to: '/reels' },
   { key: 'wellness', emoji: '🧘', ar: 'صحتك', en: 'Wellness', hookAr: 'نوم وضغط وسكر — مقالات تثق فيها', hookEn: 'Sleep, stress, sugar — articles you can trust', to: '/wellness' },
   { key: 'events', emoji: '📅', ar: 'الأحداث', en: 'Events', hookAr: 'تحديات ومناسبات المجتمع', hookEn: 'Community challenges and moments', to: '/events' },
+  { key: 'coachtools', emoji: '🧑‍🏫', ar: 'أدوات المدرب', en: 'Coach tools', hookAr: 'لينك دعوة ولوحة عملاء ورسايل جماعية', hookEn: 'Invite link, client dashboard, broadcast', to: '/coach-dashboard' },
+  { key: 'gymboard', emoji: '📺', ar: 'جيمك على PULSE', en: 'Your gym on PULSE', hookAr: 'كود أعضاء وترتيب وشاشة أبطال لايف', hookEn: 'Member code, leaderboard & live TV board', to: '/gyms' },
 ];
 
 export default function Features() {

@@ -236,20 +236,53 @@ trackerRouter.patch('/goals', async (req: AuthedRequest, res) => {
 });
 
 // ---- Strength logging & personal records ----
+const SET_TYPES = ['normal', 'warmup', 'dropset', 'failure'] as const;
+
 trackerRouter.post('/lifts', async (req: AuthedRequest, res) => {
   const parsed = z
-    .object({ exercise: z.string().min(1).max(80), weightKg: z.number().positive().max(1000), reps: z.number().int().positive().max(200) })
+    .object({
+      exercise: z.string().min(1).max(80),
+      weightKg: z.number().positive().max(1000),
+      reps: z.number().int().positive().max(200),
+      // Optional so offline-queued sets from older clients replay unchanged.
+      setType: z.enum(SET_TYPES).optional(),
+    })
     .safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Enter a weight and reps' });
   const { exercise, weightKg, reps } = parsed.data;
+  const setType = parsed.data.setType ?? 'normal';
+  // Warm-up plates must never set (or beat) a PR — compare against working sets only.
   const prev = await prisma.liftLog.findFirst({
-    where: { userId: req.userId!, exercise },
+    where: { userId: req.userId!, exercise, setType: { not: 'warmup' } },
     orderBy: { weightKg: 'desc' },
   });
-  const log = await prisma.liftLog.create({ data: { userId: req.userId!, exercise, weightKg, reps } });
-  const isPR = !prev || weightKg > prev.weightKg;
+  const log = await prisma.liftLog.create({ data: { userId: req.userId!, exercise, weightKg, reps, setType } });
+  const isPR = setType !== 'warmup' && (!prev || weightKg > prev.weightKg);
   await touchStreak(req.userId!);
   res.status(201).json({ ok: true, id: log.id, isPR, prevBest: prev?.weightKg ?? null });
+});
+
+// Fix a fat-fingered set right after logging it — ownership enforced.
+trackerRouter.patch('/lifts/:id', async (req: AuthedRequest, res) => {
+  const parsed = z
+    .object({
+      weightKg: z.number().positive().max(1000).optional(),
+      reps: z.number().int().positive().max(200).optional(),
+      setType: z.enum(SET_TYPES).optional(),
+    })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const lift = await prisma.liftLog.findUnique({ where: { id: req.params.id } });
+  if (!lift || lift.userId !== req.userId) return res.status(404).json({ error: 'Not found' });
+  const updated = await prisma.liftLog.update({ where: { id: lift.id }, data: parsed.data });
+  res.json(updated);
+});
+
+trackerRouter.delete('/lifts/:id', async (req: AuthedRequest, res) => {
+  const lift = await prisma.liftLog.findUnique({ where: { id: req.params.id } });
+  if (!lift || lift.userId !== req.userId) return res.status(404).json({ error: 'Not found' });
+  await prisma.liftLog.delete({ where: { id: lift.id } });
+  res.json({ ok: true });
 });
 
 trackerRouter.get('/lifts', async (req: AuthedRequest, res) => {
@@ -263,8 +296,12 @@ trackerRouter.get('/lifts', async (req: AuthedRequest, res) => {
 });
 
 // Personal records: best weight per exercise (with the reps at that weight).
+// Warm-up sets are excluded — a light warm-up must never masquerade as a best.
 trackerRouter.get('/prs', async (req: AuthedRequest, res) => {
-  const logs = await prisma.liftLog.findMany({ where: { userId: req.userId! }, orderBy: { weightKg: 'desc' } });
+  const logs = await prisma.liftLog.findMany({
+    where: { userId: req.userId!, setType: { not: 'warmup' } },
+    orderBy: { weightKg: 'desc' },
+  });
   const best = new Map<string, { exercise: string; weightKg: number; reps: number; createdAt: Date }>();
   for (const l of logs) if (!best.has(l.exercise)) best.set(l.exercise, l);
   res.json([...best.values()].sort((a, b) => b.weightKg - a.weightKg));

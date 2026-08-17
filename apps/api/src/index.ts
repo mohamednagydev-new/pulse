@@ -39,6 +39,8 @@ import { supportRouter } from './routes/support';
 import { partnerPortalRouter } from './routes/partnerPortal';
 import { assessmentRouter } from './routes/assessment';
 import { wearablesRouter } from './routes/wearables';
+import { routinesRouter } from './routes/routines';
+import { orgRouter } from './routes/org';
 import { localizeResponse } from './lib/localize';
 import { optionalAuth } from './middleware/auth';
 
@@ -158,6 +160,8 @@ app.use('/api/support', supportRouter);
 app.use('/api/partner-portal', partnerPortalRouter);
 app.use('/api/assessment', assessmentRouter);
 app.use('/api/wearables', wearablesRouter);
+app.use('/api/routines', routinesRouter);
+app.use('/api/org', orgRouter);
 app.use('/api/admin/reels', adminReelsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/media', mediaRouter);

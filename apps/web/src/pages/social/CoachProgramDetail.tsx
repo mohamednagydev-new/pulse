@@ -2,13 +2,15 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Play, Dumbbell, CalendarDays, Check } from 'lucide-react';
+import { Play, Dumbbell, CalendarDays, Check, Lock } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Loader, EmptyState } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 
 export default function CoachProgramDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
   const { id } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -41,7 +43,15 @@ export default function CoachProgramDetail() {
     <div className="min-h-screen pb-10">
       <TopBar title={prog.title} color="fitness-hero" textColor="text-white" />
 
-      {prog.description && <p className="px-4 text-sm text-gray-500">{prog.description}</p>}
+      {/* Private-programming badge: this program never shows on the open directory. */}
+      {prog.visibility === 'clients' && (
+        <div className="px-4">
+          <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-bold text-violet-700">
+            <Lock size={11} /> {L('Clients only', 'للعملاء فقط')}
+          </span>
+        </div>
+      )}
+      {prog.description && <p className="mt-2 px-4 text-sm text-gray-500">{prog.description}</p>}
 
       {/* Progress header: Day X of N + bar. */}
       <div className="mx-4 mt-3 rounded-2xl bg-white p-4 shadow-sm">

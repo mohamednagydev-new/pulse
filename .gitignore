@@ -8,6 +8,8 @@ build/
 # database
 prisma/*.db
 prisma/*.db-journal
+prisma/*.db-shm
+prisma/*.db-wal
 prisma/migrations/dev.db*
 
 # uploaded media (self-hosted video/images)

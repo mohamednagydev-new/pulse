@@ -16,6 +16,7 @@ import CountUp from '../components/CountUp';
 import StreakCalendar from '../components/StreakCalendar';
 import Confetti from '../components/Confetti';
 import MoreSections from '../components/MoreSections';
+import ExerciseProgressChart, { OneRmCalculator } from '../components/ExerciseProgressChart';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
@@ -123,44 +124,7 @@ export default function Progress() {
             ),
           },
           { key: 'body', emoji: '📏', label: t('homeSlim.body'), node: <BodySection /> },
-          {
-            key: 'prs', emoji: '🏆', label: t('homeSlim.prs'),
-            node: (
-              <section className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm">
-                <h2 className="mb-3 flex items-center gap-2 font-bold"><Trophy size={16} className="text-amber-500" /> {t('progress2.prs')}</h2>
-                {prs.length === 0 ? (
-                  <p className="text-sm text-gray-400">{t('progress2.prsEmpty')}</p>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {prs.map((r, i) => (
-                      <div
-                        key={r.exercise}
-                        className="relative min-w-0 rounded-2xl bg-gradient-to-b from-amber-50 to-white p-3 shadow-sm ring-1 ring-amber-100"
-                      >
-                        <button
-                          onClick={() => void shareMilestone({ kind: 'pr', title: t('share.pr'), value: `${r.weightKg} ${t('session.kg').toUpperCase()}`, subtitle: `${r.exercise} · ${r.reps} ${t('session.reps')}`, emoji: '🏆', savedMsg: t('share.saved') })}
-                          aria-label={`Share ${r.exercise} record`}
-                          className="absolute end-2 top-2 p-1 text-amber-300 hover:text-amber-500"
-                        >
-                          <Share2 size={14} />
-                        </button>
-                        <div className="flex items-center gap-1.5">
-                          <span className="shrink-0 text-lg">{i === 0 ? '🏆' : '🥇'}</span>
-                          <span className="min-w-0 truncate text-sm font-semibold">{r.exercise}</span>
-                        </div>
-                        <p className="font-display mt-1 text-2xl font-extrabold">
-                          {r.weightKg}<span className="font-sans text-sm font-bold text-gray-400"> {t('session.kg')}</span>
-                        </p>
-                        <p className="text-[11px] text-gray-400">
-                          {r.reps} {t('session.reps')} · {new Date(r.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            ),
-          },
+          { key: 'prs', emoji: '🏆', label: t('homeSlim.prs'), node: <StrengthSection prs={prs} /> },
           {
             key: 'badges', emoji: '🎖', label: t('homeSlim.badges'),
             node: (
@@ -456,6 +420,72 @@ function BodySection() {
                 {t('common.save')}
               </motion.button>
         </div>
+      </Sheet>
+    </>
+  );
+}
+
+/* -------------------------------- Strength -------------------------------- */
+
+type PrRow = { exercise: string; weightKg: number; reps: number; createdAt: string };
+
+/** PR cards → tap opens per-exercise chart + e1RM sheet; tiny 1RM calc below. */
+function StrengthSection({ prs }: { prs: PrRow[] }) {
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
+  const [selected, setSelected] = useState<string | null>(null);
+
+  return (
+    <>
+      <section className="mx-4 mt-4 rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 flex items-center gap-2 font-bold"><Trophy size={16} className="text-amber-500" /> {t('progress2.prs')}</h2>
+        {prs.length === 0 ? (
+          <p className="mt-2 text-sm text-gray-400">{t('progress2.prsEmpty')}</p>
+        ) : (
+          <>
+            <p className="mb-3 text-[11px] text-gray-400">{L('Tap an exercise for its chart & e1RM', 'دوس على أي تمرين تشوف الرسم والـ 1RM بتاعه')}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {prs.map((r, i) => (
+                <motion.div
+                  key={r.exercise}
+                  whileTap={{ scale: 0.97 }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelected(r.exercise)}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelected(r.exercise)}
+                  className="relative min-w-0 cursor-pointer rounded-2xl bg-gradient-to-b from-amber-50 to-white p-3 shadow-sm ring-1 ring-amber-100"
+                >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void shareMilestone({ kind: 'pr', title: t('share.pr'), value: `${r.weightKg} ${t('session.kg').toUpperCase()}`, subtitle: `${r.exercise} · ${r.reps} ${t('session.reps')}`, emoji: '🏆', savedMsg: t('share.saved') });
+                    }}
+                    aria-label={`Share ${r.exercise} record`}
+                    className="absolute end-2 top-2 p-1 text-amber-300 hover:text-amber-500"
+                  >
+                    <Share2 size={14} />
+                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <span className="shrink-0 text-lg">{i === 0 ? '🏆' : '🥇'}</span>
+                    <span className="min-w-0 truncate text-sm font-semibold">{r.exercise}</span>
+                  </div>
+                  <p className="font-display mt-1 text-2xl font-extrabold">
+                    {r.weightKg}<span className="font-sans text-sm font-bold text-gray-400"> {t('session.kg')}</span>
+                  </p>
+                  <p className="text-[11px] text-gray-400">
+                    {r.reps} {t('session.reps')} · {new Date(r.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </>
+        )}
+        <OneRmCalculator />
+      </section>
+
+      <Sheet open={selected !== null} onClose={() => setSelected(null)} label={selected ?? ''}>
+        {selected !== null && <ExerciseProgressChart exercise={selected} />}
       </Sheet>
     </>
   );

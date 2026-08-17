@@ -82,7 +82,9 @@ gamificationRouter.post('/challenges', async (req: AuthedRequest, res) => {
     .object({
       kind: z.enum(['personal', 'group']),
       title: z.string().min(1).max(80),
-      goalType: z.enum(['lessons', 'streak', 'calories', 'water', 'lifts', 'reels', 'xp']),
+      // 'walk' — low-pressure walking challenges; advanced by POST /api/social/walks
+      // and wearable walk imports (lib/walks.ts), not by gym workouts.
+      goalType: z.enum(['lessons', 'streak', 'calories', 'water', 'lifts', 'reels', 'xp', 'walk']),
       goalValue: z.number().int().min(1).max(100000),
       durationDays: z.union([z.literal(7), z.literal(14), z.literal(30), z.literal(60), z.literal(90)]),
     })
