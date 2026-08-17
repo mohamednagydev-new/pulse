@@ -303,31 +303,61 @@ function CoachSection({ userId }: { userId: string }) {
 
   const status = statusData?.status;
   const avg = rating?.avg ? Math.round(rating.avg * 10) / 10 : null;
+  const openChat = useMutation({
+    mutationFn: () => api.post('/api/chat/threads', { userId }),
+    onSuccess: (thread: any) => navigate(`/chat/${thread.id}`),
+    onError: (e: any) => toast(e?.message || 'Could not open chat', 'error'),
+  });
 
   return (
     <div className="mx-5 mt-4 space-y-3">
       <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-0.5">
-            {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={16} className={avg && s <= Math.round(avg) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'} />)}
-            <span className="ms-1 text-sm text-gray-500" dir="ltr">{avg ?? '—'} ({rating?.count ?? 0})</span>
+        {/* WHAT this section is, before any buttons — "Connect" told users
+            nothing about coaching (user feedback). */}
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="min-w-0 flex-1 truncate font-bold">🏋️ {t('coach.sectionTitle')}</h3>
+          <div className="flex shrink-0 items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={14} className={avg && s <= Math.round(avg) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'} />)}
+            <span className="ms-1 text-xs text-gray-500" dir="ltr">{avg ?? '—'} ({rating?.count ?? 0})</span>
           </div>
-          <motion.button
-            whileTap={{ scale: 0.92 }}
-            transition={tapSpring}
-            onClick={() => request.mutate()}
-            disabled={status === 'pending' || status === 'accepted'}
-            className="btn-pill btn-primary flex min-h-[40px] items-center gap-1.5 px-4 py-2 text-sm disabled:opacity-70"
-          >
-            {status === 'accepted' ? (
-              <><Check size={14} className="text-brand-green" /> {t('coach.yourCoach')}</>
-            ) : status === 'pending' ? (
-              <><Clock size={14} /> {t('buddies.requested')}</>
-            ) : (
-              <><Zap size={14} /> {t('buddies.connect')}</>
-            )}
-          </motion.button>
         </div>
+
+        {status === 'accepted' ? (
+          <div className="mt-3 rounded-xl bg-emerald-50 p-3">
+            <p className="text-sm font-bold text-emerald-700">✅ {t('coach.yourCoach')}</p>
+            <p className="mt-0.5 text-xs text-emerald-600">{t('coach.acceptedHint')}</p>
+            <button
+              onClick={() => openChat.mutate()}
+              disabled={openChat.isPending}
+              className="mt-2 flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-full bg-emerald-500 text-sm font-extrabold text-white disabled:opacity-60"
+            >
+              💬 {t('coach.chatWith')}
+            </button>
+          </div>
+        ) : status === 'pending' ? (
+          <div className="mt-3 rounded-xl bg-amber-50 p-3">
+            <p className="flex items-center gap-1.5 text-sm font-bold text-amber-700"><Clock size={14} /> {t('coach.pendingTitle')}</p>
+            <p className="mt-0.5 text-xs text-amber-600">{t('coach.pendingHint')}</p>
+          </div>
+        ) : (
+          <>
+            {/* How coaching works — 3 steps, so the button below needs no guessing. */}
+            <div className="mt-3 space-y-1.5 text-xs leading-relaxed text-gray-500">
+              <p>1️⃣ {t('coach.how1')}</p>
+              <p>2️⃣ {t('coach.how2')}</p>
+              <p>3️⃣ {t('coach.how3')}</p>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              transition={tapSpring}
+              onClick={() => request.mutate()}
+              disabled={request.isPending}
+              className="btn-pill btn-primary mt-3 flex min-h-[46px] w-full items-center justify-center gap-2 text-sm disabled:opacity-70"
+            >
+              <Zap size={15} /> {t('coach.requestBtn')}
+            </motion.button>
+          </>
+        )}
         {/* Only accepted clients may rate (the server 403s everyone else) — a
             tappable star row for the general public was a guaranteed-fail button. */}
         {status === 'accepted' && (

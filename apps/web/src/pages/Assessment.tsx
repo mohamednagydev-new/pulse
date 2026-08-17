@@ -338,26 +338,37 @@ function PlanView({
         </div>
       )}
 
-      <section className="mx-4 rounded-2xl bg-white p-4 shadow-sm">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-orange-500">{t('assess.yourLevel')}</p>
-        <p className="text-xl font-extrabold">{t(`assess.level.${String(as.recommendedLevel).toLowerCase()}`)}</p>
-
-        {program && (
-          <div className="mt-3 rounded-xl bg-gray-50 p-3">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{t('assess.yourProgram')}</p>
-            <p className="text-sm font-bold">{program.title}</p>
-            <p className="text-xs text-gray-400">
-              {program._count?.lessons ?? 0} {t('path.lessons')}{program.coach?.name ? ` · ${program.coach.name}` : ''}
-            </p>
+      {/* The plan HERO: your goal acted out by the moving figure, your level,
+          your program — a plan should feel like a badge, not a paragraph. */}
+      <section className="scene-tex mx-4 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-pink-600 p-4 text-white shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="h-24 w-20 shrink-0 rounded-2xl bg-white/15 p-1 text-white/90">
+            <HumanMove pattern={GOAL_PATTERNS[as.goal] ?? 'jump'} className="h-full w-full" />
           </div>
-        )}
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-white/70">{t('assess.yourLevel')}</p>
+            <p className="text-2xl font-extrabold">{t(`assess.level.${String(as.recommendedLevel).toLowerCase()}`)}</p>
+            {program && (
+              <p className="mt-0.5 truncate text-xs text-white/85">
+                📋 {program.title} · {program._count?.lessons ?? 0} {t('path.lessons')}
+              </p>
+            )}
+          </div>
+        </div>
 
         {days.length > 0 && (
-          <div className="mt-3">
-            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">{t('assess.yourDays')}</p>
+          <div className="mt-3 border-t border-white/20 pt-3">
+            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-white/70">{t('assess.yourDays')}</p>
             <div className="flex flex-wrap gap-1.5">
               {days.map((d) => (
-                <span key={d} className="rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-bold text-orange-600">{d}</span>
+                <span key={d} className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold">
+                  {(() => {
+                    const idx = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(d);
+                    return idx >= 0
+                      ? new Date(Date.UTC(2024, 0, 7 + idx)).toLocaleDateString(document.documentElement.lang || 'ar', { weekday: 'long' })
+                      : d;
+                  })()}
+                </span>
               ))}
             </div>
           </div>

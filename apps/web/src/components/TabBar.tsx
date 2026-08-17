@@ -32,7 +32,7 @@ export default function TabBar() {
                   )}
                   <Icon size={21} className={`relative ${isActive ? 'text-white drop-shadow' : 'text-gray-400'}`} strokeWidth={isActive ? 2.5 : 2} />
                 </span>
-                <span className={`text-[10px] font-bold ${isActive ? text : 'text-gray-400'}`}>
+                <span className={`max-w-[72px] truncate text-[10px] font-bold ${isActive ? text : 'text-gray-400'}`}>
                   {t(`nav.${key}`)}
                 </span>
               </motion.div>

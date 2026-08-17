@@ -12,14 +12,22 @@ import { celebrateFeedback } from '../lib/haptics';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
-/** Explore quests deep-link straight into the feature they teach. */
-const EXPLORE_ROUTES: Record<string, string> = {
+/** EVERY quest deep-links to where it gets done — a quest tile that does
+ *  nothing on tap reads as broken (user feedback: "record your weight"). */
+const QUEST_ROUTES: Record<string, string> = {
   'explore-ai': '/coach-chat',
   'explore-photo': '/tracker',
   'explore-recipe': '/tracker',
   'explore-journey': '/progress',
   'explore-duel': '/buddies',
   'explore-group': '/group',
+  workout: '/workout',
+  water: '/',
+  food: '/tracker',
+  lift: '/workout',
+  reels: '/reels',
+  social: '/community',
+  weight: '/progress',
 };
 
 /** Quest key → animated icon. Unmapped keys (reels, one-offs) keep their emoji. */
@@ -134,11 +142,11 @@ export default function DailyQuests() {
               onClick={() => {
                 if (q.done) return;
                 if (q.key === 'invite') inviteFriend();
-                else if (EXPLORE_ROUTES[q.key]) navigate(EXPLORE_ROUTES[q.key]);
+                else if (QUEST_ROUTES[q.key]) navigate(QUEST_ROUTES[q.key]);
               }}
               className={`flex min-w-0 flex-col items-center rounded-xl px-1.5 py-2.5 text-center ${
                 q.done ? 'bg-emerald-50' : 'bg-gray-50'
-              } ${(q.key === 'invite' || EXPLORE_ROUTES[q.key]) && !q.done ? 'cursor-pointer ring-1 ring-orange-300/60' : ''}`}
+              } ${(q.key === 'invite' || QUEST_ROUTES[q.key]) && !q.done ? 'cursor-pointer ring-1 ring-orange-300/60' : ''}`}
             >
               <span
                 className={`flex h-9 w-9 items-center justify-center rounded-xl text-base ${

@@ -955,7 +955,7 @@
     "profileUpdated": "Coach profile updated",
     "nowCoach": "You're now a coach! 🎉",
     "editIntro": "Share your expertise, publish content, and coach the community.",
-    "pendingTitle": "Profile under review ⏳",
+    "pendingTitle": "Request sent",
     "pendingBody": "You can build your workouts and programs now. You'll appear in the public coaches list once the PULSE team verifies your profile.",
     "headline": "Headline",
     "headlinePh": "e.g. Strength & mobility coach",
@@ -969,7 +969,15 @@
     "markUndone": "Mark not done",
     "myCoaches": "My coaches",
     "reviewPrompt": "Add a short review (optional):",
-    "thanksRating": "Thanks for rating!"
+    "thanksRating": "Thanks for rating!",
+    "sectionTitle": "Personal coaching",
+    "how1": "Send the coach a training request with one tap.",
+    "how2": "When they accept, you become their client.",
+    "how3": "Their workouts & programs open for you here — plus direct chat.",
+    "requestBtn": "Ask this coach to train me 💪",
+    "pendingHint": "The coach got your request — you get a notification the moment they accept.",
+    "acceptedHint": "Their workouts and programs below are yours — and you can message them directly.",
+    "chatWith": "Message your coach"
   },
   "workout": {
     "startSession": "Start a session",

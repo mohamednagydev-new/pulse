@@ -93,6 +93,19 @@ h3 {
    below don't scale with rem, so each gets nudged up a step explicitly. */
 html {
   font-size: 18px;
+  /* Android Chrome "font boosting" inflates SOME text blocks and not others —
+     that's the inconsistent-sizes report from Android users. 100% pins every
+     block to the sizes we set (users can still zoom, and OS accessibility
+     scaling keeps working — it scales uniformly instead of per-block). */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Defensive overflow: when OS-level text scaling makes labels bigger than we
+   planned, flex children must be allowed to shrink+truncate instead of
+   bursting out of tabs/buttons/chips. */
+button {
+  min-width: 0;
 }
 .text-\[9px\] { font-size: 11px !important; }
 .text-\[10px\] { font-size: 12px !important; }
