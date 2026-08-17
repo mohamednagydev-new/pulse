@@ -108,6 +108,14 @@ const CARDS = [
   // ---- Redesign announcement: calmer screens, user decides what shows ----
   { file: '42-new-look', kind: 'feature', bg: G.violet, img: 'new-home.png', emoji: '🧘', title: 'الشكل الجديد أهدى', sub: 'خط أكبر وشاشة مرتبة — وكل حاجة لسه موجودة: دوس على أي كارت تحت وثبّته 📌 وخلّي شاشتك على مزاجك' },
 
+  // ---- Carrefour prize challenge (Sept 1-14, 2026) ----
+  { file: '43-carrefour-challenge', kind: 'qa', bg: G.orange, title: 'تحدي كارفور — جوايز ٩٠٠ جنيه 🛒', rows: [
+    '1️⃣ من ١ لـ١٤ سبتمبر: اعمل ١٠ تمرينات من جوه التطبيق 💪',
+    '2️⃣ 🥇 الأول: قسيمة كارفور ٥٠٠ جنيه 🔥',
+    '3️⃣ 🥈🥉 التاني والتالت: قسيمة ٢٠٠ جنيه لكل واحد',
+    '4️⃣ 📸 انشر إثبات تمرينك في غرفة التحدي — النتايج بتتراجع قبل تسليم الجوايز',
+  ] },
+
   // ---- Install how-to: the #1 support question — no store, add from the browser ----
   { file: '40-how-to-install', kind: 'qa', bg: G.blue, title: 'إزاي تنزّل التطبيق؟ 📲', rows: [
     '1️⃣ افتح pulse.geddo.online من متصفح موبايلك — من غير متجر ومن غير تحميل',

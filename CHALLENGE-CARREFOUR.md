@@ -2,7 +2,7 @@
 
 > The full pack for your first sponsored-prize challenge: the design, every admin
 > field ready to paste, the rules that make cheating pointless, the posts, and
-> the verification checklist. Budget: **500 EGP Carrefour vouchers**.
+> the verification checklist. Budget: **900 EGP Carrefour vouchers (500 / 200 / 200)**.
 
 ---
 
@@ -16,13 +16,11 @@
   attaches faces to numbers.
 - **10 of 14 days is winnable by normal humans** — a rest-day margin keeps the
   middle of the pack alive (and the halfway streak-freeze gift fires at 5).
-- **Prize mode `both`** — podium for the fighters + a raffle for every completer.
-  The raffle is what keeps rank #30 finishing: تكمّل = تكسب فرصة.
+- **Prize mode `top3`** — a serious podium: the 500 makes the race real, and TWO
+  200s mean second and third are worth fighting for to the last day.
 
-**Prize split (total 500):**
-🥇 **250 جنيه** · 🥈 **100 جنيه** · 🥉 **50 جنيه** · 🎁 **سحب 100 جنيه** بين كل اللي كمّلوا الهدف
-
-Four winners from one voucher — more winners = "الجوايز حقيقية وممكن أكون أنا".
+**Prize split (total 900):**
+🥇 **٥٠٠ جنيه** · 🥈 **٢٠٠ جنيه** · 🥉 **٢٠٠ جنيه**
 
 ---
 
@@ -36,12 +34,12 @@ Four winners from one voucher — more winners = "الجوايز حقيقية و
 | Cover image | upload a card via Media (idea below) |
 | Goal type | `lessons` |
 | Goal value | `10` |
-| Starts on | *(a Saturday — الأسبوع المصري بيبدأ سبت)* |
-| Ends on | *(start + 13 days)* |
+| Starts on | `2026-09-01` |
+| Ends on | `2026-09-14` *(announce Sept 14 as the last day; the auto-podium fires the morning of Sept 15 — do the audit before 10:00, or set endsOn 2026-09-13 and keep Sept 14 as your review day)* |
 | Reward XP | `100` |
-| Prizes | 🥇 250 EGP · 🥈 100 EGP · 🥉 50 EGP Carrefour vouchers + 100 EGP raffle for ALL completers |
-| Prizes (Arabic) | 🥇 قسيمة كارفور ٢٥٠ جنيه · 🥈 ١٠٠ جنيه · 🥉 ٥٠ جنيه + 🎁 سحب قسيمة ١٠٠ جنيه بين كل اللي خلّصوا الهدف |
-| Prize mode | `both` |
+| Prizes | 🥇 500 EGP · 🥈 200 EGP · 🥉 200 EGP Carrefour vouchers |
+| Prizes (Arabic) | 🥇 قسيمة كارفور ٥٠٠ جنيه · 🥈 قسيمة ٢٠٠ جنيه · 🥉 قسيمة ٢٠٠ جنيه |
+| Prize mode | `top3` |
 | Sponsor name | *(اسم الممول لو في راعي، أو سيبها فاضية)* |
 | Difficulty | `medium` |
 
@@ -96,9 +94,8 @@ Four winners from one voucher — more winners = "الجوايز حقيقية و
 
 **FB post (launch day):**
 > 🛒🔥 أول تحدي بجوايز حقيقية على PULSE!
-> اعمل ١٠ تمرينات في ١٤ يوم — الأول ياخد قسيمة كارفور ٢٥٠ جنيه، والتاني ١٠٠،
-> والتالت ٥٠… ومش بس كده: كل واحد يخلّص الهدف بيدخل سحب على قسيمة ١٠٠ جنيه 🎁
-> يعني مش لازم تبقى الأول — كمّل وبس.
+> اعمل ١٠ تمرينات في ١٤ يوم — الأول ياخد قسيمة كارفور ٥٠٠ جنيه 🔥
+> والتاني والتالت قسيمة ٢٠٠ جنيه لكل واحد — يعني ٣ فايزين بجوايز حقيقية!
 > التطبيق مجاني والتحدي مجاني — اللينك في أول كومنت 👇
 > (النتايج بتتراجع قبل تسليم الجوايز — العب نضيف 😄)
 
