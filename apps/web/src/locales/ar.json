@@ -1041,7 +1041,9 @@
     "addPoll": "ضيف استفتاء",
     "pollOption": "اختيار",
     "pollAddOption": "ضيف اختيار",
-    "pollVotes": "{{n}} صوت"
+    "pollVotes": "{{n}} صوت",
+    "promptLabel": "سؤال النهارده",
+    "promptAnswer": "جاوب"
   },
   "bookmarks": {
     "empty": "مفيش محفوظات لسه."

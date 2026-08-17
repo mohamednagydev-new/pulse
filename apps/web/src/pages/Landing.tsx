@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { api } from '../lib/api';
 import { Mic, ScanLine, Salad, Trophy, Users, Flame, ChevronRight, Check, Dumbbell, UtensilsCrossed, MessagesSquare, Sparkles } from 'lucide-react';
 import LanguageToggle from '../components/LanguageToggle';
 import CountUp from '../components/CountUp';
@@ -174,11 +176,46 @@ export default function Landing() {
         ))}
       </motion.div>
 
+      {/* Live prize challenge — real money on the landing page is the strongest
+          conversion hook this app has. Public endpoint; renders nothing off-season. */}
+      <PrizeSection L={L} go={go} />
+
       {/* Real, current screenshots — swipe through the app before signing up. */}
       <motion.div {...reveal} className="mt-10">
         <h2 className="px-5 text-center text-xl font-extrabold">{L('See it from inside', 'شوف التطبيق من جوه')}</h2>
         <p className="mt-1 px-5 text-center text-xs text-white/60">{L('Swipe — tap any screen to enlarge', 'اسحب — ودوس على أي شاشة تكبر')}</p>
         <ScreenshotRail className="mt-4" />
+      </motion.div>
+
+      {/* The magic grid: the features no other Arabic fitness app has, as
+          colorful cards — bullets don't sell magic. */}
+      <motion.div {...reveal} className="mt-12 px-5">
+        <h2 className="text-center text-xl font-extrabold">{L('Things no other app does', 'حاجات مفيش تطبيق تاني بيعملها')}</h2>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          {([
+            { e: '🎤', g: 'from-orange-500 to-amber-600', ar: ['قول أكلت إيه', 'وإحنا نحسب السعرات'], en: ['Say what you ate', 'we count the calories'] },
+            { e: '🥗', g: 'from-emerald-500 to-teal-600', ar: ['أخصائي تغذية AI', 'بيرد بأرقامك انت'], en: ['AI nutritionist', 'answers with YOUR numbers'] },
+            { e: '📷', g: 'from-sky-500 to-blue-600', ar: ['امسح أي باركود', 'تقييم من ١٠ لهدفك'], en: ['Scan any barcode', 'scored 1-10 for your goal'] },
+            { e: '🎯', g: 'from-pink-500 to-rose-600', ar: ['رحلة الدايت', 'هدف وشريط تقدم وتفكيرات'], en: ['Diet journey', 'target, progress, nudges'] },
+            { e: '🤸', g: 'from-violet-500 to-purple-700', ar: ['شخصية بتتحرك', 'بتوريك التمرينة والعضلة'], en: ['Moving figure', 'shows the move & muscle'] },
+            { e: '🔴', g: 'from-red-500 to-orange-600', ar: ['حصص لايف', 'فيديو متزامن مع الناس'], en: ['Live classes', 'synced video together'] },
+            { e: '🏆', g: 'from-amber-500 to-yellow-600', ar: ['تحديات بجوايز', 'حقيقية بتتسلم فعلاً'], en: ['Prize challenges', 'real, actually delivered'] },
+            { e: '⚔️', g: 'from-slate-600 to-slate-800', ar: ['تحدي ١ ضد ١', 'مع صاحبك على النقط'], en: ['1v1 duels', 'you vs your friend'] },
+          ]).map((c, i) => (
+            <motion.div
+              key={c.e}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ ...spring, delay: (i % 4) * 0.05 }}
+              className={`rounded-2xl bg-gradient-to-br ${c.g} p-3.5 shadow-lg`}
+            >
+              <span className="text-2xl" aria-hidden>{c.e}</span>
+              <p className="mt-1.5 text-sm font-extrabold leading-snug">{isAr ? c.ar[0] : c.en[0]}</p>
+              <p className="text-[11px] text-white/80">{isAr ? c.ar[1] : c.en[1]}</p>
+            </motion.div>
+          ))}
+        </div>
       </motion.div>
 
       {/* Feature sections — screenshot + copy, alternating sides */}
@@ -312,5 +349,27 @@ export default function Landing() {
         <CTAs big />
       </motion.div>
     </div>
+  );
+}
+
+/** Live prize challenge on the landing page — renders nothing when no prize
+ *  challenge is in its window. Public /api/home, so guests see it too. */
+function PrizeSection({ L, go }: { L: (en: string, ar: string) => string; go: (to: string, event: string) => void }) {
+  const { data } = useQuery({ queryKey: ['landing-home'], queryFn: () => api.get('/api/home'), staleTime: 5 * 60_000 });
+  const prize = (data?.challenges ?? []).find((c: any) => c.prizeText);
+  if (!prize) return null;
+  return (
+    <motion.div {...reveal} className="mx-5 mt-10 overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 p-5 text-center shadow-xl">
+      <p className="text-3xl" aria-hidden>🏆</p>
+      <h2 className="mt-1 text-xl font-extrabold">{prize.title}</h2>
+      <p className="mt-1 text-sm font-bold text-white/90">🎁 {prize.prizeText}</p>
+      <p className="mt-1 text-xs text-white/80">{L('Running right now — join free and compete', 'شغال دلوقتي — اشترك ببلاش ونافس')}</p>
+      <button
+        onClick={() => go('/register', 'funnel-register-intent')}
+        className="mx-auto mt-3 block rounded-full bg-white px-8 py-3 text-sm font-extrabold text-orange-600 shadow-lg"
+      >
+        {L('Join the challenge', 'ادخل التحدي')}
+      </button>
+    </motion.div>
   );
 }

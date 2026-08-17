@@ -1033,7 +1033,9 @@
     "addPoll": "Add a poll",
     "pollOption": "Option",
     "pollAddOption": "Add option",
-    "pollVotes": "{{n}} votes"
+    "pollVotes": "{{n}} votes",
+    "promptLabel": "Question of the day",
+    "promptAnswer": "Answer"
   },
   "bookmarks": {
     "empty": "No bookmarks yet."

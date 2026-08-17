@@ -15,6 +15,21 @@ import PostCard from '../../components/PostCard';
 const FEED_KEY = ['feed'];
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
+/** The daily conversation starter — an empty feed never fills itself. One tap
+ *  drops the question into the composer with the user's answer to finish. */
+const PROMPTS: { ar: string; en: string }[] = [
+  { ar: 'أطول سلسلة أيام وصلتلها كام؟ 🔥', en: 'What is your longest streak ever? 🔥' },
+  { ar: 'أكلة صحية مصرية تنصح بيها الكل؟ 🍽', en: 'One healthy Egyptian dish everyone should try?' },
+  { ar: 'بتتمرن الصبح ولا بليل؟ ولي؟ ⏰', en: 'Morning or night workouts — and why? ⏰' },
+  { ar: 'إيه أصعب تمرينة جربتها في التطبيق؟ 😤', en: 'Hardest exercise you tried in the app? 😤' },
+  { ar: 'مين صاحبك اللي المفروض يشترك معانا؟ منشن 👇', en: 'Which friend should join us? Tag them 👇' },
+  { ar: 'إيه الأغنية اللي بتولعك في التمرين؟ 🎵', en: 'What song fires you up mid-workout? 🎵' },
+  { ar: 'وزنك النهارده أحسن ولا زي الأسبوع اللي فات؟ ⚖️', en: 'Weight better this week or the same? ⚖️' },
+  { ar: 'نصيحة واحدة لأي حد لسه بادئ؟ 🌱', en: 'One tip for anyone just starting? 🌱' },
+  { ar: 'فطارك النهارده كان إيه؟ صوره لو تقدر 📸', en: 'What was your breakfast today? Photo if you can 📸' },
+  { ar: 'هدفك الأسبوع ده إيه؟ اكتبه والتزم 💪', en: 'Your goal this week? Write it and own it 💪' },
+];
+
 export default function Community() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -117,6 +132,26 @@ export default function Community() {
         transition={{ ...spring, delay: 0.05 }}
         className="mx-4 rounded-2xl glass p-3"
       >
+        {/* Daily conversation starter — tap to answer it as your post. */}
+        {!text && (() => {
+          const day = Math.floor(Date.now() / 86400000);
+          const prompt = PROMPTS[day % PROMPTS.length];
+          const isArNow = document.documentElement.dir === 'rtl';
+          const q = isArNow ? prompt.ar : prompt.en;
+          return (
+            <button
+              onClick={() => setText(`${q}\n`)}
+              className="mb-2 flex w-full items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500/15 to-purple-500/10 px-3 py-2.5 text-start"
+            >
+              <span className="text-base" aria-hidden>💬</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[10px] font-bold uppercase tracking-wide text-violet-400">{t('community.promptLabel')}</span>
+                <span className="block text-sm font-bold">{q}</span>
+              </span>
+              <span className="shrink-0 rounded-full bg-violet-500 px-2.5 py-1 text-[11px] font-bold text-white">{t('community.promptAnswer')}</span>
+            </button>
+          );
+        })()}
         <div className="flex items-center gap-2">
           <input
             className="flex-1 bg-transparent text-sm outline-none"
