@@ -260,6 +260,9 @@ model ReelFavorite {
 model Partner {
   id            String   @id @default(cuid())
   type          String   @default("store") // store | gym | brand | clinic | coach_org
+  /** Self-service: the User who manages this partner's page + leads.
+   *  Assigned by the admin; null = admin-managed only. */
+  managerUserId String?
   name          String
   nameAr        String?
   tagline       String?

@@ -125,6 +125,7 @@ const Events = lazyRoute(() => import('./pages/Events'));
 const Features = lazyRoute(() => import('./pages/Features'));
 const DietPrograms = lazyRoute(() => import('./pages/DietPrograms'));
 const Champions = lazyRoute(() => import('./pages/Champions'));
+const PartnerHub = lazyRoute(() => import('./pages/PartnerHub'));
 const Leagues = lazyRoute(() => import('./pages/Leagues'));
 const PartnerPage = lazyRoute(() => import('./pages/PartnerPage'));
 const Help = lazyRoute(() => import('./pages/Help'));
@@ -357,6 +358,7 @@ export default function App() {
           <Route path="/features" element={<Features />} />
           <Route path="/diet-programs" element={<DietPrograms />} />
           <Route path="/champions" element={<Champions />} />
+          <Route path="/partner-hub" element={<PartnerHub />} />
           <Route path="/leagues" element={<Leagues />} />
           <Route path="/support" element={<Support />} />
           <Route path="/my-plan" element={<Assessment />} />

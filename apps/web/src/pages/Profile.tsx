@@ -393,6 +393,8 @@ export default function Profile() {
         </motion.button>
       )}
 
+      <PartnerHubEntry />
+
       {/* Compact rows, not slabs — same information, half the visual weight. */}
       <div className="mt-5 space-y-2 px-5">
         <MotionLink
@@ -425,6 +427,37 @@ export default function Profile() {
       </div>
 
       <EditProfileSheet open={editOpen} onClose={() => setEditOpen(false)} me={me} />
+    </div>
+  );
+}
+
+/** Shows only for users the admin linked to a partner — their door to the
+ *  self-service dashboard (edit page + work leads). */
+function PartnerHubEntry() {
+  const { t } = useTranslation();
+  const { data } = useQuery({ queryKey: ['partner-portal'], queryFn: () => api.get('/api/partner-portal/me'), staleTime: 5 * 60_000 });
+  if (!data?.partner) return null;
+  return (
+    <div className="mt-5 px-5">
+      <MotionLink
+        to="/partner-hub"
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        whileTap={{ scale: 0.97 }}
+        className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-slate-600 to-slate-800 p-4 text-white shadow-sm"
+      >
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-xl">🏪</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-extrabold">{t('partnerHub.title')}</span>
+          <span className="block truncate text-xs text-white/70">
+            {data.newLeads > 0 ? t('partnerHub.entryNew', { n: data.newLeads }) : t('partnerHub.entrySub')}
+          </span>
+        </span>
+        {data.newLeads > 0 && (
+          <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-brand-pink px-1.5 text-xs font-bold">{data.newLeads}</span>
+        )}
+      </MotionLink>
     </div>
   );
 }

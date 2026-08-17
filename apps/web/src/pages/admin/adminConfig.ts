@@ -235,6 +235,7 @@ export const RESOURCES: Resource[] = [
       { name: 'name', label: 'Partner name', type: 'text' },
       { name: 'nameAr', label: 'Name (Arabic)', type: 'text' },
       { name: 'type', label: 'Type', type: 'select', options: ['store', 'gym', 'brand', 'clinic', 'coach_org'] },
+      { name: 'managerUserId', label: 'Manager account (can edit page + work leads at /partner-hub)', type: 'remote', remote: 'users', remoteLabel: 'email' },
       { name: 'tagline', label: 'Tagline (short line)', type: 'text' },
       { name: 'taglineAr', label: 'Tagline (Arabic)', type: 'text' },
       { name: 'description', label: 'Description', type: 'textarea' },

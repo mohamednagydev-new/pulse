@@ -1301,5 +1301,38 @@
     "emptyHint": "The first prize challenge to finish puts its winners here — forever.",
     "raffle": "Raffle winner",
     "joinNext": "Join the next challenge"
+  },
+  "partnerHub": {
+    "title": "Partner dashboard",
+    "noneTitle": "No partner page linked",
+    "noneHint": "This screen is for PULSE partners (gyms, clinics, stores). Contact us to become one.",
+    "saved": "Saved ✓",
+    "cover": "Cover",
+    "logo": "Logo",
+    "viewPage": "View page",
+    "leadsSummary": "{{total}} leads · {{fresh}} new",
+    "pageSection": "Your page",
+    "contactSection": "Contact details",
+    "tagline": "Tagline (EN)",
+    "taglineAr": "Tagline (AR)",
+    "description": "Description (EN)",
+    "descriptionAr": "Description (AR)",
+    "phone": "Phone",
+    "whatsapp": "WhatsApp (digits only, e.g. 2010...)",
+    "address": "Address",
+    "mapUrl": "Google Maps link",
+    "website": "Website",
+    "instagram": "Instagram link",
+    "leadsSection": "Your leads",
+    "leadsHint": "Tap the status chip to advance: new → contacted → won → lost.",
+    "noLeads": "No leads yet — they appear here the moment a user asks for a callback.",
+    "entrySub": "Edit your page & manage your leads",
+    "entryNew": "{{n}} new leads waiting 🔔",
+    "status": {
+      "new": "NEW",
+      "contacted": "Contacted",
+      "won": "Won 🎉",
+      "lost": "Lost"
+    }
   }
 }
