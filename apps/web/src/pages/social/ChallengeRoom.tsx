@@ -37,15 +37,23 @@ export default function ChallengeRoom() {
     queryKey: ['challenge-board', id],
     queryFn: () => api.get(`/api/gamification/challenges/${id}/leaderboard`),
   });
-  useQuery({
+  const { data: msgData } = useQuery({
     queryKey: ['challenge-msgs', id],
     queryFn: async () => {
       const [msgs, me] = await Promise.all([api.get(`/api/gamification/challenges/${id}/messages`), api.get('/api/me')]);
-      setMessages(Array.isArray(msgs) ? msgs : []);
-      setMeId(me.id);
-      return msgs;
+      return { msgs: Array.isArray(msgs) ? msgs : [], meId: me.id };
     },
   });
+  // Sync from query DATA, not inside queryFn — cached-fresh remounts skipped the
+  // fetch and left the room blank (same bug as the DM chat).
+  useEffect(() => {
+    if (!msgData) return;
+    setMessages((prev) => {
+      const known = new Set(msgData.msgs.map((m: any) => m.id));
+      return [...msgData.msgs, ...prev.filter((m) => !known.has(m.id))];
+    });
+    setMeId(msgData.meId);
+  }, [msgData]);
 
   const leave = useMutation({
     mutationFn: () => api.post(`/api/gamification/challenges/${id}/leave`),

@@ -27,16 +27,28 @@ export default function ChatRoom() {
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const endRef = useRef<HTMLDivElement>(null);
 
-  const { isLoading } = useQuery({
+  const { data: room, isLoading } = useQuery({
     queryKey: ['chat-room', id],
     queryFn: async () => {
       const [data, me] = await Promise.all([api.get(`/api/chat/threads/${id}/messages`), api.get('/api/me')]);
-      setMessages(data.messages);
-      setOther(data.other);
-      setMeId(me.id);
-      return data;
+      return { ...data, meId: me.id };
     },
   });
+
+  // Sync local state from the QUERY DATA, not inside queryFn: with the global
+  // 60s staleTime, re-entering the room served cached data WITHOUT re-running
+  // queryFn — local state remounted empty and the chat looked blank until the
+  // cache went stale or a manual refresh (user report).
+  useEffect(() => {
+    if (!room) return;
+    setMessages((prev) => {
+      // Keep anything that arrived via socket after the cached snapshot.
+      const known = new Set(room.messages.map((m: Message) => m.id));
+      return [...room.messages, ...prev.filter((m) => !known.has(m.id))];
+    });
+    setOther(room.other);
+    setMeId(room.meId);
+  }, [room]);
 
   useEffect(() => {
     const socket = getSocket();
