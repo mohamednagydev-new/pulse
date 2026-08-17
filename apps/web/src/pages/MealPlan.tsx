@@ -222,12 +222,10 @@ export default function MealPlan() {
           charges for this; we hand you the person and take nothing. */}
       {!data?.empty && (
         <Link
-          to="/coaches-community?specialty=nutrition"
-          className="mx-4 mt-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition active:scale-[0.98]"
+          to="/nutritionist"
+          className="mx-4 mt-3 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm transition active:scale-[0.98]"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-brand-blue">
-            <UtensilsCrossed size={19} />
-          </span>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-lg">🥗</span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold">{t('meals.askNutritionist')}</span>
             <span className="block text-xs leading-relaxed text-gray-400">{t('meals.askNutritionistSub')}</span>

@@ -349,6 +349,7 @@ export default function App() {
           {/* NOT admin-gated — this sat inside RequireAdmin for a day and every
               normal user tapping "AI Coach" was silently bounced to Home. */}
           <Route path="/coach-chat" element={<CoachChat />} />
+          <Route path="/nutritionist" element={<CoachChat />} />
           <Route path="/buddies" element={<Buddies />} />
           <Route path="/reels" element={<Reels />} />
           <Route path="/notifications" element={<Notifications />} />

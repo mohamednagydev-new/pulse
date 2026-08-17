@@ -19,6 +19,7 @@ type Tile = { key: string; emoji: string; ar: string; en: string; hookAr: string
 
 const TILES: Tile[] = [
   { key: 'ai', emoji: '🤖', ar: 'كوتش الـAI', en: 'AI coach', hookAr: 'اسأل أي حاجة في التمرين والأكل', hookEn: 'Ask anything about training and food', to: '/coach-chat' },
+  { key: 'nutri', emoji: '🥗', ar: 'أخصائي التغذية', en: 'AI nutritionist', hookAr: 'بيرد بأرقامك انت: سعراتك وبروتينك ووزنك', hookEn: 'Answers with YOUR numbers: calories, protein, weight', to: '/nutritionist' },
   { key: 'voice', emoji: '🎤', ar: 'تسجيل بالصوت', en: 'Voice logging', hookAr: 'قول أكلت إيه وإحنا نحسب', hookEn: 'Say what you ate — we do the math', to: '/tracker' },
   { key: 'scan', emoji: '📷', ar: 'ماسح الباركود', en: 'Barcode scanner', hookAr: 'أي منتج بتقييم من ١٠ لهدفك', hookEn: 'Any product, scored 1-10 for your goal', to: '/tracker' },
   { key: 'photo', emoji: '✨', ar: 'صورة الطبق', en: 'Meal photo', hookAr: 'صوّر أكلك والسعرات تتحسب', hookEn: 'Snap your plate — calories estimated', to: '/tracker' },

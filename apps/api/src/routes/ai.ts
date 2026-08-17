@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { aiEnabled, chatComplete, visionComplete, embed, cosine } from '../lib/openai';
+import { dayString } from '../lib/time';
 import { pickLang } from '../lib/localize';
 import { consumeAi, remainingAi, OVER_BUDGET, type AiKind } from '../lib/aiBudget';
 
@@ -55,7 +56,13 @@ aiRouter.get('/search', async (req: AuthedRequest, res) => {
 // AI Coach chat with retrieval-augmented context from the app's own library.
 aiRouter.post('/chat', async (req: AuthedRequest, res) => {
   if (await blocked(req, res, 'chat')) return;
-  const schema = z.object({ message: z.string().min(1), conversationId: z.string().optional() });
+  const schema = z.object({
+    message: z.string().min(1),
+    conversationId: z.string().optional(),
+    /** 'nutrition' = the AI nutritionist persona: food-focused, answers with
+     *  the user's OWN targets and journey in context. */
+    mode: z.enum(['coach', 'nutrition']).optional(),
+  });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
   const lang = pickLang(req);
@@ -99,15 +106,54 @@ aiRouter.post('/chat', async (req: AuthedRequest, res) => {
    * absolutely ask about diabetes and blood pressure, it has to decline and hand over
    * to a human — which we can actually do, because the coach directory exists.
    */
+  // The nutritionist answers with the USER'S OWN numbers on the table — a
+  // generic "eat more protein" is what makes AI chats feel useless.
+  const nutrition = parsed.data.mode === 'nutrition';
+  let profileBlock = '';
+  if (nutrition) {
+    const [u, todayCals] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: req.userId! },
+        select: {
+          goalCalories: true, goalProtein: true, weightKg: true, targetWeightKg: true,
+          dietStartedAt: true, dietPref: true, fitnessGoal: true, gender: true,
+        },
+      }),
+      prisma.calorieEntry.aggregate({
+        where: { userId: req.userId!, date: dayString() },
+        _sum: { calories: true, protein: true },
+      }),
+    ]);
+    profileBlock = [
+      '',
+      "USER'S NUTRITION PROFILE (use these real numbers in answers when relevant):",
+      `- Goal: ${u?.fitnessGoal ?? 'unknown'} · Daily target: ${u?.goalCalories ?? '?'} kcal / ${u?.goalProtein ?? '?'}g protein`,
+      `- Weight: ${u?.weightKg ?? '?'}kg${u?.targetWeightKg ? ` → target ${u.targetWeightKg}kg (diet journey ${u.dietStartedAt ? 'ACTIVE' : 'not started'})` : ''}`,
+      `- Eaten TODAY so far: ${todayCals._sum.calories ?? 0} kcal / ${Math.round(todayCals._sum.protein ?? 0)}g protein`,
+      `- Diet preference: ${u?.dietPref ?? 'none'}`,
+    ].join('\n');
+  }
+
   const system = [
-    'You are the PULSE Coach - a practical fitness and wellness assistant for an Egyptian audience.',
+    nutrition
+      ? 'You are the PULSE Nutritionist (أخصائي التغذية) - a practical nutrition assistant for an Egyptian audience. Egyptian foods first (فول، فراخ، أرز، كشري…), budget-aware, zero guilt-tripping.'
+      : 'You are the PULSE Coach - a practical fitness and wellness assistant for an Egyptian audience.',
     `Answer in ${lang === 'ar' ? 'simple Egyptian Arabic, not formal MSA' : 'English'}.`,
     'Keep every answer SHORT: 2-4 sentences, no lists unless asked, no repetition of the question. One focused follow-up question at most.',
+    ...(nutrition
+      ? [
+          "Use the user's profile numbers below when they matter (remaining calories today, protein gap, journey pace).",
+          'When an in-app tool answers better, point to it briefly: the meal plan (خطة الوجبات), the barcode scanner, logging by voice, or the diet programs.',
+        ]
+      : []),
     grounded
       ? 'Answer FROM THE CONTEXT below and cite it like [1]. If the context does not cover the question, say so plainly instead of filling the gap from memory.'
-      : "You have NO library available for this question. Answer only general, uncontroversial fitness knowledge, keep it short, and tell the user this answer is not from PULSE's own content.",
-    'NEVER diagnose, never interpret symptoms, test results or medication, and never advise on pregnancy, injury or a named medical condition. For any of those, say it needs a real professional and point them to the coaches in the app.',
+      : nutrition
+        ? 'No PULSE library context matched. Answer only general, uncontroversial nutrition knowledge, keep it short.'
+        : "You have NO library available for this question. Answer only general, uncontroversial fitness knowledge, keep it short, and tell the user this answer is not from PULSE's own content.",
+    'NEVER diagnose, never interpret symptoms, test results or medication, and never advise on pregnancy, injury or a named medical condition (diabetes, blood pressure, kidney...). For any of those, say it needs a real professional and point them to the coaches in the app.',
     'Do not invent numbers, programme names, or article titles.',
+    profileBlock,
     '',
     'CONTEXT:',
     context || '(none)',

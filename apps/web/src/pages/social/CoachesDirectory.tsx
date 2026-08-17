@@ -105,6 +105,21 @@ export default function CoachesDirectory() {
           {!coaches?.length && (
             <EmptyState icon={<Dumbbell size={40} />} title={t('coaches.empty')} hint={t('coaches.emptyHint')} />
           )}
+
+          {/* No human nutritionist in the directory → the AI one answers NOW.
+              Shown whenever no verified coach lists a nutrition specialty. */}
+          {!(coaches ?? []).some((c: any) => /nutri|تغذية|دايت/i.test(String(c.coachSpecialties ?? ''))) && (
+            <Link
+              to="/nutritionist"
+              className="mt-2 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 p-4 text-white shadow-sm transition active:scale-[0.98]"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 text-xl">🥗</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-extrabold">{t('nutri.dirTitle')}</span>
+                <span className="block truncate text-xs text-white/80">{t('nutri.dirSub')}</span>
+              </span>
+            </Link>
+          )}
         </div>
       )}
     </div>

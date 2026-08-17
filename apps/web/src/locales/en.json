@@ -1094,8 +1094,8 @@
     "swapSub": "Same slot, same numbers — pick what you feel like.",
     "noSwaps": "No alternatives for this slot yet",
     "whyThis": "Why this plan",
-    "askNutritionist": "Ask a nutritionist",
-    "askNutritionistSub": "A plan cannot read your bloodwork. A person can — free, no commission.",
+    "askNutritionist": "A food question? Ask the nutritionist 🥗",
+    "askNutritionistSub": "Instant answers using your targets and what you ate today",
     "trainingDay": "Training day +200",
     "fitLine": "Plan matches your target {{pct}}%"
   },
@@ -1334,5 +1334,12 @@
       "won": "Won 🎉",
       "lost": "Lost"
     }
+  },
+  "nutri": {
+    "title": "AI Nutritionist 🥗",
+    "hello": "Your nutritionist, ready now",
+    "sub": "I answer with YOUR real numbers — calories left today, protein gap, journey pace. Short, practical, Egyptian food first.",
+    "dirTitle": "No nutritionist available? Ask the AI one now",
+    "dirSub": "Instant answers built on your own targets and food log"
   }
 }
