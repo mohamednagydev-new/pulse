@@ -56,6 +56,22 @@ export default function PartnerHub() {
     queryFn: () => api.get('/api/org/gym/mine/analytics'),
     enabled: isGym,
   });
+  // The no-QR membership path: «أنا بتمرن هنا» requests waiting for a yes/no.
+  const { data: joinRequests } = useQuery({
+    queryKey: ['gym-join-requests'],
+    queryFn: () => api.get('/api/org/gym/mine/join-requests'),
+    enabled: isGym,
+    refetchInterval: 60_000,
+  });
+  const decideRequest = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: 'approve' | 'decline' }) =>
+      api.post(`/api/org/gym/join-requests/${id}/${action}`, {}),
+    onSuccess: (_r, v) => {
+      toast(v.action === 'approve' ? L('Member approved 🏋️', 'تم اعتماد العضو 🏋️') : L('Request declined', 'تم رفض الطلب'), 'success');
+      qc.invalidateQueries({ queryKey: ['gym-join-requests'] });
+      qc.invalidateQueries({ queryKey: ['gym-analytics'] });
+    },
+  });
 
   const copyInvite = async () => {
     if (!invite?.url) return;
@@ -222,6 +238,51 @@ export default function PartnerHub() {
               <div className="mt-3 flex items-center gap-2 text-xs text-white/70"><Loader2 size={14} className="animate-spin" /> …</div>
             )}
           </motion.section>
+
+          {/* Membership requests — people who tapped «أنا بتمرن هنا» on the
+              gym page. Approval is what actually adds them to the board. */}
+          {(joinRequests?.length ?? 0) > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...spring, delay: 0.04 }}
+              className="mx-4 mt-4 rounded-2xl bg-white p-4 shadow-sm"
+            >
+              <h2 className="flex items-center gap-1.5 text-sm font-bold text-gray-700">
+                <Users size={15} /> {L('Membership requests', 'طلبات الانضمام')}
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-extrabold text-amber-600">
+                  {joinRequests.length}
+                </span>
+              </h2>
+              <div className="mt-3 space-y-2">
+                {joinRequests.map((r: any) => (
+                  <div key={r.id} className="flex items-center gap-3 rounded-2xl bg-gray-50 p-2.5">
+                    <MediaImage path={r.user.avatarUrl} label={r.user.firstName} className="h-10 w-10 shrink-0 rounded-full" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold">{r.user.firstName} {r.user.lastName}</p>
+                      <p className="text-[11px] text-gray-400">
+                        {L('Level', 'مستوى')} {r.user.level}{r.user.currentStreak > 0 ? ` · ${r.user.currentStreak}🔥` : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => decideRequest.mutate({ id: r.id, action: 'approve' })}
+                      disabled={decideRequest.isPending}
+                      className="shrink-0 rounded-full bg-emerald-500 px-3.5 py-2 text-xs font-extrabold text-white"
+                    >
+                      {L('Approve', 'اعتمد')}
+                    </button>
+                    <button
+                      onClick={() => decideRequest.mutate({ id: r.id, action: 'decline' })}
+                      disabled={decideRequest.isPending}
+                      className="shrink-0 rounded-full bg-gray-200 px-3 py-2 text-xs font-bold text-gray-500"
+                    >
+                      {L('No', 'لا')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
 
           {/* Analytics tiles */}
           <motion.section

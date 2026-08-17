@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import LeadForms from '../components/LeadForm';
-import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { Link, useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, Phone, Globe, MapPin, Instagram, ShoppingBag, Info } from 'lucide-react';
+import { MessageCircle, Phone, Globe, MapPin, Instagram, ShoppingBag, Info, Trophy, Flame, Tv, Check, Clock3, Dumbbell } from 'lucide-react';
 import { api } from '../lib/api';
 import { Loader, MediaImage, EmptyState } from '../components/ui';
 import TopBar from '../components/TopBar';
@@ -89,6 +89,9 @@ export default function PartnerPage() {
           <Info size={14} className="mt-0.5 shrink-0 text-brand-blue" />
           <span>{t('store.offlineNote')}</span>
         </div>
+
+        {/* Gyms only: join the gym community + this week's board */}
+        {p.type === 'gym' && <GymCommunity gymId={p.id} />}
       </div>
 
       {/* Ask them to call you back — the partner pays us per lead */}
@@ -117,6 +120,94 @@ export default function PartnerPage() {
       <AnimatePresence>
         {active && <ProductSheet product={active} onClose={() => setActive(null)} />}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/**
+ * The gym's living side, on its public page: join the community (a REQUEST the
+ * manager approves — the QR path skips this because holding the front-desk code
+ * is proof enough) and this week's champions, with a link to the full TV view.
+ */
+function GymCommunity({ gymId }: { gymId: string }) {
+  const { i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
+  const qc = useQueryClient();
+
+  const { data: membership } = useQuery({
+    queryKey: ['gym-membership', gymId],
+    queryFn: () => api.get(`/api/org/gym/${gymId}/membership`),
+  });
+  const { data: board } = useQuery({
+    queryKey: ['gym-board', gymId],
+    queryFn: () => api.get(`/api/org/gym/${gymId}/board`),
+    staleTime: 60_000,
+  });
+  const join = useMutation({
+    mutationFn: () => api.post(`/api/org/gym/${gymId}/join-request`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['gym-membership', gymId] }),
+  });
+
+  const status = membership?.status ?? 'none';
+
+  return (
+    <div className="mt-4 space-y-3">
+      {/* Membership CTA / state */}
+      {status === 'member' ? (
+        <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-600">
+          <Check size={16} /> {L("You're a member — your workouts count on the board 💪", 'انت عضو هنا — تمارينك بتتحسب في اللوحة 💪')}
+        </div>
+      ) : status === 'pending' ? (
+        <div className="flex items-center gap-2 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-600">
+          <Clock3 size={16} /> {L('Request sent — waiting for the gym to approve', 'طلبك اتبعت — مستنيين الجيم يعتمدك')}
+        </div>
+      ) : (
+        <motion.button
+          whileTap={tap}
+          disabled={join.isPending}
+          onClick={() => join.mutate()}
+          className="scene-tex flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-teal-500/90 to-cyan-700/80 px-4 py-3.5 text-sm font-extrabold text-white shadow-md"
+        >
+          <Dumbbell size={16} /> {L('I train here — join the gym community', 'أنا بتمرن هنا — ضمّني لمجتمع الجيم')}
+        </motion.button>
+      )}
+
+      {/* This week's champions (same data the TV shows) */}
+      {board && (
+        <div className="rounded-2xl bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 text-sm font-extrabold text-gray-700">
+              <Trophy size={15} className="text-amber-500" /> {L('Champions of the week', 'أبطال الأسبوع')}
+            </p>
+            <Link to={`/tv/${gymId}`} className="flex items-center gap-1 text-xs font-bold text-brand-blue">
+              <Tv size={13} /> {L('TV view', 'شاشة العرض')}
+            </Link>
+          </div>
+          {board.top10?.length ? (
+            <div className="mt-3 space-y-1.5">
+              {board.top10.slice(0, 5).map((m: any, i: number) => (
+                <div key={`${m.firstName}-${i}`} className={`flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 ${i === 0 ? 'bg-amber-50' : ''}`}>
+                  <span className="w-5 text-center text-sm font-black text-gray-400">{['🥇', '🥈', '🥉'][i] ?? i + 1}</span>
+                  <MediaImage path={m.avatarUrl} label={m.firstName} className="h-8 w-8 shrink-0 rounded-full" />
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold">{m.firstName}</span>
+                  {m.currentStreak > 1 && (
+                    <span className="flex items-center gap-0.5 text-[11px] font-bold text-orange-500"><Flame size={11} /> {m.currentStreak}</span>
+                  )}
+                  <span className="shrink-0 text-sm font-extrabold tabular-nums text-emerald-600" dir="ltr">{m.xp}</span>
+                </div>
+              ))}
+              <p className="pt-1 text-center text-[11px] text-gray-400">
+                {L(`${board.memberCount} members on PULSE`, `${board.memberCount} عضو على PULSE`)}
+              </p>
+            </div>
+          ) : (
+            <p className="mt-3 text-center text-sm text-gray-400">
+              {L('No champions yet — join and be the first 🏆', 'لسه مفيش أبطال — انضم وكن الأول 🏆')}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

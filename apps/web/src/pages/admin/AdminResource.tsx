@@ -204,6 +204,63 @@ function MacroEstimator({ form, setForm }: { form: Record<string, any>; setForm:
   );
 }
 
+/** Searchable replacement for the remote <select> — with hundreds of users,
+ *  scrolling a native dropdown to find one email was hopeless. Type to filter,
+ *  tap to pick; the current selection stays visible with a clear (×) button. */
+function RemotePicker({
+  options, labelKey, value, onChange,
+}: { options: any[]; labelKey: string; value: any; onChange: (v: any) => void }) {
+  const [q, setQ] = useState('');
+  const [open, setOpen] = useState(false);
+  const label = (o: any) => String(o[labelKey] ?? o.title ?? o.name ?? o.email ?? o.id);
+  const selected = options.find((o) => o.id === value);
+  const needle = q.trim().toLowerCase();
+  const matches = needle
+    ? options.filter((o) => label(o).toLowerCase().includes(needle) || String(o.id) === q.trim())
+    : options;
+
+  return (
+    <div className="mt-1">
+      {selected ? (
+        <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2.5">
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold">{label(selected)}</span>
+          <button type="button" onClick={() => { onChange(''); setQ(''); setOpen(true); }} aria-label="Clear" className="shrink-0 text-gray-400">
+            <X size={16} />
+          </button>
+        </div>
+      ) : (
+        <>
+          <input
+            className="input-field"
+            placeholder={`Search… (${options.length})`}
+            value={q}
+            onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
+          />
+          {open && (
+            <div className="mt-1 max-h-48 overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+              {matches.slice(0, 30).map((o: any) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  onClick={() => { onChange(o.id); setOpen(false); }}
+                  className="block w-full truncate px-3 py-2 text-start text-sm hover:bg-gray-50"
+                >
+                  {label(o)}
+                </button>
+              ))}
+              {matches.length === 0 && <p className="px-3 py-2 text-sm text-gray-400">No match</p>}
+              {matches.length > 30 && (
+                <p className="px-3 py-2 text-[11px] text-gray-400">{matches.length - 30} more — keep typing to narrow</p>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function FieldInput({ field, value, onChange }: { field: Field; value: any; onChange: (v: any) => void }) {
   const { data: options } = useQuery({
     queryKey: ['admin', field.remote],
@@ -237,10 +294,7 @@ function FieldInput({ field, value, onChange }: { field: Field; value: any; onCh
           {(field.options ?? []).map((o) => <option key={o} value={o}>{o || '—'}</option>)}
         </select>
       ) : field.type === 'remote' ? (
-        <select className="input-field mt-1 px-3" value={value} onChange={(e) => onChange(e.target.value)}>
-          <option value="">— select —</option>
-          {(options ?? []).map((o: any) => <option key={o.id} value={o.id}>{o[field.remoteLabel ?? 'title'] ?? o.id}</option>)}
-        </select>
+        <RemotePicker options={options ?? []} labelKey={field.remoteLabel ?? 'title'} value={value} onChange={onChange} />
       ) : IMG_FIELDS.includes(field.name) || field.name === 'videoId' ? (
         <div className="mt-1 flex items-center gap-2">
           {IMG_FIELDS.includes(field.name) && value && <MediaImage path={value} className="h-10 w-10 rounded-lg" />}

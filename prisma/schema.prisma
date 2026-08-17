@@ -1577,3 +1577,18 @@ model ActivityInvite {
   @@index([toUserId, status])
   @@index([fromUserId])
 }
+
+// ---------------- Gym membership requests (the no-QR path) ----------------
+// "I train at this gym" tapped on the gym's page. The manager approves from
+// Partner Hub; approval is what actually sets User.gymId. QR joins skip this
+// (holding the front-desk code IS the proof).
+model GymJoinRequest {
+  id        String   @id @default(cuid())
+  partnerId String
+  userId    String
+  status    String   @default("pending") // pending | accepted | declined
+  createdAt DateTime @default(now())
+
+  @@unique([partnerId, userId])
+  @@index([partnerId, status])
+}

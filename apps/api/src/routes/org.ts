@@ -336,3 +336,115 @@ orgRouter.get('/gym/mine/analytics', requireAuth, async (req: AuthedRequest, res
     atRisk,
   });
 });
+
+// ---------------- Gym membership WITHOUT the QR ----------------
+// The QR at the front desk is proof enough on its own; «أنا بتمرن هنا» tapped
+// on the gym's public page is a CLAIM — so it queues for the manager to
+// approve, and approval is what actually sets User.gymId.
+
+// ---- My status with this gym (drives the button on the gym page) ----
+orgRouter.get('/gym/:id/membership', requireAuth, async (req: AuthedRequest, res) => {
+  const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { gymId: true } });
+  if (me?.gymId === req.params.id) return res.json({ status: 'member' });
+  const pending = await prisma.gymJoinRequest.findUnique({
+    where: { partnerId_userId: { partnerId: req.params.id, userId: req.userId! } },
+  });
+  res.json({ status: pending?.status === 'pending' ? 'pending' : 'none' });
+});
+
+// ---- "I train at this gym" ----
+orgRouter.post('/gym/:id/join-request', requireAuth, async (req: AuthedRequest, res) => {
+  const gym = await prisma.partner.findFirst({
+    where: { id: req.params.id, type: 'gym', active: true },
+    select: { id: true, name: true, nameAr: true, managerUserId: true },
+  });
+  if (!gym) return res.status(404).json({ error: 'Gym not found' });
+
+  const me = await prisma.user.findUnique({
+    where: { id: req.userId! },
+    select: { gymId: true, firstName: true, lastName: true },
+  });
+  if (me?.gymId === gym.id) return res.json({ status: 'member' });
+
+  // Re-request after a decline is allowed — people do join gyms later.
+  await prisma.gymJoinRequest.upsert({
+    where: { partnerId_userId: { partnerId: gym.id, userId: req.userId! } },
+    update: { status: 'pending', createdAt: new Date() },
+    create: { partnerId: gym.id, userId: req.userId! },
+  });
+
+  if (gym.managerUserId && gym.managerUserId !== req.userId) {
+    const name = `${me?.firstName ?? ''} ${me?.lastName ?? ''}`.trim() || 'Someone';
+    emitToUser(gym.managerUserId, 'notify', { type: 'general' });
+    notifyUser(gym.managerUserId, {
+      title: 'Membership request 🏋️',
+      titleAr: 'طلب انضمام للجيم 🏋️',
+      body: `${name} says they train at ${gym.name} — approve them from Partner Hub.`,
+      bodyAr: `${name} بيقول إنه بيتمرن في ${gym.nameAr ?? gym.name} — اعتمده من صفحة الشريك.`,
+      url: '/partner-hub',
+      type: 'general',
+    }).catch(() => {});
+  }
+  res.json({ status: 'pending' });
+});
+
+// ---- Manager: pending requests ----
+orgRouter.get('/gym/mine/join-requests', requireAuth, async (req: AuthedRequest, res) => {
+  const gym = await prisma.partner.findFirst({
+    where: { managerUserId: req.userId!, type: 'gym', active: true },
+    select: { id: true },
+  });
+  if (!gym) return res.status(403).json({ error: 'No gym you manage was found' });
+
+  const requests = await prisma.gymJoinRequest.findMany({
+    where: { partnerId: gym.id, status: 'pending' },
+    orderBy: { createdAt: 'asc' },
+    take: 50,
+  });
+  const users = await prisma.user.findMany({
+    where: { id: { in: requests.map((r) => r.userId) } },
+    select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true, currentStreak: true },
+  });
+  const byId = new Map(users.map((u) => [u.id, u]));
+  res.json(requests.map((r) => ({ id: r.id, createdAt: r.createdAt, user: byId.get(r.userId) ?? null })).filter((r) => r.user));
+});
+
+// ---- Manager: approve / decline ----
+orgRouter.post('/gym/join-requests/:id/:action', requireAuth, async (req: AuthedRequest, res) => {
+  const action = req.params.action;
+  if (action !== 'approve' && action !== 'decline') return res.status(400).json({ error: 'Bad action' });
+
+  const request = await prisma.gymJoinRequest.findUnique({ where: { id: req.params.id } });
+  if (!request || request.status !== 'pending') return res.status(404).json({ error: 'Request not found' });
+  const gym = await prisma.partner.findFirst({
+    where: { id: request.partnerId, managerUserId: req.userId!, type: 'gym' },
+    select: { id: true, name: true, nameAr: true },
+  });
+  if (!gym) return res.status(403).json({ error: 'Not your gym' });
+
+  await prisma.gymJoinRequest.update({
+    where: { id: request.id },
+    data: { status: action === 'approve' ? 'accepted' : 'declined' },
+  });
+  if (action === 'approve') {
+    await prisma.user.update({ where: { id: request.userId }, data: { gymId: gym.id, gymJoinedAt: new Date() } });
+    notifyUser(request.userId, {
+      title: `Welcome to ${gym.name}! 🏋️`,
+      titleAr: `أهلاً بيك في ${gym.nameAr ?? gym.name}! 🏋️`,
+      body: 'Your membership was approved — your workouts now count on the gym leaderboard.',
+      bodyAr: 'الجيم اعتمد عضويتك — تمارينك بقت بتتحسب في لوحة صدارة الجيم.',
+      url: `/partner/${gym.id}`,
+      type: 'general',
+    }).catch(() => {});
+  } else {
+    notifyUser(request.userId, {
+      title: 'Membership request',
+      titleAr: 'طلب العضوية',
+      body: `${gym.name} couldn't verify your membership. If you train there, ask at the front desk for the join QR.`,
+      bodyAr: `${gym.nameAr ?? gym.name} مقدرش يتأكد من عضويتك. لو بتتمرن هناك فعلاً، اطلب كود الانضمام من الاستقبال.`,
+      url: `/partner/${gym.id}`,
+      type: 'general',
+    }).catch(() => {});
+  }
+  res.json({ ok: true, action });
+});
