@@ -40,7 +40,11 @@ if (typeof window !== 'undefined') {
   // window. "Script error." is the anonymized cross-origin echo of the same.
   // Reporting these buries real crashes under noise.
   // browser_declutter etc.: browser-extension scripts crashing in OUR telemetry.
-  const NOISE = /Java object is gone|navigation_?performance_?logger|webkit\.messageHandlers|^Script error\b|ResizeObserver loop|Failed to register a ServiceWorker|iframeBridge|browser_declutter|extension:\/\//i;
+  // EmptyRanges: Safari-internal media bug (no file, line "undefined") around
+  // <audio>/<video> buffered ranges. AbortError: a share sheet dismissed or a
+  // video.play() interrupted by navigation — user actions, not crashes.
+  // InvalidStateError with no filename: same WebKit media internals.
+  const NOISE = /Java object is gone|navigation_?performance_?logger|webkit\.messageHandlers|^Script error\b|ResizeObserver loop|Failed to register a ServiceWorker|iframeBridge|browser_declutter|extension:\/\/|EmptyRanges|AbortError|InvalidStateError.*@ (undefined|:)/i;
   const report = (msg: string) => {
     if (reported >= 5 || NOISE.test(msg)) return;
     reported += 1;

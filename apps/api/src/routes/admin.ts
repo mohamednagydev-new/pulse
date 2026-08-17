@@ -41,13 +41,13 @@ type Normalise = (data: Record<string, any>) => Record<string, any>;
  * Without it req.body went straight into create/update: unknown columns threw
  * raw Prisma 500s and any caller could mass-assign fields the form never shows.
  */
-const MODEL_FIELDS = new Map<string, Map<string, { type: string }>>(
+const MODEL_FIELDS = new Map<string, Map<string, { type: string; nullable: boolean }>>(
   Prisma.dmmf.datamodel.models.map((m) => [
     m.name,
     new Map(
       m.fields
         .filter((f) => (f.kind === 'scalar' || f.kind === 'enum') && !f.isId && !['createdAt', 'updatedAt'].includes(f.name))
-        .map((f) => [f.name, { type: f.type }]),
+        .map((f) => [f.name, { type: f.type, nullable: !f.isRequired }]),
     ),
   ]),
 );
@@ -63,7 +63,15 @@ function sanitise(modelName: string, body: unknown): Record<string, any> {
     const f = fields.get(key);
     if (!f) continue; // ids, relations, unknown columns: silently dropped
     if (value === undefined) continue;
-    if (value === null || value === '') { out[key] = null; continue; }
+    if (value === null || value === '') {
+      // The form sends '' for every untouched field. NULLABLE columns clear to
+      // null; NON-nullable ones (rewardXp, prizeMode, goalValue…) must be
+      // OMITTED so Prisma applies the default — passing null threw
+      // "Argument must not be null" on every challenge created without
+      // touching Reward XP / Prize mode (user report).
+      if (f.nullable) out[key] = null;
+      continue;
+    }
     switch (f.type) {
       case 'Int': {
         const n = Number(value);

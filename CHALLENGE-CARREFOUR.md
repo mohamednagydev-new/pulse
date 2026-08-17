@@ -40,7 +40,7 @@
 | Prizes | 🥇 500 EGP · 🥈 200 EGP · 🥉 200 EGP Carrefour vouchers |
 | Prizes (Arabic) | 🥇 قسيمة كارفور ٥٠٠ جنيه · 🥈 قسيمة ٢٠٠ جنيه · 🥉 قسيمة ٢٠٠ جنيه |
 | Prize mode | `top3` |
-| Sponsor name | *(اسم الممول لو في راعي، أو سيبها فاضية)* |
+| Sponsor name | `PULSE` *(self-sponsored — shows «برعاية PULSE» on the card; swap for a real sponsor next time)* |
 | Difficulty | `medium` |
 
 ### Description / الشروط (paste as the Arabic description)

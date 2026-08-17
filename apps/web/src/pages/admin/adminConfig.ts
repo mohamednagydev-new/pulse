@@ -1,7 +1,7 @@
 export interface Field {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'select' | 'remote' | 'checkbox';
+  type: 'text' | 'textarea' | 'number' | 'select' | 'remote' | 'checkbox' | 'date';
   options?: string[];
   remote?: string; // resource key to fetch options from
   remoteLabel?: string; // field to display
@@ -219,8 +219,8 @@ export const RESOURCES: Resource[] = [
       { name: 'coverImage', label: 'Cover image (from Upload)', type: 'text' },
       { name: 'goalType', label: 'Goal type', type: 'select', options: ['lessons', 'streak', 'calories', 'water', 'lifts'] },
       { name: 'goalValue', label: 'Goal value', type: 'number' },
-      { name: 'startsOn', label: 'Starts on (YYYY-MM-DD)', type: 'text' },
-      { name: 'endsOn', label: 'Ends on (YYYY-MM-DD)', type: 'text' },
+      { name: 'startsOn', label: 'Starts on', type: 'date' },
+      { name: 'endsOn', label: 'Ends on', type: 'date' },
       { name: 'rewardXp', label: 'Reward XP (paid on completing the goal)', type: 'number' },
       { name: 'prizeText', label: 'Prizes (announced day after end)', type: 'textarea' },
       { name: 'prizeTextAr', label: 'Prizes (Arabic)', type: 'textarea' },

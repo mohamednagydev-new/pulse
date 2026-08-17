@@ -249,7 +249,7 @@ function FieldInput({ field, value, onChange }: { field: Field; value: any; onCh
         </div>
       ) : (
         <input
-          type={field.type === 'number' ? 'number' : 'text'}
+          type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
           className="input-field mt-1"
           value={value}
           onChange={(e) => onChange(e.target.value)}
