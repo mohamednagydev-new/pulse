@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Music, Upload, Play, Pause, Star, Trash2 } from 'lucide-react';
+import { Music, Upload, Play, Pause, Star, Trash2, Globe } from 'lucide-react';
 import { api, uploadWithAuth } from '../lib/api';
 import { signedMediaUrl } from '../lib/media';
 import { toast } from '../lib/toast';
@@ -44,6 +44,21 @@ export default function MusicGallery() {
 
   const fav = useMutation({ mutationFn: (id: string) => api.patch(`/api/music/${id}/favorite`), onSuccess: () => qc.invalidateQueries({ queryKey: ['music'] }) });
   const del = useMutation({ mutationFn: (id: string) => api.del(`/api/music/${id}`), onSuccess: () => qc.invalidateQueries({ queryKey: ['music'] }) });
+  // Admin: promote an already-uploaded track to the everyone-default (the
+  // upload-time checkbox is easy to miss, and re-uploading shouldn't be the fix).
+  const isAr = useTranslation().i18n.language.startsWith('ar');
+  const mkDefault = useMutation({
+    mutationFn: (id: string) => api.patch(`/api/music/${id}/default`),
+    onSuccess: (r: any) => {
+      qc.invalidateQueries({ queryKey: ['music'] });
+      toast(
+        r.isDefault
+          ? (isAr ? 'بقت الموسيقى الافتراضية للكل 🎵' : 'Now the default track for everyone 🎵')
+          : (isAr ? 'رجعت مقطع شخصي' : 'Back to a personal track'),
+        'success',
+      );
+    },
+  });
 
   const toggle = async (id: string) => {
     const el = audioRef.current;
@@ -100,6 +115,17 @@ export default function MusicGallery() {
               {!track.isDefault && (
                 <motion.button whileTap={{ scale: 0.85 }} onClick={() => fav.mutate(track.id)} aria-label={t('music.setSession')} className="shrink-0">
                   <Star size={18} className={track.favorite ? 'fill-brand-pink text-brand-pink' : 'text-gray-300'} />
+                </motion.button>
+              )}
+              {isAdmin && (
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => mkDefault.mutate(track.id)}
+                  aria-label={isAr ? 'اجعلها الافتراضية للكل' : 'Make default for everyone'}
+                  title={isAr ? 'اجعلها الافتراضية للكل' : 'Make default for everyone'}
+                  className="shrink-0"
+                >
+                  <Globe size={18} className={track.isDefault ? 'text-brand-blue' : 'text-gray-300'} />
                 </motion.button>
               )}
               {(!track.isDefault || isAdmin) && (

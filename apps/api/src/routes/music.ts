@@ -53,6 +53,23 @@ musicRouter.post('/', upload.single('file'), async (req: AuthedRequest, res) => 
   res.status(201).json(track);
 });
 
+// Promote an existing track to the everyone-default (admin). Before this, a
+// track uploaded without the "default" checkbox was stuck personal forever —
+// the only fix was delete + re-upload.
+musicRouter.patch('/:id/default', async (req: AuthedRequest, res) => {
+  if (req.role !== 'ADMIN') return res.status(403).json({ error: 'Admins only' });
+  const track = await prisma.musicTrack.findUnique({ where: { id: req.params.id } });
+  if (!track) return res.status(404).json({ error: 'Not found' });
+  const makeDefault = !track.isDefault;
+  await prisma.musicTrack.update({
+    where: { id: track.id },
+    // Default tracks are global: detach from the uploader so they read as
+    // app-owned (matches how default uploads are stored with userId null).
+    data: makeDefault ? { isDefault: true, userId: null } : { isDefault: false, userId: req.userId! },
+  });
+  res.json({ ok: true, isDefault: makeDefault });
+});
+
 // Mark one of my tracks as the session favorite (only one at a time).
 musicRouter.patch('/:id/favorite', async (req: AuthedRequest, res) => {
   const track = await prisma.musicTrack.findFirst({ where: { id: req.params.id, userId: req.userId! } });

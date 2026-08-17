@@ -161,6 +161,27 @@ export default function Info() {
           href="https://instagram.com"
         />
 
+        {/* Nuclear refresh for installed apps stuck on an old build: drop every
+            service worker + cache, then reload from the network. The automatic
+            controllerchange reload (main.tsx) makes this rarely needed — this
+            row is for "I deployed and my phone still shows the old design". */}
+        <Row
+          icon={RefreshCw}
+          tint="bg-amber-50 text-amber-600"
+          title={isAr ? 'تحديث التطبيق' : 'Force app update'}
+          subtitle={isAr ? 'لو شكل التطبيق قديم بعد تحديث — دوس هنا' : 'Stuck on an old version? Tap here'}
+          chevron={false}
+          onClick={async () => {
+            try {
+              const regs = (await navigator.serviceWorker?.getRegistrations()) ?? [];
+              await Promise.all(regs.map((r) => r.unregister()));
+              const keys = (await caches?.keys()) ?? [];
+              await Promise.all(keys.map((k) => caches.delete(k)));
+            } catch { /* partial cleanup still helps */ }
+            window.location.replace('/');
+          }}
+        />
+
         {me?.role === 'ADMIN' && (
           <Row
             icon={LayoutDashboard}

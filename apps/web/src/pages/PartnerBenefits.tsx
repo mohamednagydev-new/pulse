@@ -273,8 +273,9 @@ export default function PartnerBenefits() {
         </div>
       </ScreenHeader>
 
-      {/* Audience switcher */}
-      <div className="no-scrollbar -mt-4 flex gap-2 overflow-x-auto px-4">
+      {/* Audience switcher. relative z-10: the header's backdrop-blur promotes
+          it to its own layer, which painted OVER this -mt-4 overlap row. */}
+      <div className="no-scrollbar relative z-10 -mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {AUDIENCES.map((a) => {
           const active = a.key === tab;
           return (

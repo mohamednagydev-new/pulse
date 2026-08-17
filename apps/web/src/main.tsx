@@ -59,6 +59,33 @@ document.addEventListener('visibilitychange', () => {
   navigator.serviceWorker?.getRegistration().then((r) => r?.update()).catch(() => {});
 });
 
+/**
+ * Make deploys VISIBLE. registerType 'autoUpdate' swaps the service worker,
+ * but the running page keeps the JS/CSS it already loaded — installed-app
+ * users kept seeing the old design for days ("the update isn't reflected").
+ * When a NEW worker takes control (and one was controlling before — first
+ * install also fires this), reload once so the fresh shell actually shows.
+ * Mid-workout reloads would destroy a session, so there we defer to the next
+ * time the app is backgrounded.
+ */
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  let refreshed = false;
+  const applyUpdate = () => {
+    if (refreshed) return;
+    refreshed = true;
+    window.location.reload();
+  };
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return; // first-ever install claiming the page — nothing stale
+    if (window.location.pathname.startsWith('/session')) {
+      document.addEventListener('visibilitychange', () => document.hidden && applyUpdate());
+      return;
+    }
+    applyUpdate();
+  });
+}
+
 const queryClient = new QueryClient({
   // Any failed mutation surfaces a toast automatically — unless the mutation
   // defines its own onError handler, which then owns the error UX (avoids
