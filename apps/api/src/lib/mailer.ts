@@ -25,17 +25,23 @@ function getTransporter(): Transporter | null {
   return transporter;
 }
 
+export type MailResult = { ok: true } | { ok: false; reason: string };
+
 /**
  * Send an email. This NEVER throws. When SMTP is not configured or sending
  * fails, the email is logged to the console — with the full body (reset links
  * included) only in development. Production logs never contain reset links:
  * anyone who can read the logs could otherwise take over accounts.
+ *
+ * Returns whether the mail actually left the building — the admin test send
+ * reported "sent ✅" for months while SMTP was unconfigured because every
+ * caller assumed resolve = delivered.
  */
-export async function sendMail({ to, subject, html, text }: MailOptions): Promise<void> {
+export async function sendMail({ to, subject, html, text }: MailOptions): Promise<MailResult> {
   const tx = getTransporter();
   if (!tx) {
     logFallback(to, subject, text ?? html);
-    return;
+    return { ok: false, reason: 'SMTP not configured (SMTP_HOST is not set in .env)' };
   }
   try {
     await tx.sendMail({
@@ -45,9 +51,24 @@ export async function sendMail({ to, subject, html, text }: MailOptions): Promis
       html,
       text: text ?? stripHtml(html),
     });
+    return { ok: true };
   } catch (err) {
     console.error('[mailer] send failed:', err);
     logFallback(to, subject, text ?? html);
+    return { ok: false, reason: err instanceof Error ? err.message : 'SMTP send failed' };
+  }
+}
+
+/** Connect + authenticate against the configured SMTP server without sending
+ *  anything — the truth-teller behind the admin "check SMTP" button. */
+export async function verifySmtp(): Promise<MailResult> {
+  const tx = getTransporter();
+  if (!tx) return { ok: false, reason: 'SMTP not configured (SMTP_HOST is not set in .env)' };
+  try {
+    await tx.verify();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? err.message : 'SMTP verify failed' };
   }
 }
 

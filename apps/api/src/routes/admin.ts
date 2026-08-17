@@ -1214,6 +1214,13 @@ adminRouter.get('/email/audience', async (req, res) => {
   res.json({ seg, count, cap: EMAIL_SEND_CAP });
 });
 
+// Connect+auth against SMTP without sending — surfaces "unconfigured" or the
+// provider's real error in the admin UI instead of a false "sent ✅".
+adminRouter.get('/email/smtp-status', async (_req, res) => {
+  const { verifySmtp } = await import('../lib/mailer');
+  res.json(await verifySmtp());
+});
+
 adminRouter.post('/email/draft', async (req: AuthedRequest, res) => {
   if (!aiEnabled()) return res.status(503).json({ error: 'AI is not configured' });
   const parsed = z.object({ goal: z.string().min(3).max(400) }).safeParse(req.body);
@@ -1285,9 +1292,12 @@ adminRouter.post('/email/send', async (req: AuthedRequest, res) => {
   };
 
   // Test send: one mail to the admin's chosen inbox, audience untouched.
+  // Report the REAL outcome — this used to answer "sent ✅" even when SMTP
+  // was never configured, so broken email looked healthy from the admin UI.
   if (testTo) {
     const { text, html } = render('يا بطل', null);
-    await sendMail({ to: testTo, subject, html, text });
+    const result = await sendMail({ to: testTo, subject, html, text });
+    if (!result.ok) return res.status(502).json({ error: `Email NOT sent — ${result.reason}` });
     return res.json({ sent: 1, test: true });
   }
 
@@ -1298,12 +1308,21 @@ adminRouter.post('/email/send', async (req: AuthedRequest, res) => {
     select: { id: true, email: true, firstName: true },
   });
   let sent = 0;
+  let failed = 0;
   for (const u of users) {
     const { text, html } = render(u.firstName, u.id);
-    await sendMail({ to: u.email, subject, html, text }).catch(() => {});
-    sent++;
+    const result = await sendMail({ to: u.email, subject, html, text });
+    if (result.ok) sent++;
+    else {
+      failed++;
+      // Unconfigured SMTP fails identically for every recipient — stop after
+      // the first one instead of "sending" to the whole audience.
+      if (result.reason.includes('not configured')) {
+        return res.status(502).json({ error: `Email NOT sent — ${result.reason}`, sent, failed: users.length - sent });
+      }
+    }
   }
-  res.json({ sent, capped: users.length === EMAIL_SEND_CAP });
+  res.json({ sent, failed, capped: users.length === EMAIL_SEND_CAP });
 });
 
 /* ------------------------------------------------------------------ *

@@ -31,6 +31,14 @@ export default function AdminEmail() {
     queryFn: () => api.get(`/api/admin/email/audience?seg=${seg}`),
   });
 
+  // Live SMTP health — sends looked "successful" for months while SMTP was
+  // never configured, so the truth gets a banner before any button.
+  const { data: smtp } = useQuery({
+    queryKey: ['admin-smtp-status'],
+    queryFn: () => api.get('/api/admin/email/smtp-status'),
+    staleTime: 60_000,
+  });
+
   const draft = useMutation({
     mutationFn: () => api.post('/api/admin/email/draft', { goal }),
     onSuccess: (d: any) => {
@@ -57,6 +65,17 @@ export default function AdminEmail() {
       </header>
 
       <div className="space-y-4 p-4">
+        {smtp && (
+          <div
+            className={`rounded-2xl px-4 py-3 text-sm font-semibold ${
+              smtp.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
+            }`}
+          >
+            {smtp.ok
+              ? '✅ SMTP connected — emails will actually deliver'
+              : `⚠️ Emails CANNOT be sent: ${smtp.reason}. Set SMTP_HOST / SMTP_USER / SMTP_PASS in the server .env and restart the API.`}
+          </div>
+        )}
         <section className="rounded-2xl bg-white p-4 shadow-sm">
           <h2 className="mb-2 text-sm font-bold text-gray-700">1 · Who gets it</h2>
           <div className="space-y-2">
