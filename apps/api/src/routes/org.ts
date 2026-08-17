@@ -219,6 +219,22 @@ orgRouter.get('/gym/:id/board', async (req, res) => {
   });
   if (!gym) return res.status(404).json({ error: 'Gym not found' });
 
+  // Self-sufficient board: if the manager never opened the invite card, the
+  // code doesn't exist yet and the TV showed no QR — the one thing a brand-new
+  // gym board is FOR. The code is public by nature (it lives on a poster), so
+  // minting it here is safe and idempotent.
+  if (!gym.inviteCode) {
+    for (let attempt = 0; attempt < 5 && !gym.inviteCode; attempt++) {
+      const candidate = genCode();
+      try {
+        await prisma.partner.update({ where: { id: gym.id }, data: { inviteCode: candidate } });
+        gym.inviteCode = candidate;
+      } catch {
+        /* unique collision — next attempt */
+      }
+    }
+  }
+
   const members = await prisma.user.findMany({
     where: { gymId: gym.id },
     select: { id: true, firstName: true, avatarUrl: true, level: true, currentStreak: true },

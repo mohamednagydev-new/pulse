@@ -120,11 +120,29 @@ export default function TvBoard() {
               transition={{ ...spring, delay: 0.08 }}
               className="rounded-3xl bg-white/5 p-[1.5vw] ring-1 ring-white/10 backdrop-blur"
             >
-              {data.top10.length === 0 && (
-                <div className="flex h-full flex-col items-center justify-center gap-2 py-16 text-center">
-                  <p className="text-[2.2vw] font-extrabold lg:text-3xl">لسه مفيش أبطال الأسبوع ده</p>
-                  <p className="text-[1.2vw] text-white/50 lg:text-lg">اتمرن النهارده وخد مكانك على الشاشة 💪</p>
+              {/* Cold start: no members joined yet — the board's whole job is
+                  recruiting, so the QR takes center stage instead of an empty
+                  list that reads as "broken". */}
+              {data.memberCount === 0 && data.joinUrl ? (
+                <div className="flex h-full flex-col items-center justify-center gap-[1.5vw] py-10 text-center">
+                  <p className="text-[2.8vw] font-black lg:text-4xl">كن أول الأبطال هنا 🏆</p>
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${encodeURIComponent(data.joinUrl)}`}
+                    alt="Join QR"
+                    className="h-[22vw] max-h-80 min-h-44 w-[22vw] min-w-44 max-w-80 rounded-3xl bg-white p-3 shadow-2xl"
+                  />
+                  <p className="text-[1.8vw] font-extrabold lg:text-2xl">امسح الكود وانضم لجيمك على PULSE 📲</p>
+                  <p className="text-[1.2vw] text-white/50 lg:text-lg">
+                    كل تمرينة بنقط… وأول ١٠ أسماء هتتعلق على الشاشة دي
+                  </p>
                 </div>
+              ) : (
+                data.top10.length === 0 && (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 py-16 text-center">
+                    <p className="text-[2.2vw] font-extrabold lg:text-3xl">لسه مفيش أبطال الأسبوع ده</p>
+                    <p className="text-[1.2vw] text-white/50 lg:text-lg">اتمرن النهارده وخد مكانك على الشاشة 💪</p>
+                  </div>
+                )
               )}
               <div className="grid gap-[0.7vw]">
                 {data.top10.map((m, i) => (

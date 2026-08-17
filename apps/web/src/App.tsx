@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
-import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -168,6 +168,7 @@ const InvitePage = lazyRoute(() => import('./pages/InvitePage'));
 const TvBoard = lazyRoute(() => import('./pages/TvBoard'));
 const PartnerBenefits = lazyRoute(() => import('./pages/PartnerBenefits'));
 const CoachClientDetail = lazyRoute(() => import('./pages/social/CoachClientDetail'));
+const MyInvite = lazyRoute(() => import('./pages/MyInvite'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const status = useAuth((s) => s.status);
@@ -233,6 +234,26 @@ export default function App() {
     window.addEventListener('pulse:session-expired', onExpired);
     return () => window.removeEventListener('pulse:session-expired', onExpired);
   }, []);
+
+  // Pending coach/gym invite: InvitePage saves the code before sending the
+  // visitor to register/login. The email path returns to the invite URL by
+  // itself, but Google OAuth lands on '/' — without this, the invite silently
+  // never redeems. InvitePage clears the stored code after redeeming.
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (status !== 'authed') return;
+    try {
+      const raw = localStorage.getItem('pulse-pending-invite');
+      if (!raw) return;
+      const { code, gym } = JSON.parse(raw);
+      if (code && !location.pathname.startsWith('/invite/')) {
+        navigate(`/invite/${gym ? 'g/' : ''}${code}`, { replace: true });
+      }
+    } catch {
+      /* corrupted entry — drop it so it can't loop */
+      localStorage.removeItem('pulse-pending-invite');
+    }
+  }, [status]);
 
   // Scroll handling + screen-view analytics. Forward navigations start at the
   // top; Back (POP) restores where you were — returning from a recipe to a
@@ -389,6 +410,7 @@ export default function App() {
           <Route path="/week-zero" element={<WeekZero />} />
           <Route path="/routines" element={<Routines />} />
           <Route path="/coach-client/:id" element={<CoachClientDetail />} />
+          <Route path="/my-invite" element={<MyInvite />} />
           {/* /setup retired — the coaching intake at /my-plan asks everything it did
               and more, and computes real calorie targets instead of flat per-goal
               numbers. Old links land on Home via the catch-all. */}

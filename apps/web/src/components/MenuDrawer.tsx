@@ -48,6 +48,7 @@ const GROUPS: Group[] = [
   {
     en: 'Community', ar: 'المجتمع',
     items: [
+      { to: '/my-invite', en: 'Invite people', ar: 'اعزم ناس', icon: UserPlus },
       { to: '/buddies', en: 'Buddies', ar: 'أصحابي', icon: HeartHandshake },
       { to: '/notifications', en: 'Notifications', ar: 'الإشعارات', icon: Bell },
       { to: '/coaches-community', en: 'Coaches', ar: 'المدربين', icon: Award },
