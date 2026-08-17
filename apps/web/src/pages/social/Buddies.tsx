@@ -63,6 +63,7 @@ export function Buddies() {
 
   // Friends vs duels — the page's two jobs, one visible at a time.
   const [view, setView] = useState<'friends' | 'duels'>('friends');
+  const [fullBoard, setFullBoard] = useState(false);
   // Challenge sheet state
   const [duelTarget, setDuelTarget] = useState<any>(null);
   const [duelMetric, setDuelMetric] = useState<DuelMetric>('workouts');
@@ -219,7 +220,7 @@ export function Buddies() {
               <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('battle.compete')}</p>
               <h2 className="px-1 pb-2 font-bold">{t('battle.title')}</h2>
               <div className="space-y-2">
-                {leaderboard.map((row: any, idx: number) => (
+                {(fullBoard ? leaderboard : leaderboard.slice(0, 5)).map((row: any, idx: number) => (
                   <motion.div
                     key={row.id}
                     initial={{ opacity: 0, y: 12 }}
@@ -258,6 +259,11 @@ export function Buddies() {
                     </span>
                   </motion.div>
                 ))}
+                {leaderboard.length > 5 && (
+                  <button onClick={() => setFullBoard((v) => !v)} className="w-full py-1.5 text-center text-xs font-bold text-gray-400">
+                    {fullBoard ? t('common.less', { defaultValue: '− أقل' }) : `+${leaderboard.length - 5}`}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -469,49 +475,48 @@ export function Buddies() {
           )}
 
           <div className="space-y-2">
+            {/* One compact row per friend — the 3-button second row doubled every
+                card's height and made the page a scroll marathon (user report). */}
             {view === 'friends' && (buddies ?? []).map((b: any) => (
-              <div key={b.id} className="rounded-2xl bg-white p-3 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <Link to={`/u/${b.id}`}>
-                    <MediaImage path={b.avatarUrl} label={b.firstName} className="h-12 w-12 rounded-full" seed={b.id.length} />
-                  </Link>
-                  <Link to={`/u/${b.id}`} className="flex-1">
-                    <p className="font-semibold">{b.firstName} {b.lastName}</p>
-                    <p className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
-                      <span className="rounded-full bg-brand-pink/10 px-2 font-bold text-brand-pink">{t('common.lv', { n: b.level })}</span>
-                      <span className="flex items-center gap-0.5"><Flame size={11} className="text-orange-500" /> {b.currentStreak}</span>
-                      <span className="flex items-center gap-0.5"><Zap size={11} className="text-amber-500" /> {b.weeklyXp} XP</span>
-                      <span className="flex items-center gap-0.5"><Dumbbell size={11} /> {b.completions}</span>
-                    </p>
-                  </Link>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <motion.button
-                    whileTap={{ scale: 0.92, rotate: -6 }}
-                    transition={tapSpring}
-                    onClick={() => cheer.mutate(b.id)}
-                    className="btn-pill btn-ghost flex min-h-[32px] flex-1 items-center justify-center gap-1.5 py-1 text-xs"
-                  >
-                    <Megaphone size={15} /> {t('buddies.cheer')}
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.92 }}
-                    transition={tapSpring}
-                    onClick={() => message.mutate(b.id)}
-                    className="btn-pill btn-primary flex min-h-[32px] flex-1 items-center justify-center gap-1.5 py-1 text-xs"
-                  >
-                    <MessageSquare size={15} /> {t('buddies.message')}
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.92 }}
-                    transition={tapSpring}
-                    onClick={() => openDuelSheet(b)}
-                    aria-label={t('duels.challengeTitle', { name: b.firstName })}
-                    className="btn-pill btn-ghost flex min-h-[40px] items-center justify-center gap-1.5 px-3.5 py-1.5 text-sm text-brand-pink"
-                  >
-                    <Swords size={16} /> {t('duels.duel')}
-                  </motion.button>
-                </div>
+              <div key={b.id} className="flex items-center gap-2.5 rounded-2xl bg-white p-3 shadow-sm">
+                <Link to={`/u/${b.id}`} className="shrink-0">
+                  <MediaImage path={b.avatarUrl} label={b.firstName} className="h-11 w-11 rounded-full" seed={b.id.length} />
+                </Link>
+                <Link to={`/u/${b.id}`} className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{b.firstName} {b.lastName}</p>
+                  <p className="flex items-center gap-2 text-[11px] text-gray-400">
+                    <span className="flex items-center gap-0.5"><Flame size={11} className="text-orange-500" /> {b.currentStreak}</span>
+                    <span className="flex items-center gap-0.5"><Zap size={11} className="text-amber-500" /> {b.weeklyXp}</span>
+                    <span className="flex items-center gap-0.5"><Dumbbell size={11} /> {b.completions}</span>
+                  </p>
+                </Link>
+                <motion.button
+                  whileTap={{ scale: 0.85, rotate: -6 }}
+                  transition={tapSpring}
+                  onClick={() => cheer.mutate(b.id)}
+                  aria-label={t('buddies.cheer')}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600 active:scale-90"
+                >
+                  <Megaphone size={15} />
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  transition={tapSpring}
+                  onClick={() => message.mutate(b.id)}
+                  aria-label={t('buddies.message')}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-brand-blue active:scale-90"
+                >
+                  <MessageSquare size={15} />
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  transition={tapSpring}
+                  onClick={() => openDuelSheet(b)}
+                  aria-label={t('duels.challengeTitle', { name: b.firstName })}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-pink/10 text-brand-pink active:scale-90"
+                >
+                  <Swords size={15} />
+                </motion.button>
               </div>
             ))}
           </div>

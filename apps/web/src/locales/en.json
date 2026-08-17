@@ -1005,7 +1005,8 @@
     "shareOnHint": "Everyone sees it — your proof becomes motivation for others 💪",
     "shareOffHint": "Stays inside this challenge room only.",
     "proofSendBtn": "Post proof",
-    "proofSentPrivate": "Proof posted in the room 📸 (not shared to the feed)"
+    "proofSentPrivate": "Proof posted in the room 📸 (not shared to the feed)",
+    "enterNow": "Join"
   },
   "community": {
     "addMedia": "Add media",

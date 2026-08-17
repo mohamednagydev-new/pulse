@@ -128,6 +128,33 @@ export default function Home() {
 
       <QuickActions />
 
+      {/* A LIVE prize challenge outranks the calm default: real money on the
+          table is the one thing that always earns a core slot. Auto-appears
+          when a prize challenge is in its window, gone when it ends. */}
+      {(() => {
+        const prizeChal = (challenges as any[]).find((c) => c.prizeText);
+        if (!prizeChal) return null;
+        return (
+          <motion.button
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate(`/challenge/${prizeChal.id}`)}
+            className="scene-tex mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-3.5 text-start text-white shadow-md shadow-amber-500/30"
+          >
+            <span className="text-2xl" aria-hidden>🏆</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-extrabold">{prizeChal.title}</span>
+              <span className="block truncate text-[11px] text-white/85">🎁 {prizeChal.prizeText}</span>
+            </span>
+            <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-extrabold text-orange-600">
+              {t('challenge.enterNow')}
+            </span>
+          </motion.button>
+        );
+      })()}
+
       {/* Today's habits — the things that reset every morning */}
       <DailyQuests />
 
