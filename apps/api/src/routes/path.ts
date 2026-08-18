@@ -25,6 +25,7 @@ const LEVEL_ORDER = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 const GOAL_TYPE: Record<string, 'WORKOUT' | 'YOGA'> = {
   lose_weight: 'WORKOUT',
   build_muscle: 'WORKOUT',
+  recomp: 'WORKOUT',
   stay_fit: 'YOGA',
 };
 

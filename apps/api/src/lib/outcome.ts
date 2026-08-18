@@ -124,6 +124,68 @@ export async function measureOutcome(
     };
   }
 
+  if (goal === 'recomp') {
+    // Both halves matter, and a FLAT scale is not failure here — losing fat
+    // while adding muscle often nets out to zero on the scale. Strength going
+    // up is the truth-teller.
+    const [wChange, sChange] = await Promise.all([
+      weightChange(userId, sinceDate),
+      strengthChange(userId, since),
+    ]);
+    if (wChange === null && sChange === null) {
+      return {
+        verdict: 'no_data', metric: 'strength', change: null, windowDays,
+        message: {
+          en: 'Log your weight twice and your sets for a few sessions — recomp is judged on both.',
+          ar: 'سجّل وزنك مرتين ومجموعاتك كام تمرينة — الريكومب بيتحكم عليه من الاتنين.',
+        },
+      };
+    }
+    if (wChange !== null && wChange <= -4 && windowDays <= 28) {
+      return {
+        verdict: 'too_fast', metric: 'weight', change: wChange, windowDays,
+        message: {
+          en: `Down ${Math.abs(wChange)} kg in ${windowDays} days — too fast for recomp; that pace costs muscle. Eat a little more.`,
+          ar: `نزلت ${Math.abs(wChange)} كجم في ${windowDays} يوم — ده سريع على الريكومب وبياكل من عضلاتك. كُل شوية أكتر.`,
+        },
+      };
+    }
+    if ((sChange ?? 0) >= 3 && wChange !== null && wChange < -0.5) {
+      return {
+        verdict: 'working', metric: 'strength', change: sChange, windowDays,
+        message: {
+          en: `Lifts up ~${sChange}% while the scale is down ${Math.abs(wChange)} kg — textbook recomposition. Keep going.`,
+          ar: `أوزانك زادت ~${sChange}% والميزان نزل ${Math.abs(wChange)} كجم — ريكومب بالكتاب. كمّل.`,
+        },
+      };
+    }
+    if ((sChange ?? 0) >= 3) {
+      return {
+        verdict: 'working', metric: 'strength', change: sChange, windowDays,
+        message: {
+          en: `Lifts up ~${sChange}% over ${windowDays} days. A steady scale during recomp means fat out, muscle in.`,
+          ar: `أوزانك زادت ~${sChange}% في ${windowDays} يوم. ثبات الميزان في الريكومب معناه دهون بتنزل وعضل بيتبني.`,
+        },
+      };
+    }
+    if (wChange !== null && wChange < -0.5) {
+      return {
+        verdict: 'working', metric: 'weight', change: wChange, windowDays,
+        message: {
+          en: `Down ${Math.abs(wChange)} kg — the fat-loss half is working. Log your sets so we can watch the muscle half too.`,
+          ar: `نزلت ${Math.abs(wChange)} كجم — نص التخسيس شغال. سجّل مجموعاتك عشان نتابع نص العضل كمان.`,
+        },
+      };
+    }
+    return {
+      verdict: 'flat', metric: 'strength', change: sChange ?? 0, windowDays,
+      message: {
+        en: `Neither the lifts nor the scale moved in ${windowDays} days. Tighten the kitchen slightly and push the last rep harder.`,
+        ar: `لا الأوزان اتحركت ولا الميزان من ${windowDays} يوم. ظبّط الأكل شوية وادّي في آخر عدة أكتر.`,
+      },
+    };
+  }
+
   if (goal === 'build_muscle' || goal === 'get_strong') {
     const change = await strengthChange(userId, since);
     if (change === null) {

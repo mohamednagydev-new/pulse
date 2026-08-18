@@ -441,6 +441,9 @@ mealsRouter.get('/barcode/:code', async (req: AuthedRequest, res) => {
   if (fat > 20) score -= 1;
   if (goal === 'lose_weight' && kcal > 300) score -= 1;
   if (goal === 'build_muscle' && protein < 5) score -= 1;
+  // Recomp wants both halves: protein present AND the portion not blowing the small deficit.
+  if (goal === 'recomp' && protein < 5) score -= 1;
+  if (goal === 'recomp' && kcal > 350) score -= 1;
   score = Math.max(1, Math.min(10, score));
 
   const advice =

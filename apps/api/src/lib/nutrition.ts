@@ -51,6 +51,9 @@ const GOAL_SHIFT: Record<string, number> = {
   get_strong: 0.08,
   stay_fit: 0,
   more_energy: 0,
+  // Recomposition (lose fat + build muscle together): a SMALL deficit — deep
+  // cuts cost muscle, a surplus costs the fat-loss half. The magic is protein.
+  recomp: -0.1,
 };
 
 /** Protein grams per kg of body weight. Higher when losing, to protect muscle. */
@@ -60,6 +63,8 @@ const PROTEIN_PER_KG: Record<string, number> = {
   get_strong: 1.8,
   stay_fit: 1.4,
   more_energy: 1.4,
+  // Highest of all: recomp asks the body to build in a deficit — only works fed on protein.
+  recomp: 2.2,
 };
 
 /** Used when we have no measurements at all — same spirit as the old wizard. */
@@ -69,6 +74,7 @@ const FALLBACK: Record<string, Omit<Targets, 'basis' | 'note'>> = {
   get_strong: { calories: 2500, protein: 175, carbs: 265, fat: 75 },
   stay_fit: { calories: 2200, protein: 140, carbs: 240, fat: 70 },
   more_energy: { calories: 2200, protein: 140, carbs: 240, fat: 70 },
+  recomp: { calories: 2100, protein: 175, carbs: 185, fat: 60 },
 };
 
 const round5 = (n: number) => Math.round(n / 5) * 5;

@@ -22,7 +22,7 @@ export const assessmentRouter = Router();
 assessmentRouter.use(requireAuth);
 
 const schema = z.object({
-  goal: z.enum(['lose_weight', 'build_muscle', 'stay_fit', 'get_strong', 'more_energy']),
+  goal: z.enum(['lose_weight', 'build_muscle', 'recomp', 'stay_fit', 'get_strong', 'more_energy']),
   experience: z.enum(['none', 'some', 'regular', 'advanced']),
   daysPerWeek: z.number().int().min(1).max(7),
   minutesPerSession: z.number().int().min(10).max(120),

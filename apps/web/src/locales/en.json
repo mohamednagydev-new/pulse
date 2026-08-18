@@ -733,6 +733,7 @@
     "goal": {
       "lose_weight": "Lose weight",
       "build_muscle": "Build muscle",
+      "recomp": "Both — lose fat + build muscle",
       "get_strong": "Get stronger",
       "stay_fit": "Stay healthy",
       "more_energy": "Have more energy"
@@ -740,6 +741,7 @@
     "goalSub": {
       "lose_weight": "Burn more, feel lighter",
       "build_muscle": "Add size and shape",
+      "recomp": "Recomposition: burn and build at the same time",
       "get_strong": "Lift heavier over time",
       "stay_fit": "Move well, feel good",
       "more_energy": "Beat the afternoon crash"

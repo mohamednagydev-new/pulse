@@ -150,6 +150,10 @@ const GOAL_LINE: Record<string, Bilingual> = {
     en: 'Split by muscle group so each one gets real volume and time to recover.',
     ar: 'مقسّمة على العضلات عشان كل واحدة تاخد حقها ووقت ترتاح فيه.',
   },
+  recomp: {
+    en: 'Strength split plus a small calorie deficit — the weights build while the kitchen burns.',
+    ar: 'تقسيمة حديد مع عجز سعرات بسيط — الحديد يبني والمطبخ يحرق، الاتنين مع بعض.',
+  },
   stay_fit: {
     en: 'A balance of movement, mobility and calm rather than pure strength work.',
     ar: 'توازن بين الحركة والمرونة والهدوء، مش حديد وبس.',

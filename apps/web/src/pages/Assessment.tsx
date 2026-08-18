@@ -42,7 +42,7 @@ const DEFAULTS: Answers = {
 };
 
 const OPTIONS = {
-  goal: ['lose_weight', 'build_muscle', 'get_strong', 'stay_fit', 'more_energy'],
+  goal: ['lose_weight', 'build_muscle', 'recomp', 'get_strong', 'stay_fit', 'more_energy'],
   experience: ['none', 'some', 'regular', 'advanced'],
   equipment: ['none', 'home_basic', 'full_gym'],
   activityLevel: ['sedentary', 'light', 'moderate', 'active'],
@@ -510,7 +510,7 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
 /** The goal step gets a tiny person acting each goal out — the first "the app
  *  shows me the movement" moment, before a single workout is opened. */
 const GOAL_PATTERNS: Record<string, PatternName> = {
-  lose_weight: 'jog', build_muscle: 'curl', get_strong: 'deadlift', stay_fit: 'jump', more_energy: 'breathe',
+  lose_weight: 'jog', build_muscle: 'curl', recomp: 'deadlift', get_strong: 'deadlift', stay_fit: 'jump', more_energy: 'breathe',
 };
 
 function Choices({
