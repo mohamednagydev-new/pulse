@@ -498,8 +498,10 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
   return (
     <button
       onClick={onClick}
+      // Selected = the brand color, NOT bg-white: the dark-mode override remaps
+      // .dark .bg-white to a faint tint, which made selected ≈ unselected.
       className={`min-h-[52px] rounded-xl px-3 text-sm font-bold transition active:scale-95 ${
-        active ? 'bg-white text-ink' : 'bg-white/10 text-white'
+        active ? 'bg-brand-pink text-white shadow-lg ring-2 ring-white/80' : 'bg-white/10 text-white'
       }`}
     >
       {children}
@@ -516,6 +518,8 @@ const GOAL_PATTERNS: Record<string, PatternName> = {
 function Choices({
   options, value, onPick, t, group,
 }: { options: string[]; value: string; onPick: (v: string) => void; t: (k: string) => string; group: string }) {
+  // Selected = brand color with a bright ring — bg-white was invisible in
+  // dark mode (the .dark .bg-white remap tints it to ~6%).
   return (
     <div className="space-y-2">
       {options.map((o) => (
@@ -523,21 +527,25 @@ function Choices({
           key={o}
           onClick={() => onPick(o)}
           className={`flex w-full items-center justify-between gap-3 rounded-2xl p-4 text-start transition active:scale-[0.98] ${
-            value === o ? 'bg-white text-ink shadow-lg' : 'bg-white/15 text-white ring-1 ring-white/20'
+            value === o ? 'bg-brand-pink text-white shadow-lg ring-2 ring-white/80' : 'bg-white/15 text-white ring-1 ring-white/20'
           }`}
         >
           {group === 'goal' && GOAL_PATTERNS[o] && (
-            <span className={`h-11 w-11 shrink-0 ${value === o ? 'text-gray-500' : 'text-white/70'}`}>
+            <span className={`h-11 w-11 shrink-0 ${value === o ? 'text-white/90' : 'text-white/70'}`}>
               <HumanMove pattern={GOAL_PATTERNS[o]} className="h-11 w-11" />
             </span>
           )}
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold">{t(`assess.${group}.${o}`)}</span>
-            <span className={`block text-xs ${value === o ? 'text-gray-500' : 'text-white/60'}`}>
+            <span className={`block text-xs ${value === o ? 'text-white/80' : 'text-white/60'}`}>
               {t(`assess.${group}Sub.${o}`)}
             </span>
           </span>
-          {value === o && <Check size={18} className="shrink-0 text-brand-green" />}
+          {value === o && (
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white">
+              <Check size={15} className="text-brand-pink" />
+            </span>
+          )}
         </button>
       ))}
     </div>
