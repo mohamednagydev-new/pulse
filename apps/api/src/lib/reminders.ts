@@ -226,7 +226,14 @@ async function runCheck() {
       prisma.notification.deleteMany({ where: { createdAt: { lt: cut(60) } } }),
       prisma.reelWatch.deleteMany({ where: { createdAt: { lt: cut(45) } } }),
       prisma.jobRun.deleteMany({ where: { ranAt: { lt: cut(14) } } }),
+      // The fastest-growing table: every workout/action writes an XpEvent.
+      // Totals live on User.xp and league results in LeagueMember, so events
+      // older than a year serve no query (all windows are ≤ 90 days).
+      prisma.xpEvent.deleteMany({ where: { createdAt: { lt: cut(366) } } }),
     ]).catch((e) => console.warn('[retention]', e?.message));
+    // Keep the WAL sidecar from growing unbounded between backups: fold it
+    // back into the main file once a night, right before the copy.
+    await prisma.$executeRawUnsafe('PRAGMA wal_checkpoint(TRUNCATE)').catch(() => {});
     if (await claimJob(`backup:${day}`)) await backupDatabase(day);
   }
 
