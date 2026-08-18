@@ -255,6 +255,23 @@ export default function App() {
     }
   }, [status]);
 
+  // THE INTAKE GATE (owner decision, Aug 2026 — reinstated deliberately after
+  // being removed): a signed-in account that has not finished the plan wizard
+  // goes to /my-plan and nowhere else. The 2025-era gate trapped users when the
+  // onboarded flag went stale; this one cannot: POST /api/assessment sets
+  // onboarded=true server-side and the wizard refreshes the auth user on
+  // submit, so the gate lifts the moment the last question is answered.
+  // Exemptions: the wizard itself, the auth funnel, invite redemption (so a
+  // coach/gym connection lands BEFORE the wizard), public TV boards, admins.
+  const gateUser = useAuth((s) => s.user);
+  useEffect(() => {
+    if (status !== 'authed' || !gateUser || gateUser.onboarded || gateUser.role === 'ADMIN') return;
+    const p = location.pathname;
+    const exempt = ['/my-plan', '/welcome', '/onboarding', '/login', '/register', '/forgot-password', '/reset-password', '/contact'];
+    if (exempt.includes(p) || p.startsWith('/invite/') || p.startsWith('/tv/') || p.startsWith('/admin')) return;
+    navigate('/my-plan', { replace: true });
+  }, [status, gateUser, location.pathname]);
+
   // Scroll handling + screen-view analytics. Forward navigations start at the
   // top; Back (POP) restores where you were — returning from a recipe to a
   // scrolled list used to dump you at the top of the feed.
