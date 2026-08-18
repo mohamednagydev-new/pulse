@@ -113,6 +113,7 @@ export default function Assessment() {
         onPartyDone={() => setParty(false)}
         onRedo={() => { setResult(null); setA({ ...DEFAULTS, goal: ' ' }); setStep(0); }}
         onStart={(id: string) => navigate(`/lesson/${id}`)}
+        onHome={() => navigate('/')}
       />
     );
   }
@@ -313,10 +314,10 @@ export default function Assessment() {
 /* ------------------------------- Result ------------------------------- */
 
 function PlanView({
-  data, dueRecheck, say, t, party, onPartyDone, onRedo, onStart,
+  data, dueRecheck, say, t, party, onPartyDone, onRedo, onStart, onHome,
 }: {
   data: any; dueRecheck?: boolean; say: (b: Bilingual) => string;
-  t: (k: string, o?: any) => string; party: boolean; onPartyDone: () => void;
+  t: (k: string, o?: any) => string; party: boolean; onPartyDone: () => void; onHome: () => void;
   onRedo: () => void; onStart: (lessonId: string) => void;
 }) {
   const as = data.assessment ?? {};
@@ -412,6 +413,14 @@ function PlanView({
             <Play size={16} fill="currentColor" /> {t('assess.startFirst')}
           </button>
         )}
+        {/* Not everyone trains the minute they finish the wizard — the plan is
+            saved, so leaving here must be a first-class exit, not a trap. */}
+        <button
+          onClick={onHome}
+          className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl bg-white text-sm font-bold text-gray-700 ring-1 ring-gray-200 active:scale-95"
+        >
+          {say({ en: "Go home — I'll start later", ar: 'الرئيسية — هبدأ بعدين' })}
+        </button>
         <button
           onClick={onRedo}
           className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl bg-gray-100 text-sm font-bold text-gray-600 active:scale-95"
