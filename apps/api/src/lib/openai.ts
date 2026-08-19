@@ -43,7 +43,9 @@ export async function visionComplete(
   const res = await openai.chat.completions.create({
     model: CHAT_MODEL,
     temperature: opts.temperature ?? 0.2,
-    max_tokens: 300, // a macro estimate is numbers + a sentence, never more
+    // 500, not 300: a plate with 3-4 dishes emits a JSON array that a 300-token
+    // cap truncated mid-string — the parse then failed as "could not read".
+    max_tokens: 500,
     ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
     messages: [
       { role: 'system', content: system },
@@ -51,9 +53,11 @@ export async function visionComplete(
         role: 'user',
         content: [
           { type: 'text', text: prompt },
-          // "low" detail is deliberate: a plate of food does not need the high-detail
-          // tiling pass, and it roughly halves the token cost of every photo.
-          { type: 'image_url', image_url: { url: imageDataUrl, detail: 'low' } },
+          // "auto" detail, not "low": low squeezes every photo to 512px before the
+          // model sees it — mixed plates became unrecognizable and users got
+          // "no food in this photo" for perfectly clear shots. The cost delta on
+          // a 1024px food photo is a fraction of a cent.
+          { type: 'image_url', image_url: { url: imageDataUrl, detail: 'auto' } },
         ],
       },
     ],

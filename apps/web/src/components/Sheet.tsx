@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -34,6 +34,21 @@ export default function Sheet({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
+
+  // Keyboard-aware height for EVERY sheet: dvh ignores the on-screen keyboard
+  // (iOS always; Android without the interactive-widget meta), so any sheet
+  // with an input had its lower half swallowed behind the keys. visualViewport
+  // reports the space actually visible; the style cap beats the maxH class.
+  const [vvh, setVvh] = useState<number | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setVvh(Math.round(vv.height));
+    update();
+    vv.addEventListener('resize', update);
+    return () => vv.removeEventListener('resize', update);
+  }, [open]);
 
   // Scroll lock + focus management for the open lifetime of the sheet.
   useEffect(() => {
@@ -111,7 +126,10 @@ export default function Sheet({
             transition={{ type: 'spring', stiffness: 380, damping: 38 }}
             onKeyDown={trapTab}
             className={`sheet-panel fixed inset-x-0 bottom-0 z-[80] mx-auto w-full max-w-[480px] overflow-y-auto rounded-t-[28px] bg-white outline-none ${maxH}`}
-            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            style={{
+              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+              ...(vvh && vvh < window.innerHeight - 40 ? { maxHeight: `${Math.round(vvh * 0.94)}px` } : {}),
+            }}
           >
             <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-gray-300" aria-hidden />
             {children}

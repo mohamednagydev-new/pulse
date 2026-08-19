@@ -232,7 +232,17 @@ aiRouter.post('/meal-photo', async (req: AuthedRequest, res) => {
     ? `What is in this photo? The user adds: ${parsed.data.note}`
     : 'What is in this photo, and roughly what is in it nutritionally?';
 
-  const raw = await visionComplete(system, prompt, parsed.data.image, { json: true });
+  // A failed AI call must not masquerade as "no food in the photo" — that
+  // message tells the user to retake a photo that was never analyzed at all.
+  let raw: string;
+  try {
+    raw = await visionComplete(system, prompt, parsed.data.image, { json: true });
+  } catch (err) {
+    console.error('[meal-photo] vision failed:', err instanceof Error ? err.message : err);
+    return res.status(503).json({
+      error: lang === 'ar' ? 'خدمة تحليل الصور مش متاحة دلوقتي — جرّب تاني بعد شوية.' : 'Photo analysis is unavailable right now — try again shortly.',
+    });
+  }
 
   let data: any;
   try {
