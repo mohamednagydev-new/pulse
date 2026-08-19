@@ -1,15 +1,18 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Star, ClipboardList, Users, Apple, User } from 'lucide-react';
+import { Star, ClipboardList, Users, Flame, User } from 'lucide-react';
 
 /** Each tab owns its section color — the active pill slides between them and
- *  recolors, so the bar itself tells you where you are. */
+ *  recolors, so the bar itself tells you where you are.
+ *  IA: Home · Train · Community · Food · Me. The old Wellness slot now fronts
+ *  the food tracker (/wellness stays routable via search & Food hub); the
+ *  locale keys keep their historic names — only their VALUES were relabeled. */
 const tabs = [
   { to: '/', key: 'recommended', icon: Star, grad: 'from-orange-500 to-pink-600', glow: 'shadow-orange-500/40', text: 'text-orange-500' },
   { to: '/programs', key: 'programs', icon: ClipboardList, grad: 'from-blue-500 to-indigo-600', glow: 'shadow-blue-500/40', text: 'text-brand-blue' },
   { to: '/community', key: 'community', icon: Users, grad: 'from-violet-500 to-purple-700', glow: 'shadow-violet-500/40', text: 'text-violet-500' },
-  { to: '/wellness', key: 'wellness', icon: Apple, grad: 'from-emerald-500 to-teal-600', glow: 'shadow-emerald-500/40', text: 'text-brand-green' },
+  { to: '/tracker', key: 'wellness', icon: Flame, grad: 'from-emerald-500 to-teal-600', glow: 'shadow-emerald-500/40', text: 'text-brand-green' },
   { to: '/profile', key: 'profile', icon: User, grad: 'from-teal-500 to-cyan-600', glow: 'shadow-teal-500/40', text: 'text-brand-teal' },
 ];
 

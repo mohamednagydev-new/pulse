@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { Flame, Megaphone, Flower2, Droplets, Wind } from 'lucide-react';
 import { api } from '../lib/api';
 import { getSocket } from '../lib/socket';
@@ -15,6 +16,8 @@ const DAY_INDEX = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 export default function TodayStrip() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
+  const isAr = i18n.language.startsWith('ar');
   const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
   const { data: presence } = useQuery({ queryKey: ['presence'], queryFn: () => api.get('/api/social/presence') });
   const { data: sched } = useQuery({ queryKey: ['schedule'], queryFn: () => api.get('/api/me/schedule') });
@@ -22,6 +25,11 @@ export default function TodayStrip() {
   const { data: buddies } = useQuery({ queryKey: ['buddies'], queryFn: () => api.get('/api/social/buddies') });
   const { data: path } = useQuery({ queryKey: ['path-current'], queryFn: () => api.get('/api/path/current') });
   const { data: plan } = useQuery({ queryKey: ['assessment'], queryFn: () => api.get('/api/assessment'), staleTime: 5 * 60_000 });
+  // Rest-of-the-day chips share the Tracker's / WaterCard's caches (same keys),
+  // so a Home visit after either screen renders instantly from cache.
+  const { data: day } = useQuery({ queryKey: ['tracker-day'], queryFn: () => api.get('/api/tracker/day') });
+  const { data: water } = useQuery({ queryKey: ['water'], queryFn: () => api.get('/api/daily/water'), staleTime: 60_000 });
+  const { data: journey } = useQuery({ queryKey: ['diet-journey'], queryFn: () => api.get('/api/tracker/diet-journey') });
   const [online, setOnline] = useState<number | null>(null);
 
   useEffect(() => {
@@ -73,6 +81,42 @@ export default function TodayStrip() {
 
   const buddy = (buddies ?? [])[0];
 
+  // Water chip logs a glass in place — WaterCard's optimistic mutation verbatim,
+  // because deep-linking to '/' would just land on the collapsed card.
+  const logWater = useMutation<any, Error, { delta: number }, { prev?: any }>({
+    mutationFn: (body) => api.post('/api/daily/water', body),
+    onMutate: async (body) => {
+      await qc.cancelQueries({ queryKey: ['water'] });
+      const prev = qc.getQueryData<any>(['water']);
+      if (prev) qc.setQueryData(['water'], { ...prev, glasses: Math.max(0, prev.glasses + body.delta) });
+      return { prev };
+    },
+    onError: (err, _body, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['water'], ctx.prev);
+      toast(err?.message ?? 'Something went wrong', 'error');
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['water'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
+    },
+  });
+
+  // Rest of the day at a glance: food, water, and (when due) the weigh-in.
+  const kcal = day?.totals?.calories ?? 0;
+  const kcalGoal = day?.goals?.calories ?? 0;
+  // Same honesty thresholds as the Tracker's bar: amber at goal, red past 115%.
+  const kcalPct = kcalGoal ? Math.round((kcal / kcalGoal) * 100) : 0;
+  const kcalTone = kcalPct > 115 ? 'text-red-500' : kcalPct >= 100 ? 'text-amber-600' : 'text-ink';
+  const glasses = water?.glasses ?? 0;
+  const waterGoal = Math.max(1, water?.goal ?? 8);
+  const waterDone = glasses >= waterGoal;
+  // Weigh-in nudge only while a diet journey is live AND the scale went quiet
+  // for 3+ days — weights ride the progress payload the strip already fetches.
+  const weights: { date: string }[] = progress?.weights ?? [];
+  const lastWeigh = weights.length ? new Date(weights[weights.length - 1].date).getTime() : 0;
+  const weighInDue = !!journey?.active && Date.now() - lastWeigh > 3 * 86400000;
+  const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
+
   return (
     <div className="animate-fade-up mx-4 -mt-3 rounded-2xl glass p-4">
       <div className="flex items-center gap-4">
@@ -108,6 +152,62 @@ export default function TodayStrip() {
           {isRest && !path?.enrolled ? t('today.explore') : t('today.start')}
         </button>
       </div>
+
+      {/* Rest of the day: the weight-loss half of the day (food, water, weigh-in)
+          lived on three screens — one glance here covers it. Chips render only
+          once their cached query has data, so loading shows nothing (no flash);
+          Home sits behind RequireAuth, so guests never reach this. */}
+      {(day || water || weighInDue) && (
+        <div className="mt-3 flex items-center gap-2 overflow-x-auto border-t border-gray-200/40 pt-3">
+          {day && (
+            <button
+              onClick={() => navigate('/tracker')}
+              className="flex min-h-[30px] shrink-0 items-center gap-1.5 rounded-full bg-white/60 px-3 text-[11px] font-bold text-gray-600 transition active:scale-95"
+              aria-label={isAr ? 'سعرات النهارده' : "Today's calories"}
+            >
+              🍽{' '}
+              <span className={`tabular-nums ${kcalTone}`}>
+                {kcalGoal ? `${fmt(kcal)} / ${fmt(kcalGoal)}` : `${fmt(kcal)} ${isAr ? 'سعرة' : 'kcal'}`}
+              </span>
+            </button>
+          )}
+          {water && (
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={() => {
+                tapFeedback();
+                // At goal the chip stops adding (same guard as WaterCard's "+").
+                if (!waterDone) logWater.mutate({ delta: 1 });
+              }}
+              className={`flex min-h-[30px] shrink-0 items-center gap-1.5 rounded-full px-3 text-[11px] font-bold transition ${
+                waterDone ? 'bg-sky-100 text-sky-600' : 'bg-white/60 text-gray-600'
+              }`}
+              aria-label={isAr ? 'سجّل كوباية مية' : 'Log a glass of water'}
+            >
+              💧{' '}
+              {/* Keyed pop: the count re-mounts on each glass, so the optimistic
+                  bump reads as a tiny celebration instead of a silent redraw. */}
+              <motion.span
+                key={glasses}
+                initial={{ scale: 1.45 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+                className={`tabular-nums ${waterDone ? '' : 'text-ink'}`}
+              >
+                {glasses}/{waterGoal}
+              </motion.span>
+            </motion.button>
+          )}
+          {weighInDue && (
+            <button
+              onClick={() => navigate('/progress')}
+              className="flex min-h-[30px] shrink-0 items-center gap-1.5 rounded-full bg-violet-100 px-3 text-[11px] font-bold text-violet-600 transition active:scale-95"
+            >
+              ⚖️ {isAr ? 'اتوزن' : 'Weigh-in'}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Next-step chips folded INTO the hero. "New here? Week Zero", "Get my
           plan" and "Pick a program" were each a full-width card — three stacked

@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Mic, Plus, Search, Trash2, Sparkles, UtensilsCrossed, Pencil } from 'lucide-react';
+import { Camera, Mic, Plus, Search, Trash2, Sparkles, Pencil } from 'lucide-react';
 import Sheet from '../components/Sheet';
 import { listenOnce, voiceSupported } from '../lib/voiceInput';
 import { toast } from '../lib/toast';
-import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Loader, ErrorMsg } from '../components/ui';
 import TopBar from '../components/TopBar';
@@ -14,6 +13,7 @@ import CountUp from '../components/CountUp';
 import AmbientBg from '../components/AmbientBg';
 import FoodPicker from '../components/FoodPicker';
 import MealPhoto from '../components/MealPhoto';
+import NutritionHub from '../components/NutritionHub';
 import SpotlightBubble from '../components/SpotlightBubble';
 import { bumpDaily, markSpot, spotSeen } from '../lib/spotlight';
 
@@ -27,6 +27,8 @@ export default function Tracker() {
   const [busy, setBusy] = useState(false);
   const [picking, setPicking] = useState(false);
   const [photo, setPhoto] = useState(false);
+  // The AI free-text box is a secondary door now — closed until asked for.
+  const [describeOpen, setDescribeOpen] = useState(false);
   const [goalsOpen, setGoalsOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const voice = useRef<{ cancel: () => void } | null>(null);
@@ -80,7 +82,7 @@ export default function Tracker() {
   if (isError)
     return (
       <div className="min-h-screen">
-        <TopBar title={t('tracker.calories')} color="bg-gradient-to-b from-brand-green to-emerald-600" textColor="text-white" />
+        <TopBar title={isAr ? 'الأكل' : 'Food'} color="bg-gradient-to-b from-brand-green to-emerald-600" textColor="text-white" />
         <ErrorMsg error={error} onRetry={() => refetch()} />
       </div>
     );
@@ -97,7 +99,7 @@ export default function Tracker() {
   return (
     <div className="relative min-h-screen overflow-x-hidden pb-10">
       <AmbientBg tone="green" />
-      <TopBar title={t('tracker.calories')} color="bg-gradient-to-b from-brand-green to-emerald-600" textColor="text-white" />
+      <TopBar title={isAr ? 'الأكل' : 'Food'} color="bg-gradient-to-b from-brand-green to-emerald-600" textColor="text-white" />
 
       <motion.div
         initial={{ opacity: 0, y: 14 }}
@@ -142,42 +144,6 @@ export default function Tracker() {
         ) : null}
       </motion.div>
 
-      {journey && !journey.active && (
-        <Link to="/progress" className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-white shadow-sm transition active:scale-[0.98]">
-          <span className="text-lg">🎯</span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-extrabold">{t('diet.trackerCta')}</span>
-            <span className="block truncate text-[11px] text-white/80">{t('diet.trackerCtaSub')}</span>
-          </span>
-        </Link>
-      )}
-      {journey?.active && (
-        <Link to="/progress" className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-2.5 rounded-2xl bg-white px-4 py-3 shadow-sm transition active:scale-[0.98]">
-          <span className="text-lg">🎯</span>
-          <span className="min-w-0 flex-1">
-            <span className="mb-1.5 flex items-center justify-between text-[11px] font-bold">
-              <span>{t('diet.title')}</span>
-              <span className={journey.onTrack ? 'text-emerald-500' : 'text-amber-500'}>{journey.onTrack ? t('diet.onTrack') : t('diet.behind')}</span>
-            </span>
-            <span className="block h-1.5 overflow-hidden rounded-full bg-gray-100">
-              <span className="block h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-600" style={{ width: `${journey.pct}%` }} />
-            </span>
-          </span>
-        </Link>
-      )}
-
-      {/* Global diet programs — shared commitments, one tap away from the tracker. */}
-      <Link
-        to="/diet-programs"
-        className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-white p-3.5 shadow-sm transition active:scale-[0.98]"
-      >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-lg">🥗</span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold">{t('dietProg.title')}</span>
-          <span className="block truncate text-xs text-gray-400">{t('dietProg.trackerHook')}</span>
-        </span>
-      </Link>
-
       {/* The primary way in: pick from the Egyptian food table. Always works. */}
       <motion.button
         initial={{ opacity: 0, y: 14 }}
@@ -197,45 +163,39 @@ export default function Tracker() {
         <Plus size={18} className="shrink-0 text-gray-300" />
       </motion.button>
 
-      <Link
-        to="/meals"
-        className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-white p-4 text-start shadow-sm transition active:scale-[0.98]"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-brand-orange">
-          <UtensilsCrossed size={19} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block font-bold">{t('meals.title')}</span>
-          <span className="block truncate text-xs text-gray-400">{t('meals.subtitle')}</span>
-        </span>
-      </Link>
-
-      {/* Vision. Only offered when it can actually work — a camera button that 503s
-          is worse than no camera button. */}
+      {/* Photo + AI-describe, demoted to one compact secondary row — small doors,
+          not stacked cards. Only offered when the AI can actually work. */}
       {ai?.enabled && (
-        <motion.button
+        <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          whileTap={{ scale: 0.98 }}
           transition={{ ...spring, delay: 0.1 }}
-          onClick={() => setPhoto(true)}
-          className="mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-white p-4 text-start shadow-sm"
+          className="mx-4 mt-2 flex gap-2"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-brand-pink">
-            <Camera size={19} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-bold">{t('photo.title')}</span>
-            <span className="block truncate text-xs text-gray-400">{t('photo.sub')}</span>
-          </span>
-        </motion.button>
+          <button
+            onClick={() => setPhoto(true)}
+            aria-label={t('photo.title')}
+            className="flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-white text-xs font-bold text-gray-600 shadow-sm transition active:scale-[0.97]"
+          >
+            <Camera size={14} className="text-brand-pink" /> {isAr ? 'صوّر الأكل' : 'Photo'}
+          </button>
+          <button
+            onClick={() => setDescribeOpen((v) => !v)}
+            aria-expanded={describeOpen}
+            className={`flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-xl text-xs font-bold shadow-sm transition active:scale-[0.97] ${
+              describeOpen ? 'bg-emerald-50 text-brand-green' : 'bg-white text-gray-600'
+            }`}
+          >
+            <Sparkles size={14} className="text-brand-pink" /> {isAr ? 'اوصف أكلك' : 'Describe'}
+          </button>
+        </motion.div>
       )}
 
       {/* Secondary, and only when it is actually configured. */}
       {ai?.enabled && voiceSpot && !spotSeen('spot-voice') && (
         <SpotlightBubble spotKey="spot-voice" text={t('spot.voice')} onDismiss={() => setVoiceSpot(false)} className="mx-4 mt-2" />
       )}
-      {ai?.enabled && (
+      {ai?.enabled && describeOpen && (
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -293,11 +253,9 @@ export default function Tracker() {
         </motion.div>
       )}
 
-      <AnimatePresence>{picking && <FoodPicker onClose={() => setPicking(false)} />}</AnimatePresence>
-      <GoalsSheet open={goalsOpen} onClose={() => setGoalsOpen(false)} current={goals} />
-      <AnimatePresence>{photo && <MealPhoto onClose={() => setPhoto(false)} />}</AnimatePresence>
-
+      {/* TODAY'S LOG — the user's food is the page's content, so it comes first. */}
       <div className="mt-4 space-y-2 px-4">
+        <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">{isAr ? 'أكل النهارده' : "Today's log"}</p>
         {(data?.entries ?? []).map((e: any, i: number) => (
           <motion.div
             key={e.id}
@@ -315,8 +273,16 @@ export default function Tracker() {
             </button>
           </motion.div>
         ))}
-        {!data?.entries?.length && <p className="py-10 text-center text-sm text-gray-400">{t('tracker.noFood')}</p>}
+        {!data?.entries?.length && <p className="py-6 text-center text-sm text-gray-400">{t('tracker.noFood')}</p>}
       </div>
+
+      {/* NUTRITION hub — the three diet products, told apart by function, with
+          the weight-goal journey as the headline card (it owns the journey now). */}
+      <NutritionHub journey={journey} />
+
+      <AnimatePresence>{picking && <FoodPicker onClose={() => setPicking(false)} />}</AnimatePresence>
+      <GoalsSheet open={goalsOpen} onClose={() => setGoalsOpen(false)} current={goals} />
+      <AnimatePresence>{photo && <MealPhoto onClose={() => setPhoto(false)} />}</AnimatePresence>
     </div>
   );
 }

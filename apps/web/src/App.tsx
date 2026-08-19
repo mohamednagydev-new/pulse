@@ -19,7 +19,8 @@ import { celebrateFeedback } from './lib/haptics';
 import { pulseChime } from './lib/chime';
 import { track } from './lib/track';
 
-const TAB_ROUTES = ['/', '/programs', '/community', '/wellness', '/profile'];
+// Food (/tracker) replaced Wellness in the tab bar (IA restructure); /wellness stays routed, reached via links.
+const TAB_ROUTES = ['/', '/programs', '/community', '/tracker', '/profile'];
 import AppLayout from './components/AppLayout';
 import Splash from './components/Splash';
 
@@ -35,9 +36,9 @@ import Landing from './pages/Landing';
 import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import ProgramsHome from './pages/programs/ProgramsHome';
-import WellnessHome from './pages/wellness/WellnessHome';
 import Profile from './pages/Profile';
 import Community from './pages/social/Community';
+import Tracker from './pages/Tracker';
 
 /** lazy() that survives redeploys. A client whose open app requests a chunk
  *  from a previous build gets a broken module ("reading 'default'" crashes at
@@ -108,6 +109,7 @@ const ProgramPage = lazyRoute(() => import('./pages/programs/ProgramPage'));
 const LessonPage = lazyRoute(() => import('./pages/programs/LessonPage'));
 const ExercisesPage = lazyRoute(() => import('./pages/programs/ExercisesPage'));
 const MuscleGroupPage = lazyRoute(() => import('./pages/programs/MuscleGroupPage'));
+const WellnessHome = lazyRoute(() => import('./pages/wellness/WellnessHome'));
 const WellnessSection = lazyRoute(() => import('./pages/wellness/WellnessSection'));
 const CategoryPage = lazyRoute(() => import('./pages/wellness/CategoryPage'));
 const RecipePage = lazyRoute(() => import('./pages/wellness/RecipePage'));
@@ -129,7 +131,6 @@ const PartnerHub = lazyRoute(() => import('./pages/PartnerHub'));
 const Leagues = lazyRoute(() => import('./pages/Leagues'));
 const PartnerPage = lazyRoute(() => import('./pages/PartnerPage'));
 const Help = lazyRoute(() => import('./pages/Help'));
-const Tracker = lazyRoute(() => import('./pages/Tracker'));
 const MealPlan = lazyRoute(() => import('./pages/MealPlan'));
 const Venues = lazyRoute(() => import('./pages/Venues'));
 const Progress = lazyRoute(() => import('./pages/Progress'));

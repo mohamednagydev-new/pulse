@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Users, MessageSquare, Send, ImagePlus, X, Award, Clapperboard, BarChart3 } from 'lucide-react';
+import { Users, MessageSquare, Send, ImagePlus, X, Award, Clapperboard, BarChart3, Radio } from 'lucide-react';
 import { api, uploadWithAuth } from '../../lib/api';
 import { trackAd, pickAd } from '../../lib/ads';
 import { getSocket } from '../../lib/socket';
@@ -31,7 +31,7 @@ const PROMPTS: { ar: string; en: string }[] = [
 ];
 
 export default function Community() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [text, setText] = useState('');
@@ -102,6 +102,10 @@ export default function Community() {
           </motion.h1>
         </div>
         <div className="flex items-center gap-1">
+          {/* Group live lost its drawer tile — this pill is its Community front door. */}
+          <button onClick={() => navigate('/group')} className="flex h-8 items-center gap-1 rounded-full bg-white/15 px-2.5 text-[11px] font-bold">
+            <Radio size={13} /> {i18n.language.startsWith('ar') ? 'تمرين جماعي' : 'Group live'}
+          </button>
           <button onClick={() => navigate('/coaches-community')} aria-label="Coaches" className="flex h-10 w-10 items-center justify-center rounded-full"><Award size={24} /></button>
           <button onClick={() => navigate('/people')} aria-label="People" className="flex h-10 w-10 items-center justify-center rounded-full"><Users size={24} /></button>
           <button onClick={() => navigate('/chat')} aria-label="Messages" className="relative flex h-10 w-10 items-center justify-center rounded-full">

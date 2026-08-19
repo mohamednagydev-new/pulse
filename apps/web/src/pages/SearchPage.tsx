@@ -43,6 +43,41 @@ function pushRecent(q: string) {
   try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch { /* private mode */ }
 }
 
+/** Static screens index — search finds DESTINATIONS, not just content. Matched
+ *  against name + keywords in both languages, rendered above content results. */
+type ScreenDest = { to: string; en: string; ar: string; k: string; emoji: string };
+const SCREENS: ScreenDest[] = [
+  { to: '/programs', en: 'Train', ar: 'التمرين', k: 'workout programs plans gym تمرين تدريب برامج', emoji: '🏋️' },
+  { to: '/exercises', en: 'Muscle map', ar: 'خريطة العضلات', k: 'exercises muscles anatomy عضلات تمارين', emoji: '💪' },
+  { to: '/routines', en: 'Routines', ar: 'روتيناتي', k: 'my routines custom روتين', emoji: '📋' },
+  { to: '/schedule', en: 'Schedule', ar: 'جدولي', k: 'calendar week days جدول مواعيد', emoji: '🗓️' },
+  { to: '/my-plan', en: 'My plan', ar: 'خطتي', k: 'plan assessment goals خطة أهداف', emoji: '🎯' },
+  { to: '/tracker', en: 'Food & calories', ar: 'الأكل والسعرات', k: 'food calories tracker macros protein أكل سعرات بروتين', emoji: '🔥' },
+  { to: '/meals', en: 'Meal plan', ar: 'خطة الأكل', k: 'meals food plan وجبات أكل', emoji: '🍽️' },
+  { to: '/diet-programs', en: 'Diet programs', ar: 'برامج الدايت', k: 'diet nutrition keto دايت رجيم تغذية', emoji: '🥗' },
+  { to: '/progress', en: 'Weight journey', ar: 'رحلة الوزن', k: 'weight scale body وزن ميزان جسم', emoji: '⚖️' },
+  { to: '/achievements', en: 'Challenges', ar: 'التحديات', k: 'achievements badges streak تحديات إنجازات', emoji: '🏅' },
+  { to: '/leagues', en: 'League', ar: 'الدوري', k: 'league ranking دوري ترتيب', emoji: '🏆' },
+  { to: '/champions', en: 'Champions', ar: 'الأبطال', k: 'champions leaderboard winners أبطال', emoji: '🥇' },
+  { to: '/progress', en: 'Progress', ar: 'تقدمي', k: 'progress stats charts تقدم إحصائيات', emoji: '📈' },
+  { to: '/buddies', en: 'Buddies', ar: 'أصحابي', k: 'buddies friends workout partner أصحاب صحاب', emoji: '🤝' },
+  { to: '/my-invite', en: 'Invite friends', ar: 'اعزم أصحابك', k: 'invite referral share دعوة اعزم', emoji: '💌' },
+  { to: '/community', en: 'Community', ar: 'المجتمع', k: 'feed posts social مجتمع منشورات', emoji: '🫂' },
+  { to: '/group', en: 'Group sessions', ar: 'تمرين جماعي', k: 'group live sessions together جماعي لايف', emoji: '👥' },
+  { to: '/coaches-community', en: 'Find a coach', ar: 'دوّر على مدرب', k: 'coaches trainer مدرب كوتش', emoji: '🎓' },
+  { to: '/coach-chat', en: 'AI Coach', ar: 'كوتش AI', k: 'ai coach chat assistant ذكاء كوتش', emoji: '🤖' },
+  { to: '/nutritionist', en: 'Nutritionist', ar: 'أخصائي التغذية', k: 'nutritionist diet questions تغذية دايت', emoji: '🥦' },
+  { to: '/reels', en: 'Reels', ar: 'ريلز', k: 'reels videos shorts ريلز فيديو', emoji: '🎬' },
+  { to: '/music', en: 'Music', ar: 'مزيكتي', k: 'music playlist مزيكا أغاني', emoji: '🎵' },
+  { to: '/wellness', en: 'Wellness library', ar: 'مكتبة العافية', k: 'wellness recovery yoga sleep عافية استشفاء يوجا نوم', emoji: '🧘' },
+  { to: '/gyms', en: 'Gyms', ar: 'دوّر على جيم', k: 'gyms venues clinics near me جيم عيادات', emoji: '🏢' },
+  { to: '/store', en: 'Store', ar: 'المتجر', k: 'store shop supplements متجر تسوق مكملات', emoji: '🛒' },
+  { to: '/deals', en: 'Deals', ar: 'العروض', k: 'deals offers discounts عروض خصومات', emoji: '🎟️' },
+  { to: '/events', en: 'Events', ar: 'الفعاليات', k: 'events فعاليات إيفنتات', emoji: '📅' },
+  { to: '/info', en: 'Settings', ar: 'الإعدادات', k: 'settings account preferences إعدادات حساب', emoji: '⚙️' },
+  { to: '/help', en: 'Help', ar: 'المساعدة', k: 'help how it works support مساعدة شرح', emoji: '❓' },
+];
+
 export default function SearchPage() {
   const { t, i18n } = useTranslation();
   const isAr = i18n.language.startsWith('ar');
@@ -100,6 +135,13 @@ export default function SearchPage() {
   const hasResults = smartResults.length > 0 || groups.some((g) => (data?.[g.key] ?? []).length > 0);
   const searching = enabled && (isLoading || debounced !== q.trim());
 
+  // Screens match instantly on the raw query (static list, no debounce needed);
+  // empty query shows nothing extra.
+  const screenQ = q.trim().toLowerCase();
+  const screenMatches = screenQ
+    ? SCREENS.filter((s) => `${s.en} ${s.ar} ${s.k}`.toLowerCase().includes(screenQ))
+    : [];
+
   return (
     <div className="min-h-screen pb-10">
       <TopBar title={t('common.search')} />
@@ -124,6 +166,25 @@ export default function SearchPage() {
       </div>
 
       <div className="mt-4 px-4">
+        {/* Screens index: jump straight to a destination by name, above content results. */}
+        {screenMatches.length > 0 && (
+          <div className="mb-5">
+            <h2 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-400">{L('Screens', 'شاشات')}</h2>
+            <div className="flex flex-wrap gap-2">
+              {screenMatches.map((s) => (
+                <Link
+                  key={`${s.to}-${s.en}`}
+                  to={s.to}
+                  className="flex min-h-9 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition active:scale-95"
+                >
+                  <span aria-hidden>{s.emoji}</span>
+                  <span>{L(s.en, s.ar)}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Blank state: recent searches beat an empty screen. */}
         {!enabled && (
           recent.length > 0 ? (

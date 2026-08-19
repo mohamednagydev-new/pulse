@@ -4,10 +4,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Menu, X, CalendarDays, Dumbbell, Music, TrendingUp, Flame, Medal,
-  Settings, Shield, LogOut, Moon, Sun, MessagesSquare, ClipboardList, ChevronDown,
-  Award, Trophy, UserPlus, Users, HeartHandshake, ShoppingBag, HelpCircle, Ticket,
-  Clapperboard, ScanLine, UtensilsCrossed, Building2, Bot, Bell, Gem, Salad, ListChecks, Handshake, type LucideIcon,
+  Menu, X, CalendarDays, Settings, Shield, LogOut, Moon, Sun, MessagesSquare,
+  ChevronDown, Award, UserPlus, ShoppingBag, HelpCircle, Ticket, Building2,
+  Bot, Gem, Salad, Handshake, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
@@ -18,52 +17,32 @@ import { currentTheme, toggleTheme } from '../lib/theme';
 type Item = { to: string; en: string; ar: string; icon: LucideIcon };
 type Group = { en: string; ar: string; items: Item[] };
 
-/** Grouped shortcuts. Bottom-tab pages are excluded, and so is anything already
- *  reachable from Profile (Saved, Completed, My plan) - a second route to the same
- *  screen only makes the menu longer. */
+/** Slim shortcut set. Everything that used to live here is still one tap away
+ *  somewhere obvious: Train tools moved into the merged Train tab, tracking
+ *  screens into the Food tab + Profile + Home quick actions, social extras
+ *  into Home/Community — the drawer keeps only what has no tab of its own. */
 const GROUPS: Group[] = [
   {
-    en: 'Train', ar: 'تمرين',
+    en: 'Assistant', ar: 'المساعد',
     items: [
       { to: '/coach-chat', en: 'AI Coach', ar: 'كوتش AI', icon: Bot },
-      { to: '/my-plan', en: 'My plan', ar: 'خطتي', icon: ClipboardList },
-      { to: '/schedule', en: 'Schedule', ar: 'جدولي', icon: CalendarDays },
-      { to: '/workout', en: 'Workout', ar: 'تمرين', icon: Dumbbell },
-      { to: '/exercises', en: 'Muscle map', ar: 'خريطة العضلات', icon: ScanLine },
-      { to: '/routines', en: 'My routines', ar: 'روتيناتي', icon: ListChecks },
-      { to: '/music', en: 'My music', ar: 'مزيكتي', icon: Music },
+      { to: '/nutritionist', en: 'Nutritionist', ar: 'أخصائي التغذية', icon: Salad },
     ],
   },
   {
-    en: 'Progress', ar: 'تقدمي',
+    en: 'Around you', ar: 'حواليك',
     items: [
-      { to: '/progress', en: 'Progress', ar: 'تقدمي', icon: TrendingUp },
-      { to: '/tracker', en: 'Calories', ar: 'السعرات', icon: Flame },
-      { to: '/meals', en: 'Meal plan', ar: 'خطة الأكل', icon: UtensilsCrossed },
-      { to: '/diet-programs', en: 'Diet programs', ar: 'برامج الدايت', icon: Salad },
-      { to: '/achievements', en: 'Challenges', ar: 'التحديات', icon: Medal },
-      { to: '/leagues', en: 'League', ar: 'الدوري', icon: Trophy },
-    ],
-  },
-  {
-    en: 'Community', ar: 'المجتمع',
-    items: [
-      { to: '/my-invite', en: 'Invite people', ar: 'اعزم ناس', icon: UserPlus },
-      { to: '/buddies', en: 'Buddies', ar: 'أصحابي', icon: HeartHandshake },
-      { to: '/notifications', en: 'Notifications', ar: 'الإشعارات', icon: Bell },
-      { to: '/coaches-community', en: 'Find a coach', ar: 'دوّر على مدرب', icon: Award },
-      { to: '/group', en: 'Group live', ar: 'تمرين جماعي', icon: Users },
-      { to: '/reels', en: 'Reels', ar: 'ريلز', icon: Clapperboard },
-    ],
-  },
-  {
-    en: 'Discover', ar: 'اكتشف',
-    items: [
-      { to: '/features', en: 'PULSE treasures', ar: 'كنوز PULSE', icon: Gem },
       { to: '/gyms', en: 'Find a gym', ar: 'دوّر على جيم', icon: Building2 },
       { to: '/store', en: 'Store', ar: 'المتجر', icon: ShoppingBag },
       { to: '/deals', en: 'Deals', ar: 'العروض', icon: Ticket },
       { to: '/events', en: 'Events', ar: 'الفعاليات', icon: CalendarDays },
+    ],
+  },
+  {
+    en: 'Grow', ar: 'انشر واكسب',
+    items: [
+      { to: '/my-invite', en: 'Invite people', ar: 'اعزم ناس', icon: UserPlus },
+      { to: '/coaches-community', en: 'Find a coach', ar: 'دوّر على مدرب', icon: Award },
       { to: '/why-partner', en: 'Partner with us', ar: 'اعرض بيزنس معانا', icon: Handshake },
       { to: '/support', en: 'Contact us', ar: 'كلّمنا', icon: MessagesSquare },
     ],
@@ -73,7 +52,7 @@ const GROUPS: Group[] = [
 export default function MenuDrawer({ className = '' }: { className?: string }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  // One group expanded at a time. Collapsed, the whole menu is four rows plus the
+  // One group expanded at a time. Collapsed, the whole menu is three rows plus the
   // footer, so it fits any phone without scrolling at all — which is a better fix
   // than making a long list scroll well.
   const [openGroup, setOpenGroup] = useState<string>(GROUPS[0].en);
@@ -101,9 +80,8 @@ export default function MenuDrawer({ className = '' }: { className?: string }) {
   const close = () => setOpen(false);
   const doLogout = async () => { await logout(); navigate('/login'); };
 
-  /** Icon over label, three to a row. Eighteen destinations as side-by-side rows
-   *  needed nine rows; stacked in threes it needs six, and the labels get more
-   *  width than a two-column row layout gave them. */
+  /** Icon over label, three to a row — labels get more width than a
+   *  two-column row layout gave them. */
   const Tile = ({ to, en, ar, icon: Icon }: Item) => (
     <Link
       to={to}
@@ -248,6 +226,10 @@ export default function MenuDrawer({ className = '' }: { className?: string }) {
                 <button onClick={doLogout} className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-white/5 text-sm font-semibold transition active:scale-95 hover:bg-white/15">
                   <LogOut size={16} /> {L('Logout', 'خروج')}
                 </button>
+                {/* Treasures demoted from the grid to a footer text link — still reachable. */}
+                <Link to="/features" onClick={close} className="flex min-h-[32px] items-center justify-center gap-1.5 text-xs font-semibold text-white/50 transition hover:text-white/80">
+                  <Gem size={12} /> {L('PULSE treasures', 'كنوز PULSE')}
+                </Link>
               </div>
             </motion.div>
           </div>
