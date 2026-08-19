@@ -22,6 +22,31 @@ async function groupHost(id: string): Promise<string | null> {
   return s.coachUserId;
 }
 
+/** Host controls belong to the coach — or an admin stepping in (no-show coach). */
+async function canHost(id: string, userId: string): Promise<boolean> {
+  if ((await groupHost(id)) === userId) return true;
+  const me = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } }).catch(() => null);
+  return me?.role === 'ADMIN';
+}
+
+/** Start/stop a session timer from outside the socket (admin dashboard). */
+export function setGroupTimer(sessionId: string, action: 'start' | 'stop', durationSec: number, byUserId: string) {
+  const payload =
+    action === 'start'
+      ? { id: sessionId, action: 'start' as const, durationSec: Math.min(Math.max(durationSec || 60, 10), 3600), startedAt: Date.now(), by: byUserId }
+      : { id: sessionId, action: 'stop' as const, by: byUserId };
+  const st = groupState.get(sessionId);
+  if (st) st.timer = action === 'start' ? (payload as GroupTimer) : undefined;
+  io?.to(`group:${sessionId}`).emit('group:timer', payload);
+}
+
+/** Live member count per session room — lets the admin see who's actually in. */
+export function groupLiveCounts(): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [id, members] of groupMembers) out[id] = members.size;
+  return out;
+}
+
 function addGroupMember(id: string, userId: string) {
   if (!groupMembers.has(id)) groupMembers.set(id, new Set());
   groupMembers.get(id)!.add(userId);
@@ -108,21 +133,17 @@ export function initRealtime(server: http.Server, origin: string) {
       io?.to(`group:${id}`).emit('group:members', { id, members: [...(groupMembers.get(id) ?? [])] });
     });
     // Shared timer — clients sync off startedAt so late joiners see the same countdown.
-    socket.on('group:timer', (p: { id: string; action: 'start' | 'stop'; durationSec?: number }) => {
+    // Host-or-admin only: an open handler let any participant restart the class clock.
+    socket.on('group:timer', async (p: { id: string; action: 'start' | 'stop'; durationSec?: number }) => {
       if (!p || typeof p.id !== 'string') return;
-      const payload =
-        p.action === 'start'
-          ? { id: p.id, action: 'start' as const, durationSec: Math.min(Math.max(Number(p.durationSec) || 60, 10), 3600), startedAt: Date.now(), by: userId }
-          : { id: p.id, action: 'stop', by: userId };
-      const st = groupState.get(p.id);
-      if (st) st.timer = p.action === 'start' ? (payload as GroupTimer) : undefined;
-      io?.to(`group:${p.id}`).emit('group:timer', payload);
+      if (!(await canHost(p.id, userId))) return;
+      setGroupTimer(p.id, p.action === 'start' ? 'start' : 'stop', Number(p.durationSec) || 60, userId);
     });
     // Host-synced video transport: the coach's play/pause/seek drives every
     // member's player. Host-only — a participant scrubbing would scrub the class.
     socket.on('group:video', async (p: { id: string; action: 'play' | 'pause'; positionSec?: number }) => {
       if (!p || typeof p.id !== 'string' || (p.action !== 'play' && p.action !== 'pause')) return;
-      if ((await groupHost(p.id)) !== userId) return;
+      if (!(await canHost(p.id, userId))) return;
       const payload: GroupVideo = {
         id: p.id,
         action: p.action,

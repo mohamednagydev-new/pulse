@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Calendar, Play, Pause, Trash2, Dumbbell, Timer, Square, Mic, Send, RotateCcw, RotateCw } from 'lucide-react';
+import { Users, Calendar, Play, Pause, Trash2, Dumbbell, Timer, Square, Mic, Send, RotateCcw, RotateCw, ListChecks } from 'lucide-react';
 import { api, uploadWithAuth, mediaUrl } from '../../lib/api';
 import { useSignedMedia } from '../../lib/media';
 import { toast } from '../../lib/toast';
@@ -24,7 +24,9 @@ function fmt(sec: number) {
 }
 
 export default function GroupSessionDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
   const { id } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -180,7 +182,8 @@ export default function GroupSessionDetail() {
   if (!data) return null;
 
   const isOwner = me?.id && me.id === data.coachUserId;
-  const isHost = !!user?.id && user.id === data.coachUserId;
+  // Admins get host controls too — a coach who no-shows shouldn't strand the room.
+  const isHost = !!user?.id && (user.id === data.coachUserId || user.role === 'ADMIN');
 
   const liveHere = liveMembers
     .map((uid) => data.participants?.find((p: any) => p.id === uid))
@@ -277,6 +280,44 @@ export default function GroupSessionDetail() {
         {data.muscleFocus && <p className="mt-2 text-sm font-semibold text-brand-blue">{data.muscleFocus}</p>}
         {data.description && <p className="mt-3 text-sm text-gray-600">{data.description}</p>}
       </div>
+
+      {/* Session plan: the coach's own steps/rules, then a default "how a live
+          session works" explainer so a first-time joiner is never guessing. */}
+      <section className="mt-5 px-4">
+        <div className="card p-4">
+          <h2 className="mb-2 flex items-center gap-1 text-sm font-bold">
+            <ListChecks size={15} /> {L('Session plan', 'خطة الجلسة')}
+          </h2>
+          {data.instructions ? (
+            <p className="whitespace-pre-line text-sm text-gray-600">{data.instructions}</p>
+          ) : data.coachWorkout?.exercises?.length ? (
+            <ul className="space-y-1 text-sm text-gray-600">
+              {data.coachWorkout.exercises.slice(0, 8).map((ex: any, i: number) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-brand-blue">{i + 1}.</span>
+                  <span>{ex.name ?? ex.title ?? ex.exercise ?? ''}</span>
+                  {(ex.sets || ex.reps) && (
+                    <span className="text-xs text-gray-400">{ex.sets ? `${ex.sets}×` : ''}{ex.reps ?? ''}</span>
+                  )}
+                </li>
+              ))}
+              {data.coachWorkout.exercises.length > 8 && (
+                <li className="text-xs text-gray-400">+{data.coachWorkout.exercises.length - 8}</li>
+              )}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-400">
+              {L('The coach will guide the session live — warm up and be ready at start time.',
+                 'الكوتش هيقود الجلسة لايف — سخّن وكن جاهز وقت البداية.')}
+            </p>
+          )}
+          <div className="mt-3 space-y-1 border-t border-gray-100 pt-3 text-xs text-gray-400">
+            <p>1️⃣ {L('Join before the start time — you get a reminder an hour before.', 'انضم قبل الميعاد — هيجيلك تنبيه قبلها بساعة.')}</p>
+            <p>2️⃣ {L('At start, everyone follows the same shared timer and the coach’s video.', 'وقت البداية الكل بيمشي على نفس التايمر المشترك وفيديو الكوتش.')}</p>
+            <p>3️⃣ {L('Use the room chat and reactions — rest when you need, form beats speed.', 'استخدم شات الروم والتفاعلات — ارتاح لما تحتاج، الأداء الصح أهم من السرعة.')}</p>
+          </div>
+        </div>
+      </section>
 
       {data.isJoined && (
         <section className="mt-5 px-4">

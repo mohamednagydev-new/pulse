@@ -337,3 +337,20 @@ adminReelsRouter.delete('/posts/:id', async (req, res) => {
   if (!gone.count) return res.status(404).json({ error: 'Not found' });
   res.json({ ok: true });
 });
+
+/* ---- Scheduled-pull trigger ---- */
+
+/** POST /pull-now — run the REELS_CHANNELS intake immediately (same job the
+ *  scheduler runs daily at 06:00). New finds land inactive, for review here. */
+adminReelsRouter.post('/pull-now', async (_req, res) => {
+  const { pullReels } = await import('../lib/reelsPull');
+  if (!(process.env.REELS_CHANNELS ?? '').trim()) {
+    return res.status(400).json({ error: 'Set REELS_CHANNELS in the API .env first (channel links, comma-separated, optional |yoga suffix).' });
+  }
+  try {
+    const result = await pullReels();
+    res.json(result);
+  } catch (e: any) {
+    res.status(502).json({ error: e?.message ?? 'Pull failed' });
+  }
+});

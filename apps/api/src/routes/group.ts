@@ -36,6 +36,7 @@ groupRouter.post('/', async (req: AuthedRequest, res) => {
   const schema = z.object({
     title: z.string().min(1),
     description: z.string().optional(),
+    instructions: z.string().max(4000).optional(),
     muscleFocus: z.string().optional(),
     coachWorkoutId: z.string().optional(),
     scheduledAt: z.string().min(1),
@@ -49,6 +50,7 @@ groupRouter.post('/', async (req: AuthedRequest, res) => {
       coachUserId: req.userId!,
       title: p.data.title,
       description: p.data.description,
+      instructions: p.data.instructions,
       muscleFocus: p.data.muscleFocus,
       coachWorkoutId: p.data.coachWorkoutId,
       scheduledAt,

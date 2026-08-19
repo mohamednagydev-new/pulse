@@ -80,6 +80,13 @@ async function runCheck() {
     await postDailyChallengePrompts().catch((e) => console.warn('[weekly-prompt]', e?.message));
   }
 
+  // Daily 06:00 — pull new reels from the configured channels (REELS_CHANNELS)
+  // into the review inbox. No env → no-op.
+  if (hour === 6 && (await claimJob(`reelspull:${day}`))) {
+    const { pullReels } = await import('./reelsPull');
+    await pullReels().catch((e) => console.warn('[reels-pull]', e?.message));
+  }
+
   // Live-session reminders: joining a Thursday-7pm session used to produce
   // total silence until (and including) Thursday 7pm. One ping in the hour
   // before the start, per participant, claimed per session.

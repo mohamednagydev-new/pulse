@@ -671,6 +671,8 @@ model GroupSession {
   coachUserId    String
   title          String
   description    String?
+  /** Multi-line "what we'll do" — steps/rules/equipment shown to joiners. */
+  instructions   String?
   coachWorkoutId String?
   muscleFocus    String?
   scheduledAt    DateTime

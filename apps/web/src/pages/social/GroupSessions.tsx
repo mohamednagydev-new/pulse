@@ -14,7 +14,9 @@ import { toast } from '../../lib/toast';
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
 export default function GroupSessions() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
   const qc = useQueryClient();
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
   const meId = me?.id;
@@ -30,16 +32,18 @@ export default function GroupSessions() {
   const [focus, setFocus] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
   const [workoutId, setWorkoutId] = useState('');
+  const [instructions, setInstructions] = useState('');
 
   const create = useMutation({
     mutationFn: () => api.post('/api/group', {
       title,
       muscleFocus: focus || undefined,
       coachWorkoutId: workoutId || undefined,
+      instructions: instructions.trim() || undefined,
       scheduledAt: new Date(scheduledAt).toISOString(),
     }),
     onSuccess: () => {
-      setTitle(''); setFocus(''); setScheduledAt(''); setWorkoutId('');
+      setTitle(''); setFocus(''); setScheduledAt(''); setWorkoutId(''); setInstructions('');
       qc.invalidateQueries({ queryKey: ['group-upcoming'] });
       toast(t('group.scheduled'), 'success');
     },
@@ -80,6 +84,16 @@ export default function GroupSessions() {
                 ))}
               </select>
               <span className="mt-1 block text-[11px] text-gray-400">{t('group.workoutHint')}</span>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold text-gray-500">📋 {L('Session plan (what you’ll do)', 'خطة الجلسة (هنعمل إيه)')}</span>
+              <textarea
+                className="input-field min-h-[84px]"
+                placeholder={L('Steps, rules, equipment… e.g.\n1) 5 min warm-up\n2) 3 rounds full-body\nBring a mat + water', 'خطوات، قواعد، أدوات… مثلاً:\n١) ٥ دقايق تسخين\n٢) ٣ جولات جسم كامل\nهات مات ومَيّة')}
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+              />
+              <span className="mt-1 block text-[11px] text-gray-400">{L('Shown to everyone who joins — so nobody is guessing what the group will do.', 'بتظهر لكل اللي هينضم — محدش يبقى مش عارف المجموعة هتعمل إيه.')}</span>
             </label>
             <button
               onClick={() => title.trim() && scheduledAt && create.mutate()}

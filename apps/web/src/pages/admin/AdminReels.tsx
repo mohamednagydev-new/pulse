@@ -222,6 +222,7 @@ type TabKey = 'paste' | 'library' | 'community';
 export default function AdminReels() {
   const [tab, setTab] = useState<TabKey>('paste');
 
+  const qc = useQueryClient();
   const { data: library, isLoading: libraryLoading } = useQuery<CuratedReel[]>({
     queryKey: ['admin', 'reels', 'library'],
     queryFn: () => api.get('/api/admin/reels'),
@@ -239,6 +240,21 @@ export default function AdminReels() {
         <Link to="/admin"><ChevronLeft /></Link>
         <Clapperboard size={20} />
         <h1 className="text-lg font-bold">Reels Curation</h1>
+        <button
+          onClick={async () => {
+            try {
+              const r: { added: number; skipped: number } = await api.post('/api/admin/reels/pull-now');
+              alert(`Pulled ${r.added} new reel(s) into the library (inactive, review below). Skipped ${r.skipped}.`);
+              qc.invalidateQueries({ queryKey: ['admin', 'reels'] });
+            } catch (e: any) {
+              alert(e?.message ?? 'Pull failed');
+            }
+          }}
+          className="ml-auto rounded-xl bg-white/15 px-3 py-1.5 text-xs font-semibold"
+          title="Pull the newest uploads from the channels configured in REELS_CHANNELS"
+        >
+          Pull channels
+        </button>
       </header>
 
       <div className="px-4 pt-4">

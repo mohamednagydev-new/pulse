@@ -199,6 +199,15 @@ coachRouter.post('/programs/:id/day-done', async (req: AuthedRequest, res) => {
     update: {},
   });
   const set = new Set(parseArray(row.completedDays) as number[]);
+  if (parsed.data.done && !set.has(parsed.data.day)) {
+    // A program day is a real day. You can catch up on ticks you forgot, but you
+    // can't have completed more days than have passed since you enrolled — that
+    // blocks "complete complete complete"-ing a 30-day program in five minutes.
+    const daysElapsed = Math.floor((Date.now() - row.startedAt.getTime()) / 86_400_000);
+    if (set.size >= daysElapsed + 1) {
+      return res.status(429).json({ error: 'One program day per day — come back tomorrow 💪' });
+    }
+  }
   if (parsed.data.done) set.add(parsed.data.day);
   else set.delete(parsed.data.day);
   const completedDays = Array.from(set).sort((a, b) => a - b);

@@ -432,3 +432,51 @@ adminOpsRouter.post('/users/:id/force-logout', async (req: AuthedRequest, res) =
   const gone = await prisma.refreshToken.deleteMany({ where: { userId: req.params.id } });
   res.json({ ok: true, sessions: gone.count });
 });
+
+// =========================================================================
+// Live group sessions — see the schedule, and start the class timer when a
+// coach no-shows (participants otherwise sit in a silent room).
+// =========================================================================
+
+/** GET /group-sessions — recent + upcoming, with live room occupancy. */
+adminOpsRouter.get('/group-sessions', async (_req: AuthedRequest, res) => {
+  const { groupLiveCounts } = await import('../lib/realtime');
+  const sessions = await prisma.groupSession.findMany({
+    where: { scheduledAt: { gte: new Date(Date.now() - 6 * 3_600_000), lte: new Date(Date.now() + 7 * 86_400_000) } },
+    orderBy: { scheduledAt: 'asc' },
+    take: 100,
+  });
+  const coaches = await prisma.user.findMany({
+    where: { id: { in: [...new Set(sessions.map((s) => s.coachUserId))] } },
+    select: { id: true, firstName: true, lastName: true, email: true },
+  });
+  const coachMap = new Map(coaches.map((c) => [c.id, c]));
+  const counts = await prisma.groupParticipant.groupBy({
+    by: ['sessionId'],
+    where: { sessionId: { in: sessions.map((s) => s.id) } },
+    _count: true,
+  });
+  const countMap = new Map(counts.map((c) => [c.sessionId, c._count]));
+  const live = groupLiveCounts();
+  res.json(
+    sessions.map((s) => ({
+      ...s,
+      coach: coachMap.get(s.coachUserId) ?? null,
+      participantCount: countMap.get(s.id) ?? 0,
+      liveCount: live[s.id] ?? 0,
+    })),
+  );
+});
+
+/** POST /group-sessions/:id/timer {action, durationSec} — remote start/stop. */
+adminOpsRouter.post('/group-sessions/:id/timer', async (req: AuthedRequest, res) => {
+  const parsed = z
+    .object({ action: z.enum(['start', 'stop']), durationSec: z.number().int().min(10).max(3600).optional() })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
+  const session = await prisma.groupSession.findUnique({ where: { id: req.params.id }, select: { id: true } });
+  if (!session) return res.status(404).json({ error: 'Not found' });
+  const { setGroupTimer } = await import('../lib/realtime');
+  setGroupTimer(session.id, parsed.data.action, parsed.data.durationSec ?? 60, req.userId!);
+  res.json({ ok: true });
+});

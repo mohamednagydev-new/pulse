@@ -247,6 +247,28 @@ meRouter.post('/completions', async (req: AuthedRequest, res) => {
   const existing = await prisma.lessonCompletion.findUnique({
     where: { userId_lessonId: { userId: req.userId!, lessonId: parsed.data.lessonId } },
   });
+  // Pace guard: a real lesson takes time. "Complete, complete, complete" in
+  // seconds is fake progress — it pollutes challenges, duels and leaderboards.
+  if (!existing) {
+    const MIN_GAP_MS = 3 * 60 * 1000; // at most one new lesson every 3 minutes
+    const DAILY_CAP = 15; // beyond this nobody is actually training
+    const last = await prisma.lessonCompletion.findFirst({
+      where: { userId: req.userId! },
+      orderBy: { completedAt: 'desc' },
+      select: { completedAt: true },
+    });
+    if (last && Date.now() - last.completedAt.getTime() < MIN_GAP_MS) {
+      return res.status(429).json({ error: 'Slow down — finish this one first 💪' });
+    }
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const today = await prisma.lessonCompletion.count({
+      where: { userId: req.userId!, completedAt: { gte: dayStart } },
+    });
+    if (today >= DAILY_CAP) {
+      return res.status(429).json({ error: 'Daily limit reached — rest is part of the program 😴' });
+    }
+  }
   // Re-completing must NOT bump completedAt — that would let old lessons be
   // recycled into duel/challenge windows (verified exploit).
   const completion = await prisma.lessonCompletion.upsert({

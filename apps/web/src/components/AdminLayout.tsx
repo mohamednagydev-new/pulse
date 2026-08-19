@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Dumbbell, UtensilsCrossed, Newspaper, Clapperboard, Users, Award,
   MessagesSquare, Shield, Store, Ticket, CalendarDays, Building2, Mail, BarChart3,
-  Upload, Search, ExternalLink, Menu, X, Trophy, Import, ClipboardList, type LucideIcon,
+  Upload, Search, ExternalLink, Menu, X, Trophy, Import, ClipboardList, Radio, type LucideIcon,
 } from 'lucide-react';
 
 /**
@@ -43,6 +43,7 @@ const NAV: NavGroup[] = [
     label: 'People',
     items: [
       { to: '/admin/users', label: 'Users', icon: Users },
+      { to: '/admin/sessions', label: 'Live sessions', icon: Radio },
       { to: '/admin/moderation', label: 'Moderation', icon: Shield },
       { to: '/admin/support', label: 'Support', icon: MessagesSquare },
       { to: '/admin/posts', label: 'Community posts', icon: Newspaper },
