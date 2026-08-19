@@ -17,6 +17,27 @@ interface Ticket {
 }
 
 const STATUSES: Status[] = ['open', 'in_progress', 'resolved', 'closed'];
+
+/** Canned quick replies — one tap appends the snippet to the draft. Plain
+ *  client-side strings; edit here when the answers change. */
+const CANNED: { label: string; text: string }[] = [
+  {
+    label: 'Password reset',
+    text: "Hi! You can reset your password from the login screen: tap \"Forgot password?\" and follow the link we email you. If the email doesn't arrive within a few minutes, check your spam folder — or reply here and we'll reset it manually.",
+  },
+  {
+    label: 'Change language',
+    text: 'You can switch the app language any time from your profile: open Profile → Settings → Language and pick Arabic or English. The whole app switches instantly.',
+  },
+  {
+    label: 'Thanks / received',
+    text: "Thanks for reaching out! We've received your message and we're looking into it — we'll get back to you right here shortly.",
+  },
+  {
+    label: 'Fixed in update',
+    text: 'Good news — this is fixed in the latest update. Please close and reopen the app (or refresh the page) to load the newest version, and tell us if it still happens.',
+  },
+];
 const KIND_ICON = { suggestion: Lightbulb, issue: Bug, question: HelpCircle };
 const STATUS_TONE: Record<Status, string> = {
   open: 'bg-orange-100 text-orange-600',
@@ -124,12 +145,29 @@ function Tickets() {
                 <p className="mt-2 whitespace-pre-wrap rounded-xl bg-gray-50 p-3 text-xs leading-relaxed text-gray-700">{tk.body}</p>
                 {tk.contact && <p className="mt-1.5 text-[11px] text-gray-400" dir="ltr">Contact: {tk.contact}</p>}
 
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {CANNED.map((c) => (
+                    <button
+                      key={c.label}
+                      onClick={() =>
+                        setDrafts((d) => {
+                          const cur = (d[tk.id] ?? tk.reply ?? '').trim();
+                          return { ...d, [tk.id]: cur ? `${cur} ${c.text}` : c.text };
+                        })
+                      }
+                      title={c.text}
+                      className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold text-gray-500 transition hover:bg-gray-200 active:scale-95"
+                    >
+                      + {c.label}
+                    </button>
+                  ))}
+                </div>
                 <textarea
                   value={drafts[tk.id] ?? tk.reply ?? ''}
                   onChange={(e) => setDrafts((d) => ({ ...d, [tk.id]: e.target.value }))}
                   rows={2}
                   placeholder="Reply to the user — they get a notification"
-                  className="mt-3 w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-2.5 text-xs outline-none focus:border-orange-400 focus:bg-white"
+                  className="mt-1.5 w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-2.5 text-xs outline-none focus:border-orange-400 focus:bg-white"
                 />
 
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">

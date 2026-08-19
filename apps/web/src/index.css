@@ -65,6 +65,11 @@ h3 {
 }
 
 /* Phone-width app, centered over the motivational backdrop on desktop */
+/* Admin escapes the phone frame: the dashboard is the one desktop-first surface. */
+.admin-frame {
+  @apply relative z-10 min-h-screen w-full;
+}
+
 .app-frame {
   @apply relative z-10 mx-auto min-h-screen w-full max-w-[480px];
   background:

@@ -28,11 +28,31 @@ export interface Resource {
   listLabel: string; // field shown in list
   group: ResourceGroup;
   fields: Field[];
+  /** Which fields become columns in the desktop table (in order). Any field
+   *  name is allowed — images render as thumbnails, booleans as dots.
+   *  Omitted → first 4 text/number fields. */
+  table?: string[];
 }
+
+/** Resolve the table columns for a resource: the explicit `table` list when
+ *  present, otherwise the first four text/number fields. */
+export function tableFields(r: Resource): Field[] {
+  if (r.table?.length) {
+    return r.table
+      .map((name) => r.fields.find((f) => f.name === name))
+      .filter((f): f is Field => !!f);
+  }
+  return r.fields.filter((f) => f.type === 'text' || f.type === 'number').slice(0, 4);
+}
+
+/** Field names whose values are image paths — thumbnails in the table,
+ *  preview + upload button in the form. */
+export const IMG_FIELDS = ['coverImage', 'image', 'avatarUrl', 'thumbnail', 'icon', 'svgAsset', 'logo', 'cover'];
 
 export const RESOURCES: Resource[] = [
   {
     key: 'coaches', label: 'Coaches', api: 'coaches', listLabel: 'name', group: 'training',
+    table: ['avatarUrl', 'name', 'nameAr', 'type', 'headline', 'order'],
     fields: [
       { name: 'name', label: 'Name', type: 'text' },
       { name: 'nameAr', label: 'Name (Arabic)', type: 'text' },
@@ -45,6 +65,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'programs', label: 'Programs', api: 'programs', listLabel: 'title', group: 'training',
+    table: ['coverImage', 'title', 'titleAr', 'level', 'order'],
     fields: [
       { name: 'coachId', label: 'Coach', type: 'remote', remote: 'coaches', remoteLabel: 'name' },
       { name: 'title', label: 'Title', type: 'text' },
@@ -58,6 +79,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'lessons', label: 'Lessons', api: 'lessons', listLabel: 'title', group: 'training',
+    table: ['thumbnail', 'title', 'durationSec', 'videoId', 'order'],
     fields: [
       { name: 'programId', label: 'Program', type: 'remote', remote: 'programs', remoteLabel: 'title' },
       { name: 'title', label: 'Title', type: 'text' },
@@ -73,6 +95,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'muscle-groups', label: 'Muscle Groups', api: 'muscle-groups', listLabel: 'name', group: 'training',
+    table: ['name', 'nameAr', 'bodySide', 'order'],
     fields: [
       { name: 'name', label: 'Name', type: 'text' },
       { name: 'nameAr', label: 'Name (Arabic)', type: 'text' },
@@ -85,6 +108,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'exercises', label: 'Exercises', api: 'exercises', listLabel: 'name', group: 'training',
+    table: ['name', 'nameAr', 'level', 'sets', 'reps', 'order'],
     fields: [
       { name: 'name', label: 'Name', type: 'text' },
       { name: 'nameAr', label: 'Name (Arabic)', type: 'text' },
@@ -106,6 +130,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'categories', label: 'Categories', api: 'categories', listLabel: 'title', group: 'wellness',
+    table: ['image', 'kind', 'title', 'titleAr', 'order'],
     fields: [
       { name: 'kind', label: 'Kind', type: 'select', options: ['initiative', 'recipe', 'article'] },
       { name: 'title', label: 'Title', type: 'text' },
@@ -117,6 +142,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'articles', label: 'Articles', api: 'articles', listLabel: 'title', group: 'wellness',
+    table: ['coverImage', 'title', 'excerpt', 'readTimeMin', 'order'],
     fields: [
       { name: 'categoryId', label: 'Category', type: 'remote', remote: 'categories', remoteLabel: 'title' },
       { name: 'title', label: 'Title', type: 'text' },
@@ -142,6 +168,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'recipes', label: 'Recipes', api: 'recipes', listLabel: 'title', group: 'wellness',
+    table: ['coverImage', 'title', 'calories', 'protein', 'cuisine', 'servings', 'order'],
     fields: [
       { name: 'categoryId', label: 'Category', type: 'remote', remote: 'categories', remoteLabel: 'title' },
       { name: 'title', label: 'Title', type: 'text' },
@@ -177,6 +204,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'banners', label: 'Banners / Ads / Onboarding', api: 'banners', listLabel: 'title', group: 'engagement',
+    table: ['image', 'section', 'title', 'impressions', 'clicks', 'order'],
     fields: [
       { name: 'section', label: 'Section (onboarding = intro slide backgrounds, order 0-3)', type: 'select', options: ['home_sponsor', 'feed_ad', 'workout_promo', 'onboarding'] },
       { name: 'title', label: 'Title', type: 'text' },
@@ -191,6 +219,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'featured', label: 'Featured (home)', api: 'featured', listLabel: 'title', group: 'engagement',
+    table: ['image', 'section', 'title', 'durationSec', 'order'],
     fields: [
       { name: 'section', label: 'Section', type: 'select', options: ['fit_for_life', 'meal_prep', 'challenge'] },
       { name: 'title', label: 'Title', type: 'text' },
@@ -204,6 +233,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'plans', label: 'Membership Plans', api: 'plans', listLabel: 'name', group: 'business',
+    table: ['name', 'priceCents', 'interval'],
     fields: [
       { name: 'name', label: 'Name', type: 'text' },
       { name: 'priceCents', label: 'Price (cents)', type: 'number' },
@@ -212,6 +242,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'challenges', label: 'Challenges', api: 'challenges', listLabel: 'title', group: 'engagement',
+    table: ['title', 'goalType', 'goalValue', 'startsOn', 'endsOn', 'rewardXp'],
     fields: [
       { name: 'title', label: 'Title', type: 'text' },
       { name: 'titleAr', label: 'Title (Arabic)', type: 'text' },
@@ -231,6 +262,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'partners', label: 'Partners / Sponsors', api: 'partners', listLabel: 'name', group: 'business',
+    table: ['logo', 'name', 'type', 'city', 'country', 'featured', 'active', 'views'],
     fields: [
       { name: 'name', label: 'Partner name', type: 'text' },
       { name: 'nameAr', label: 'Name (Arabic)', type: 'text' },
@@ -274,6 +306,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'partner-products', label: 'Store Products', api: 'partner-products', listLabel: 'title', group: 'business',
+    table: ['image', 'title', 'category', 'priceAmount', 'active', 'views', 'order'],
     fields: [
       { name: 'partnerId', label: 'Partner', type: 'remote', remote: 'partners', remoteLabel: 'name' },
       { name: 'category', label: 'Category', type: 'select', options: ['supplements', 'wear', 'equipment', 'food', 'membership', 'service'] },
@@ -296,6 +329,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'partner-deals', label: 'Deals & Coupons', api: 'partner-deals', listLabel: 'title', group: 'business',
+    table: ['image', 'title', 'discount', 'code', 'validUntil', 'active', 'redeems'],
     fields: [
       { name: 'partnerId', label: 'Partner', type: 'remote', remote: 'partners', remoteLabel: 'name' },
       { name: 'title', label: 'Deal title', type: 'text' },
@@ -314,6 +348,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'lead-forms', label: 'Lead Forms', api: 'lead-forms', listLabel: 'title', group: 'business',
+    table: ['title', 'kind', 'cta', 'active', 'views'],
     fields: [
       { name: 'partnerId', label: 'Partner', type: 'remote', remote: 'partners', remoteLabel: 'name' },
       { name: 'kind', label: 'Kind', type: 'select', options: ['trial', 'consult', 'quote', 'membership', 'tour'] },
@@ -332,6 +367,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'fit-events', label: 'Events Board', api: 'fit-events', listLabel: 'title', group: 'business',
+    table: ['image', 'title', 'kind', 'date', 'city', 'featured', 'active'],
     fields: [
       { name: 'partnerId', label: 'Partner (optional)', type: 'remote', remote: 'partners', remoteLabel: 'name' },
       { name: 'kind', label: 'Kind', type: 'select', options: ['class', 'bootcamp', 'race', 'workshop', 'open_day'] },
@@ -361,6 +397,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'badges', label: 'Badges', api: 'badges', listLabel: 'title', group: 'engagement',
+    table: ['icon', 'code', 'title', 'titleAr'],
     fields: [
       { name: 'code', label: 'Code (unique)', type: 'text' },
       { name: 'title', label: 'Title', type: 'text' },

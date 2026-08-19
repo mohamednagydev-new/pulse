@@ -1,13 +1,27 @@
 import { useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Loader } from '../../components/ui';
 
 interface DauPoint {
   day: string; // YYYY-MM-DD
   users: number;
+}
+interface TimelinePoint {
+  day: string; // YYYY-MM-DD (UTC bucket)
+  signups: number;
+  actives: number;
+  workouts: number;
+}
+interface TimelineData {
+  days: TimelinePoint[];
+  activesSource: string;
+}
+interface MonitoringData {
+  funnel: { registerViews: number; registered: number; onboarded: number };
+  cohorts: { weekStart: string; size: number; weeks: (number | null)[] }[];
+  topScreens: { path: string; count: number }[];
+  topSources: { source: string; count: number }[];
 }
 interface CountRow {
   path?: string;
@@ -125,6 +139,166 @@ function DauChart({ dau }: { dau: DauPoint[] | undefined }) {
   );
 }
 
+/** 30-day monitoring chart: actives + workouts as lines on one count axis,
+ *  signups (a much smaller magnitude — same axis would flatten it) as its own
+ *  bar strip below. Inline SVG like every chart in the app; no libraries. */
+const C_ACTIVES = '#3b82f6';
+const C_WORKOUTS = BRAND_ORANGE;
+
+function TimelineChart({ days }: { days: TimelinePoint[] }) {
+  const W = 600;
+  const H = 150;
+  const PAD = 6;
+  const n = days.length;
+  if (!n) return <p className="py-4 text-center text-sm text-gray-400">No data yet.</p>;
+  const lineMax = Math.max(...days.map((d) => Math.max(d.actives, d.workouts)), 1);
+  const signupMax = Math.max(...days.map((d) => d.signups), 1);
+  const x = (i: number) => PAD + (i / Math.max(n - 1, 1)) * (W - PAD * 2);
+  const y = (v: number) => H - PAD - (v / lineMax) * (H - PAD * 2);
+  const pts = (pick: (d: TimelinePoint) => number) => days.map((d, i) => `${x(i)},${y(pick(d))}`).join(' ');
+  const colW = (W - PAD * 2) / n;
+
+  return (
+    <div>
+      <div className="mb-2 flex flex-wrap items-center gap-4 text-xs font-semibold text-gray-500">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: C_ACTIVES }} /> Active users
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: C_WORKOUTS }} /> Workouts
+        </span>
+        <span className="ms-auto text-gray-400">peak {lineMax.toLocaleString()}</span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Active users and workouts per day, last 30 days">
+        {/* recessive gridlines */}
+        {[0.25, 0.5, 0.75].map((f) => (
+          <line key={f} x1={PAD} x2={W - PAD} y1={H - PAD - f * (H - PAD * 2)} y2={H - PAD - f * (H - PAD * 2)} stroke="#f3f4f6" strokeWidth="1" />
+        ))}
+        <line x1={PAD} x2={W - PAD} y1={H - PAD} y2={H - PAD} stroke="#e5e7eb" strokeWidth="1" />
+        <polyline points={pts((d) => d.workouts)} fill="none" stroke={C_WORKOUTS} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <polyline points={pts((d) => d.actives)} fill="none" stroke={C_ACTIVES} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        {/* hover targets: one full-height column per day with a native tooltip */}
+        {days.map((d, i) => (
+          <rect key={d.day} x={x(i) - colW / 2} y={0} width={colW} height={H} fill="transparent">
+            <title>{`${d.day} — actives ${d.actives} · workouts ${d.workouts} · signups ${d.signups}`}</title>
+          </rect>
+        ))}
+      </svg>
+      <div className="mt-0.5 flex justify-between text-[10px] text-gray-400">
+        <span>{days[0].day.slice(5)}</span>
+        <span>{days[Math.floor(n / 2)].day.slice(5)}</span>
+        <span>{days[n - 1].day.slice(5)}</span>
+      </div>
+
+      <p className="mb-1 mt-3 text-xs font-semibold text-gray-500">
+        Signups / day <span className="font-normal text-gray-400">(own scale · peak {signupMax})</span>
+      </p>
+      <div className="flex h-10 items-end gap-px">
+        {days.map((d) => (
+          <div key={d.day} className="min-w-0 flex-1" title={`${d.day}: ${d.signups} signups`}>
+            <div
+              className="w-full rounded-t bg-ink/60"
+              style={{ height: `${(d.signups / signupMax) * 40}px`, minHeight: d.signups > 0 ? 3 : 1 }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Registration funnel, last 30 days: register-page views → completed
+ *  registrations (both raw funnel-* event counts — guests included) →
+ *  users who finished onboarding (profile goal set). */
+function RegistrationFunnel({ funnel }: { funnel: MonitoringData['funnel'] }) {
+  const steps = [
+    { label: 'Register views', value: funnel.registerViews, note: 'funnel-register-view events' },
+    { label: 'Registered', value: funnel.registered, note: 'funnel-registered events' },
+    { label: 'Onboarded', value: funnel.onboarded, note: 'new users with a fitness goal' },
+  ];
+  const base = Math.max(steps[0].value, 1);
+  if (!steps.some((s) => s.value > 0)) {
+    return <p className="py-4 text-center text-sm text-gray-400">No registration activity in the last 30 days.</p>;
+  }
+  return (
+    <div className="space-y-3">
+      {steps.map((s, i) => {
+        const pct = Math.round((s.value / base) * 100);
+        const prev = i > 0 ? Math.max(steps[i - 1].value, 1) : null;
+        const conv = prev != null ? Math.round((s.value / prev) * 100) : null;
+        return (
+          <div key={s.label}>
+            <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
+              <span className="font-medium">
+                {s.label} <span className="text-[10px] font-normal text-gray-400">{s.note}</span>
+              </span>
+              <span className="shrink-0 text-xs font-semibold tabular-nums text-gray-500">
+                {s.value.toLocaleString()}
+                {conv != null && <span className="ms-1.5 text-emerald-600">{conv}% of prev</span>}
+              </span>
+            </div>
+            <div className="h-4 overflow-hidden rounded-full bg-gray-100">
+              <div
+                className={`h-full rounded-full ${i === steps.length - 1 ? 'bg-emerald-500' : 'bg-ink/60'}`}
+                style={{ width: `${Math.min(Math.max(pct, s.value > 0 ? 3 : 0), 100)}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Weekly retention grid: each row is a signup cohort, each cell the % of it
+ *  active N weeks later. Heat = single-hue opacity ramp (magnitude, one hue). */
+function RetentionCohorts({ cohorts }: { cohorts: MonitoringData['cohorts'] }) {
+  if (!cohorts.some((c) => c.size > 0)) {
+    return <p className="py-4 text-center text-sm text-gray-400">No signups in the last 6 weeks yet.</p>;
+  }
+  const cell = (pct: number | null, key: number) => {
+    if (pct === null) return <td key={key} className="p-1 text-center text-xs text-gray-300">—</td>;
+    return (
+      <td key={key} className="p-1">
+        <div
+          className="rounded-lg py-1.5 text-center text-xs font-bold tabular-nums"
+          style={{
+            backgroundColor: `rgba(59, 130, 246, ${0.08 + (pct / 100) * 0.72})`,
+            color: pct > 55 ? '#fff' : '#1e3a8a',
+          }}
+        >
+          {pct}%
+        </div>
+      </td>
+    );
+  };
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[420px] border-separate border-spacing-0">
+        <thead>
+          <tr className="text-[11px] font-bold uppercase text-gray-400">
+            <th className="p-1 text-start">Cohort week</th>
+            <th className="p-1 text-end">Size</th>
+            {['+1w', '+2w', '+3w', '+4w'].map((h) => (
+              <th key={h} className="p-1 text-center">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {cohorts.map((c) => (
+            <tr key={c.weekStart}>
+              <td className="p-1 text-xs font-semibold text-gray-600">{c.weekStart}</td>
+              <td className="p-1 text-end text-xs font-semibold tabular-nums text-gray-500">{c.size}</td>
+              {c.weeks.map((w, i) => (c.size === 0 ? <td key={i} className="p-1 text-center text-xs text-gray-300">—</td> : cell(w, i)))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-2 text-[11px] text-gray-400">Active = any tracked event during that week. Weeks that have not happened yet show a dash.</p>
+    </div>
+  );
+}
+
 /** Acquisition funnel per ad source: where people stall between the ad click
  *  and a created account. Steps ordered; each shows count + % of that source's
  *  landings, so TikTok and Facebook campaigns are directly comparable. */
@@ -218,6 +392,14 @@ export default function AdminAnalytics() {
     queryKey: ['admin', 'analytics'],
     queryFn: () => api.get('/api/admin/analytics'),
   });
+  const { data: timeline } = useQuery<TimelineData>({
+    queryKey: ['admin', 'analytics', 'timeline'],
+    queryFn: () => api.get('/api/admin/analytics/timeline'),
+  });
+  const { data: monitoring } = useQuery<MonitoringData>({
+    queryKey: ['admin', 'analytics', 'monitoring'],
+    queryFn: () => api.get('/api/admin/analytics/monitoring'),
+  });
 
   const totals = data?.totals;
   const tiles: { label: string; value: number }[] = [
@@ -234,20 +416,30 @@ export default function AdminAnalytics() {
   const emptyText = 'No analytics yet — events start flowing as users browse.';
 
   return (
-    <div className="min-h-screen pb-10">
-      <header className="safe-header flex items-center gap-2 bg-ink px-4 pb-4 text-white">
-        <Link to="/admin"><ChevronLeft /></Link>
-        <h1 className="text-lg font-bold">Analytics</h1>
-      </header>
+    <div className="pb-10">
+      <h1 className="mb-4 text-xl font-extrabold">Analytics</h1>
 
       {isLoading || !data ? (
         <Loader />
       ) : (
-        <div className="space-y-4 p-4">
-          <div className="grid grid-cols-3 gap-3">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
             {tiles.map((t) => (
               <StatTile key={t.label} value={t.value} label={t.label} />
             ))}
+          </div>
+
+          <Card title="30-day timeline — actives, workouts & signups">
+            {timeline ? <TimelineChart days={timeline.days} /> : <Loader />}
+          </Card>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Registration funnel (30 days)">
+              {monitoring ? <RegistrationFunnel funnel={monitoring.funnel} /> : <Loader />}
+            </Card>
+            <Card title="Weekly retention cohorts">
+              {monitoring ? <RetentionCohorts cohorts={monitoring.cohorts} /> : <Loader />}
+            </Card>
           </div>
 
           <Card title="Daily active users (14 days)">
@@ -274,13 +466,28 @@ export default function AdminAnalytics() {
             )}
           </Card>
 
-          <Card title="Top screens (7 days)">
-            <BarList rows={data.topScreens ?? []} empty={emptyText} />
-          </Card>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Top screens (7 days)">
+              <BarList rows={data.topScreens ?? []} empty={emptyText} />
+            </Card>
 
-          <Card title="Top events (7 days)">
-            <BarList rows={data.topEvents ?? []} empty={emptyText} />
-          </Card>
+            <Card title="Top events (7 days)">
+              <BarList rows={data.topEvents ?? []} empty={emptyText} />
+            </Card>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Top screens (30 days)">
+              <BarList rows={monitoring?.topScreens ?? []} empty={emptyText} />
+            </Card>
+
+            <Card title="Top ad sources (30 days)">
+              <BarList
+                rows={(monitoring?.topSources ?? []).map((s) => ({ name: s.source, count: s.count }))}
+                empty="No UTM landings yet — appears once ad links with utm_source (or ttclid/fbclid) are visited."
+              />
+            </Card>
+          </div>
         </div>
       )}
     </div>

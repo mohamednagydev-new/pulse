@@ -5,73 +5,198 @@ import { Plus, Trash2, ChevronLeft, X, Upload, Sparkles } from 'lucide-react';
 import { api, getAccessToken, API_BASE } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { Loader, MediaImage } from '../../components/ui';
-import { RESOURCES, NUMBER_FIELDS, BOOLEAN_FIELDS, type Field } from './adminConfig';
+import { RESOURCES, NUMBER_FIELDS, BOOLEAN_FIELDS, IMG_FIELDS, type Field, type Resource } from './adminConfig';
+import ResourceTable from './ResourceTable';
+import ConfirmDialog from './ConfirmDialog';
 
-const IMG_FIELDS = ['coverImage', 'image', 'avatarUrl', 'thumbnail', 'icon', 'svgAsset'];
+/** Fields that must never travel with a duplicate: unique per record, or an
+ *  identity in their own right. Copying a coupon code or an email creates a
+ *  constraint error at best and a silent collision at worst. */
+const UNIQUE_FIELDS = ['code', 'inviteCode', 'email'];
 
 export default function AdminResource() {
   const { resource } = useParams();
   const conf = RESOURCES.find((r) => r.key === resource);
   const qc = useQueryClient();
   const [editing, setEditing] = useState<any | null>(null);
+  const [confirmDel, setConfirmDel] = useState<any | null>(null); // phone list delete
+
+  const listKey = ['admin', conf?.api];
 
   const { data: items, isLoading } = useQuery({
-    queryKey: ['admin', conf?.api],
+    queryKey: listKey,
     queryFn: () => api.get(`/api/admin/${conf!.api}`),
     enabled: !!conf,
   });
 
-  const del = useMutation({
-    mutationFn: (id: string) => api.del(`/api/admin/${conf!.api}/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', conf?.api] }),
+  const invalidate = () => qc.invalidateQueries({ queryKey: listKey });
+
+  /** Inline boolean toggle from the table — optimistic, rolled back on error. */
+  const toggle = useMutation({
+    mutationFn: ({ id, field, value }: { id: string; field: string; value: boolean }) =>
+      api.patch(`/api/admin/${conf!.api}/${id}`, { [field]: value }),
+    onMutate: async ({ id, field, value }) => {
+      await qc.cancelQueries({ queryKey: listKey });
+      const prev = qc.getQueryData(listKey);
+      qc.setQueryData(listKey, (old: any) =>
+        (old ?? []).map((it: any) => (it.id === id ? { ...it, [field]: value } : it)),
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      qc.setQueryData(listKey, ctx?.prev);
+      toast('Update failed — change rolled back', 'error');
+    },
+    onSettled: invalidate,
   });
+
+  /** POST a copy of the record: config fields only, label suffixed " (copy)",
+   *  unique-ish fields (code/inviteCode/email) stripped so constraints hold. */
+  const duplicate = async (item: any) => {
+    if (!conf) return;
+    const copy: Record<string, any> = {};
+    for (const f of conf.fields) {
+      const v = item[f.name];
+      if (v === undefined || v === null || UNIQUE_FIELDS.includes(f.name)) continue;
+      copy[f.name] = v;
+    }
+    const labelField = ['title', 'name'].find((k) => typeof copy[k] === 'string') ?? conf.listLabel;
+    if (typeof copy[labelField] === 'string') copy[labelField] = `${copy[labelField]} (copy)`;
+    try {
+      await api.post(`/api/admin/${conf.api}`, copy);
+      invalidate();
+      toast('Duplicated', 'success');
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Duplicate failed', 'error');
+    }
+  };
+
+  /** Sequential deletes (the API is per-id); one summary toast at the end. */
+  const deleteMany = async (ids: string[]) => {
+    if (!conf) return;
+    let ok = 0;
+    for (const id of ids) {
+      try {
+        await api.del(`/api/admin/${conf.api}/${id}`);
+        ok++;
+      } catch {
+        /* keep going — the summary reports the misses */
+      }
+    }
+    invalidate();
+    if (ids.length === 1) toast(ok ? 'Deleted' : 'Delete failed', ok ? 'success' : 'error');
+    else toast(`Deleted ${ok}/${ids.length}`, ok === ids.length ? 'success' : 'error');
+  };
+
+  /** Bulk flag set (active/featured) — sequential PATCH, summary toast. */
+  const setMany = async (ids: string[], field: string, value: boolean) => {
+    if (!conf) return;
+    let ok = 0;
+    for (const id of ids) {
+      try {
+        await api.patch(`/api/admin/${conf.api}/${id}`, { [field]: value });
+        ok++;
+      } catch {
+        /* summary below */
+      }
+    }
+    invalidate();
+    toast(`Updated ${ok}/${ids.length}`, ok === ids.length ? 'success' : 'error');
+  };
 
   if (!conf) return <div className="p-6">Unknown resource.</div>;
 
   return (
-    <div className="min-h-screen pb-10">
-      <header className="safe-header flex items-center gap-2 bg-ink px-4 pb-4 text-white">
-        <Link to="/admin"><ChevronLeft /></Link>
-        <h1 className="text-lg font-bold">{conf.label}</h1>
-        <button onClick={() => setEditing({})} className="ms-auto flex items-center gap-1 rounded-full bg-brand-pink px-4 py-2 text-sm">
+    <div className="pb-10">
+      <div className="mb-4 flex items-center gap-3">
+        <Link to="/admin" className="text-gray-500 lg:hidden" aria-label="Back">
+          <ChevronLeft />
+        </Link>
+        <h1 className="text-xl font-extrabold">{conf.label}</h1>
+        <button
+          onClick={() => setEditing({})}
+          className="ms-auto flex items-center gap-1 rounded-full bg-brand-pink px-4 py-2 text-sm font-semibold text-white"
+        >
           <Plus size={16} /> New
         </button>
-      </header>
+      </div>
 
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="divide-y">
-          {(items ?? []).map((it: any) => (
-            <div key={it.id} className="flex items-center gap-3 bg-white px-4 py-3">
-              <button onClick={() => setEditing(it)} className="flex-1 text-left">
-                <p className="font-medium">{it[conf.listLabel] || it.id}</p>
-                <p className="text-xs text-gray-400">{it.id}</p>
-              </button>
-              <button onClick={() => confirm('Delete?') && del.mutate(it.id)} className="text-gray-300 hover:text-red-500">
-                <Trash2 size={18} />
-              </button>
-            </div>
-          ))}
-          {!items?.length && <p className="p-6 text-center text-gray-400">No items yet.</p>}
-        </div>
+        <>
+          {/* Desktop: real data table */}
+          <div className="hidden lg:block">
+            <ResourceTable
+              key={conf.key}
+              conf={conf}
+              items={items ?? []}
+              onEdit={setEditing}
+              onDuplicate={duplicate}
+              onDeleteMany={deleteMany}
+              onSetMany={setMany}
+              onToggle={(item, field, value) => toggle.mutate({ id: item.id, field, value })}
+            />
+          </div>
+
+          {/* Phone: the original card list */}
+          <div className="divide-y overflow-hidden rounded-xl lg:hidden">
+            {(items ?? []).map((it: any) => (
+              <div key={it.id} className="flex items-center gap-3 bg-white px-4 py-3">
+                <button onClick={() => setEditing(it)} className="flex-1 text-left">
+                  <p className="font-medium">{it[conf.listLabel] || it.id}</p>
+                  <p className="text-xs text-gray-400">{it.id}</p>
+                </button>
+                <button onClick={() => setConfirmDel(it)} className="text-gray-300 hover:text-red-500">
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
+            {!items?.length && <p className="p-6 text-center text-gray-400">No items yet.</p>}
+          </div>
+        </>
       )}
 
-      {editing && <EditDrawer conf={conf} item={editing} onClose={() => setEditing(null)} />}
+      {confirmDel && (
+        <ConfirmDialog
+          title={`Delete "${confirmDel[conf.listLabel] || confirmDel.id}"?`}
+          message="This cannot be undone."
+          confirmLabel="Delete"
+          danger
+          onConfirm={() => {
+            deleteMany([String(confirmDel.id)]);
+            setConfirmDel(null);
+          }}
+          onCancel={() => setConfirmDel(null)}
+        />
+      )}
+
+      {editing && <EditPanel conf={conf} item={editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }
 
-function EditDrawer({ conf, item, onClose }: { conf: any; item: any; onClose: () => void }) {
+/** The create/edit form. Phones keep the bottom sheet; on lg+ the same form
+ *  docks as a right-side panel so the table stays visible behind it. Closing
+ *  with unsaved edits asks first. */
+function EditPanel({ conf, item, onClose }: { conf: Resource; item: any; onClose: () => void }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState<Record<string, any>>({ ...item });
+  const [form, setFormRaw] = useState<Record<string, any>>({ ...item });
+  const [dirty, setDirty] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
   const [error, setError] = useState('');
   const isNew = !item.id;
+
+  const setForm = (v: Record<string, any>) => {
+    setFormRaw(v);
+    setDirty(true);
+  };
+  const requestClose = () => (dirty ? setConfirmClose(true) : onClose());
 
   const save = useMutation({
     mutationFn: () => {
       const payload: Record<string, any> = {};
-      for (const f of conf.fields as Field[]) {
+      for (const f of conf.fields) {
         let v = form[f.name];
         if (v === undefined) continue;
 
@@ -101,24 +226,53 @@ function EditDrawer({ conf, item, onClose }: { conf: any; item: any; onClose: ()
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
-      <div className="admin-sheet max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl p-5" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">{isNew ? 'Create' : 'Edit'} {conf.label}</h2>
-          <button onClick={onClose}><X /></button>
+    <>
+      <div
+        className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-stretch lg:justify-end"
+        onClick={requestClose}
+      >
+        <div
+          className="admin-sheet max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl p-5 lg:h-full lg:max-h-none lg:rounded-none lg:border-s lg:border-gray-200 lg:shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-bold">
+              {isNew ? 'Create' : 'Edit'} {conf.label}
+              {dirty && <span className="ms-2 align-middle text-xs font-semibold text-amber-600">unsaved</span>}
+            </h2>
+            <button onClick={requestClose} aria-label="Close">
+              <X />
+            </button>
+          </div>
+          {conf.key === 'recipes' && <MacroEstimator form={form} setForm={setForm} />}
+          <div className="space-y-3">
+            {conf.fields.map((f) => (
+              <FieldInput key={f.name} field={f} value={form[f.name] ?? ''} onChange={(v) => setForm({ ...form, [f.name]: v })} />
+            ))}
+          </div>
+          {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
+          <button
+            onClick={() => save.mutate()}
+            disabled={save.isPending}
+            className="btn-pill mt-5 w-full bg-brand-pink text-white disabled:opacity-60"
+          >
+            {save.isPending ? 'Saving…' : 'Save'}
+          </button>
         </div>
-        {conf.key === 'recipes' && <MacroEstimator form={form} setForm={setForm} />}
-        <div className="space-y-3">
-          {(conf.fields as Field[]).map((f) => (
-            <FieldInput key={f.name} field={f} value={form[f.name] ?? ''} onChange={(v) => setForm({ ...form, [f.name]: v })} />
-          ))}
-        </div>
-        {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
-        <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-pill mt-5 w-full bg-brand-pink text-white disabled:opacity-60">
-          {save.isPending ? 'Saving…' : 'Save'}
-        </button>
       </div>
-    </div>
+
+      {confirmClose && (
+        <ConfirmDialog
+          title="Discard changes?"
+          message="This form has unsaved edits. Close anyway?"
+          confirmLabel="Discard"
+          cancelLabel="Keep editing"
+          danger
+          onConfirm={onClose}
+          onCancel={() => setConfirmClose(false)}
+        />
+      )}
+    </>
   );
 }
 

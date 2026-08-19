@@ -12,7 +12,8 @@ import { buildTranslationPatch } from '../lib/translate';
 import { aiEnabled, chatComplete } from '../lib/openai';
 import { onlineCount, onlineIds } from '../lib/realtime';
 import { notifyUser } from './push';
-import { daysAgoStr } from '../lib/time';
+import { daysAgoStr, dayString, startOfDayTz } from '../lib/time';
+import { verifySmtp } from '../lib/mailer';
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireAdmin);
@@ -1415,5 +1416,227 @@ adminRouter.get('/challenge-audit/:id', async (req, res) => {
   res.json({
     challenge: { id: ch.id, title: ch.title, goalType: ch.goalType, goalValue: ch.goalValue, startsOn: ch.startsOn, endsOn: ch.endsOn, prizeText: ch.prizeText },
     participants: rows,
+  });
+});
+
+// ============================ Dashboard overview ============================
+
+/** SMTP verify is a live network round-trip to the mail server — cache the
+ *  result for 10 minutes so the dashboard doesn't hammer it on every load. */
+let smtpCache: { at: number; ok: boolean; reason?: string } | null = null;
+async function smtpStatus(): Promise<{ ok: boolean; reason?: string }> {
+  if (smtpCache && Date.now() - smtpCache.at < 10 * 60_000) return smtpCache;
+  const r = await verifySmtp();
+  smtpCache = { at: Date.now(), ok: r.ok, reason: r.ok ? undefined : r.reason };
+  return smtpCache;
+}
+
+/** Newest nightly backup file — same location convention as reminders.ts
+ *  backupDatabase (BACKUP_DIR or <repo>/backups). Null when none exist. */
+function lastBackupAt(): string | null {
+  try {
+    const dir = process.env.BACKUP_DIR
+      ? path.resolve(process.env.BACKUP_DIR)
+      : path.resolve(__dirname, '../../../../backups');
+    let newest = 0;
+    for (const f of fs.readdirSync(dir)) {
+      if (!f.endsWith('.db')) continue;
+      const t = fs.statSync(path.join(dir, f)).mtimeMs;
+      if (t > newest) newest = t;
+    }
+    return newest ? new Date(newest).toISOString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** SQLite file size in MB. DATABASE_URL is "file:" relative to <repo>/prisma
+ *  (Prisma resolves against the schema dir). Best-effort: null on any surprise. */
+function dbSizeMB(): number | null {
+  try {
+    const url = process.env.DATABASE_URL ?? '';
+    if (!url.startsWith('file:')) return null;
+    let p = url.slice(5).split('?')[0];
+    if (!path.isAbsolute(p)) p = path.resolve(__dirname, '../../../../prisma', p);
+    return Math.round((fs.statSync(p).size / (1024 * 1024)) * 10) / 10;
+  } catch {
+    return null;
+  }
+}
+
+/** Everything the admin dashboard needs in one round trip: today's pulse,
+ *  queues that need a human, and whether the machinery (SMTP, AI, backups,
+ *  nightly jobs) is actually running. */
+adminRouter.get('/overview', async (_req, res) => {
+  const today = dayString();
+  const startToday = startOfDayTz(today);
+
+  const [
+    totalUsers,
+    weeklyActives,
+    signupsToday,
+    workoutsToday,
+    foodLogsToday,
+    openSupportTickets,
+    newLeads,
+    pendingGymJoinRequests,
+    reportedPostsPending,
+    pendingCoachRequests,
+    activeChallenges,
+    pushRows,
+    lastJobRuns,
+    smtp,
+  ] = await Promise.all([
+    prisma.user.count(),
+    // lastActiveOn is YYYY-MM-DD, so string compare IS date compare.
+    prisma.user.count({ where: { lastActiveOn: { gte: daysAgoStr(7) } } }),
+    prisma.user.count({ where: { createdAt: { gte: startToday } } }),
+    prisma.xpEvent.count({ where: { reason: 'workout-session', createdAt: { gte: startToday } } }),
+    prisma.calorieEntry.count({ where: { date: today } }),
+    prisma.supportTicket.count({ where: { status: { in: ['open', 'in_progress'] } } }),
+    prisma.lead.count({ where: { status: 'new' } }),
+    prisma.gymJoinRequest.count({ where: { status: 'pending' } }),
+    // ChatReport is the only PERSISTED report queue — feed-post reports only
+    // notify admins (social.ts POST /posts/:id/report stores nothing).
+    prisma.chatReport.count({ where: { status: 'open' } }),
+    prisma.coachRequest.count({ where: { status: 'pending' } }),
+    prisma.challenge.count({ where: { startsOn: { lte: today }, endsOn: { gte: today } } }),
+    prisma.pushSubscription.findMany({ select: { userId: true }, distinct: ['userId'] }),
+    // JobRun rows are written by claimJob right before each nightly job runs,
+    // so a row existing means the job fired (there is no failure column).
+    prisma.jobRun.findMany({ orderBy: { ranAt: 'desc' }, take: 5, select: { key: true, ranAt: true } }),
+    smtpStatus(),
+  ]);
+
+  res.json({
+    totalUsers,
+    weeklyActives,
+    signupsToday,
+    workoutsToday,
+    foodLogsToday,
+    openSupportTickets,
+    newLeads,
+    pendingGymJoinRequests,
+    reportedPostsPending,
+    pendingCoachRequests,
+    activeChallenges,
+    pushSubscribers: pushRows.length,
+    system: {
+      lastBackupAt: lastBackupAt(),
+      smtpOk: smtp.ok,
+      smtpReason: smtp.reason ?? null,
+      aiEnabled: aiEnabled(),
+      dbSizeMB: dbSizeMB(),
+      lastJobRuns,
+    },
+  });
+});
+
+// ============================ Monitoring / tracking ============================
+
+/** 30-day daily timeline: signups, active users and finished workout sessions.
+ *  "Actives" = distinct users with ANY product Event that day — same source as
+ *  the 14-day DAU chart (lastActiveOn can't reconstruct history: it only keeps
+ *  each user's latest day). Days are UTC buckets, matching /analytics. */
+adminRouter.get('/analytics/timeline', async (_req, res) => {
+  const sinceMs = Date.now() - 30 * 86400000;
+  const [signups, actives, workouts] = await Promise.all([
+    prisma.$queryRawUnsafe<{ day: string; n: number | bigint }[]>(
+      `SELECT date(createdAt / 1000, 'unixepoch') as day, COUNT(*) as n
+       FROM User WHERE createdAt >= ? GROUP BY day`,
+      sinceMs,
+    ),
+    prisma.$queryRawUnsafe<{ day: string; n: number | bigint }[]>(
+      `SELECT date(createdAt / 1000, 'unixepoch') as day, COUNT(DISTINCT userId) as n
+       FROM Event WHERE createdAt >= ? AND userId IS NOT NULL GROUP BY day`,
+      sinceMs,
+    ),
+    prisma.$queryRawUnsafe<{ day: string; n: number | bigint }[]>(
+      `SELECT date(createdAt / 1000, 'unixepoch') as day, COUNT(*) as n
+       FROM XpEvent WHERE createdAt >= ? AND reason = 'workout-session' GROUP BY day`,
+      sinceMs,
+    ),
+  ]);
+  const pick = (rows: { day: string; n: number | bigint }[]) =>
+    new Map(rows.map((r) => [r.day, Number(r.n)]));
+  const s = pick(signups);
+  const a = pick(actives);
+  const w = pick(workouts);
+  const days: { day: string; signups: number; actives: number; workouts: number }[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const day = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    days.push({ day, signups: s.get(day) ?? 0, actives: a.get(day) ?? 0, workouts: w.get(day) ?? 0 });
+  }
+  res.json({ days, activesSource: 'events' });
+});
+
+/** Funnel + retention + reach, one round trip.
+ *  - funnel: register-page views vs completed registrations (funnel-* Events,
+ *    fired by guests too, so they are EVENT counts, not distinct users) vs
+ *    users who finished onboarding (fitnessGoal set), last 30 days.
+ *  - cohorts: last 6 weekly signup cohorts, % with any Event 1–4 weeks later.
+ *  - topScreens/topSources: Event 'screen' paths and funnel-landing utm metas. */
+adminRouter.get('/analytics/monitoring', async (_req, res) => {
+  const WEEK = 7 * 86400000;
+  const now = Date.now();
+  const since30 = new Date(now - 30 * 86400000);
+
+  const [registerViews, registered, onboarded, topScreensRaw, topSourcesRaw, cohortUsers, activityRaw] =
+    await Promise.all([
+      prisma.event.count({ where: { name: 'funnel-register-view', createdAt: { gte: since30 } } }),
+      prisma.event.count({ where: { name: 'funnel-registered', createdAt: { gte: since30 } } }),
+      prisma.user.count({ where: { createdAt: { gte: since30 }, fitnessGoal: { not: null } } }),
+      prisma.event.groupBy({
+        by: ['meta'],
+        where: { name: 'screen', createdAt: { gte: since30 }, meta: { not: null } },
+        _count: true,
+        orderBy: { _count: { meta: 'desc' } },
+        take: 15,
+      }),
+      // First-touch ad source travels in the meta of every funnel event
+      // ("tiktok/campaign", "facebook", "direct") — landing = top of funnel.
+      prisma.event.groupBy({
+        by: ['meta'],
+        where: { name: 'funnel-landing', createdAt: { gte: since30 } },
+        _count: true,
+        orderBy: { _count: { meta: 'desc' } },
+        take: 10,
+      }),
+      prisma.user.findMany({
+        where: { createdAt: { gte: new Date(now - 7 * WEEK) } },
+        select: { id: true, createdAt: true },
+      }),
+      // Distinct (user, weeks-ago) activity pairs — cheap even at scale, and
+      // lets JS assemble the whole cohort grid without N queries.
+      prisma.$queryRawUnsafe<{ userId: string; wk: number | bigint }[]>(
+        `SELECT DISTINCT userId, CAST((? - createdAt) / ${WEEK} AS INTEGER) as wk
+         FROM Event WHERE userId IS NOT NULL AND createdAt >= ?`,
+        now,
+        now - 7 * WEEK,
+      ),
+    ]);
+
+  const activeSet = new Set(activityRaw.map((r) => `${r.userId}|${Number(r.wk)}`));
+  const cohorts: { weekStart: string; size: number; weeks: (number | null)[] }[] = [];
+  for (let c = 6; c >= 1; c--) {
+    const members = cohortUsers.filter((u) => Math.floor((now - u.createdAt.getTime()) / WEEK) === c);
+    const weeks: (number | null)[] = [1, 2, 3, 4].map((j) => {
+      if (c - j < 0) return null; // that week hasn't happened yet
+      if (!members.length) return null;
+      const active = members.filter((u) => activeSet.has(`${u.id}|${c - j}`)).length;
+      return Math.round((active / members.length) * 100);
+    });
+    cohorts.push({
+      weekStart: new Date(now - (c + 1) * WEEK).toISOString().slice(0, 10),
+      size: members.length,
+      weeks,
+    });
+  }
+
+  res.json({
+    funnel: { registerViews, registered, onboarded },
+    cohorts,
+    topScreens: topScreensRaw.map((r) => ({ path: r.meta as string, count: r._count })),
+    topSources: topSourcesRaw.map((r) => ({ source: r.meta ?? 'direct', count: r._count })),
   });
 });
