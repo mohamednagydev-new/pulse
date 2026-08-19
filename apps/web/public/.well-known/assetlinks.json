@@ -1,10 +1,14 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "online.geddo.pulse",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_YOUR_SHA256_FINGERPRINT_FROM_PLAY_CONSOLE"]
+      "sha256_cert_fingerprints": [
+        "85:B0:13:AA:68:0E:52:78:69:EE:83:9B:57:B4:60:E2:81:8C:70:24:BF:36:56:0C:44:BA:2F:33:21:63:F5:81"
+      ]
     }
   }
 ]
