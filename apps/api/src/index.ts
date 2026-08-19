@@ -58,7 +58,9 @@ app.set('trust proxy', 1);
 // crossOriginResourcePolicy stays permissive for the same reason (media is consumed
 // from the web origin, which differs from the API origin in dev).
 app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));
+// Capacitor iOS serves the bundled app from capacitor://localhost (Android:
+// http(s)://localhost) — allow those origins alongside the web one.
+app.use(cors({ origin: [env.WEB_ORIGIN, 'capacitor://localhost', 'http://localhost'], credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 

@@ -37,7 +37,11 @@ function removeGroupMember(id: string, userId: string) {
 }
 
 export function initRealtime(server: http.Server, origin: string) {
-  io = new Server(server, { cors: { origin, credentials: true } });
+  // Same origin set as the HTTP CORS layer: the web origin plus the Capacitor
+  // native shells — otherwise the iOS app's socket handshake is rejected.
+  io = new Server(server, {
+    cors: { origin: [origin, 'capacitor://localhost', 'http://localhost'], credentials: true },
+  });
 
   io.use((socket, next) => {
     try {

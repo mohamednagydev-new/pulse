@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clapperboard, Play, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { api } from '../lib/api';
+import { api, API_BASE, mediaUrl } from '../lib/api';
 import { useSignedMedia } from '../lib/media';
 import { MediaImage } from './ui';
 import { useAuth } from '../store/auth';
@@ -32,7 +32,9 @@ type Reel =
 
 /** Build a poster URL from a local image path (same normalization as MediaImage). */
 const posterSrc = (p: string) =>
-  p.startsWith('http') || p.startsWith('/media') ? p : `/media/image/${p.replace(/^images\//, '')}`;
+  p.startsWith('http') ? p
+  : p.startsWith('/media') ? mediaUrl(p)
+  : `${API_BASE}/media/image/${p.replace(/^images\//, '')}`;
 
 /** Resolves the signed URL for a curated clip and plays it. */
 function CuratedPlayer({ videoId, poster, title }: { videoId: string; poster?: string | null; title: string }) {

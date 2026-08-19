@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, RefreshCw, Send, CalendarClock, ImagePlus, Sparkles } from 'lucide-react';
-import { api, getAccessToken } from '../../lib/api';
+import { api, getAccessToken, API_BASE } from '../../lib/api';
 import { Loader, MediaImage } from '../../components/ui';
 import { toast } from '../../lib/toast';
 
@@ -220,7 +220,7 @@ function PostCardEditor({ suggestion, canPost }: { suggestion: Suggestion; canPo
     try {
       const fd = new FormData();
       fd.append('file', f);
-      const res = await fetch('/api/admin/upload/image', {
+      const res = await fetch(`${API_BASE}/api/admin/upload/image`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${getAccessToken()}` },
         credentials: 'include',

@@ -1,11 +1,14 @@
 import { io, type Socket } from 'socket.io-client';
-import { getAccessToken } from './api';
+import { getAccessToken, API_BASE } from './api';
 
 let socket: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
-    const url = import.meta.env.DEV ? 'http://localhost:4000' : undefined;
+    // Dev: vite proxy doesn't carry websockets, hit the API directly.
+    // Native (Capacitor): API_BASE is the absolute API origin — connect there.
+    // Web prod: undefined = same origin, unchanged.
+    const url = import.meta.env.DEV ? 'http://localhost:4000' : API_BASE || undefined;
     socket = io(url, {
       // Function form: the token is read at every connection attempt, not
       // captured once at construction. Components mount (and used to build the

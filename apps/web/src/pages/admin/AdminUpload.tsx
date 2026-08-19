@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Upload, Copy, Check } from 'lucide-react';
-import { getAccessToken } from '../../lib/api';
+import { getAccessToken, API_BASE } from '../../lib/api';
 
 /** Upload Canva-exported MP4s and images; returns IDs/URLs to paste into content. */
 export default function AdminUpload() {
@@ -32,7 +32,7 @@ function Uploader({ kind, endpoint, accept, resultKey, hint }: { kind: string; e
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch(endpoint, {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${getAccessToken()}` },
         credentials: 'include',

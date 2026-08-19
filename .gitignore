@@ -27,3 +27,10 @@ backups/
 .vite/
 coverage/
 apps/web/dev-dist/
+
+# iOS native shell — the Xcode project itself IS committed; only build junk is ignored
+apps/web/ios/App/Pods/
+apps/web/ios/App/build/
+apps/web/ios/DerivedData/
+apps/web/ios/App/App/public/
+apps/web/ios/App/App/capacitor.config.json

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, ChevronLeft, X, Upload, Sparkles } from 'lucide-react';
-import { api, getAccessToken } from '../../lib/api';
+import { api, getAccessToken, API_BASE } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { Loader, MediaImage } from '../../components/ui';
 import { RESOURCES, NUMBER_FIELDS, BOOLEAN_FIELDS, type Field } from './adminConfig';
@@ -321,7 +321,7 @@ function MediaUpload({ isVideo, onChange }: { isVideo: boolean; onChange: (v: st
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch(isVideo ? '/api/admin/upload/video' : '/api/admin/upload/image', {
+      const res = await fetch(`${API_BASE}${isVideo ? '/api/admin/upload/video' : '/api/admin/upload/image'}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${getAccessToken()}` },
         body: fd,

@@ -1,6 +1,7 @@
 import { useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import CoverArt from './CoverArt';
+import { API_BASE, mediaUrl } from '../lib/api';
 
 export function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`skeleton ${className}`} />;
@@ -114,7 +115,12 @@ export function MediaImage({
   label?: string;
 }) {
   if (path) {
-    const src = path.startsWith('http') || path.startsWith('/') ? path : `/media/image/${path.replace(/^images\//, '')}`;
+    // '/media/...' (server-issued, possibly signed) gets the API origin prefix;
+    // other '/'-rooted paths are bundled assets and stay as-is.
+    const src =
+      path.startsWith('http') ? path
+      : path.startsWith('/') ? mediaUrl(path)
+      : `${API_BASE}/media/image/${path.replace(/^images\//, '')}`;
     return <img src={src} alt={label ?? ''} className={`object-cover ${className}`} loading="lazy" />;
   }
   // Round images are people: no photo → a deterministic fitness avatar (stable

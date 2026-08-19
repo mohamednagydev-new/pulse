@@ -1,3 +1,39 @@
+/** Base URL for every API/media/socket request. Empty on the web build (same-
+ *  origin relative URLs, behavior unchanged); set to the absolute origin
+ *  (https://pulse.geddo.online) for the Capacitor iOS build, where the WebView
+ *  runs at capacitor://localhost and relative '/api' would go nowhere. */
+export const API_BASE = (import.meta.env.VITE_API_BASE as string) || '';
+
+/** True when running inside the Capacitor native shell (iOS/Android app). */
+export const IS_NATIVE = !!(window as any).Capacitor?.isNativePlatform?.();
+
+/** Prefix a server-issued media path ('/media/...') with the API origin.
+ *  Absolute http(s) URLs and bundled assets pass through untouched. */
+export function mediaUrl(p: string): string {
+  return p.startsWith('/media') ? `${API_BASE}${p}` : p;
+}
+
+// ---------------------------------------------------------------------------
+// Native refresh-token transport. Inside Capacitor, WKWebView + ITP make the
+// httpOnly refresh COOKIE unreliable (cross-site to the API origin), so native
+// clients carry the refresh token themselves: the API returns it in the JSON
+// body when the request has the `x-client: native` header, and accepts it back
+// in the refresh/logout body. localStorage is app-scoped in Capacitor —
+// acceptable for v1.
+// ---------------------------------------------------------------------------
+const NATIVE_RT_KEY = 'pulse-native-rt';
+
+export function getNativeRefreshToken(): string | null {
+  return IS_NATIVE ? localStorage.getItem(NATIVE_RT_KEY) : null;
+}
+
+/** Persist (rotate) or clear the native refresh token. No-op on the web. */
+export function setNativeRefreshToken(t: string | null | undefined) {
+  if (!IS_NATIVE) return;
+  if (t) localStorage.setItem(NATIVE_RT_KEY, t);
+  else localStorage.removeItem(NATIVE_RT_KEY);
+}
+
 let accessToken: string | null = null;
 let lang: string = localStorage.getItem('fitit_lang') || 'ar';
 
@@ -17,18 +53,31 @@ export function setApiLang(l: string) {
 type RefreshResult = 'ok' | 'denied' | 'offline';
 
 async function tryRefreshEx(): Promise<RefreshResult> {
+  // Native: no stored refresh token means there is no session to refresh —
+  // short-circuit instead of a doomed network round-trip at every app open.
+  if (IS_NATIVE && !getNativeRefreshToken()) return 'denied';
   try {
     // 10s cap: a cold server or dead network must degrade to 'offline', not
     // hold the installed app on its splash screen indefinitely.
-    const res = await fetch('/api/auth/refresh', {
+    const res = await fetch(`${API_BASE}/api/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
+      ...(IS_NATIVE
+        ? {
+            headers: { 'Content-Type': 'application/json', 'x-client': 'native' },
+            body: JSON.stringify({ refreshToken: getNativeRefreshToken() }),
+          }
+        : {}),
       signal: typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(10000) : undefined,
     });
-    if (res.status === 401 || res.status === 403) return 'denied';
+    if (res.status === 401 || res.status === 403) {
+      if (IS_NATIVE) setNativeRefreshToken(null); // the server rejected it — it's dead
+      return 'denied';
+    }
     if (!res.ok) return 'offline';
     const data = await res.json();
     setAccessToken(data.accessToken);
+    if (IS_NATIVE) setNativeRefreshToken(data.refreshToken); // rotated on every refresh
     return 'ok';
   } catch {
     return 'offline';
@@ -48,11 +97,12 @@ function extractError(payload: any, fallback: string): string {
 }
 
 async function request(path: string, options: RequestInit = {}, retry = true): Promise<any> {
-  const res = await fetch(path, {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       'x-lang': lang,
+      ...(IS_NATIVE ? { 'x-client': 'native' } : {}),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(options.headers ?? {}),
     },
@@ -91,9 +141,13 @@ async function request(path: string, options: RequestInit = {}, retry = true): P
  *  a page-reload-fixes-it bug users can't diagnose. */
 export async function uploadWithAuth(path: string, form: FormData): Promise<Response> {
   const doFetch = () =>
-    fetch(path, {
+    fetch(`${API_BASE}${path}`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}`, 'x-lang': lang },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'x-lang': lang,
+        ...(IS_NATIVE ? { 'x-client': 'native' } : {}),
+      },
       credentials: 'include',
       body: form,
     });

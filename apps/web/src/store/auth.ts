@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api, setAccessToken } from '../lib/api';
+import { api, setAccessToken, IS_NATIVE, getNativeRefreshToken, setNativeRefreshToken } from '../lib/api';
 import { refreshSocketAuth, disconnectSocket } from '../lib/socket';
 
 export interface User {
@@ -67,23 +67,28 @@ export const useAuth = create<AuthState>((set) => ({
   },
 
   login: async (email, password, remember = true) => {
-    const { accessToken, user } = await api.post('/api/auth/login', { email, password, remember });
+    const { accessToken, user, refreshToken } = await api.post('/api/auth/login', { email, password, remember });
     setAccessToken(accessToken);
+    setNativeRefreshToken(refreshToken); // native only — no-op on the web (field absent anyway)
     set({ user, status: 'authed' });
     syncLangToAccount(user);
     refreshSocketAuth();
   },
 
   register: async (data) => {
-    const { accessToken, user } = await api.post('/api/auth/register', data);
+    const { accessToken, user, refreshToken } = await api.post('/api/auth/register', data);
     setAccessToken(accessToken);
+    setNativeRefreshToken(refreshToken);
     set({ user, status: 'authed' });
     refreshSocketAuth();
   },
 
   logout: async () => {
-    await api.post('/api/auth/logout');
+    // Native carries its refresh token in the body (no reliable cookie in the
+    // WKWebView) so the server can revoke the right session row.
+    await api.post('/api/auth/logout', IS_NATIVE ? { refreshToken: getNativeRefreshToken() } : undefined);
     setAccessToken(null);
+    setNativeRefreshToken(null);
     disconnectSocket();
     set({ user: null, status: 'guest' });
   },

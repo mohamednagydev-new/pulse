@@ -4,7 +4,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Calendar, Play, Pause, Trash2, Dumbbell, Timer, Square, Mic, Send, RotateCcw, RotateCw } from 'lucide-react';
-import { api, uploadWithAuth } from '../../lib/api';
+import { api, uploadWithAuth, mediaUrl } from '../../lib/api';
 import { useSignedMedia } from '../../lib/media';
 import { toast } from '../../lib/toast';
 import { getSocket } from '../../lib/socket';
@@ -419,7 +419,7 @@ export default function GroupSessionDetail() {
                       <div key={n.key} className="flex items-center gap-2">
                         <MediaImage path={sender?.avatarUrl} label={sender?.firstName} className="h-7 w-7 shrink-0 rounded-full" seed={3} />
                         {n.audio ? (
-                          <audio controls preload="metadata" src={n.audio} className="h-9 min-w-0 flex-1" />
+                          <audio controls preload="metadata" src={mediaUrl(n.audio)} className="h-9 min-w-0 flex-1" />
                         ) : (
                           <p className={`min-w-0 flex-1 rounded-2xl px-3 py-1.5 text-sm ${isCoach ? 'bg-orange-50 font-semibold text-orange-700' : 'bg-gray-50 text-gray-700'}`}>
                             <span className="me-1.5 text-[10px] font-bold text-gray-400">{sender?.firstName}</span>

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
 import { env } from '../env';
-import { issueTokens } from '../lib/session';
+import { issueTokensEx, publicUser } from '../lib/session';
 
 export const oauthRouter = Router();
 
@@ -131,8 +131,16 @@ oauthRouter.get('/:provider/callback', async (req, res) => {
       }
     }
 
-    await issueTokens(res, user);
+    const { accessToken, refreshToken } = await issueTokensEx(res, user);
     res.clearCookie('oauth_state', { path: '/' });
+    // Native client (Capacitor, `x-client: native`): the cookie is cross-site
+    // and unreliable in the WKWebView, so hand the tokens back in JSON — the
+    // caller persists the refresh token itself. (Requires an exchange the app
+    // controls, e.g. an in-app fetch of this callback; a plain top-level
+    // redirect cannot carry the header and keeps the web behavior.)
+    if (req.headers['x-client'] === 'native') {
+      return res.json({ accessToken, refreshToken, user: publicUser(user) });
+    }
     res.redirect(`${env.WEB_ORIGIN}/?oauth=success`);
   } catch (e) {
     console.error('OAuth error', e);

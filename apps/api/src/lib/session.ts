@@ -38,7 +38,16 @@ export function setRefreshCookie(res: Response, raw: string, remember = true) {
   });
 }
 
-export async function issueTokens(res: Response, user: { id: string; role: string }, remember = true) {
+/** Issue an access token + a rotated refresh token. The refresh token is
+ *  ALWAYS set as the httpOnly cookie (web transport); the raw value is also
+ *  returned so native clients (`x-client: native`, where WKWebView/ITP make the
+ *  cross-site cookie unreliable) can receive it in the JSON body instead.
+ *  Storage/rotation is identical for both transports. */
+export async function issueTokensEx(
+  res: Response,
+  user: { id: string; role: string },
+  remember = true,
+): Promise<{ accessToken: string; refreshToken: string }> {
   const access = signAccessToken({ sub: user.id, role: user.role });
   const { raw, hash } = generateRefreshToken();
   await prisma.refreshToken.create({
@@ -49,5 +58,9 @@ export async function issueTokens(res: Response, user: { id: string; role: strin
     },
   });
   setRefreshCookie(res, raw, remember);
-  return access;
+  return { accessToken: access, refreshToken: raw };
+}
+
+export async function issueTokens(res: Response, user: { id: string; role: string }, remember = true) {
+  return (await issueTokensEx(res, user, remember)).accessToken;
 }

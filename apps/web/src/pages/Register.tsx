@@ -4,6 +4,7 @@ import { User, Phone, Mail, Lock, MapPin, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../store/auth';
+import { API_BASE } from '../lib/api';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
 import { pixelRegistration } from '../lib/pixels';
@@ -112,7 +113,7 @@ export default function Register() {
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.97 }}
-                onClick={() => (window.location.href = '/api/auth/google')}
+                onClick={() => (window.location.href = `${API_BASE}/api/auth/google`)}
                 className="mt-5 flex min-h-[48px] w-full items-center justify-center gap-3 rounded-full bg-white px-6 py-3 font-semibold text-ink shadow-lg"
               >
                 <GoogleLogo />

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Mic, Send, Trash2, Flag, Ban } from 'lucide-react';
-import { api, uploadWithAuth } from '../../lib/api';
+import { api, uploadWithAuth, mediaUrl } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import { Loader } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -198,7 +198,7 @@ export default function ChatRoom() {
             <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${mine ? 'bg-brand-pink text-white' : 'bg-white text-ink shadow-sm'}`}>
                 {m.audioUrl ? (
-                  <audio controls preload="metadata" src={m.audioUrl} className="h-10 w-52 max-w-full" />
+                  <audio controls preload="metadata" src={mediaUrl(m.audioUrl)} className="h-10 w-52 max-w-full" />
                 ) : (
                   m.text
                 )}

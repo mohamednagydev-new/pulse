@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Play, Share2, Volume2, VolumeX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { api } from '../lib/api';
+import { api, API_BASE, mediaUrl } from '../lib/api';
 import { useSignedMedia } from '../lib/media';
 import { toast } from '../lib/toast';
 import { MediaImage } from './ui';
@@ -47,7 +47,9 @@ export type Reel =
 
 /** Build a poster URL from a local image path (same normalization as MediaImage). */
 const posterSrc = (p: string) =>
-  p.startsWith('http') || p.startsWith('/media') ? p : `/media/image/${p.replace(/^images\//, '')}`;
+  p.startsWith('http') ? p
+  : p.startsWith('/media') ? mediaUrl(p)
+  : `${API_BASE}/media/image/${p.replace(/^images\//, '')}`;
 
 /** One full-screen snap slide. Autoplays when ≥60% visible, pauses otherwise. */
 export default function ReelVideo({

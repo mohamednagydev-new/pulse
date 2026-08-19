@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Flame, Trophy, Users, Zap } from 'lucide-react';
 import { MediaImage } from '../components/ui';
+import { API_BASE } from '../lib/api';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
@@ -34,7 +35,7 @@ export default function TvBoard() {
     // Plain fetch on purpose: this screen is a logged-out TV — no tokens,
     // no refresh dance, just the public board endpoint.
     queryFn: async () => {
-      const res = await fetch(`/api/org/gym/${id}/board`);
+      const res = await fetch(`${API_BASE}/api/org/gym/${id}/board`);
       if (!res.ok) throw new Error('board unavailable');
       return res.json();
     },

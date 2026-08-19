@@ -3,12 +3,27 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
 import { hashPassword, verifyPassword, hashRefreshToken } from '../lib/auth';
-import { issueTokens, publicUser } from '../lib/session';
+import { issueTokensEx, publicUser } from '../lib/session';
 import { sendMail } from '../lib/mailer';
 import { notifyUser } from './push';
 
 function sha256(value: string): string {
   return crypto.createHash('sha256').update(value).digest('hex');
+}
+
+/** Native app (Capacitor WKWebView): the httpOnly refresh cookie is cross-site
+ *  there and ITP-hostile, so these clients get/return the refresh token via the
+ *  JSON body instead. Web requests (header absent) behave exactly as before. */
+function isNativeClient(req: { headers: Record<string, unknown> }): boolean {
+  return req.headers['x-client'] === 'native';
+}
+
+/** The refresh token as presented by the client: cookie (web) or body (native). */
+function presentedRefreshToken(req: { cookies?: Record<string, string>; body?: unknown }): string | undefined {
+  const cookie = req.cookies?.refreshToken;
+  if (cookie) return cookie;
+  const bodyToken = (req.body as { refreshToken?: unknown } | undefined)?.refreshToken;
+  return typeof bodyToken === 'string' && bodyToken ? bodyToken : undefined;
 }
 
 export const authRouter = Router();
@@ -67,8 +82,8 @@ authRouter.post('/register', async (req, res) => {
     checkBadges(referrer.id, referrer.currentStreak, referrer.level).catch(() => {});
   }
 
-  const accessToken = await issueTokens(res, user);
-  res.json({ accessToken, user: publicUser(user) });
+  const { accessToken, refreshToken } = await issueTokensEx(res, user);
+  res.json({ accessToken, user: publicUser(user), ...(isNativeClient(req) ? { refreshToken } : {}) });
 });
 
 authRouter.post('/login', async (req, res) => {
@@ -79,8 +94,8 @@ authRouter.post('/login', async (req, res) => {
   if (!user || !user.passwordHash || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
-  const accessToken = await issueTokens(res, user, parsed.data.remember ?? true);
-  res.json({ accessToken, user: publicUser(user) });
+  const { accessToken, refreshToken } = await issueTokensEx(res, user, parsed.data.remember ?? true);
+  res.json({ accessToken, user: publicUser(user), ...(isNativeClient(req) ? { refreshToken } : {}) });
 });
 
 authRouter.post('/forgot-password', async (req, res) => {
@@ -148,7 +163,7 @@ authRouter.post('/reset-password', async (req, res) => {
 });
 
 authRouter.post('/refresh', async (req, res) => {
-  const raw = req.cookies?.refreshToken;
+  const raw = presentedRefreshToken(req); // cookie (web) or JSON body (native)
   if (!raw) return res.status(401).json({ error: 'No refresh token' });
   const token = await prisma.refreshToken.findUnique({
     where: { tokenHash: hashRefreshToken(raw) },
@@ -159,12 +174,16 @@ authRouter.post('/refresh', async (req, res) => {
   }
   // rotate: delete old, issue new (deleteMany is idempotent under concurrent refreshes)
   await prisma.refreshToken.deleteMany({ where: { id: token.id } });
-  const accessToken = await issueTokens(res, token.user);
-  res.json({ accessToken, user: publicUser(token.user) });
+  const { accessToken, refreshToken } = await issueTokensEx(res, token.user);
+  res.json({
+    accessToken,
+    user: publicUser(token.user),
+    ...(isNativeClient(req) ? { refreshToken } : {}), // native rotates via the body
+  });
 });
 
 authRouter.post('/logout', async (req, res) => {
-  const raw = req.cookies?.refreshToken;
+  const raw = presentedRefreshToken(req); // cookie (web) or JSON body (native)
   if (raw) {
     await prisma.refreshToken.deleteMany({ where: { tokenHash: hashRefreshToken(raw) } });
   }

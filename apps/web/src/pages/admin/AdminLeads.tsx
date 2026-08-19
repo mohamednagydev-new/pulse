@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Download, MessageCircle, Phone, Trash2 } from 'lucide-react';
-import { api, getAccessToken } from '../../lib/api';
+import { api, getAccessToken, API_BASE } from '../../lib/api';
 import { toast } from '../../lib/toast';
 
 interface Lead {
@@ -56,7 +56,7 @@ export default function AdminLeads() {
   // would hit the endpoint unauthenticated.
   const exportCsv = async () => {
     try {
-      const res = await fetch('/api/admin/leads.csv', { headers: { Authorization: `Bearer ${getAccessToken()}` } });
+      const res = await fetch(`${API_BASE}/api/admin/leads.csv`, { headers: { Authorization: `Bearer ${getAccessToken()}` } });
       if (!res.ok) throw new Error('Export failed');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

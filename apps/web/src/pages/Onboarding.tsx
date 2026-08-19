@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
 import { ChevronRight, Flame, Dumbbell, Activity, Salad, type LucideIcon } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, API_BASE } from '../lib/api';
 import LanguageToggle from '../components/LanguageToggle';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
@@ -71,7 +71,7 @@ export default function Onboarding() {
   };
 
   const slide = slides[i];
-  const bg = media?.[i]?.image ? `/media/image/${String(media[i].image).replace(/^images\//, '')}` : null;
+  const bg = media?.[i]?.image ? `${API_BASE}/media/image/${String(media[i].image).replace(/^images\//, '')}` : null;
   // Screen-space direction the new slide enters from.
   const enterX = (rtl ? -1 : 1) * dir * 48;
 
