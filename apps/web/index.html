@@ -11,7 +11,10 @@
     <meta name="apple-mobile-web-app-title" content="PULSE" />
     <meta name="mobile-web-app-capable" content="yes" />
     <!-- Pinch-zoom stays enabled (WCAG 1.4.4) — locking scale never worked on iOS anyway. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- interactive-widget: Android Chrome shrinks the LAYOUT viewport when the
+         keyboard opens, so bottom sheets (food search) resize above it instead
+         of having their lists swallowed behind the keys. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#F97316" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

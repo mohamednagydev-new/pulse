@@ -358,9 +358,17 @@ aiRouter.post('/calories', async (req: AuthedRequest, res) => {
   const schema = z.object({ text: z.string().min(1) });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
-  const system =
-    'You estimate nutrition. Given food described in any language, return JSON: {"items":[{"name":string,"calories":number,"protein":number,"carbs":number,"fat":number}]}. Grams for macros, kcal for calories. Best-effort.';
-  const raw = await chatComplete([{ role: 'system', content: system }, { role: 'user', content: parsed.data.text }], { json: true });
+  // Quantity-aware, like the photo path: "2 eggs and 3 spoons of rice" must
+  // scale, not return one generic serving per item.
+  const system = [
+    'You are a nutrition estimator. The user describes food in any language (Arabic and Egyptian dialect expected).',
+    'RESPECT STATED QUANTITIES exactly: "2 eggs" = two eggs, "نص فرخة" = half a chicken, "3 معالق رز" = 3 tablespoons of rice — scale every number accordingly.',
+    'When no quantity is given, assume ONE typical home serving of that dish and say so in the portion field.',
+    'Compound dishes (koshary, fool, shawarma, pizza slice): estimate the dish as normally prepared, including oil/sauce.',
+    'Return JSON: {"items":[{"name":string,"portion":string,"calories":number,"protein":number,"carbs":number,"fat":number}]}.',
+    'portion: the quantity you actually priced, e.g. "2 eggs", "1 medium plate (~350g)". Grams for macros, kcal for calories.',
+  ].join('\n');
+  const raw = await chatComplete([{ role: 'system', content: system }, { role: 'user', content: parsed.data.text }], { json: true, temperature: 0.2 });
   let data: any;
   try {
     data = JSON.parse(raw);

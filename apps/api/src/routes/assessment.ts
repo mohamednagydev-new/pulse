@@ -68,12 +68,25 @@ assessmentRouter.get('/', async (req: AuthedRequest, res) => {
     : null;
 
   const today = dayString();
+  // The plan page must show the days the user ACTUALLY trains: the Assessment
+  // row froze the days chosen at plan time, but the Schedule screen edits
+  // user.scheduleJson — without this overlay the two screens contradicted
+  // each other ("my plan says Monday, my schedule says Tuesday").
+  let liveDays: string[] | null = null;
+  try {
+    const u = await prisma.user.findUnique({ where: { id: req.userId! }, select: { scheduleJson: true } });
+    const sch = u?.scheduleJson ? JSON.parse(u.scheduleJson) : null;
+    if (Array.isArray(sch)) {
+      const training = sch.filter((d: any) => Array.isArray(d?.groups) && d.groups.length > 0).map((d: any) => String(d.day));
+      if (training.length) liveDays = training;
+    }
+  } catch { /* malformed scheduleJson — fall back to the plan snapshot */ }
   res.json({
     hasPlan: true,
     assessment: {
       ...latest,
       limitations: safeParse(latest.limitations),
-      scheduleDays: safeParse(latest.scheduleDays),
+      scheduleDays: liveDays ?? safeParse(latest.scheduleDays),
       rationale: safeParse(latest.rationale),
       cautions: safeParse(latest.cautions),
     },

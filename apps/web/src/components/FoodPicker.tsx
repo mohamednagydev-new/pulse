@@ -104,9 +104,22 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
   const label = (f: Food) => f.name;
   const unit = (f: Food) => f.portion;
 
+  // Keyboard-aware height: dvh ignores the keyboard on iOS (and on Android
+  // without the interactive-widget meta), so the results list sat behind the
+  // keys. visualViewport reports the space actually visible.
+  const [vvh, setVvh] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setVvh(Math.round(vv.height));
+    update();
+    vv.addEventListener('resize', update);
+    return () => vv.removeEventListener('resize', update);
+  }, []);
+
   return (
     <Sheet open onClose={onClose} label={t('food.search')}>
-      <div className="flex max-h-[80dvh] min-h-0 flex-col">
+      <div className="flex min-h-0 flex-col" style={{ maxHeight: vvh ? `${Math.round(vvh * 0.82)}px` : '80dvh' }}>
         {/* Three ways in: search the table, my saved recipes, or a barcode. */}
         <div className="flex shrink-0 gap-1.5 px-4 pt-3">
           {([
