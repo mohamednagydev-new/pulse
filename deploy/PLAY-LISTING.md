@@ -103,9 +103,9 @@ Start today — your body will thank you 🧡
 ## 5 · The questionnaire answers
 
 **App access** (login is required, so reviewers need credentials):
-- Choose "All or some functionality is restricted" → add instructions:
-  - Username: *create a fresh account for this — e.g. `playreview@geddo.online` / a password you set* (do NOT hand out the admin account)
-  - Note for reviewers: `After login the app requires completing a short fitness questionnaire (9 quick questions) before the home screen — this is the intended onboarding.`
+- Choose "All or some functionality is restricted" → credentials (account already created on production, intake completed so reviewers land straight on the app):
+  - Username: `playreview@geddo.online`
+  - Password: `PulseReview#2026`
 
 **Ads:** Yes, contains ads (sponsor banners) — no ad SDKs, so no advertising-ID collection.
 
