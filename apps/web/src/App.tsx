@@ -170,6 +170,7 @@ const TvBoard = lazyRoute(() => import('./pages/TvBoard'));
 const PartnerBenefits = lazyRoute(() => import('./pages/PartnerBenefits'));
 const CoachClientDetail = lazyRoute(() => import('./pages/social/CoachClientDetail'));
 const MyInvite = lazyRoute(() => import('./pages/MyInvite'));
+const Privacy = lazyRoute(() => import('./pages/Privacy'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const status = useAuth((s) => s.status);
@@ -368,6 +369,8 @@ export default function App() {
 
         {/* Fully public, no shell: runs on a gym's TV screen. */}
         <Route path="/tv/:id" element={<TvBoard />} />
+        {/* Public legal page — Play Store requires a reachable privacy policy URL. */}
+        <Route path="/privacy" element={<Privacy />} />
 
         <Route
           element={
