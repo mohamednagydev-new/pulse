@@ -64,7 +64,7 @@ export default function Privacy() {
         )}
       </S>
       <S t={L('Contact', 'تواصل')}>
-        support@geddo.online · pulse.geddo.online
+        mohamed.nagy.dev@gmail.com · pulse.geddo.online
       </S>
     </div>
   );

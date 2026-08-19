@@ -14,7 +14,7 @@ Everything the Console asks for, in order. Artifacts referenced live in `C:\puls
 | Free or paid | Free |
 | Category | Health & Fitness |
 | Tags | Fitness, Nutrition, Workout |
-| Contact email (public, required) | `support@geddo.online` — **make sure this inbox actually exists before submitting** |
+| Contact email (public, required) | `mohamed.nagy.dev@gmail.com` — **make sure this inbox actually exists before submitting** |
 | Website | `https://pulse.geddo.online` |
 | Privacy policy URL | `https://pulse.geddo.online/privacy` |
 
