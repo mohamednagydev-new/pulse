@@ -207,7 +207,7 @@ const HOW_TO: Step[] = [
     arBody: 'دوسة واحدة بتبدأ تمرينة النهاردة. مش عارف تعمل إيه؟ دوس "فاجئني" والتطبيق يختارلك.',
   },
   {
-    icon: Dumbbell, to: '/workout',
+    icon: Dumbbell, to: '/programs',
     en: 'Train with the timer and the voice',
     ar: 'اتمرن مع التايمر والصوت',
     enBody: 'Rest counts down for you, your music keeps playing, and the coach voice calls out what is next.',
@@ -285,14 +285,14 @@ const HOW_TO: Step[] = [
  * ------------------------------------------------------------------ */
 const NEW_TRAINING: Step[] = [
   {
-    icon: Dumbbell, to: '/workout',
+    icon: Dumbbell, to: '/programs',
     en: 'Log sets one by one',
     ar: 'سجّل مجموعاتك واحدة واحدة',
     enBody: 'Inside a session every set logs on its own — weight and reps. Flag a set as warmup, dropset or to-failure, and tap any logged set to edit it if you slipped.',
     arBody: 'جوه التمرينة كل مجموعة بتتسجل لوحدها — الوزن والعدات. علّم المجموعة تسخين أو دروب سِت أو لحد الفشل، ولو غلطت دوس على أي مجموعة اتسجلت وعدّلها عادي.',
   },
   {
-    icon: Timer, to: '/workout',
+    icon: Timer, to: '/programs',
     en: 'Set your own rest time',
     ar: 'ظبط وقت الراحة على مزاجك',
     enBody: 'The rest timer counts down between sets. Change the seconds once and it sticks — 30, 60, 90, whatever fits your training.',

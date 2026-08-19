@@ -28,7 +28,7 @@ const TILES: Tile[] = [
   { key: 'recipes', emoji: '👨‍🍳', ar: 'وصفاتي', en: 'My recipes', hookAr: 'اعمل وصفتك محسوبة بالماكروز', hookEn: 'Build your recipe, macros included', to: '/tracker' },
   { key: 'mealplan', emoji: '🥗', ar: 'خطة الوجبات', en: 'Meal plan', hookAr: 'بتشرح نفسها وبتزود يوم التمرين', hookEn: 'Explains itself, boosts training days', to: '/meals' },
   { key: 'muscle', emoji: '💪', ar: 'خريطة العضلات', en: 'Muscle map', hookAr: 'دوس على العضلة وخد جلسة كاملة', hookEn: 'Tap a muscle, get a full session', to: '/exercises' },
-  { key: 'sets', emoji: '🏋️', ar: 'تسجيل المجموعات', en: 'Set-by-set logging', hookAr: 'تسخين ودروب سِت وفشل — وعدّل أي مجموعة', hookEn: 'Warmup, dropset, failure — edit any set', to: '/workout' },
+  { key: 'sets', emoji: '🏋️', ar: 'تسجيل المجموعات', en: 'Set-by-set logging', hookAr: 'تسخين ودروب سِت وفشل — وعدّل أي مجموعة', hookEn: 'Warmup, dropset, failure — edit any set', to: '/programs' },
   { key: 'charts', emoji: '📈', ar: 'رسم لكل تمرينة', en: 'Exercise charts', hookAr: 'شوف وزنك بيكبر + e1RM وحاسبة أقصى رقم', hookEn: 'Watch your weights climb + e1RM & 1RM calc', to: '/progress' },
   { key: 'routines', emoji: '📋', ar: 'الروتينات', en: 'Routines', hookAr: 'احفظ تمرينتك — وانسخ روتينات الناس بضغطة', hookEn: "Save your session — copy others' in one tap", to: '/routines' },
   { key: 'live', emoji: '🔴', ar: 'حصص لايف', en: 'Live classes', hookAr: 'فيديو متزامن وتايمر مشترك مع الكل', hookEn: 'Synced video + shared timer together', to: '/group' },

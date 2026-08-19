@@ -41,7 +41,7 @@ export default function GettingStarted() {
 
   const steps = [
     { key: 'plan', icon: ClipboardList, done: plan?.hasPlan === true, action: () => navigate('/my-plan'), label: t('gs.plan') },
-    { key: 'workout', icon: Dumbbell, done: (progress?.totalCompletions ?? 0) > 0, action: () => navigate('/workout'), label: t('gs.workout') },
+    { key: 'workout', icon: Dumbbell, done: (progress?.totalCompletions ?? 0) > 0, action: () => navigate('/programs'), label: t('gs.workout') },
     { key: 'challenge', icon: Trophy, done: Array.isArray(challenges) && challenges.some((c: any) => c.joined), action: () => navigate('/achievements'), label: t('gs.challenge') },
     { key: 'buddy', icon: HeartHandshake, done: Array.isArray(buddies) && buddies.length > 0, action: () => navigate('/people'), label: t('gs.buddy') },
     { key: 'invite', icon: Gift, done: (referral?.invited ?? 0) > 0, action: inviteNow, label: t('gs.invite') },
