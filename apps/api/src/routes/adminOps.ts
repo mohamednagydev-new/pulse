@@ -331,3 +331,66 @@ adminOpsRouter.post('/moderation/chat-reports/:id/delete-thread', async (req: Au
   console.log(`[admin-ops] ADMIN ${req.userId} deleted DM thread ${report.threadId} via report ${report.id}`);
   res.json({ ok: true });
 });
+
+/* ------------------------- Reported posts queue ------------------------- */
+
+/** GET /moderation/post-reports — pending feed-post reports, grouped by post. */
+adminOpsRouter.get('/moderation/post-reports', async (_req, res) => {
+  const pending = await prisma.postReport.findMany({ where: { status: 'pending' }, orderBy: { createdAt: 'desc' } });
+  if (pending.length === 0) return res.json([]);
+  const postIds = [...new Set(pending.map((r) => r.postId))];
+  const posts = await prisma.feedPost.findMany({
+    where: { id: { in: postIds } },
+    include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
+  });
+  const byId = new Map(posts.map((p) => [p.id, p]));
+  // Reports whose post is already gone have nothing left to moderate — auto-resolve.
+  const orphaned = postIds.filter((id) => !byId.has(id));
+  if (orphaned.length) {
+    await prisma.postReport.updateMany({ where: { postId: { in: orphaned } }, data: { status: 'resolved' } });
+  }
+  const reporterIds = [...new Set(pending.map((r) => r.reporterId))];
+  const reporters = await prisma.user.findMany({ where: { id: { in: reporterIds } }, select: { id: true, firstName: true } });
+  const rName = new Map(reporters.map((u) => [u.id, u.firstName]));
+  res.json(
+    postIds
+      .filter((id) => byId.has(id))
+      .map((id) => {
+        const rows = pending.filter((r) => r.postId === id);
+        return {
+          post: byId.get(id),
+          count: rows.length,
+          reporters: rows.map((r) => rName.get(r.reporterId) ?? '?'),
+          reasons: [...new Set(rows.map((r) => r.reason).filter(Boolean))],
+          latestAt: rows[0].createdAt,
+        };
+      }),
+  );
+});
+
+/** Dismiss all pending reports on a post — the content stays up. */
+adminOpsRouter.post('/moderation/post-reports/:postId/dismiss', async (req, res) => {
+  await prisma.postReport.updateMany({ where: { postId: req.params.postId, status: 'pending' }, data: { status: 'resolved' } });
+  res.json({ ok: true });
+});
+
+/** Delete a reported post (optionally warning its author) and resolve its reports. */
+adminOpsRouter.post('/moderation/post-reports/:postId/delete', async (req, res) => {
+  const warn = Boolean(req.body?.warn);
+  const post = await prisma.feedPost.findUnique({ where: { id: req.params.postId }, select: { id: true, userId: true } });
+  if (post) {
+    await prisma.feedPost.delete({ where: { id: post.id } });
+    if (warn) {
+      notifyUser(post.userId, {
+        title: 'Post removed by moderators',
+        titleAr: 'تم حذف منشورك',
+        body: 'Your post was reported and removed for violating community guidelines.',
+        bodyAr: 'منشورك اتبلغ عنه واتشال لمخالفته ارشادات المجتمع.',
+        url: '/community',
+        type: 'general',
+      }).catch(() => {});
+    }
+  }
+  await prisma.postReport.updateMany({ where: { postId: req.params.postId, status: 'pending' }, data: { status: 'resolved' } });
+  res.json({ ok: true, deleted: Boolean(post) });
+});

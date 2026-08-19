@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Flag, MessageCircle, Pin, RefreshCw, Trash2, Trophy } from 'lucide-react';
+import { AlertTriangle, Flag, MessageCircle, Pin, RefreshCw, Trash2, Trophy, Check } from 'lucide-react';
 import { api } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { timeAgo } from '../../components/PostCard';
@@ -43,10 +43,11 @@ function AuthorLink({ name, email }: { name: string; email?: string | null }) {
 
 export default function AdminModeration() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'chats' | 'posts' | 'rooms'>('chats');
+  const [tab, setTab] = useState<'reported' | 'chats' | 'posts' | 'rooms'>('reported');
   const [openThread, setOpenThread] = useState<string | null>(null);
 
   const reports = useQuery({ queryKey: ['mod-reports'], queryFn: () => api.get('/api/admin/moderation/reports') });
+  const reported = useQuery({ queryKey: ['mod-post-reports'], queryFn: () => api.get('/api/admin-ops/moderation/post-reports'), enabled: tab === 'reported' });
   const feed = useQuery({ queryKey: ['mod-feed'], queryFn: () => api.get('/api/admin/moderation/feed'), enabled: tab === 'posts' });
   const rooms = useQuery({ queryKey: ['mod-rooms'], queryFn: () => api.get('/api/admin/moderation/challenge-messages'), enabled: tab === 'rooms' });
   const thread = useQuery({
@@ -55,10 +56,24 @@ export default function AdminModeration() {
     enabled: Boolean(openThread),
   });
 
+  const dismissReport = useMutation({
+    mutationFn: (postId: string) => api.post(`/api/admin-ops/moderation/post-reports/${postId}/dismiss`, {}),
+    onSuccess: () => { toast('Reports dismissed', 'success'); qc.invalidateQueries({ queryKey: ['mod-post-reports'] }); },
+  });
+  const deleteReported = useMutation({
+    mutationFn: ({ postId, warn }: { postId: string; warn: boolean }) =>
+      api.post(`/api/admin-ops/moderation/post-reports/${postId}/delete`, { warn }),
+    onSuccess: () => {
+      toast('Post removed', 'success');
+      qc.invalidateQueries({ queryKey: ['mod-post-reports'] });
+      qc.invalidateQueries({ queryKey: ['mod-feed'] });
+    },
+  });
+
   const refetchAll = () => {
     qc.invalidateQueries({ queryKey: ['mod-reports'] });
     qc.invalidateQueries({ queryKey: ['mod-feed'] });
-    qc.invalidateQueries({ queryKey: ['mod-rooms'] });
+    qc.invalidateQueries({ queryKey: ['mod-post-reports'] });
   };
 
   // ---- actions (dismiss / delete / delete+warn) ----
@@ -118,7 +133,7 @@ export default function AdminModeration() {
         <div>
           <h1 className="text-xl font-extrabold">Moderation</h1>
           <p className="text-xs text-gray-400">
-            {openReports.length} open report{openReports.length === 1 ? '' : 's'} · post reports arrive as admin pushes and land in Recent posts
+            {(reported.data?.length ?? 0)} reported post{(reported.data?.length ?? 0) === 1 ? '' : 's'} · {openReports.length} open chat report{openReports.length === 1 ? '' : 's'}
           </p>
         </div>
         <button onClick={refetchAll} aria-label="Refresh" className="rounded-full bg-white p-2.5 text-gray-500 shadow-sm">
@@ -127,10 +142,60 @@ export default function AdminModeration() {
       </div>
 
       <div className="flex flex-wrap gap-1.5">
+        <TabBtn k="reported" icon={Flag} label={`Reported posts${reported.data?.length ? ` (${reported.data.length})` : ''}`} />
         <TabBtn k="chats" icon={Flag} label={`Reported chats${openReports.length ? ` (${openReports.length})` : ''}`} />
         <TabBtn k="posts" icon={MessageCircle} label="Recent posts" />
         <TabBtn k="rooms" icon={Trophy} label="Rooms" />
       </div>
+
+      {/* ---- Reported posts (persisted queue) ---- */}
+      {tab === 'reported' && (
+        <div className="space-y-2">
+          {(reported.data ?? []).length === 0 && !reported.isLoading && (
+            <p className="rounded-2xl bg-white p-6 text-center text-sm text-gray-400 shadow-sm">No reported posts — all clear ✅</p>
+          )}
+          {(reported.data ?? []).map((r: any) => (
+            <div key={r.post.id} className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs">
+                    <AuthorLink name={`${r.post.user.firstName} ${r.post.user.lastName}`} email={r.post.user.email} />
+                    <span className="ms-2 text-gray-400">{timeAgo(r.post.createdAt)} · 🚩 {r.count} report{r.count === 1 ? '' : 's'}</span>
+                  </p>
+                  {(r.post.text || r.post.textAr) && <p className="mt-1 break-words text-sm">{r.post.textAr ?? r.post.text}</p>}
+                  {r.post.mediaType && <p className="mt-0.5 text-[11px] text-gray-400">[{r.post.mediaType} attached]</p>}
+                  {r.reasons.length > 0 && <p className="mt-1 text-[11px] font-semibold text-amber-600">{r.reasons.join(' · ')}</p>}
+                  <p className="mt-0.5 text-[11px] text-gray-400">Reported by: {r.reporters.join(', ')}</p>
+                </div>
+                <button
+                  onClick={() => dismissReport.mutate(r.post.id)}
+                  aria-label="Dismiss reports"
+                  title="Dismiss — the post stays up"
+                  className="shrink-0 rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"
+                >
+                  <Check size={15} />
+                </button>
+                <button
+                  onClick={() => deleteReported.mutate({ postId: r.post.id, warn: false })}
+                  aria-label="Delete post"
+                  title="Delete post"
+                  className="shrink-0 rounded-lg p-1.5 text-red-500 hover:bg-red-50"
+                >
+                  <Trash2 size={15} />
+                </button>
+                <button
+                  onClick={() => deleteReported.mutate({ postId: r.post.id, warn: true })}
+                  aria-label="Delete post and warn author"
+                  title="Delete + warn author"
+                  className="shrink-0 rounded-lg p-1.5 text-red-600 hover:bg-red-50"
+                >
+                  <AlertTriangle size={15} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ---- Reported chats ---- */}
       {tab === 'chats' && (

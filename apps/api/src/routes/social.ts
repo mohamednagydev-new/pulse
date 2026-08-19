@@ -291,7 +291,18 @@ socialRouter.post('/posts/:id/report', async (req: AuthedRequest, res) => {
   if (!post) return res.status(404).json({ error: 'Not found' });
   const reporter = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } });
   const excerpt = (post.text ?? post.textAr ?? (post.mediaType ? `[${post.mediaType}]` : '')).slice(0, 80);
-  const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+  // Persist the report — moderation has a real queue now, not just a push that
+  // vanishes once read. One row per reporter per post; repeats refresh it.
+  const reason = typeof req.body?.reason === 'string' ? req.body.reason.slice(0, 200) : null;
+  const firstReport = (await prisma.postReport.count({ where: { postId: post.id, status: 'pending' } })) === 0;
+  await prisma.postReport.upsert({
+    where: { postId_reporterId: { postId: post.id, reporterId: req.userId! } },
+    update: { status: 'pending', ...(reason ? { reason } : {}) },
+    create: { postId: post.id, reporterId: req.userId!, reason },
+  });
+  // Push admins only on the first open report — later reporters bump the queue
+  // count on the dashboard instead of re-spamming every admin inbox.
+  const admins = firstReport ? await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } }) : [];
   for (const a of admins) {
     notifyUser(a.id, {
       title: 'Post reported 🚩',

@@ -31,6 +31,7 @@ interface OverviewData {
   newLeads: number;
   pendingGymJoinRequests: number;
   reportedPostsPending: number;
+  chatReportsOpen: number;
   pendingCoachRequests: number;
   activeChallenges: number;
   pushSubscribers: number;
@@ -105,7 +106,8 @@ export default function AdminHome() {
 
   const attention: { to?: string; icon: LucideIcon; label: string; count: number; hint: string }[] = data
     ? [
-        { to: '/admin/moderation', icon: Flag, label: 'Open chat reports', count: data.reportedPostsPending, hint: 'Review in Moderation' },
+        { to: '/admin/moderation', icon: Flag, label: 'Reported posts', count: data.reportedPostsPending, hint: 'Review in Moderation' },
+        { to: '/admin/moderation', icon: Flag, label: 'Open chat reports', count: data.chatReportsOpen, hint: 'Review in Moderation' },
         { to: '/admin/support', icon: MessagesSquare, label: 'Open support tickets', count: data.openSupportTickets, hint: 'Reply in Support' },
         { to: '/admin/leads', icon: Inbox, label: 'New partner leads', count: data.newLeads, hint: 'Triage in Leads' },
         // No admin screen — gym owners accept these in their own portal.
@@ -152,7 +154,7 @@ export default function AdminHome() {
             <KpiCard to="/admin/support" icon={MessagesSquare} value={data.openSupportTickets} label="Open tickets" />
             <KpiCard to="/admin/leads" icon={Inbox} value={data.newLeads} label="New leads" />
             <KpiCard icon={Building2} value={data.pendingGymJoinRequests} label="Gym requests" />
-            <KpiCard to="/admin/moderation" icon={Flag} value={data.reportedPostsPending} label="Open reports" />
+            <KpiCard to="/admin/moderation" icon={Flag} value={data.reportedPostsPending + data.chatReportsOpen} label="Open reports" />
             <KpiCard to="/admin/users" icon={GraduationCap} value={data.pendingCoachRequests} label="Coach requests" />
             <KpiCard to="/admin/challenges" icon={Trophy} value={data.activeChallenges} label="Active challenges" />
             <KpiCard to="/admin/email" icon={BellRing} value={data.pushSubscribers} label="Push subscribers" />

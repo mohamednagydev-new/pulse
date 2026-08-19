@@ -1592,3 +1592,17 @@ model GymJoinRequest {
   @@unique([partnerId, userId])
   @@index([partnerId, status])
 }
+
+// A user's report of a feed post — persisted so moderation has a real queue
+// (reports used to be notification-only and vanished once the push was read).
+model PostReport {
+  id         String   @id @default(cuid())
+  postId     String
+  reporterId String
+  reason     String?
+  status     String   @default("pending") // pending | resolved
+  createdAt  DateTime @default(now())
+
+  @@unique([postId, reporterId])
+  @@index([status])
+}

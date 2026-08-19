@@ -1498,7 +1498,7 @@ adminRouter.get('/overview', async (_req, res) => {
     prisma.gymJoinRequest.count({ where: { status: 'pending' } }),
     // ChatReport is the only PERSISTED report queue — feed-post reports only
     // notify admins (social.ts POST /posts/:id/report stores nothing).
-    prisma.chatReport.count({ where: { status: 'open' } }),
+    prisma.postReport.findMany({ where: { status: 'pending' }, distinct: ['postId'], select: { postId: true } }).then((r) => r.length),
     prisma.coachRequest.count({ where: { status: 'pending' } }),
     prisma.challenge.count({ where: { startsOn: { lte: today }, endsOn: { gte: today } } }),
     prisma.pushSubscription.findMany({ select: { userId: true }, distinct: ['userId'] }),
@@ -1518,6 +1518,7 @@ adminRouter.get('/overview', async (_req, res) => {
     newLeads,
     pendingGymJoinRequests,
     reportedPostsPending,
+    chatReportsOpen: await prisma.chatReport.count({ where: { status: 'open' } }),
     pendingCoachRequests,
     activeChallenges,
     pushSubscribers: pushRows.length,
