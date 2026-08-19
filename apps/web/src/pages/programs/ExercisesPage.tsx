@@ -42,8 +42,10 @@ export default function ExercisesPage() {
   };
 
   const pick = (g: Group) => {
-    if (active?.id === g.id) navigate(`/exercises/${g.id}`);
-    else setActive(g);
+    // One tap = go. setActive gives the dot a brief highlight flash while the
+    // route transition starts — no second tap required anymore.
+    setActive(g);
+    navigate(`/exercises/${g.id}`);
   };
 
   return (

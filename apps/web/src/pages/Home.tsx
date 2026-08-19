@@ -24,6 +24,7 @@ import MenuDrawer from '../components/MenuDrawer';
 import ScreenHeader from '../components/ScreenHeader';
 import VideoPlayer from '../components/VideoPlayer';
 import CountUp from '../components/CountUp';
+import XpInfoSheet from '../components/XpInfoSheet';
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
@@ -361,6 +362,7 @@ export default function Home() {
 function Greeting() {
   const { t } = useTranslation();
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
+  const [xpInfo, setXpInfo] = useState(false);
   const h = new Date().getHours();
   const part = h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
   const streak = me?.currentStreak ?? 0;
@@ -371,12 +373,16 @@ function Greeting() {
       </p>
       {me && (
         <div className="flex shrink-0 items-center gap-2">
-          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">{t('common.lv', { n: me.level ?? 1 })}</span>
+          {/* Tappable: nobody explains the economy elsewhere — the pill itself does. */}
+          <button onClick={() => setXpInfo(true)} className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">
+            {t('common.lv', { n: me.level ?? 1 })}
+          </button>
           {streak > 0 && (
             <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">{streak}🔥</span>
           )}
         </div>
       )}
+      <XpInfoSheet open={xpInfo} onClose={() => setXpInfo(false)} />
     </div>
   );
 }

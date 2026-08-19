@@ -326,6 +326,12 @@ function PlanView({
   const cautions: Bilingual[] = as.cautions ?? [];
   const days: string[] = as.scheduleDays ?? [];
 
+  // The intake computes a daily calorie target and quietly wires the whole app
+  // to it — say so out loud. Fresh submits carry `targets`; revisits read the
+  // saved goal off the cached ['me'] profile.
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
+  const kcalTarget: number | null = data.targets?.calories ?? me?.goalCalories ?? null;
+
   return (
     <div className="relative min-h-screen overflow-x-hidden pb-24">
       {party && <Confetti onDone={onPartyDone} />}
@@ -375,6 +381,18 @@ function PlanView({
           </div>
         )}
       </section>
+
+      {kcalTarget ? (
+        <section className="mx-4 mt-4 flex items-start gap-2 rounded-2xl bg-white p-4 shadow-sm">
+          <Utensils size={15} className="mt-0.5 shrink-0 text-brand-green" />
+          <p className="text-xs leading-relaxed text-gray-600">
+            {say({
+              en: `Your daily target: ~${kcalTarget.toLocaleString('en-US')} kcal — the meal plan and tracker follow it`,
+              ar: `هدفك اليومي ~${kcalTarget.toLocaleString('en-US')} سعرة — خطة الأكل والتراكر ماشيين عليه`,
+            })}
+          </p>
+        </section>
+      ) : null}
 
       <Outcome say={say} t={t} />
 

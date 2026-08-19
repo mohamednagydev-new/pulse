@@ -51,7 +51,7 @@ const GROUPS: Group[] = [
       { to: '/my-invite', en: 'Invite people', ar: 'اعزم ناس', icon: UserPlus },
       { to: '/buddies', en: 'Buddies', ar: 'أصحابي', icon: HeartHandshake },
       { to: '/notifications', en: 'Notifications', ar: 'الإشعارات', icon: Bell },
-      { to: '/coaches-community', en: 'Coaches', ar: 'المدربين', icon: Award },
+      { to: '/coaches-community', en: 'Find a coach', ar: 'دوّر على مدرب', icon: Award },
       { to: '/group', en: 'Group live', ar: 'تمرين جماعي', icon: Users },
       { to: '/reels', en: 'Reels', ar: 'ريلز', icon: Clapperboard },
     ],

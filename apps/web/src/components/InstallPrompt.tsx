@@ -2,7 +2,10 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X, Share, PlusSquare, MoreVertical, Compass } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import Sheet from './Sheet';
+import { api } from '../lib/api';
+import { useAuth } from '../store/auth';
 import { getDeferredPrompt, clearDeferredPrompt, isIOS, isInAppBrowser, isStandalone, markInstalled } from '../lib/install';
 
 const SNOOZE_KEY = 'pulse_install_snooze';
@@ -20,6 +23,20 @@ export default function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [iosHelp, setIosHelp] = useState(false);
 
+  // Day-one grace: never auto-nag a brand-new account with the install banner.
+  // The cached ['me'] query the whole app shares tells us how old the account is.
+  const status = useAuth((s) => s.status);
+  const { data: me } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => api.get('/api/me'),
+    enabled: status === 'authed',
+  });
+  const seasoned =
+    !!me &&
+    (Date.now() - new Date(me.createdAt).getTime() > 86400000 ||
+      (me.currentStreak ?? 0) > 0 ||
+      (me.xp ?? 0) > 50);
+
   useEffect(() => {
     // Manual trigger (Settings → Install app) always works, even after snoozing.
     const onManual = () => {
@@ -30,19 +47,20 @@ export default function InstallPrompt() {
       if (!getDeferredPrompt()) setIosHelp(true);
     };
     window.addEventListener('pulse:install-open', onManual);
+    return () => window.removeEventListener('pulse:install-open', onManual);
+  }, []);
 
-    if (isStandalone() || snoozed()) return () => window.removeEventListener('pulse:install-open', onManual);
+  useEffect(() => {
+    if (!seasoned || isStandalone() || snoozed()) return;
 
     const show = () => setVisible(true);
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    timer = setTimeout(show, 8000); // let them look around first
+    const timer = setTimeout(show, 8000); // let them look around first
     window.addEventListener('pulse:installable', show);
     return () => {
-      window.removeEventListener('pulse:install-open', onManual);
       window.removeEventListener('pulse:installable', show);
-      if (timer) clearTimeout(timer);
+      clearTimeout(timer);
     };
-  }, []);
+  }, [seasoned]);
 
   const dismiss = () => {
     localStorage.setItem(SNOOZE_KEY, String(Date.now()));

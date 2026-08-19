@@ -18,7 +18,7 @@ export default function UserProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // "Connect to chat" explainer, opened by the message button when not yet buddies.
   const [gate, setGate] = useState(false);
   const [followsTab, setFollowsTab] = useState<'followers' | 'following' | null>(null);
@@ -165,7 +165,9 @@ export default function UserProfile() {
 
       {user.isCoach && (user.coachBio || user.coachSpecialties) && (
         <div className="mx-5 mt-3 rounded-2xl bg-white p-4 text-sm text-gray-600 shadow-sm">
-          <p className="mb-1 font-bold text-ink">{t('home.coaches')}</p>
+          {/* home.coaches now reads "Coach programs" (the Home content rail) — this
+              heading sits over a human coach's bio, so it says so directly. */}
+          <p className="mb-1 font-bold text-ink">{i18n.language.startsWith('ar') ? 'المدرب' : 'Coach'}</p>
           {user.coachBio && <p className="leading-relaxed">{user.coachBio}</p>}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {parseSpecialties(user.coachSpecialties).map((s: string, i: number) => (

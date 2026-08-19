@@ -15,7 +15,8 @@ const tapSpring = { type: 'spring', stiffness: 500, damping: 30 } as const;
 export default function CoachesDirectory() {
   const [q, setQ] = useState('');
   const qc = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
   // The meal plan links here with ?specialty=nutrition, so someone asking about food
   // lands on the people who answer that rather than on the full trainer list.
   const [params] = useSearchParams();
@@ -45,7 +46,8 @@ export default function CoachesDirectory() {
   return (
     <div className="relative min-h-screen pb-8">
       <AmbientBg tone="warm" />
-      <TopBar title={t('home.coaches')} color="fitness-hero" textColor="text-white" />
+      {/* Human-coach directory — a different thing from Home's "Coach programs" content rail. */}
+      <TopBar title={isAr ? 'دوّر على مدرب' : 'Find a coach'} color="fitness-hero" textColor="text-white" />
       <div className="px-4">
         <div className="flex min-h-[44px] items-center gap-2 rounded-full bg-white px-4 py-3 shadow-sm">
           <Search size={18} className="shrink-0 text-gray-400" />

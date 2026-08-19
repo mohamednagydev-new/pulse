@@ -119,7 +119,7 @@
   },
   "home": {
     "fitForLife": "لياقة مدى الحياة",
-    "coaches": "مدربو بلس",
+    "coaches": "برامج المدربين",
     "prepareMeal": "حضّر وجبتك",
     "workout": "تمرين",
     "challenges": "تحديات تستاهل تدخلها",
@@ -157,7 +157,7 @@
     "back": "ورا"
   },
   "achievements": {
-    "title": "الإنجازات"
+    "title": "التحديات"
   },
   "wellness": {
     "welcome": "مرحباً بك في",
@@ -193,7 +193,7 @@
     "bio": "نبذة عنك",
     "gender": "النوع",
     "saveChanges": "احفظ التغييرات",
-    "badges": "الأوسمة"
+    "badges": "التحديات"
   },
   "info": {
     "title": "معلومات",

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
+import { api } from '../lib/api';
 import { useAuth } from '../store/auth';
 
 /**
@@ -21,7 +23,7 @@ const TIPS: { to: string; emoji: string; en: string; ar: string }[] = [
   { to: '/achievements', emoji: '🏆', en: "A new challenge starts every Saturday — this week's is live now", ar: 'كل سبت في تحدي جديد — تحدي الأسبوع شغال دلوقتي' },
   { to: '/community', emoji: '👏', en: 'Cheer a buddy who just worked out — it makes their day', ar: 'شجّع صاحبك اللي لسه متمرن — هتعمله يومه' },
   { to: '/meals', emoji: '🥗', en: 'Your daily meal plan explains every plate — and you can swap any meal', ar: 'خطة أكلك اليومية بتشرح كل طبق — وتقدر تبدّل أي وجبة' },
-  { to: '/buddies', emoji: '🎁', en: 'Invite a friend — you both earn streak freezes', ar: 'اعزم صاحبك — وانتوا الاتنين تكسبوا فريز للسلسلة' },
+  { to: '/my-invite', emoji: '🎁', en: 'Invite a friend — you both earn streak freezes', ar: 'اعزم صاحبك — وانتوا الاتنين تكسبوا فريز للسلسلة' },
   { to: '/profile', emoji: '🎽', en: 'New 3D avatars! Pick your character from your profile', ar: 'أفاتارات 3D جديدة! اختار شخصيتك من البروفايل' },
   { to: '/group', emoji: '🎥', en: 'Join a live group session with Coach PULSE — free, weekly', ar: 'ادخل تمرين جماعي لايف مع كوتش PULSE — ببلاش وكل أسبوع' },
   { to: '/reels', emoji: '🎬', en: 'Short workout reels — learn one new move on your break', ar: 'ريلز تمارين قصيرة — اتعلم حركة جديدة في البريك' },
@@ -36,8 +38,21 @@ export default function FeatureToast() {
   const status = useAuth((s) => s.status);
   const [tip, setTip] = useState<(typeof TIPS)[number] | null>(null);
 
+  // Day-one grace: a brand-new account gets zero feature marketing — let them
+  // meet the product first. Same cached ['me'] query the rest of the app uses.
+  const { data: me } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => api.get('/api/me'),
+    enabled: status === 'authed',
+  });
+  const seasoned =
+    !!me &&
+    (Date.now() - new Date(me.createdAt).getTime() > 86400000 ||
+      (me.currentStreak ?? 0) > 0 ||
+      (me.xp ?? 0) > 50);
+
   useEffect(() => {
-    if (status !== 'authed') return;
+    if (status !== 'authed' || !seasoned) return;
     const state = JSON.parse(localStorage.getItem(KEY) || '{"last":0,"idx":0}');
     if (Date.now() - state.last < EVERY_DAYS * 86400000) return;
     const idx = state.idx % TIPS.length;
@@ -49,7 +64,7 @@ export default function FeatureToast() {
       clearTimeout(show);
       clearTimeout(hide);
     };
-  }, [status]);
+  }, [status, seasoned]);
 
   const ar = i18n.language.startsWith('ar');
 

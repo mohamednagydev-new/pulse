@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Dumbbell } from 'lucide-react';
+import { ChevronDown, ChevronRight, Dumbbell, Play } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Loader, ErrorMsg } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -12,7 +12,9 @@ import ContentVideo from '../../components/ContentVideo';
 import RelatedReels from '../../components/RelatedReels';
 
 export default function MuscleGroupPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const navigate = useNavigate();
   const { groupId } = useParams();
   const [open, setOpen] = useState<string | null>(null);
   const { data: group, isLoading, error } = useQuery({
@@ -115,6 +117,17 @@ export default function MuscleGroupPage() {
       </div>
 
       <RelatedReels keyword={group.reelKeyword || `${group.name} workout`} className="mt-8 px-4" />
+
+      {/* Sticky start CTA — browsing the list used to dead-end here; this hands
+          the whole group straight to the guided session player. */}
+      <div
+        className="sticky bottom-0 z-20 mt-6 border-t border-white/10 bg-gray-900/90 p-4 backdrop-blur"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+      >
+        <button onClick={() => navigate(`/session/${groupId}`)} className="btn-pill btn-primary w-full">
+          <Play size={18} /> {isAr ? 'ابدأ التمرين ده' : 'Start this workout'} <ChevronRight size={16} className="rtl:rotate-180" />
+        </button>
+      </div>
     </div>
   );
 }

@@ -39,6 +39,15 @@ export default function PushNudge() {
   const { data: progress } = useQuery({ queryKey: ['progress'], queryFn: () => api.get('/api/tracker/progress') });
   const { data: challenges } = useQuery({ queryKey: ['challenges'], queryFn: () => api.get('/api/gamification/challenges'), staleTime: 60_000 });
 
+  // Day-one grace: a brand-new account never sees the permission ask — the
+  // cached ['me'] query says whether they've been around (or done anything).
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
+  const seasoned =
+    !!me &&
+    (Date.now() - new Date(me.createdAt).getTime() > 86400000 ||
+      (me.currentStreak ?? 0) > 0 ||
+      (me.xp ?? 0) > 50);
+
   // Aggressive mode: any activity counts — a completion, a joined challenge,
   // or simply having the app data loaded on a second visit. The polite
   // earned-moment-only gate left the push count growing too slowly.
@@ -53,7 +62,7 @@ export default function PushNudge() {
   // iOS can only push from the installed app — pitch the install first.
   const iosInstallPitch = state === 'unsupported' && isIos && !standalone;
 
-  if (snoozed || !earned || state === null) return null;
+  if (snoozed || !seasoned || !earned || state === null) return null;
   if (state !== 'default' && !iosInstallPitch) return null;
 
   const snooze = () => {

@@ -119,7 +119,7 @@
   },
   "home": {
     "fitForLife": "Fit For Life",
-    "coaches": "PULSE Coaches",
+    "coaches": "Coach programs",
     "prepareMeal": "Prepare Your Meal",
     "workout": "WORKOUT",
     "challenges": "Challenges worth joining",
@@ -157,7 +157,7 @@
     "back": "Back"
   },
   "achievements": {
-    "title": "Achievements"
+    "title": "Challenges"
   },
   "wellness": {
     "welcome": "Welcome To The",
@@ -193,7 +193,7 @@
     "bio": "Bio",
     "gender": "Gender",
     "saveChanges": "Save changes",
-    "badges": "Badges"
+    "badges": "Challenges"
   },
   "info": {
     "title": "Info",

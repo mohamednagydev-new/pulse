@@ -39,8 +39,9 @@ export default function ExerciseProgressChart({ exercise }: { exercise: string }
 
   const stats = useMemo(() => {
     const logs: Lift[] = Array.isArray(data) ? data : [];
-    // Warmup sets are noise for strength trends.
-    const working = logs.filter((l) => l.setType !== 'warmup');
+    // Warmup sets are noise for strength trends; bodyweight (0 kg) sets carry
+    // no weight signal, so they'd only flatten the chart and zero the e1RM.
+    const working = logs.filter((l) => l.setType !== 'warmup' && l.weightKg > 0);
     if (working.length === 0) return null;
 
     // Best set per day = the heaviest set (ties broken by e1RM).
@@ -103,7 +104,7 @@ export default function ExerciseProgressChart({ exercise }: { exercise: string }
       {/* e1RM tiles */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-gradient-to-b from-cyan-50 to-white p-3 shadow-sm ring-1 ring-cyan-100">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{L('Current e1RM', 'أقصى وزن متوقع دلوقتي')}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{L('Current estimated max (e1RM)', 'أقصى وزن متوقع دلوقتي')}</p>
           <div className="mt-1 flex items-baseline gap-1.5" dir="ltr">
             <span className="font-display text-2xl font-extrabold">{round1(currentE1rm)}</span>
             <span className="text-sm font-bold text-gray-400">{kg}</span>
@@ -120,7 +121,7 @@ export default function ExerciseProgressChart({ exercise }: { exercise: string }
           )}
         </div>
         <div className="rounded-2xl bg-gradient-to-b from-amber-50 to-white p-3 shadow-sm ring-1 ring-amber-100">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{L('All-time best e1RM', 'أحسن رقم ليك')}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{L('Best-ever estimated max (e1RM)', 'أحسن رقم ليك')}</p>
           <div className="mt-1 flex items-baseline gap-1.5" dir="ltr">
             <span className="font-display text-2xl font-extrabold">{round1(bestE1rm)}</span>
             <span className="text-sm font-bold text-gray-400">{kg}</span>
@@ -129,6 +130,10 @@ export default function ExerciseProgressChart({ exercise }: { exercise: string }
           <p className="mt-0.5 text-[10px] text-gray-400">{L('Epley estimate', 'تقدير بمعادلة Epley')}</p>
         </div>
       </div>
+      {/* Plain-language read of what those tiles mean */}
+      <p className="mt-2 text-[11px] text-gray-400">
+        {L('The heaviest single rep we estimate you could lift', 'أتقل عدة واحدة متوقع ترفعها')}
+      </p>
 
       {/* Weight over time */}
       <div className="mt-4 rounded-2xl bg-gray-50 p-3">

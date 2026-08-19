@@ -242,22 +242,24 @@ trackerRouter.post('/lifts', async (req: AuthedRequest, res) => {
   const parsed = z
     .object({
       exercise: z.string().min(1).max(80),
-      weightKg: z.number().positive().max(1000),
+      // 0 = bodyweight set (push-ups, air squats) — weight is optional, reps aren't.
+      weightKg: z.number().min(0).max(1000),
       reps: z.number().int().positive().max(200),
       // Optional so offline-queued sets from older clients replay unchanged.
       setType: z.enum(SET_TYPES).optional(),
     })
     .safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'Enter a weight and reps' });
+  if (!parsed.success) return res.status(400).json({ error: 'Enter your reps (weight is optional)' });
   const { exercise, weightKg, reps } = parsed.data;
   const setType = parsed.data.setType ?? 'normal';
-  // Warm-up plates must never set (or beat) a PR — compare against working sets only.
+  // Warm-up plates and bodyweight (0 kg) sets must never set (or beat) a PR —
+  // compare against weighted working sets only.
   const prev = await prisma.liftLog.findFirst({
-    where: { userId: req.userId!, exercise, setType: { not: 'warmup' } },
+    where: { userId: req.userId!, exercise, setType: { not: 'warmup' }, weightKg: { gt: 0 } },
     orderBy: { weightKg: 'desc' },
   });
   const log = await prisma.liftLog.create({ data: { userId: req.userId!, exercise, weightKg, reps, setType } });
-  const isPR = setType !== 'warmup' && (!prev || weightKg > prev.weightKg);
+  const isPR = setType !== 'warmup' && weightKg > 0 && (!prev || weightKg > prev.weightKg);
   await touchStreak(req.userId!);
   res.status(201).json({ ok: true, id: log.id, isPR, prevBest: prev?.weightKg ?? null });
 });
@@ -266,7 +268,8 @@ trackerRouter.post('/lifts', async (req: AuthedRequest, res) => {
 trackerRouter.patch('/lifts/:id', async (req: AuthedRequest, res) => {
   const parsed = z
     .object({
-      weightKg: z.number().positive().max(1000).optional(),
+      // 0 = bodyweight — an edit may clear the weight, matching POST's rule.
+      weightKg: z.number().min(0).max(1000).optional(),
       reps: z.number().int().positive().max(200).optional(),
       setType: z.enum(SET_TYPES).optional(),
     })
@@ -296,10 +299,10 @@ trackerRouter.get('/lifts', async (req: AuthedRequest, res) => {
 });
 
 // Personal records: best weight per exercise (with the reps at that weight).
-// Warm-up sets are excluded — a light warm-up must never masquerade as a best.
+// Warm-up and bodyweight (0 kg) sets are excluded — neither is a "best weight".
 trackerRouter.get('/prs', async (req: AuthedRequest, res) => {
   const logs = await prisma.liftLog.findMany({
-    where: { userId: req.userId!, setType: { not: 'warmup' } },
+    where: { userId: req.userId!, setType: { not: 'warmup' }, weightKg: { gt: 0 } },
     orderBy: { weightKg: 'desc' },
   });
   const best = new Map<string, { exercise: string; weightKg: number; reps: number; createdAt: Date }>();

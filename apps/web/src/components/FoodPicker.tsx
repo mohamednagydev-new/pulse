@@ -95,6 +95,8 @@ export default function FoodPicker({ onClose, date }: { onClose: () => void; dat
       qc.invalidateQueries({ queryKey: ['quests'] });
       onClose();
     },
+    onError: () =>
+      toast(i18n.language.startsWith('ar') ? 'مقدرناش نسجّلها — جرّب تاني' : "Couldn't log that — try again", 'error'),
   });
 
   const foods: Food[] = data?.foods ?? [];

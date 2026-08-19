@@ -83,7 +83,10 @@ export default function MealPhoto({ onClose }: { onClose: () => void }) {
       setItems(r.items ?? []);
       setMessage(r.message ?? '');
     } catch (e) {
-      setErr(e instanceof Error ? e.message : t('photo.failed'));
+      // Raw server errors are English (and often technical) — log them for
+      // debugging but always show the localized message to the user.
+      console.error('meal-photo estimate failed:', e);
+      setErr(t('photo.failed'));
     } finally {
       setBusy(false);
     }

@@ -36,6 +36,7 @@ export default function MyRecipes({ onClose, date }: { onClose: () => void; date
       toast(t('myrec.logged'), 'success');
       onClose();
     },
+    onError: () => toast(ar ? 'مقدرناش نسجّلها — جرّب تاني' : "Couldn't log that — try again", 'error'),
   });
   const del = useMutation({
     mutationFn: (id: string) => api.del(`/api/meals/my-recipes/${id}`),

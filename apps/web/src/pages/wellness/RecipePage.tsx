@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Clock, Flame, Users, ChefHat, ShoppingBag, Check } from 'lucide-react';
+import { Clock, Flame, Users, ChefHat, ShoppingBag, Check, UtensilsCrossed } from 'lucide-react';
 import { api } from '../../lib/api';
+import { toast } from '../../lib/toast';
+import { useAuth } from '../../store/auth';
 import { usePageMeta } from '../../lib/seo';
 import { Loader, ErrorMsg, MediaImage } from '../../components/ui';
 import TopBar from '../../components/TopBar';
@@ -17,8 +19,28 @@ const reveal = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 
 export default function RecipePage() {
   const { id } = useParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const qc = useQueryClient();
+  // Guests can browse this page — the "log it" shortcut only exists once signed in.
+  const status = useAuth((s) => s.status);
   const { data: recipe, isLoading, error } = useQuery({ queryKey: ['recipe', id], queryFn: () => api.get(`/api/recipes/${id}`) });
+
+  // Same endpoint the meal plan's "I ate this" uses — one tap from the recipe
+  // straight into today's tracker, slotted by time of day.
+  const logIt = useMutation({
+    mutationFn: () => {
+      const h = new Date().getHours();
+      const slot = h < 11 ? 'breakfast' : h < 16 ? 'lunch' : h < 21 ? 'dinner' : 'snack';
+      return api.post('/api/meals/log', { recipeId: id, slot, servings: 1 });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tracker-day'] });
+      qc.invalidateQueries({ queryKey: ['quests'] });
+      toast(isAr ? 'اتسجّلت في أكل النهارده ✅' : 'Logged to today ✅', 'success');
+    },
+    onError: () => toast(isAr ? 'مقدرناش نسجّلها — جرّب تاني' : "Couldn't log that — try again", 'error'),
+  });
 
   usePageMeta({
     title: recipe?.title,
@@ -100,6 +122,18 @@ export default function RecipePage() {
             ))}
           </div>
         )}
+
+        {status === 'authed' && recipe.calories ? (
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => logIt.mutate()}
+            disabled={logIt.isPending}
+            className="btn-pill btn-green mt-4 w-full disabled:opacity-60"
+          >
+            <UtensilsCrossed size={16} />
+            {isAr ? `سجّلها في أكلي (~${recipe.calories} سعرة)` : `Log this meal (~${recipe.calories} kcal)`}
+          </motion.button>
+        ) : null}
 
         <ContentVideo videoId={recipe.videoId} videoUrl={recipe.videoUrl} poster={recipe.coverImage} label={recipe.title} className="mt-4" />
 

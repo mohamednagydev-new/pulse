@@ -22,7 +22,7 @@ import { coach, cancel as cancelVoice, voiceEnabled, setVoiceEnabled } from '../
 import { getRestTip } from '../../lib/restTips';
 
 /** Easier/harder progression link — present only on muscle-group exercises. */
-type ProgressionLink = { id: string; name: string; nameAr?: string | null } | null | undefined;
+type ProgressionLink = { id: string; name: string; nameAr?: string | null; muscleGroupId?: string | null } | null | undefined;
 
 const DEFAULT_REST_SECONDS = 45;
 const REST_CHOICES = [30, 45, 60, 90, 120];
@@ -164,6 +164,10 @@ export default function WorkoutSession() {
   // Save-as-routine on the done screen — one shot per session.
   const [routineSaved, setRoutineSaved] = useState(false);
   const [savingRoutine, setSavingRoutine] = useState(false);
+  // Easier/harder swaps — keyed by slot index so a chip tap replaces the
+  // exercise in place; sets already logged stay keyed to the old name.
+  const [swaps, setSwaps] = useState<Record<number, any>>({});
+  const [swapping, setSwapping] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const timer = useRef<ReturnType<typeof setInterval>>();
   // One auto-opened share sheet per session, max — a dismissed sheet stays dismissed.
@@ -202,7 +206,8 @@ export default function WorkoutSession() {
   };
 
   const allExercises: any[] = group?.exercises ?? [];
-  const exercises: any[] = shortMode ? allExercises.slice(0, 4) : allExercises;
+  const baseExercises: any[] = shortMode ? allExercises.slice(0, 4) : allExercises;
+  const exercises: any[] = baseExercises.map((e, idx) => swaps[idx] ?? e);
   const current = exercises[i];
   const easier: ProgressionLink = current?.easier;
   const harder: ProgressionLink = current?.harder;
@@ -221,8 +226,8 @@ export default function WorkoutSession() {
     staleTime: 60_000,
   });
   const lastLift = Array.isArray(liftHistory) && liftHistory.length ? liftHistory[0] : null;
-  // Best excludes warm-ups — same rule the server applies to PRs.
-  const workLifts = Array.isArray(liftHistory) ? liftHistory.filter((l: any) => l.setType !== 'warmup') : [];
+  // Best excludes warm-ups AND bodyweight (0 kg) sets — same rule as server PRs.
+  const workLifts = Array.isArray(liftHistory) ? liftHistory.filter((l: any) => l.setType !== 'warmup' && l.weightKg > 0) : [];
   const bestLift = workLifts.length
     ? workLifts.reduce((a: any, b: any) => (b.weightKg > a.weightKg ? b : a))
     : null;
@@ -299,10 +304,11 @@ export default function WorkoutSession() {
 
   const logSet = async () => {
     if (!current || logging) return;
-    const weightKg = parseFloat(entry.kg);
+    // Weight is OPTIONAL — empty (or 0) means a bodyweight set. Reps required.
+    const weightKg = entry.kg.trim() === '' ? 0 : parseFloat(entry.kg);
     const reps = parseInt(entry.reps, 10);
-    if (!Number.isFinite(weightKg) || weightKg <= 0 || !Number.isFinite(reps) || reps <= 0) {
-      toast(t('session.enterFirst'), 'error');
+    if (!Number.isFinite(weightKg) || weightKg < 0 || !Number.isFinite(reps) || reps < 1) {
+      toast(isAr ? 'اكتب عدد العدات الأول' : 'Enter your reps first', 'error');
       return;
     }
     setLogging(true);
@@ -361,7 +367,46 @@ export default function WorkoutSession() {
     if (!s.id) return; // offline-queued: not on the server yet
     tapFeedback();
     setEditingId(s.id);
-    setEntry({ kg: String(s.weightKg), reps: String(s.reps), setType: s.setType });
+    // 0 kg = bodyweight — show an empty weight field, not a literal "0".
+    setEntry({ kg: s.weightKg > 0 ? String(s.weightKg) : '', reps: String(s.reps), setType: s.setType });
+  };
+
+  /** Whether an easier/harder chip can actually deliver a swap: the full
+   *  exercise is in this group's payload, or we know which group to fetch. */
+  const canSwap = (link: NonNullable<ProgressionLink>) =>
+    allExercises.some((e: any) => e.id === link.id) || !!link.muscleGroupId;
+
+  /** Swap the CURRENT slot to its easier/harder progression, in place.
+   *  Sets already logged stay attributed to the old exercise's name. */
+  const swapTo = async (link: NonNullable<ProgressionLink>) => {
+    if (swapping) return;
+    const swappedName = isAr ? (link.nameAr || link.name) : link.name;
+    const applySwap = (full: any) => {
+      tapFeedback();
+      setSwaps((m) => ({ ...m, [i]: full }));
+      toast(isAr ? `بدلناها على ${swappedName}` : `Swapped to ${swappedName}`, 'success');
+    };
+    const local = allExercises.find((e: any) => e.id === link.id);
+    if (local) {
+      applySwap(local);
+      return;
+    }
+    if (!link.muscleGroupId) return; // chip shouldn't be a button in this case
+    setSwapping(true);
+    try {
+      const g = await queryClient.fetchQuery({
+        queryKey: ['muscle-group', link.muscleGroupId],
+        queryFn: () => api.get(`/api/muscle-groups/${link.muscleGroupId}`),
+        staleTime: 5 * 60_000,
+      });
+      const full = (g?.exercises ?? []).find((e: any) => e.id === link.id);
+      if (!full) throw new Error('not found');
+      applySwap(full);
+    } catch {
+      toast(isAr ? 'معرفناش نبدلها دلوقتي — جرب تاني' : 'Could not swap right now — try again', 'error');
+    } finally {
+      setSwapping(false);
+    }
   };
 
   const deleteSet = async (s: SessionSet) => {
@@ -823,19 +868,34 @@ export default function WorkoutSession() {
             )}
           </div>
 
-          {/* Progression ladder — muscle-group sessions only (coach workouts don't carry these) */}
+          {/* Progression ladder — muscle-group sessions only (coach workouts don't
+              carry these). Tapping a chip swaps THIS slot to the linked exercise;
+              it stays a plain span only when we have no way to deliver the swap. */}
           {(easier || harder) && (
             <div className="mt-2 flex flex-wrap gap-2">
-              {easier && (
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/60">
-                  {isAr ? 'صعبة عليك؟' : 'Too hard?'} → <span className="font-semibold text-white/90">{isAr ? (easier.nameAr || easier.name) : easier.name}</span>
-                </span>
-              )}
-              {harder && (
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/60">
-                  {isAr ? 'سهلة أوي؟' : 'Too easy?'} → <span className="font-semibold text-white/90">{isAr ? (harder.nameAr || harder.name) : harder.name}</span>
-                </span>
-              )}
+              {([
+                { link: easier, q: isAr ? 'صعبة عليك؟' : 'Too hard?' },
+                { link: harder, q: isAr ? 'سهلة أوي؟' : 'Too easy?' },
+              ] as { link: ProgressionLink; q: string }[]).map(({ link, q }) => {
+                if (!link) return null;
+                const label = (
+                  <>
+                    {q} → <span className="font-semibold text-white/90">{isAr ? (link.nameAr || link.name) : link.name}</span>
+                  </>
+                );
+                return canSwap(link) ? (
+                  <button
+                    key={link.id}
+                    onClick={() => void swapTo(link)}
+                    disabled={swapping}
+                    className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/60 transition active:scale-95 disabled:opacity-50"
+                  >
+                    {label}
+                  </button>
+                ) : (
+                  <span key={link.id} className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/60">{label}</span>
+                );
+              })}
             </div>
           )}
 
@@ -857,7 +917,7 @@ export default function WorkoutSession() {
             </p>
             {lastLift && (
               <p className="mt-1 text-xs text-white/50">
-                {isAr ? 'آخر مرة' : 'Last time'}: <span className="font-bold text-white/80">{lastLift.weightKg} {t('session.kg')} × {lastLift.reps}</span>
+                {isAr ? 'آخر مرة' : 'Last time'}: <span className="font-bold text-white/80">{lastLift.weightKg > 0 ? <>{lastLift.weightKg} {t('session.kg')}</> : (isAr ? 'وزن الجسم' : 'Bodyweight')} × {lastLift.reps}</span>
                 {bestLift && bestLift.weightKg > lastLift.weightKg && (
                   <> · {isAr ? 'رقمك القياسي' : 'your best'}: <span className="font-bold text-orange-300">{bestLift.weightKg} {t('session.kg')}</span></>
                 )}
@@ -881,8 +941,8 @@ export default function WorkoutSession() {
               <input
                 type="text"
                 inputMode="decimal"
-                placeholder={t('session.kg')}
-                aria-label="Weight (kg)"
+                placeholder={isAr ? 'كجم (اختياري)' : 'kg (optional)'}
+                aria-label="Weight (kg), optional — leave empty for bodyweight"
                 value={entry.kg}
                 onChange={(e) => setEntry({ kg: e.target.value.replace(/[^\d.]/g, '') })}
                 className="h-11 w-0 min-w-0 flex-1 rounded-xl bg-white/10 px-3 text-center font-semibold text-white outline-none placeholder:text-white/40 focus:ring-2 focus:ring-brand-pink"
@@ -926,7 +986,7 @@ export default function WorkoutSession() {
                     >
                       <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/10 text-[10px] font-bold tabular-nums text-white/60">{k + 1}</span>
                       <span className="min-w-0 flex-1 truncate font-semibold tabular-nums">
-                        {s.weightKg} {t('session.kg')} × {s.reps}
+                        {s.weightKg > 0 ? <>{s.weightKg} {t('session.kg')}</> : (isAr ? 'وزن الجسم' : 'Bodyweight')} × {s.reps}
                       </span>
                       {s.setType !== 'normal' && opt && (
                         <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${opt.cls}`}>{isAr ? opt.ar : opt.en}</span>

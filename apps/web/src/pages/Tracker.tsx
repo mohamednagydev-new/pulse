@@ -21,6 +21,7 @@ const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
 
 export default function Tracker() {
   const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
   const qc = useQueryClient();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -67,7 +68,9 @@ export default function Tracker() {
       setText('');
       qc.invalidateQueries({ queryKey: ['tracker-day'] });
     } catch {
-      /* AI may be off; user can add manually below */
+      // AI may be off or the estimate failed — say so and keep their text so
+      // nothing typed is lost; the food list below always works.
+      toast(isAr ? 'معرفناش نقدّرها — جرّب من قايمة الأكل' : "Couldn't estimate that — try the food list", 'error');
     } finally {
       setBusy(false);
     }
@@ -84,7 +87,12 @@ export default function Tracker() {
 
   const totals = data?.totals ?? { calories: 0, protein: 0, carbs: 0, fat: 0 };
   const goals = data?.goals ?? {};
-  const pct = goals.calories ? Math.min(100, Math.round((totals.calories / goals.calories) * 100)) : 0;
+  // Honest bar: fill still caps at 100%, but the color tells the truth —
+  // green under target, amber a little over (to 115%), red past that.
+  const rawPct = goals.calories ? Math.round((totals.calories / goals.calories) * 100) : 0;
+  const pct = Math.min(100, rawPct);
+  const overBy = goals.calories ? Math.max(0, Math.round(totals.calories - goals.calories)) : 0;
+  const barTone = rawPct > 115 ? 'bg-red-500' : rawPct >= 100 ? 'bg-amber-500' : 'bg-brand-green';
 
   return (
     <div className="relative min-h-screen overflow-x-hidden pb-10">
@@ -116,14 +124,21 @@ export default function Tracker() {
           </div>
         </div>
         {goals.calories ? (
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${pct}%` }}
-              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-              className="h-full rounded-full bg-brand-green"
-            />
-          </div>
+          <>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+                className={`h-full rounded-full ${barTone}`}
+              />
+            </div>
+            {overBy > 0 && (
+              <p className={`mt-1.5 text-end text-[11px] font-bold ${rawPct > 115 ? 'text-red-500' : 'text-amber-600'}`}>
+                {isAr ? `+${overBy} زيادة` : `+${overBy} over`}
+              </p>
+            )}
+          </>
         ) : null}
       </motion.div>
 
