@@ -34,6 +34,8 @@ const USER_ROW_SELECT = {
   createdAt: true,
   lastSeenAt: true,
   lastActiveOn: true,
+  bannedAt: true,
+  banReason: true,
   _count: { select: { pushSubs: true } },
 } as const;
 
@@ -48,14 +50,27 @@ function userListWhere(q: Record<string, unknown>) {
   if (role === 'admin') and.push({ role: 'ADMIN' });
   if (role === 'user') and.push({ role: 'USER' });
   if (String(q.coach ?? '') === '1') and.push({ isCoach: true });
+  // Any window 1-365 days — presets in the UI, but the API takes arbitrary days.
   const inactive = Number(q.inactive);
-  if (inactive === 7 || inactive === 30) {
+  if (Number.isInteger(inactive) && inactive >= 1 && inactive <= 365) {
     const cutoff = new Date(Date.now() - inactive * 86400000);
     // Never seen (null) only counts as inactive when the account is older than the window.
     and.push({ OR: [{ lastSeenAt: { lt: cutoff } }, { lastSeenAt: null, createdAt: { lt: cutoff } }] });
   }
   if (String(q.joined ?? '') === 'week') {
     and.push({ createdAt: { gte: new Date(Date.now() - 7 * 86400000) } });
+  }
+  if (String(q.banned ?? '') === '1') and.push({ bannedAt: { not: null } });
+  // Retention segments: joined before the window AND seen inside it (retained),
+  // or joined 14+ days ago and quiet for 14+ (churned).
+  const segment = String(q.segment ?? '');
+  if (segment === 'retained7' || segment === 'retained30') {
+    const days = segment === 'retained7' ? 7 : 30;
+    const cutoff = new Date(Date.now() - days * 86400000);
+    and.push({ createdAt: { lt: cutoff }, lastSeenAt: { gte: cutoff } });
+  } else if (segment === 'churned') {
+    const cutoff = new Date(Date.now() - 14 * 86400000);
+    and.push({ createdAt: { lt: cutoff }, OR: [{ lastSeenAt: { lt: cutoff } }, { lastSeenAt: null }] });
   }
   return and.length ? { AND: and } : {};
 }
@@ -104,14 +119,14 @@ adminOpsRouter.get('/users.csv', async (req, res) => {
     const s = v == null ? '' : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const header = 'id,firstName,lastName,email,role,isCoach,coachVerified,level,xp,currentStreak,streakFreezes,joined,lastSeenAt,lastActiveOn,pushSubs';
+  const header = 'id,firstName,lastName,email,role,isCoach,coachVerified,level,xp,currentStreak,streakFreezes,joined,lastSeenAt,lastActiveOn,pushSubs,banned';
   const lines = rows.map((u) =>
     [
       u.id, u.firstName, u.lastName, u.email, u.role,
       u.isCoach ? 1 : 0, u.coachVerified ? 1 : 0,
       u.level, u.xp, u.currentStreak, u.streakFreezes,
       u.createdAt.toISOString(), u.lastSeenAt?.toISOString() ?? '', u.lastActiveOn ?? '',
-      u._count.pushSubs,
+      u._count.pushSubs, u.bannedAt ? 1 : 0,
     ].map(esc).join(','),
   );
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -393,4 +408,27 @@ adminOpsRouter.post('/moderation/post-reports/:postId/delete', async (req, res) 
   }
   await prisma.postReport.updateMany({ where: { postId: req.params.postId, status: 'pending' }, data: { status: 'resolved' } });
   res.json({ ok: true, deleted: Boolean(post) });
+});
+
+/** POST /users/:id/ban {reason?} — toggle suspension. Banning also revokes every
+ *  refresh token, so the account is out within one access-token TTL (~15 min). */
+adminOpsRouter.post('/users/:id/ban', async (req: AuthedRequest, res) => {
+  if (req.params.id === req.userId) return res.status(400).json({ error: "You can't ban yourself" });
+  const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true, role: true, bannedAt: true } });
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  if (target.role === 'ADMIN') return res.status(400).json({ error: 'Demote the admin role first' });
+  if (target.bannedAt) {
+    await prisma.user.update({ where: { id: target.id }, data: { bannedAt: null, banReason: null } });
+    return res.json({ ok: true, banned: false });
+  }
+  const reason = typeof req.body?.reason === 'string' ? req.body.reason.slice(0, 200) : null;
+  await prisma.user.update({ where: { id: target.id }, data: { bannedAt: new Date(), banReason: reason } });
+  await prisma.refreshToken.deleteMany({ where: { userId: target.id } });
+  res.json({ ok: true, banned: true });
+});
+
+/** POST /users/:id/force-logout — revoke every session without banning. */
+adminOpsRouter.post('/users/:id/force-logout', async (req: AuthedRequest, res) => {
+  const gone = await prisma.refreshToken.deleteMany({ where: { userId: req.params.id } });
+  res.json({ ok: true, sessions: gone.count });
 });

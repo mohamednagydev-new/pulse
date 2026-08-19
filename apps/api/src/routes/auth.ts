@@ -94,6 +94,9 @@ authRouter.post('/login', async (req, res) => {
   if (!user || !user.passwordHash || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
+  if (user.bannedAt) {
+    return res.status(403).json({ error: 'This account is suspended. Contact support.' });
+  }
   const { accessToken, refreshToken } = await issueTokensEx(res, user, parsed.data.remember ?? true);
   res.json({ accessToken, user: publicUser(user), ...(isNativeClient(req) ? { refreshToken } : {}) });
 });
@@ -171,6 +174,11 @@ authRouter.post('/refresh', async (req, res) => {
   });
   if (!token || token.expiresAt < new Date()) {
     return res.status(401).json({ error: 'Refresh token expired' });
+  }
+  if (token.user.bannedAt) {
+    // Kill every remaining session — a banned account holds no doors open.
+    await prisma.refreshToken.deleteMany({ where: { userId: token.user.id } });
+    return res.status(403).json({ error: 'This account is suspended. Contact support.' });
   }
   // rotate: delete old, issue new (deleteMany is idempotent under concurrent refreshes)
   await prisma.refreshToken.deleteMany({ where: { id: token.id } });

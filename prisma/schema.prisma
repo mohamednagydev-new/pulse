@@ -82,6 +82,11 @@ model User {
   coachSpecialties String? // JSON array
   coachVerified    Boolean @default(false)
   coachFeatured    Boolean @default(false)
+  /** Suspension: set = the account cannot log in or refresh; reason shown to
+   *  admins only. Ban beats delete for moderation — reversible and auditable. */
+  bannedAt      DateTime?
+  banReason     String?
+
   /** Coach's shareable invite code: /invite/:code lands a trainee pre-connected
    *  as this coach's client (the WhatsApp-funnel killer). Generated on demand. */
   coachInviteCode  String? @unique

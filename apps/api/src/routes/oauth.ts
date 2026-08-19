@@ -131,6 +131,10 @@ oauthRouter.get('/:provider/callback', async (req, res) => {
       }
     }
 
+    if (user.bannedAt) {
+      res.clearCookie('oauth_state', { path: '/' });
+      return res.redirect(`${env.WEB_ORIGIN}/login?oauth=suspended`);
+    }
     const { accessToken, refreshToken } = await issueTokensEx(res, user);
     res.clearCookie('oauth_state', { path: '/' });
     // Native client (Capacitor, `x-client: native`): the cookie is cross-site

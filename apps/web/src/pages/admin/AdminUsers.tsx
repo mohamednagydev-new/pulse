@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowDown, ArrowUp, BadgeCheck, Bell, ChevronLeft, ChevronRight, Download,
-  Search, Shield, Snowflake, Star, Trash2,
+  ArrowDown, ArrowUp, BadgeCheck, Ban, Bell, ChevronLeft, ChevronRight, Download,
+  LogOut, Search, Shield, Snowflake, Star, Trash2,
 } from 'lucide-react';
 import { api, API_BASE, getAccessToken } from '../../lib/api';
 import { Loader } from '../../components/ui';
@@ -29,6 +29,8 @@ export default function AdminUsers() {
   const [coach, setCoach] = useState(false);
   const [inactive, setInactive] = useState('');
   const [joinedWeek, setJoinedWeek] = useState(false);
+  const [segment, setSegment] = useState('');
+  const [bannedOnly, setBannedOnly] = useState(false);
   const [sort, setSort] = useState<Sort>('joined');
   const [dir, setDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
@@ -48,10 +50,12 @@ export default function AdminUsers() {
     if (coach) p.set('coach', '1');
     if (inactive) p.set('inactive', inactive);
     if (joinedWeek) p.set('joined', 'week');
+    if (segment) p.set('segment', segment);
+    if (bannedOnly) p.set('banned', '1');
     p.set('sort', sort);
     p.set('dir', dir);
     return p;
-  }, [q, role, coach, inactive, joinedWeek, sort, dir]);
+  }, [q, role, coach, inactive, joinedWeek, segment, bannedOnly, sort, dir]);
 
   const { data, isLoading } = useQuery({
     queryKey: [...KEY, qs.toString(), page],
@@ -77,6 +81,16 @@ export default function AdminUsers() {
     mutationFn: (u: any) => api.post(`/api/admin-ops/users/${u.id}/freeze`),
     onSuccess: (r: any) => { toast(`Freeze granted (now ${r.streakFreezes}/3) ❄`, 'success'); invalidate(); },
     onError: (e: any) => toast(e?.message ?? 'Freeze failed', 'error'),
+  });
+  const toggleBan = useMutation({
+    mutationFn: (u: any) => api.post(`/api/admin-ops/users/${u.id}/ban`, {}),
+    onSuccess: (r: any) => { toast(r.banned ? 'Account suspended 🚫' : 'Suspension lifted', 'success'); invalidate(); },
+    onError: (e: any) => toast(e?.message ?? 'Ban failed', 'error'),
+  });
+  const forceLogout = useMutation({
+    mutationFn: (u: any) => api.post(`/api/admin-ops/users/${u.id}/force-logout`, {}),
+    onSuccess: (r: any) => toast(`Signed out of ${r.sessions} session${r.sessions === 1 ? '' : 's'}`, 'success'),
+    onError: (e: any) => toast(e?.message ?? 'Failed', 'error'),
   });
 
   // Fetch with the auth header, then hand the browser a blob — a plain <a href>
@@ -151,9 +165,23 @@ export default function AdminUsers() {
         </select>
         <select className="input-field w-auto" value={inactive} onChange={(e) => { setInactive(e.target.value); setPage(1); }}>
           <option value="">Any activity</option>
+          <option value="3">Inactive 3+ days</option>
           <option value="7">Inactive 7+ days</option>
+          <option value="14">Inactive 14+ days</option>
           <option value="30">Inactive 30+ days</option>
+          <option value="60">Inactive 60+ days</option>
+          <option value="90">Inactive 90+ days</option>
         </select>
+        <select className="input-field w-auto" value={segment} onChange={(e) => { setSegment(e.target.value); setPage(1); }}>
+          <option value="">All segments</option>
+          <option value="retained7">Retained 7d+</option>
+          <option value="retained30">Retained 30d+</option>
+          <option value="churned">Churned (14d)</option>
+        </select>
+        <label className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold ${bannedOnly ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+          <input type="checkbox" className="hidden" checked={bannedOnly} onChange={(e) => { setBannedOnly(e.target.checked); setPage(1); }} />
+          Banned
+        </label>
         <label className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold ${coach ? 'bg-ink text-white' : 'bg-gray-100 text-gray-500'}`}>
           <input type="checkbox" className="hidden" checked={coach} onChange={(e) => { setCoach(e.target.checked); setPage(1); }} />
           Coaches only
@@ -202,6 +230,11 @@ export default function AdminUsers() {
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${u.role === 'ADMIN' ? 'bg-brand-pink/10 text-brand-pink' : u.isCoach ? 'bg-blue-50 text-brand-blue' : 'bg-gray-100 text-gray-500'}`}>
                       {u.role === 'ADMIN' ? 'ADMIN' : u.isCoach ? 'COACH' : 'USER'}
                     </span>
+                    {u.bannedAt && (
+                      <span className="ms-1 rounded-full bg-red-100 px-2 py-1 text-[10px] font-bold text-red-600" title={u.banReason ?? undefined}>
+                        BANNED
+                      </span>
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-xs text-gray-500">{new Date(u.createdAt).toLocaleDateString()}</td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-xs text-gray-500">{u.lastSeenAt ? timeAgo(u.lastSeenAt) : (u.lastActiveOn ?? '—')}</td>
@@ -235,6 +268,18 @@ export default function AdminUsers() {
                         onClick={() => freeze.mutate(u)}
                       >
                         <Snowflake size={15} />
+                      </RowBtn>
+                      {u.role !== 'ADMIN' && (
+                        <RowBtn
+                          title={u.bannedAt ? 'Lift suspension' : 'Suspend account (blocks login)'}
+                          tone={u.bannedAt ? 'text-red-600' : 'text-gray-400'}
+                          onClick={() => toggleBan.mutate(u)}
+                        >
+                          <Ban size={15} />
+                        </RowBtn>
+                      )}
+                      <RowBtn title="Force logout (revoke all sessions)" tone="text-gray-400" onClick={() => forceLogout.mutate(u)}>
+                        <LogOut size={15} />
                       </RowBtn>
                       <RowBtn title="Delete user" tone="text-red-400" onClick={() => setDeleteUser(u)}>
                         <Trash2 size={15} />
