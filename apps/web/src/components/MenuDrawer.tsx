@@ -6,7 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu, X, CalendarDays, Settings, Shield, LogOut, Moon, Sun, MessagesSquare,
   ChevronDown, Award, UserPlus, ShoppingBag, HelpCircle, Ticket, Building2,
-  Bot, Gem, Salad, Handshake, type LucideIcon,
+  Bot, Gem, Salad, Handshake, Dumbbell, Users, Flame, HeartHandshake,
+  TrendingUp, Medal, HeartPulse, ClipboardList, ScanLine, ListChecks, Music,
+  UtensilsCrossed, Trophy, Clapperboard, Crown, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
@@ -22,6 +24,49 @@ type Group = { en: string; ar: string; items: Item[] };
  *  screens into the Food tab + Profile + Home quick actions, social extras
  *  into Home/Community — the drawer keeps only what has no tab of its own. */
 const GROUPS: Group[] = [
+  {
+    // The bottom tabs only render on the five main screens — from every inner
+    // screen this drawer IS the navigation. And the owner wants it to double
+    // as the feature showcase: everything the app offers, grouped, one
+    // accordion open at a time so it stays compact.
+    en: 'Main', ar: 'الأساسية',
+    items: [
+      { to: '/programs', en: 'Train', ar: 'التمرين', icon: Dumbbell },
+      { to: '/community', en: 'Community', ar: 'المجتمع', icon: Users },
+      { to: '/tracker', en: 'Food', ar: 'الأكل', icon: Flame },
+      { to: '/wellness', en: 'Wellness library', ar: 'مكتبة العافية', icon: HeartPulse },
+      { to: '/buddies', en: 'Buddies', ar: 'أصحابي', icon: HeartHandshake },
+      { to: '/progress', en: 'Progress', ar: 'تقدمي', icon: TrendingUp },
+      { to: '/achievements', en: 'Challenges', ar: 'التحديات', icon: Medal },
+    ],
+  },
+  {
+    en: 'My training', ar: 'تمريني',
+    items: [
+      { to: '/my-plan', en: 'My plan', ar: 'خطتي', icon: ClipboardList },
+      { to: '/schedule', en: 'Schedule', ar: 'جدولي', icon: CalendarDays },
+      { to: '/exercises', en: 'Muscle map', ar: 'خريطة العضلات', icon: ScanLine },
+      { to: '/routines', en: 'My routines', ar: 'روتيناتي', icon: ListChecks },
+      { to: '/group', en: 'Group live', ar: 'تمرين جماعي', icon: Users },
+      { to: '/music', en: 'My music', ar: 'مزيكتي', icon: Music },
+    ],
+  },
+  {
+    en: 'My food', ar: 'أكلي',
+    items: [
+      { to: '/meals', en: 'Meal plan', ar: 'خطة الأكل', icon: UtensilsCrossed },
+      { to: '/diet-programs', en: 'Diet programs', ar: 'برامج الدايت', icon: Salad },
+      { to: '/wellness/kitchen', en: 'Healthy kitchen', ar: 'مطبخ العافية', icon: HeartPulse },
+    ],
+  },
+  {
+    en: 'Compete', ar: 'نافس',
+    items: [
+      { to: '/leagues', en: 'League', ar: 'الدوري', icon: Trophy },
+      { to: '/champions', en: 'Champions', ar: 'الأبطال', icon: Crown },
+      { to: '/reels', en: 'Reels', ar: 'ريلز', icon: Clapperboard },
+    ],
+  },
   {
     en: 'Assistant', ar: 'المساعد',
     items: [
