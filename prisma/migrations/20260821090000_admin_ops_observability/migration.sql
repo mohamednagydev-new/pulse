@@ -1,0 +1,12 @@
+CREATE TABLE "AdminAction" ("id" TEXT NOT NULL PRIMARY KEY, "adminId" TEXT NOT NULL, "action" TEXT NOT NULL, "targetType" TEXT, "targetId" TEXT, "detail" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "AdminAction_createdAt_idx" ON "AdminAction"("createdAt");
+CREATE INDEX "AdminAction_adminId_idx" ON "AdminAction"("adminId");
+CREATE TABLE "JobLog" ("id" TEXT NOT NULL PRIMARY KEY, "name" TEXT NOT NULL, "ok" BOOLEAN NOT NULL DEFAULT true, "note" TEXT, "manual" BOOLEAN NOT NULL DEFAULT false, "ranAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "JobLog_name_ranAt_idx" ON "JobLog"("name", "ranAt");
+CREATE INDEX "JobLog_ranAt_idx" ON "JobLog"("ranAt");
+CREATE TABLE "IntegrityEvent" ("id" TEXT NOT NULL PRIMARY KEY, "userId" TEXT NOT NULL, "kind" TEXT NOT NULL, "detail" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "IntegrityEvent_userId_createdAt_idx" ON "IntegrityEvent"("userId", "createdAt");
+CREATE INDEX "IntegrityEvent_createdAt_idx" ON "IntegrityEvent"("createdAt");
+CREATE TABLE "ContentIssue" ("id" TEXT NOT NULL PRIMARY KEY, "kind" TEXT NOT NULL, "refId" TEXT NOT NULL, "title" TEXT, "url" TEXT, "status" TEXT NOT NULL DEFAULT 'open', "note" TEXT, "detectedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE UNIQUE INDEX "ContentIssue_kind_refId_key" ON "ContentIssue"("kind", "refId");
+CREATE INDEX "ContentIssue_status_idx" ON "ContentIssue"("status");

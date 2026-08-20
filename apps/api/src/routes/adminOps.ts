@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requireAuth, requireAdmin, type AuthedRequest } from '../middleware/auth';
 import { notifyUser } from './push';
+import { audit } from '../lib/audit';
 
 // Admin operations: user management actions, unified moderation queue, and
 // per-module controls added by the admin overhaul. Separate file from admin.ts
@@ -203,6 +204,7 @@ adminOpsRouter.post('/users/:id/role', async (req: AuthedRequest, res) => {
       data: { role: parsed.data.role },
       select: { id: true, role: true },
     });
+    audit(req.userId!, 'user.role', { targetType: 'user', targetId: user.id, detail: `Role set to ${parsed.data.role}` });
     res.json(user);
   } catch {
     res.status(404).json({ error: 'Not found' });
@@ -210,7 +212,7 @@ adminOpsRouter.post('/users/:id/role', async (req: AuthedRequest, res) => {
 });
 
 /** POST /api/admin-ops/users/:id/coach-verified {verified?} — toggle the badge (coaches only). */
-adminOpsRouter.post('/users/:id/coach-verified', async (req, res) => {
+adminOpsRouter.post('/users/:id/coach-verified', async (req: AuthedRequest, res) => {
   const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { isCoach: true, coachVerified: true } });
   if (!target) return res.status(404).json({ error: 'Not found' });
   if (!target.isCoach) return res.status(400).json({ error: 'Not a coach' });
@@ -220,21 +222,27 @@ adminOpsRouter.post('/users/:id/coach-verified', async (req, res) => {
     data: { coachVerified: verified },
     select: { id: true, coachVerified: true },
   });
+  audit(req.userId!, 'user.coach-verify', {
+    targetType: 'user',
+    targetId: user.id,
+    detail: verified ? 'Coach badge verified' : 'Coach badge removed',
+  });
   res.json(user);
 });
 
 /** POST /api/admin-ops/users/:id/push {title, body} — direct push + in-app notification. */
-adminOpsRouter.post('/users/:id/push', async (req, res) => {
+adminOpsRouter.post('/users/:id/push', async (req: AuthedRequest, res) => {
   const parsed = z.object({ title: z.string().min(1).max(80), body: z.string().min(1).max(300) }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Title and body are required' });
   const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true } });
   if (!target) return res.status(404).json({ error: 'Not found' });
   await notifyUser(target.id, { title: parsed.data.title, body: parsed.data.body, url: '/', type: 'general' });
+  audit(req.userId!, 'user.push', { targetType: 'user', targetId: target.id, detail: `Sent push "${parsed.data.title}"` });
   res.json({ ok: true });
 });
 
 /** POST /api/admin-ops/users/:id/freeze — grant one streak freeze (max 3). */
-adminOpsRouter.post('/users/:id/freeze', async (req, res) => {
+adminOpsRouter.post('/users/:id/freeze', async (req: AuthedRequest, res) => {
   const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { streakFreezes: true } });
   if (!target) return res.status(404).json({ error: 'Not found' });
   if (target.streakFreezes >= 3) return res.status(400).json({ error: 'Already at the maximum (3 freezes)' });
@@ -243,6 +251,7 @@ adminOpsRouter.post('/users/:id/freeze', async (req, res) => {
     data: { streakFreezes: { increment: 1 } },
     select: { id: true, streakFreezes: true },
   });
+  audit(req.userId!, 'user.freeze', { targetType: 'user', targetId: user.id, detail: `Granted a streak freeze (now ${user.streakFreezes})` });
   res.json(user);
 });
 
@@ -306,6 +315,7 @@ adminOpsRouter.delete('/users/:id', async (req: AuthedRequest, res) => {
 
   await prisma.user.delete({ where: { id } });
   console.log(`[admin-ops] ADMIN ${req.userId} deleted user ${id} (${target.email})`);
+  audit(req.userId!, 'user.delete', { targetType: 'user', targetId: id, detail: `Deleted account ${target.email}` });
   res.json({ ok: true });
 });
 
@@ -326,6 +336,7 @@ adminOpsRouter.post('/moderation/posts/:id/delete-warn', async (req: AuthedReque
   if (!post) return res.status(404).json({ error: 'Not found' });
   await prisma.feedPost.delete({ where: { id: post.id } });
   await notifyUser(post.userId, { ...WARN, type: 'general' }).catch(() => {});
+  audit(req.userId!, 'moderation.post-delete', { targetType: 'post', targetId: post.id, detail: 'Deleted post and warned its author' });
   res.json({ ok: true });
 });
 
@@ -335,6 +346,7 @@ adminOpsRouter.post('/moderation/challenge-messages/:id/delete-warn', async (req
   if (!msg) return res.status(404).json({ error: 'Not found' });
   await prisma.challengeMessage.delete({ where: { id: msg.id } });
   if (msg.userId) await notifyUser(msg.userId, { ...WARN, type: 'general' }).catch(() => {});
+  audit(req.userId!, 'moderation.message-delete', { targetType: 'post', targetId: msg.id, detail: 'Deleted challenge message and warned its author' });
   res.json({ ok: true });
 });
 
@@ -355,6 +367,11 @@ adminOpsRouter.post('/moderation/chat-reports/:id/delete-thread', async (req: Au
   }
   await prisma.chatReport.updateMany({ where: { threadId: report.threadId, status: 'open' }, data: { status: 'resolved' } });
   console.log(`[admin-ops] ADMIN ${req.userId} deleted DM thread ${report.threadId} via report ${report.id}`);
+  audit(req.userId!, 'moderation.chat-thread-delete', {
+    targetType: 'post',
+    targetId: report.threadId,
+    detail: `Deleted DM thread via report ${report.id}${req.body?.warn ? ' and warned the reported user' : ''}`,
+  });
   res.json({ ok: true });
 });
 
@@ -395,13 +412,14 @@ adminOpsRouter.get('/moderation/post-reports', async (_req, res) => {
 });
 
 /** Dismiss all pending reports on a post — the content stays up. */
-adminOpsRouter.post('/moderation/post-reports/:postId/dismiss', async (req, res) => {
+adminOpsRouter.post('/moderation/post-reports/:postId/dismiss', async (req: AuthedRequest, res) => {
   await prisma.postReport.updateMany({ where: { postId: req.params.postId, status: 'pending' }, data: { status: 'resolved' } });
+  audit(req.userId!, 'moderation.report-dismiss', { targetType: 'post', targetId: req.params.postId, detail: 'Dismissed pending reports — post stays up' });
   res.json({ ok: true });
 });
 
 /** Delete a reported post (optionally warning its author) and resolve its reports. */
-adminOpsRouter.post('/moderation/post-reports/:postId/delete', async (req, res) => {
+adminOpsRouter.post('/moderation/post-reports/:postId/delete', async (req: AuthedRequest, res) => {
   const warn = Boolean(req.body?.warn);
   const post = await prisma.feedPost.findUnique({ where: { id: req.params.postId }, select: { id: true, userId: true } });
   if (post) {
@@ -418,6 +436,13 @@ adminOpsRouter.post('/moderation/post-reports/:postId/delete', async (req, res) 
     }
   }
   await prisma.postReport.updateMany({ where: { postId: req.params.postId, status: 'pending' }, data: { status: 'resolved' } });
+  if (post) {
+    audit(req.userId!, 'moderation.post-delete', {
+      targetType: 'post',
+      targetId: post.id,
+      detail: `Deleted reported post${warn ? ' and warned its author' : ''}`,
+    });
+  }
   res.json({ ok: true, deleted: Boolean(post) });
 });
 
@@ -430,17 +455,20 @@ adminOpsRouter.post('/users/:id/ban', async (req: AuthedRequest, res) => {
   if (target.role === 'ADMIN') return res.status(400).json({ error: 'Demote the admin role first' });
   if (target.bannedAt) {
     await prisma.user.update({ where: { id: target.id }, data: { bannedAt: null, banReason: null } });
+    audit(req.userId!, 'user.unban', { targetType: 'user', targetId: target.id, detail: 'Lifted suspension' });
     return res.json({ ok: true, banned: false });
   }
   const reason = typeof req.body?.reason === 'string' ? req.body.reason.slice(0, 200) : null;
   await prisma.user.update({ where: { id: target.id }, data: { bannedAt: new Date(), banReason: reason } });
   await prisma.refreshToken.deleteMany({ where: { userId: target.id } });
+  audit(req.userId!, 'user.ban', { targetType: 'user', targetId: target.id, detail: `Banned — ${reason || 'no reason given'}` });
   res.json({ ok: true, banned: true });
 });
 
 /** POST /users/:id/force-logout — revoke every session without banning. */
 adminOpsRouter.post('/users/:id/force-logout', async (req: AuthedRequest, res) => {
   const gone = await prisma.refreshToken.deleteMany({ where: { userId: req.params.id } });
+  audit(req.userId!, 'user.force-logout', { targetType: 'user', targetId: req.params.id, detail: `Revoked ${gone.count} session(s)` });
   res.json({ ok: true, sessions: gone.count });
 });
 
@@ -489,5 +517,10 @@ adminOpsRouter.post('/group-sessions/:id/timer', async (req: AuthedRequest, res)
   if (!session) return res.status(404).json({ error: 'Not found' });
   const { setGroupTimer } = await import('../lib/realtime');
   setGroupTimer(session.id, parsed.data.action, parsed.data.durationSec ?? 60, req.userId!);
+  audit(req.userId!, 'session.timer', {
+    targetType: 'session',
+    targetId: session.id,
+    detail: parsed.data.action === 'start' ? `Started room timer (${parsed.data.durationSec ?? 60}s)` : 'Stopped room timer',
+  });
   res.json({ ok: true });
 });

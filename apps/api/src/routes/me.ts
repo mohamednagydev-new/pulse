@@ -6,6 +6,7 @@ import { AuthedRequest, requireAuth } from '../middleware/auth';
 import { touchStreak } from '../lib/gamify';
 import { awardXp, createFeedPost, bumpChallenges, XP_PER_LESSON } from '../lib/social';
 import { signMedia } from '../lib/mediaSign';
+import { flagIntegrity } from '../lib/integrity';
 import { notifyUser } from './push';
 import { env } from '../env';
 
@@ -258,6 +259,7 @@ meRouter.post('/completions', async (req: AuthedRequest, res) => {
       select: { completedAt: true },
     });
     if (last && Date.now() - last.completedAt.getTime() < MIN_GAP_MS) {
+      flagIntegrity(req.userId!, 'lesson-pace');
       return res.status(429).json({ error: 'Slow down — finish this one first 💪' });
     }
     const dayStart = new Date();
@@ -266,6 +268,7 @@ meRouter.post('/completions', async (req: AuthedRequest, res) => {
       where: { userId: req.userId!, completedAt: { gte: dayStart } },
     });
     if (today >= DAILY_CAP) {
+      flagIntegrity(req.userId!, 'lesson-cap');
       return res.status(429).json({ error: 'Daily limit reached — rest is part of the program 😴' });
     }
   }
@@ -305,7 +308,10 @@ meRouter.post('/workout-done', async (req: AuthedRequest, res) => {
   const recent = await prisma.xpEvent.findFirst({
     where: { userId: req.userId!, reason: 'workout-session', createdAt: { gte: new Date(Date.now() - 8 * 60 * 1000) } },
   });
-  if (recent) return res.json({ ok: true, throttled: true });
+  if (recent) {
+    flagIntegrity(req.userId!, 'workout-throttle');
+    return res.json({ ok: true, throttled: true });
+  }
   await awardXp(req.userId!, 60, 'workout-session');
   await createFeedPost(req.userId!, 'completion', `Crushed a workout${name ? ` — ${name}` : ''} 💪`, 'workout', undefined, {
     textAr: `كسّر تمرين${name ? ` — ${name}` : ''} 💪`,

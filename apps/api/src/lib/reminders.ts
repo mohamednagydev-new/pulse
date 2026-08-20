@@ -6,6 +6,7 @@ import { ensureWeeklyChallenge, postDailyChallengePrompts } from './weekly';
 import { settleStaleRooms, promotionCliffhangers } from './leagues';
 import { nextCheckDate } from './coach';
 import { dayString, daysAgoStr, localHour, localDow, startOfDayTz } from './time';
+import { runLogged, logJobFailure } from './jobslog';
 
 /** Hourly reminder engine. In-app notifications always persist (via notifyUser);
  *  push delivery additionally requires VAPID. */
@@ -69,22 +70,41 @@ async function runCheck() {
   const day = dayString(now);
 
   // Monthly season rotation — idempotent, cheap (one indexed query when already created).
-  await ensureCurrentSeason().catch((e) => console.warn('[seasons]', e?.message));
+  // Hourly no-ops are not logged (noise); failures land in the JobLog.
+  await ensureCurrentSeason().catch((e) => {
+    console.warn('[seasons]', e?.message);
+    logJobFailure('season', e);
+  });
 
   // Weekly challenge rotation (Saturdays, self-healing any day) + last week's podium.
-  await ensureWeeklyChallenge().catch((e) => console.warn('[weekly]', e?.message));
+  await ensureWeeklyChallenge().catch((e) => {
+    console.warn('[weekly]', e?.message);
+    logJobFailure('weekly-challenge', e);
+  });
 
   // Daily 10:00 — a coach conversation-starter in every open official challenge
   // room, so the shared spaces never read as abandoned.
   if (hour === 10 && (await claimJob(`chalprompt:${day}`))) {
-    await postDailyChallengePrompts().catch((e) => console.warn('[weekly-prompt]', e?.message));
+    await runLogged('daily-prompts', false, async () => {
+      await postDailyChallengePrompts();
+    });
   }
 
   // Daily 06:00 — pull new reels from the configured channels (REELS_CHANNELS)
   // into the review inbox. No env → no-op.
   if (hour === 6 && (await claimJob(`reelspull:${day}`))) {
-    const { pullReels } = await import('./reelsPull');
-    await pullReels().catch((e) => console.warn('[reels-pull]', e?.message));
+    await runLogged('reels-pull', false, async () => {
+      const { pullReels } = await import('./reelsPull');
+      const r = await pullReels();
+      return `added ${r.added}, skipped ${r.skipped}`;
+    });
+  }
+
+  // Monday 05:00 — weekly video health sweep: probe curated library links and
+  // flag/park anything that has gone dead since import.
+  if (localDow(now) === 1 && hour === 5 && (await claimJob(`videosweep:${day}`))) {
+    const { sweepVideos } = await import('./videoHealth');
+    await runLogged('video-sweep', false, sweepVideos);
   }
 
   // Live-session reminders: joining a Thursday-7pm session used to produce
@@ -241,7 +261,7 @@ async function runCheck() {
     // Keep the WAL sidecar from growing unbounded between backups: fold it
     // back into the main file once a night, right before the copy.
     await prisma.$executeRawUnsafe('PRAGMA wal_checkpoint(TRUNCATE)').catch(() => {});
-    if (await claimJob(`backup:${day}`)) await backupDatabase(day);
+    if (await claimJob(`backup:${day}`)) await runLogged('backup', false, () => backupDatabase(day));
   }
 
   // ---- Diet-journey nudges: the reminder engine was workout-only; a user on
@@ -372,15 +392,17 @@ async function runCheck() {
   // Friday 17:00 — the weekly win-back email digest for lapsed users (the ONE
   // marketing email; everything else stays push/in-app by design).
   if (localDow(now) === 5 && hour === 17 && (await claimJob(`digest:${day}`))) {
-    const { sendWeeklyDigest } = await import('./digest');
-    await sendWeeklyDigest().catch((e) => console.warn('[digest]', e?.message));
+    await runLogged('digest', false, async () => {
+      const { sendWeeklyDigest } = await import('./digest');
+      await sendWeeklyDigest();
+    });
   }
 
   // Saturday 12:00 — auto-post last week's league promotions to the Facebook
   // Page (the fixed weekly appointment from LAUNCH-CAMPAIGNS.md, on autopilot).
   // Requires FB_PAGE_ID/FB_PAGE_TOKEN in .env; silently skipped otherwise.
   if (localDow(now) === 6 && hour === 12 && (await claimJob(`fbleague:${day}`))) {
-    await postLeaguePromotions().catch((e) => console.warn('[fb-league]', e?.message));
+    await runLogged('fb-league', false, postLeaguePromotions);
   }
 
   // Daily 09:00 — top up the recurring Coach PULSE group sessions for the next
@@ -389,9 +411,15 @@ async function runCheck() {
   // any hour where NOTHING upcoming exists (first boot after deploy) — the
   // function is idempotent, so the extra path cannot double-book.
   if (hour === 9 && (await claimJob(`groupsessions:${day}`))) {
-    await ensureGroupSessions().catch((e) => console.warn('[groups]', e?.message));
+    await ensureGroupSessions().catch((e) => {
+      console.warn('[groups]', e?.message);
+      logJobFailure('group-sessions', e);
+    });
   } else if ((await prisma.groupSession.count({ where: { scheduledAt: { gte: now } } })) === 0) {
-    await ensureGroupSessions().catch((e) => console.warn('[groups]', e?.message));
+    await ensureGroupSessions().catch((e) => {
+      console.warn('[groups]', e?.message);
+      logJobFailure('group-sessions', e);
+    });
   }
 
   // Streak rescue — 20:00: trained yesterday, nothing today, streak worth
@@ -493,7 +521,7 @@ const GROUP_SLOTS = [
   },
 ];
 
-async function ensureGroupSessions() {
+export async function ensureGroupSessions() {
   const coach = await prisma.user.findUnique({
     where: { email: 'coach@pulse.geddo.online' },
     select: { id: true },
@@ -538,7 +566,7 @@ async function ensureGroupSessions() {
  * Lands in BACKUP_DIR (default <repo>/backups); keeps the newest 14. Point
  * BACKUP_DIR at a mounted/synced drive to make it off-site.
  */
-async function backupDatabase(day: string) {
+export async function backupDatabase(day: string): Promise<string> {
   const fs = await import('fs');
   const path = await import('path');
   try {
@@ -554,8 +582,11 @@ async function backupDatabase(day: string) {
     const old = fs.readdirSync(dir).filter((f) => /^pulse-\d{4}-\d{2}-\d{2}\.db$/.test(f)).sort().slice(0, -keep);
     for (const f of old) fs.unlinkSync(path.join(dir, f));
     console.log(`[backup] wrote ${target}`);
+    const mb = (fs.statSync(target).size / 1048576).toFixed(1);
+    return `wrote pulse-${day}.db (${mb} MB)`;
   } catch (e) {
     console.error('[backup] FAILED — the database has no fresh copy tonight:', (e as Error)?.message);
+    throw e; // surfaced by runLogged as ok:false in the JobLog
   }
 }
 
@@ -564,10 +595,10 @@ async function backupDatabase(day: string) {
  * First names only (never full identity), top 6, plus totals — recognition
  * content that users screenshot and reshare themselves.
  */
-async function postLeaguePromotions() {
+async function postLeaguePromotions(): Promise<string | void> {
   const pageId = process.env.FB_PAGE_ID;
   const token = process.env.FB_PAGE_TOKEN;
-  if (!pageId || !token) return;
+  if (!pageId || !token) return 'skipped — FB_PAGE_ID/FB_PAGE_TOKEN not configured';
 
   const { weekKey } = await import('./time');
   const lastWeek = weekKey(new Date(Date.now() - 7 * 86_400_000));
@@ -576,7 +607,7 @@ async function postLeaguePromotions() {
     include: { user: { select: { firstName: true } } },
     take: 200,
   });
-  if (promoted.length === 0) return; // quiet week — no post beats an empty post
+  if (promoted.length === 0) return 'no promotions last week — nothing posted'; // quiet week — no post beats an empty post
 
   const names = promoted.slice(0, 6).map((p) => p.user.firstName).filter(Boolean);
   const more = promoted.length - names.length;
@@ -593,8 +624,12 @@ async function postLeaguePromotions() {
     body: new URLSearchParams({ message, link: `${env.WEB_ORIGIN}/leagues`, access_token: token }),
   });
   const json: any = await res.json().catch(() => ({}));
-  if (json.id) console.log(`[fb-league] posted ${json.id} (${promoted.length} promotions)`);
-  else console.warn('[fb-league] post failed:', JSON.stringify(json.error ?? json));
+  if (json.id) {
+    console.log(`[fb-league] posted ${json.id} (${promoted.length} promotions)`);
+    return `posted ${json.id} (${promoted.length} promotions)`;
+  }
+  console.warn('[fb-league] post failed:', JSON.stringify(json.error ?? json));
+  throw new Error(`FB post failed: ${JSON.stringify(json.error ?? json).slice(0, 300)}`);
 }
 
 /** "Your week: 4 workouts, 2 PRs, streak 12 🔥" — sent to everyone active in the last 14 days. */

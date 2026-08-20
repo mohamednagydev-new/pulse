@@ -7,6 +7,7 @@ import { emitToUser } from '../lib/realtime';
 import { notifyUser } from './push';
 import { enrichExercises, userLimitations } from '../lib/enrich';
 import { preferredGender } from '../lib/genderMedia';
+import { flagIntegrity } from '../lib/integrity';
 
 export const coachRouter = Router();
 coachRouter.use(requireAuth);
@@ -205,6 +206,7 @@ coachRouter.post('/programs/:id/day-done', async (req: AuthedRequest, res) => {
     // blocks "complete complete complete"-ing a 30-day program in five minutes.
     const daysElapsed = Math.floor((Date.now() - row.startedAt.getTime()) / 86_400_000);
     if (set.size >= daysElapsed + 1) {
+      flagIntegrity(req.userId!, 'program-day', `program ${req.params.id}`);
       return res.status(429).json({ error: 'One program day per day — come back tomorrow 💪' });
     }
   }

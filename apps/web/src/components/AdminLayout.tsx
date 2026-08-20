@@ -3,7 +3,8 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Dumbbell, UtensilsCrossed, Newspaper, Clapperboard, Users, Award,
   MessagesSquare, Shield, Store, Ticket, CalendarDays, Building2, Mail, BarChart3,
-  Upload, Search, ExternalLink, Menu, X, Trophy, Import, ClipboardList, Radio, type LucideIcon,
+  Upload, Search, ExternalLink, Menu, X, Trophy, Import, ClipboardList, Radio,
+  Megaphone, ShieldAlert, VideoOff, Activity, ScrollText, type LucideIcon,
 } from 'lucide-react';
 
 /**
@@ -35,6 +36,7 @@ const NAV: NavGroup[] = [
       { to: '/admin/recipes', label: 'Recipes', icon: UtensilsCrossed },
       { to: '/admin/articles', label: 'Articles', icon: Newspaper },
       { to: '/admin/reels', label: 'Reels', icon: Clapperboard },
+      { to: '/admin/video-health', label: 'Video health', icon: VideoOff },
       { to: '/admin/video-import', label: 'Video import', icon: Import },
       { to: '/admin/upload', label: 'Media upload', icon: Upload },
     ],
@@ -44,7 +46,9 @@ const NAV: NavGroup[] = [
     items: [
       { to: '/admin/users', label: 'Users', icon: Users },
       { to: '/admin/sessions', label: 'Live sessions', icon: Radio },
+      { to: '/admin/broadcast', label: 'Broadcast', icon: Megaphone },
       { to: '/admin/moderation', label: 'Moderation', icon: Shield },
+      { to: '/admin/integrity', label: 'Integrity', icon: ShieldAlert },
       { to: '/admin/support', label: 'Support', icon: MessagesSquare },
       { to: '/admin/posts', label: 'Community posts', icon: Newspaper },
     ],
@@ -64,6 +68,13 @@ const NAV: NavGroup[] = [
       { to: '/admin/banners', label: 'Banners', icon: Ticket },
       { to: '/admin/events', label: 'Events', icon: CalendarDays },
       { to: '/admin/leads', label: 'Leads', icon: Store },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { to: '/admin/system', label: 'Jobs & health', icon: Activity },
+      { to: '/admin/audit', label: 'Audit log', icon: ScrollText },
     ],
   },
 ];

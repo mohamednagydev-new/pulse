@@ -1613,3 +1613,60 @@ model PostReport {
   @@unique([postId, reporterId])
   @@index([status])
 }
+
+// ---------------- Admin operations (audit / jobs / integrity / content health) ----------------
+
+/** Append-only trail of admin panel actions — who did what, when. */
+model AdminAction {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String // ban | unban | force-logout | delete-user | role-change | verify-coach | broadcast | job-run | ...
+  targetType String? // user | post | reel | session | job | broadcast | lesson
+  targetId   String?
+  detail     String? // human-readable context ("reason: spam", "timer start 60s")
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([adminId])
+}
+
+/** Execution history for scheduled jobs (JobRun above is the once-per-slot
+ *  claim lock; this is the observable "what ran, did it work" record). */
+model JobLog {
+  id     String   @id @default(cuid())
+  name   String // weekly-challenge | season | group-sessions | reels-pull | backup | digest | video-sweep | broadcast
+  ok     Boolean  @default(true)
+  note   String? // "created 3", error message, counts
+  manual Boolean  @default(false)
+  ranAt  DateTime @default(now())
+
+  @@index([name, ranAt])
+  @@index([ranAt])
+}
+
+/** Anti-cheat signals — written when a pace guard trips or an anomaly is detected. */
+model IntegrityEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String // lesson-pace | lesson-cap | program-day | workout-throttle | xp-spike
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+/** A content item whose embedded video no longer plays (weekly sweep findings). */
+model ContentIssue {
+  id         String   @id @default(cuid())
+  kind       String // lesson-video | reel-video
+  refId      String // Lesson id or CuratedReel id
+  title      String?
+  url        String?
+  status     String   @default("open") // open | resolved | ignored
+  note       String? // oEmbed error detail
+  detectedAt DateTime @default(now())
+
+  @@unique([kind, refId])
+  @@index([status])
+}
