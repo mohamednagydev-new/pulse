@@ -155,7 +155,7 @@ export default function AdminHome() {
             <KpiCard to="/admin/leads" icon={Inbox} value={data.newLeads} label="New leads" />
             <KpiCard icon={Building2} value={data.pendingGymJoinRequests} label="Gym requests" />
             <KpiCard to="/admin/moderation" icon={Flag} value={data.reportedPostsPending + data.chatReportsOpen} label="Open reports" />
-            <KpiCard to="/admin/users" icon={GraduationCap} value={data.pendingCoachRequests} label="Coach requests" />
+            <KpiCard to="/admin/users?role=coach-pending" icon={GraduationCap} value={data.pendingCoachRequests} label="Coach requests" />
             <KpiCard to="/admin/challenges" icon={Trophy} value={data.activeChallenges} label="Active challenges" />
             <KpiCard to="/admin/email" icon={BellRing} value={data.pushSubscribers} label="Push subscribers" />
           </div>

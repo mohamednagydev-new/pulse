@@ -74,6 +74,9 @@ h3 {
 }
 .dark .admin-frame {
   background: #0e0d11;
+  /* Native controls (selects, inputs, scrollbars, date pickers) render dark —
+     without this they keep their UA-white faces inside the dark dashboard. */
+  color-scheme: dark;
 }
 /* Admin surfaces stay SOLID in dark mode. The app's glass remaps
    (.dark .bg-white → 6.5% tint) suit phone screens over a gradient, but they
@@ -657,6 +660,8 @@ textarea:focus-visible {
   color: #ececf0 !important;
 }
 .dark .text-gray-900 { color: #ececf0 !important; }
+.dark .text-gray-800 { color: #dddde3 !important; }
+.dark .text-gray-700 { color: #cfcfd6 !important; }
 .dark .text-gray-600 { color: #b7b7bf !important; }
 .dark .text-gray-500 { color: #9a9aa3 !important; }
 .dark .text-gray-400 { color: #82828b !important; }

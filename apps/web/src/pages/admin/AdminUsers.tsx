@@ -25,11 +25,11 @@ export default function AdminUsers() {
   const [params] = useSearchParams();
   const [search, setSearch] = useState(params.get('q') ?? ''); // live input
   const [q, setQ] = useState(search); // debounced, what the server sees
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState(params.get('role') ?? '');
   const [coach, setCoach] = useState(false);
   const [inactive, setInactive] = useState('');
   const [joinedWeek, setJoinedWeek] = useState(false);
-  const [segment, setSegment] = useState('');
+  const [segment, setSegment] = useState(params.get('segment') ?? '');
   const [bannedOnly, setBannedOnly] = useState(false);
   const [sort, setSort] = useState<Sort>('joined');
   const [dir, setDir] = useState<'asc' | 'desc'>('desc');
@@ -162,6 +162,8 @@ export default function AdminUsers() {
           <option value="">All roles</option>
           <option value="admin">Admins</option>
           <option value="user">Users</option>
+          <option value="coach">Coaches</option>
+          <option value="coach-pending">Coach requests (pending)</option>
         </select>
         <select className="input-field w-auto" value={inactive} onChange={(e) => { setInactive(e.target.value); setPage(1); }}>
           <option value="">Any activity</option>
@@ -174,6 +176,10 @@ export default function AdminUsers() {
         </select>
         <select className="input-field w-auto" value={segment} onChange={(e) => { setSegment(e.target.value); setPage(1); }}>
           <option value="">All segments</option>
+          <option value="active1">Active today</option>
+          <option value="active7">Active last 7d</option>
+          <option value="active30">Active last 30d</option>
+          <option value="daily">Daily streak 3+</option>
           <option value="retained7">Retained 7d+</option>
           <option value="retained30">Retained 30d+</option>
           <option value="churned">Churned (14d)</option>

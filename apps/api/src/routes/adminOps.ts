@@ -49,6 +49,9 @@ function userListWhere(q: Record<string, unknown>) {
   const role = String(q.role ?? '');
   if (role === 'admin') and.push({ role: 'ADMIN' });
   if (role === 'user') and.push({ role: 'USER' });
+  if (role === 'coach') and.push({ isCoach: true });
+  // The "Coach requests" queue: applied (isCoach) but not yet let into the directory.
+  if (role === 'coach-pending') and.push({ isCoach: true, coachVerified: false });
   if (String(q.coach ?? '') === '1') and.push({ isCoach: true });
   // Any window 1-365 days — presets in the UI, but the API takes arbitrary days.
   const inactive = Number(q.inactive);
@@ -71,6 +74,14 @@ function userListWhere(q: Record<string, unknown>) {
   } else if (segment === 'churned') {
     const cutoff = new Date(Date.now() - 14 * 86400000);
     and.push({ createdAt: { lt: cutoff }, OR: [{ lastSeenAt: { lt: cutoff } }, { lastSeenAt: null }] });
+  } else if (segment === 'active1' || segment === 'active7' || segment === 'active30') {
+    // Currently-active users: opened the app inside the window.
+    const days = segment === 'active1' ? 1 : segment === 'active7' ? 7 : 30;
+    and.push({ lastSeenAt: { gte: new Date(Date.now() - days * 86400000) } });
+  } else if (segment === 'daily') {
+    // "Daily" = a live activity streak (lesson/food/workout on consecutive days),
+    // not just opening the app.
+    and.push({ currentStreak: { gte: 3 } });
   }
   return and.length ? { AND: and } : {};
 }
