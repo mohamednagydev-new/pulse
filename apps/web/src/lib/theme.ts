@@ -7,8 +7,8 @@ export function applyTheme(theme: Theme) {
 export function currentTheme(): Theme {
   const stored = localStorage.getItem('pulse_theme') as Theme | null;
   if (stored === 'light' || stored === 'dark') return stored;
-  // Dark by default — the glass look is the brand. The toggle wins once used.
-  return 'dark';
+  // Light by default (owner call, Aug 2026) — the toggle wins once used.
+  return 'light';
 }
 
 export function initTheme() {

@@ -359,7 +359,7 @@
     "workouts_one": "workout",
     "workouts_other": "workouts",
     "streakDays": "{{n}} day streak",
-    "trainingNow": "{{n}} training now",
+    "trainingNow": "{{n}} online",
     "start": "Start",
     "explore": "Explore",
     "xpThisWeek": "{{xp}} XP this week",

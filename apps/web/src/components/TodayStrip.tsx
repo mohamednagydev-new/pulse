@@ -79,7 +79,12 @@ export default function TodayStrip() {
     navigate(id ? `/session/${id}` : '/programs');
   };
 
-  const buddy = (buddies ?? [])[0];
+  // The cheer row rotates through ALL buddies (daily), quiet ones first — it
+  // used to pin buddies[0] forever, so one person got all the cheers.
+  const buddyList: any[] = buddies ?? [];
+  const quiet = buddyList.filter((b) => !(b.weeklyXp > 0));
+  const cheerPool = quiet.length ? quiet : buddyList;
+  const buddy = cheerPool.length ? cheerPool[new Date().getDate() % cheerPool.length] : undefined;
 
   // Water chip logs a glass in place — WaterCard's optimistic mutation verbatim,
   // because deep-linking to '/' would just land on the collapsed card.
@@ -198,14 +203,23 @@ export default function TodayStrip() {
               </motion.span>
             </motion.button>
           )}
-          {weighInDue && (
-            <button
-              onClick={() => navigate('/progress')}
-              className="flex min-h-[30px] shrink-0 items-center gap-1.5 rounded-full bg-violet-100 px-3 text-[11px] font-bold text-violet-600 transition active:scale-95"
-            >
-              ⚖️ {isAr ? 'اتوزن' : 'Weigh-in'}
-            </button>
-          )}
+          {/* Log-food shortcut: the calories chip only *shows* the number —
+              this is the one-tap way to add to it (user: "only two buttons?"). */}
+          <button
+            onClick={() => navigate('/food')}
+            className="flex min-h-[30px] shrink-0 items-center gap-1.5 rounded-full bg-emerald-100 px-3 text-[11px] font-bold text-emerald-700 transition active:scale-95"
+          >
+            ➕ {isAr ? 'سجّل أكل' : 'Log food'}
+          </button>
+          {/* Weigh-in is always reachable; it only turns violet-loud when due. */}
+          <button
+            onClick={() => navigate('/progress')}
+            className={`flex min-h-[30px] shrink-0 items-center gap-1.5 rounded-full px-3 text-[11px] font-bold transition active:scale-95 ${
+              weighInDue ? 'bg-violet-100 text-violet-600' : 'bg-white/60 text-gray-600'
+            }`}
+          >
+            ⚖️ {isAr ? 'اتوزن' : 'Weigh-in'}
+          </button>
         </div>
       )}
 
