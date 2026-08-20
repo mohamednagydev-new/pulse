@@ -182,6 +182,18 @@ adminBroadcastRouter.post('/send', async (req: AuthedRequest, res) => {
   await prisma.jobLog.create({ data: { name: 'broadcast', ok: true, manual: true, note } }).catch(() => {});
   audit(req.userId!, 'broadcast.send', { targetType: 'broadcast', detail: note });
 
+  // Owner's archive copy: every real broadcast lands in the owner's inbox too —
+  // proof of what went out, when, and to how many.
+  const copyTo = process.env.BROADCAST_COPY_TO ?? 'mohamed.nagy.dev@gmail.com';
+  if (copyTo) {
+    sendMail({
+      to: copyTo,
+      subject: `[COPY] ${title}`,
+      html: `<p><i>Broadcast archive — audience ${users.length} (${note})</i></p><hr/>${emailHtml(body, url)}`,
+      text: `Broadcast archive — audience ${users.length} (${note})\n\n${body}`,
+    }).catch(() => {});
+  }
+
   res.json({ audience: users.length, push: nPush, email: nEmail, failed: nFail });
 });
 

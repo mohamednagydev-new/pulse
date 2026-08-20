@@ -26,6 +26,18 @@ export default class ErrorBoundary extends Component<Props, State> {
     const where = window.location.pathname.slice(0, 60);
     // Lazy import keeps this file dependency-free unless a crash actually happens.
     import('../lib/track').then(({ track }) => track('client-error', `boundary@${where}: ${error.message}`.slice(0, 200))).catch(() => {});
+
+    // Self-heal the deploy-seam crash: right after an update the service worker
+    // can serve a stale chunk next to new code — hook counts mismatch (React
+    // #300/#310) or a dynamic import 404s, and ONE hard reload fixes it. Reload
+    // automatically, at most once per 5 minutes so a genuine bug can't loop.
+    const msg = error.message || '';
+    const deploySeam = /#3[01]0|Loading chunk|dynamically imported module|Importing a module script failed/i.test(msg);
+    const last = Number(sessionStorage.getItem('eb_reload_at') || 0);
+    if (deploySeam && Date.now() - last > 5 * 60 * 1000) {
+      sessionStorage.setItem('eb_reload_at', String(Date.now()));
+      window.location.reload();
+    }
   }
 
   render() {

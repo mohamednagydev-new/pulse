@@ -11,7 +11,8 @@ const groupMembers = new Map<string, Set<string>>(); // groupId -> userIds curre
 // running timer and the video transport survive until the room empties.
 type GroupTimer = { id: string; action: 'start'; durationSec: number; startedAt: number; by: string };
 type GroupVideo = { id: string; action: 'play' | 'pause'; positionSec: number; at: number; by: string };
-const groupState = new Map<string, { hostId: string; timer?: GroupTimer; video?: GroupVideo }>();
+type GroupStep = { id: string; idx: number; by: string };
+const groupState = new Map<string, { hostId: string; timer?: GroupTimer; video?: GroupVideo; step?: GroupStep }>();
 
 async function groupHost(id: string): Promise<string | null> {
   const cached = groupState.get(id);
@@ -125,6 +126,7 @@ export function initRealtime(server: http.Server, origin: string) {
       const st = groupState.get(id);
       if (st?.timer) socket.emit('group:timer', st.timer);
       if (st?.video) socket.emit('group:video', st.video);
+      if (st?.step) socket.emit('group:step', st.step);
     });
     socket.on('group:close', (id: string) => {
       if (typeof id !== 'string' || !id) return;
@@ -138,6 +140,16 @@ export function initRealtime(server: http.Server, origin: string) {
       if (!p || typeof p.id !== 'string') return;
       if (!(await canHost(p.id, userId))) return;
       setGroupTimer(p.id, p.action === 'start' ? 'start' : 'stop', Number(p.durationSec) || 60, userId);
+    });
+    // Synced exercise stepper — the host walks the room through the linked
+    // workout ("Now: Squat, 3×45s"), late joiners get the current step replayed.
+    socket.on('group:step', async (p: { id: string; idx: number }) => {
+      if (!p || typeof p.id !== 'string' || !Number.isInteger(p.idx) || p.idx < 0 || p.idx > 50) return;
+      if (!(await canHost(p.id, userId))) return;
+      const payload: GroupStep = { id: p.id, idx: p.idx, by: userId };
+      const st = groupState.get(p.id);
+      if (st) st.step = payload;
+      io?.to(`group:${p.id}`).emit('group:step', payload);
     });
     // Host-synced video transport: the coach's play/pause/seek drives every
     // member's player. Host-only — a participant scrubbing would scrub the class.

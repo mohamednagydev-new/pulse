@@ -1350,6 +1350,12 @@ adminRouter.post('/email/send', async (req: AuthedRequest, res) => {
       }
     }
   }
+  // Owner's archive copy of every blast — same as the broadcast module.
+  if (sent > 0) {
+    const copyTo = process.env.BROADCAST_COPY_TO ?? 'mohamed.nagy.dev@gmail.com';
+    const { text, html } = render('Archive', 'copy');
+    sendMail({ to: copyTo, subject: `[COPY] ${subject}`, html: `<p><i>Blast archive — sent ${sent}, failed ${failed}</i></p><hr/>${html}`, text }).catch(() => {});
+  }
   res.json({ sent, failed, capped: users.length === EMAIL_SEND_CAP });
 });
 

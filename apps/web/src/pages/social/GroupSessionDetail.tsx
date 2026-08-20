@@ -9,7 +9,7 @@ import { useSignedMedia } from '../../lib/media';
 import { toast } from '../../lib/toast';
 import { getSocket } from '../../lib/socket';
 import { useAuth } from '../../store/auth';
-import { tapFeedback, successFeedback } from '../../lib/haptics';
+import { tapFeedback, successFeedback, celebrateFeedback } from '../../lib/haptics';
 import { Loader, MediaImage } from '../../components/ui';
 import TopBar from '../../components/TopBar';
 import CoachBadge from '../../components/CoachBadge';
@@ -53,6 +53,9 @@ export default function GroupSessionDetail() {
   const [timeUp, setTimeUp] = useState(false);
   const [preset, setPreset] = useState(60);
   const [bursts, setBursts] = useState<{ key: number; emoji: string; x: number }[]>([]);
+  // Synced exercise stepper: the host walks everyone through the linked workout.
+  const [stepIdx, setStepIdx] = useState(0);
+  const [finished, setFinished] = useState(false);
   const burstKey = useRef(0);
   const timeUpFired = useRef(false);
 
@@ -127,6 +130,10 @@ export default function GroupSessionDetail() {
       setFeed((prev) => [...prev.slice(-29), { key: ++feedKey.current, text: p.text, by: p.by, at: p.at }]);
     };
 
+    const onStep = (p: any) => {
+      if (p?.id === id && Number.isInteger(p.idx)) setStepIdx(p.idx);
+    };
+    socket.on('group:step', onStep);
     socket.on('group:members', onMembers);
     socket.on('group:timer', onTimer);
     socket.on('group:react', onReact);
@@ -135,6 +142,7 @@ export default function GroupSessionDetail() {
     socket.on('group:chat', onChat);
     return () => {
       socket.emit('group:close', id);
+      socket.off('group:step', onStep);
       socket.off('group:members', onMembers);
       socket.off('group:timer', onTimer);
       socket.off('group:react', onReact);
@@ -434,6 +442,69 @@ export default function GroupSessionDetail() {
                 </div>
               )}
             </div>
+
+            {/* Synced exercise stepper — the host drives, the room follows.
+                This is what makes the live room TRAINING, not just a timer. */}
+            {(() => {
+              const exs = data.coachWorkout?.exercises;
+              if (!exs?.length) return null;
+              const idx = Math.min(stepIdx, exs.length - 1);
+              const ex = exs[idx];
+              const next = exs[idx + 1];
+              const setStep = (i: number) => {
+                tapFeedback();
+                getSocket().emit('group:step', { id, idx: Math.max(0, Math.min(exs.length - 1, i)) });
+              };
+              return (
+                <div className="mt-4 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-orange-500">
+                      {L('Now', 'دلوقتي')} · {idx + 1}/{exs.length}
+                    </span>
+                    {isHost && (
+                      <span className="ms-auto flex gap-1">
+                        <button onClick={() => setStep(idx - 1)} disabled={idx === 0} className="rounded-full bg-white px-2.5 py-1 text-xs font-bold shadow-sm disabled:opacity-40">‹</button>
+                        <button onClick={() => setStep(idx + 1)} disabled={idx >= exs.length - 1} className="rounded-full bg-orange-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm disabled:opacity-40">›</button>
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-lg font-extrabold text-ink">{ex.name}</p>
+                  {(ex.sets || ex.reps) && (
+                    <p className="text-xs font-bold text-orange-600">{ex.sets ? `${ex.sets} × ` : ''}{ex.reps ?? ''}</p>
+                  )}
+                  {Array.isArray(ex.instructions) && ex.instructions.slice(0, 2).map((line: string, i: number) => (
+                    <p key={i} className="mt-0.5 text-xs text-gray-500">• {line}</p>
+                  ))}
+                  {next && (
+                    <p className="mt-2 border-t border-orange-100 pt-1.5 text-[11px] text-gray-400">
+                      {L('Next up:', 'اللي بعده:')} <span className="font-semibold">{next.name}</span>
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Finish: the moment the live room counts as real training —
+                XP, streak and a feed post, same as any workout. */}
+            {data.isJoined && (
+              <button
+                onClick={async () => {
+                  if (finished) return;
+                  try {
+                    await api.post('/api/me/workout-done', { name: data.title });
+                    setFinished(true);
+                    celebrateFeedback();
+                    toast(L('Session logged — XP + streak counted 💪', 'اتسجلت الحصة — نقاط وسلسلة محسوبة 💪'), 'success');
+                  } catch {
+                    toast(L('Could not log it — try again', 'مقدرناش نسجلها — جرّب تاني'), 'error');
+                  }
+                }}
+                disabled={finished}
+                className={`mt-3 w-full rounded-xl py-2.5 text-sm font-bold ${finished ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-500 text-white active:scale-[0.99]'}`}
+              >
+                {finished ? L('Logged ✅ great work', 'اتسجلت ✅ عاش يا بطل') : L('I finished this session ✅', 'خلصت الحصة ✅')}
+              </button>
+            )}
 
             {/* Reaction bar */}
             <div className="mt-4 flex justify-center gap-2">

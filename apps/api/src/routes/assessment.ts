@@ -109,7 +109,18 @@ function safeParse(v: string | null): any[] {
 /** Run the intake: score it, choose a program, write the schedule, enrol them. */
 assessmentRouter.post('/', async (req: AuthedRequest, res) => {
   const parsed = schema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'Please answer every question.' });
+  if (!parsed.success) {
+    // Field-specific messages beat "answer everything" — a 2015 birth year
+    // (under the 12+ age floor) used to read as "you missed a field".
+    const issue = parsed.error.issues[0];
+    if (issue?.path?.[0] === 'birthYear') {
+      const maxYear = new Date().getFullYear() - 12;
+      return res.status(400).json({ error: `Ages 12+ only — birth year must be ${maxYear} or earlier. السن من ١٢ سنة وطالع — سنة الميلاد ${maxYear} أو أقدم.` });
+    }
+    if (issue?.path?.[0] === 'heightCm') return res.status(400).json({ error: 'Height looks off — enter it in centimeters (e.g. 170). الطول بالسنتيمتر، مثلاً ١٧٠.' });
+    if (issue?.path?.[0] === 'weightKg') return res.status(400).json({ error: 'Weight looks off — enter it in kilograms (e.g. 80). الوزن بالكيلوجرام، مثلاً ٨٠.' });
+    return res.status(400).json({ error: 'Please answer every question.' });
+  }
   const a: Answers = parsed.data;
 
   const { level, why } = decideLevel(a);
