@@ -545,6 +545,15 @@ export async function ensureGroupSessions() {
     select: { id: true },
   });
   if (!coach) return; // pre-launch DB without the official account — nothing to do
+  // Link each slot to the coach's same-named workout (seeded by
+  // prisma/seed-official-workouts.ts): the session gets "Start together" and an
+  // enriched exercise list instead of text only. Missing seed → text-only, fine.
+  const workouts = await prisma.coachWorkout.findMany({
+    where: { coachUserId: coach.id },
+    select: { id: true, title: true },
+  });
+  const workoutFor = (slotTitle: string) =>
+    workouts.find((w) => slotTitle.startsWith(w.title))?.id;
   let created = 0;
   for (let n = 0; n < 7; n++) {
     const dayStr = daysAgoStr(-n);
@@ -554,13 +563,19 @@ export async function ensureGroupSessions() {
       if (localDow(scheduledAt) !== slot.dow) continue;
       const exists = await prisma.groupSession.findFirst({
         where: { coachUserId: coach.id, scheduledAt },
-        select: { id: true, instructions: true },
+        select: { id: true, instructions: true, coachWorkoutId: true },
       });
       if (exists) {
-        // Backfill: sessions created before slots carried a written plan left
-        // joiners staring at an empty room ("what do I actually do?").
-        if (!exists.instructions) {
-          await prisma.groupSession.update({ where: { id: exists.id }, data: { instructions: slot.instructions } });
+        // Backfill: older sessions get the written plan and the linked workout
+        // the moment either becomes available.
+        const patch: Record<string, unknown> = {};
+        if (!exists.instructions) patch.instructions = slot.instructions;
+        if (!exists.coachWorkoutId) {
+          const wid = workoutFor(slot.title);
+          if (wid) patch.coachWorkoutId = wid;
+        }
+        if (Object.keys(patch).length) {
+          await prisma.groupSession.update({ where: { id: exists.id }, data: patch });
         }
         continue;
       }
@@ -570,6 +585,7 @@ export async function ensureGroupSessions() {
           title: slot.title,
           description: slot.description,
           instructions: slot.instructions,
+          coachWorkoutId: workoutFor(slot.title),
           muscleFocus: slot.muscleFocus,
           scheduledAt,
         },
