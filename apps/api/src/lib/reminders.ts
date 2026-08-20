@@ -90,6 +90,15 @@ async function runCheck() {
     });
   }
 
+  // Daily 18:00 — new-user activation drip (D1/D2/D3, each tied to one action)
+  // + the week-1 "get a buddy / join a session" nudge. The first 72 hours
+  // decide retention; until this job they were silent for push-less users.
+  if (hour === 18 && (await claimJob(`drip:${day}`))) {
+    const { runNewUserDrip, runConnectionNudge } = await import('./drip');
+    await runLogged('new-user-drip', false, runNewUserDrip);
+    await runLogged('connection-nudge', false, runConnectionNudge);
+  }
+
   // Daily 06:00 — pull new reels from the configured channels (REELS_CHANNELS)
   // into the review inbox. No env → no-op.
   if (hour === 6 && (await claimJob(`reelspull:${day}`))) {

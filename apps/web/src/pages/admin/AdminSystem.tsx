@@ -31,6 +31,8 @@ const JOBS: { name: string; label: string; schedule: string; runnable: boolean }
   { name: 'backup', label: 'Database backup', schedule: 'Nightly 04:00', runnable: true },
   { name: 'digest', label: 'Win-back email digest', schedule: 'Friday 17:00', runnable: false },
   { name: 'video-sweep', label: 'Video health sweep', schedule: 'Monday 05:00', runnable: true },
+  { name: 'new-user-drip', label: 'New-user drip (D1-D3)', schedule: 'Daily 18:00', runnable: true },
+  { name: 'connection-nudge', label: 'Week-1 buddy nudge', schedule: 'Daily 18:00', runnable: true },
   { name: 'broadcast', label: 'Broadcast', schedule: 'Manual only', runnable: false },
 ];
 

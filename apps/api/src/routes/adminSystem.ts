@@ -26,6 +26,8 @@ const JOB_NAMES = [
   'backup',
   'digest',
   'video-sweep',
+  'new-user-drip',
+  'connection-nudge',
   'broadcast',
 ] as const;
 
@@ -114,6 +116,14 @@ adminSystemRouter.post('/run/:name', async (req: AuthedRequest, res: Response) =
     'video-sweep': async () => {
       const { sweepVideos } = await import('../lib/videoHealth');
       return sweepVideos();
+    },
+    'new-user-drip': async () => {
+      const { runNewUserDrip } = await import('../lib/drip');
+      return runNewUserDrip();
+    },
+    'connection-nudge': async () => {
+      const { runConnectionNudge } = await import('../lib/drip');
+      return runConnectionNudge();
     },
   };
 
