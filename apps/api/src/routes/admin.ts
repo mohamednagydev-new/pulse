@@ -1246,7 +1246,7 @@ adminRouter.get('/email/audience', async (req, res) => {
 // provider's real error in the admin UI instead of a false "sent ✅".
 adminRouter.get('/email/smtp-status', async (_req, res) => {
   const { verifySmtp } = await import('../lib/mailer');
-  res.json(await verifySmtp());
+  res.json(await verifySmtp(true)); // explicit button — bypass the 10-min cache
 });
 
 adminRouter.post('/email/draft', async (req: AuthedRequest, res) => {

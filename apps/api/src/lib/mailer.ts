@@ -21,6 +21,15 @@ function getTransporter(): Transporter | null {
       process.env.SMTP_USER || process.env.SMTP_PASS
         ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
         : undefined,
+    // Pooling is what makes bulk sends survivable: without it every sendMail
+    // opens a NEW connection and LOGS IN AGAIN — a 200-recipient broadcast was
+    // 200 logins in a burst, which trips Gmail's "454 too many login attempts"
+    // lockout. One connection, reused, throttled to ~1 email per 1.5s.
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 200,
+    rateDelta: 1500,
+    rateLimit: 1,
   });
   return transporter;
 }
@@ -60,16 +69,24 @@ export async function sendMail({ to, subject, html, text }: MailOptions): Promis
 }
 
 /** Connect + authenticate against the configured SMTP server without sending
- *  anything — the truth-teller behind the admin "check SMTP" button. */
-export async function verifySmtp(): Promise<MailResult> {
+ *  anything — the truth-teller behind the admin "check SMTP" button.
+ *
+ *  Cached for 10 minutes: the dashboard banner calls this on every load, and
+ *  each verify is a real SMTP login — those attempts counted toward Gmail's
+ *  lockout threshold. `force` (the explicit check button) bypasses the cache. */
+let lastVerify: { at: number; result: MailResult } | null = null;
+
+export async function verifySmtp(force = false): Promise<MailResult> {
   const tx = getTransporter();
   if (!tx) return { ok: false, reason: 'SMTP not configured (SMTP_HOST is not set in .env)' };
+  if (!force && lastVerify && Date.now() - lastVerify.at < 10 * 60 * 1000) return lastVerify.result;
   try {
     await tx.verify();
-    return { ok: true };
+    lastVerify = { at: Date.now(), result: { ok: true } };
   } catch (err) {
-    return { ok: false, reason: err instanceof Error ? err.message : 'SMTP verify failed' };
+    lastVerify = { at: Date.now(), result: { ok: false, reason: err instanceof Error ? err.message : 'SMTP verify failed' } };
   }
+  return lastVerify.result;
 }
 
 function logFallback(to: string, subject: string, body: string) {
