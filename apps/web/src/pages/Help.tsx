@@ -285,6 +285,13 @@ const HOW_TO: Step[] = [
  * ------------------------------------------------------------------ */
 const NEW_TRAINING: Step[] = [
   {
+    icon: Trophy, to: '/programs',
+    en: 'Pro programs for advanced lifters',
+    ar: 'برامج احترافية للمتقدمين',
+    enBody: 'Three advanced blocks: Powerlifting Peaking (6 weeks to a max attempt), Hypertrophy Specialization (high-volume muscle building) and Engine Builder (conditioning tests and intervals). Find them under Programs → Advanced.',
+    arBody: 'تلات برامج متقدمة: Powerlifting Peaking (٦ أسابيع لمحاولة أقصى وزن)، وHypertrophy Specialization (حجم تدريب عالي لبناء العضل)، وEngine Builder (اختبارات لياقة وإنترفالز). هتلاقيهم في البرامج → متقدم.',
+  },
+  {
     icon: Dumbbell, to: '/programs',
     en: 'Log sets one by one',
     ar: 'سجّل مجموعاتك واحدة واحدة',
@@ -315,6 +322,20 @@ const NEW_TRAINING: Step[] = [
 ];
 
 const NEW_BUDDIES: Step[] = [
+  {
+    icon: MessageSquare, to: '/community',
+    en: 'Filter the feed your way',
+    ar: 'فلتر الفيد على مزاجك',
+    enBody: "Above the feed: All, Posts, or Buddies' progress. Posts shows what people actually wrote; Progress shows your buddies' workouts, streaks and level-ups.",
+    arBody: 'فوق الفيد: الكل، بوستات، أو تقدّم أصحابي. «بوستات» بتوريك اللي الناس كتباه فعلاً، و«التقدم» بيوريك تمرينات وسلاسل أصحابك.',
+  },
+  {
+    icon: Radio, to: '/group',
+    en: 'Live group sessions come with a plan',
+    ar: 'الجلسات الجماعية اللايف بقى ليها خطة',
+    enBody: 'Open any session and the Session plan card tells you exactly what the group will do — exercises, rounds, rest — plus how the shared timer works. Weekly sessions run Saturday, Tuesday and Thursday.',
+    arBody: 'افتح أي جلسة وهتلاقي كارت «خطة الجلسة» بيقولك المجموعة هتعمل إيه بالظبط — تمارين وجولات وراحة — وإزاي التايمر المشترك شغال. الجلسات الأسبوعية: السبت والتلات والخميس.',
+  },
   {
     icon: Footprints, to: '/buddies',
     en: 'Invite a buddy to walk',
@@ -370,6 +391,13 @@ const COACH_STEPS: Step[] = [
 ];
 
 const GYM_STEPS: Step[] = [
+  {
+    icon: BadgeCheck, to: '/partner-hub',
+    en: 'Verified badge & monthly report',
+    ar: 'علامة التوثيق والتقرير الشهري',
+    enBody: 'Verified gyms get a badge and a boost in the directory. In your Partner Hub a Monthly Report card shows leads, new members, active members and top performers — with one tap to copy and share it.',
+    arBody: 'الجيمات الموثقة بتاخد علامة ✓ وترتيب أعلى في الدليل. وفي لوحة الشريك كارت «التقرير الشهري» بيوريك العملاء والأعضاء الجدد والنشطين والأبطال — وبزرار واحد تنسخه وتشاركه.',
+  },
   {
     icon: Ticket, to: '/gyms',
     en: 'Your gym invite code',

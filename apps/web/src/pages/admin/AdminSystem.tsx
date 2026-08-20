@@ -19,6 +19,7 @@ type SystemData = {
   db: { path: string; sizeBytes: number } | null;
   backup: { file: string; mtime: string; sizeBytes: number } | null;
   process: { uptimeSec: number; rssMb: number; nodeVersion: string };
+  ffmpeg?: { ok: boolean; detail: string };
 };
 
 /** Every job the scheduler knows about; `runnable` = has a Run-now endpoint. */
@@ -33,6 +34,7 @@ const JOBS: { name: string; label: string; schedule: string; runnable: boolean }
   { name: 'video-sweep', label: 'Video health sweep', schedule: 'Monday 05:00', runnable: true },
   { name: 'new-user-drip', label: 'New-user drip (D1-D3)', schedule: 'Daily 18:00', runnable: true },
   { name: 'connection-nudge', label: 'Week-1 buddy nudge', schedule: 'Daily 18:00', runnable: true },
+  { name: 'auto-posts', label: 'Community pulse posts', schedule: 'Every 2h · 09-23', runnable: true },
   { name: 'broadcast', label: 'Broadcast', schedule: 'Manual only', runnable: false },
 ];
 
@@ -147,6 +149,11 @@ export default function AdminSystem() {
               <p className="flex items-center gap-1.5 text-xs font-semibold uppercase text-gray-400"><Cpu size={14} /> Process</p>
               <p className="mt-1 text-2xl font-bold">{fmtUptime(data.process.uptimeSec)}</p>
               <p className="mt-1 text-xs text-gray-400">uptime · {data.process.rssMb} MB RSS · node {data.process.nodeVersion}</p>
+              {data.ffmpeg && (
+                <p className={`mt-1 text-xs font-semibold ${data.ffmpeg.ok ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {data.ffmpeg.ok ? '✓ ffmpeg' : '✗ ffmpeg'} — {data.ffmpeg.detail}
+                </p>
+              )}
             </div>
           </div>
 

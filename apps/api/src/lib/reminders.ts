@@ -90,6 +90,15 @@ async function runCheck() {
     });
   }
 
+  // Community pulse — an official post every AUTO_POST_HOURS (default 2)
+  // between 09:00 and 23:00, rotating facts / tips / how-tos / questions so
+  // the feed never reads as "only auto-nudges".
+  const pulseEvery = Math.max(1, Number(process.env.AUTO_POST_HOURS) || 2);
+  if (hour >= 9 && hour <= 23 && hour % pulseEvery === 0 && (await claimJob(`autopost:${day}:${hour}`))) {
+    const { postCommunityPulse } = await import('./autoPosts');
+    await runLogged('auto-posts', false, postCommunityPulse);
+  }
+
   // Daily 18:00 — new-user activation drip (D1/D2/D3, each tied to one action)
   // + the week-1 "get a buddy / join a session" nudge. The first 72 hours
   // decide retention; until this job they were silent for push-less users.

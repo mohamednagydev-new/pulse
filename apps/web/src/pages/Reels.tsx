@@ -34,7 +34,19 @@ export default function Reels() {
 
   const feedQuery = useQuery({
     queryKey: ['reels', topic],
-    queryFn: () => api.get(`/api/reels?topic=${topic}`),
+    // Client-side shuffle on top of the server's: on slow connections the
+    // service worker's NetworkFirst timeout serves a cached body, which made
+    // the feed open in the exact same order every day. Shuffling here means
+    // even a cached response gets a fresh order.
+    queryFn: () =>
+      api.get(`/api/reels?topic=${topic}`).then((d: any) => {
+        const a = [...(d?.reels ?? [])];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return { ...d, reels: a };
+      }),
     enabled: view === 'feed',
   });
   const favoritesQuery = useQuery({
@@ -228,6 +240,16 @@ function UploadSheet({
   const { t } = useTranslation();
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
+  // Local preview of the picked/recorded clip. Catches "my camera recorded
+  // black" BEFORE posting — if this preview is black, the recording is bad;
+  // if it plays here but not after posting, the server transcoder is off.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file) { setPreviewUrl(null); return; }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
   const [caption, setCaption] = useState('');
   const [topic, setTopic] = useState<UploadTopic>(defaultTopic);
   const [uploading, setUploading] = useState(false);
@@ -297,6 +319,16 @@ function UploadSheet({
               className="hidden"
               onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])}
             />
+
+            {previewUrl && (
+              <video
+                src={previewUrl}
+                controls
+                playsInline
+                muted
+                className="mt-3 max-h-64 w-full rounded-2xl bg-black object-contain"
+              />
+            )}
 
             <input
               className="mt-3 w-full rounded-2xl bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40"

@@ -200,6 +200,19 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
     pollVotes: { select: { userId: true, optionIdx: true } },
   };
 
+  // Feed lenses: 'posts' = things people wrote (text/photos/polls/reels),
+  // 'progress' = the auto-generated activity trail (completions, streaks,
+  // level-ups) of people you follow. Mixing them made the feed read as
+  // "only nudges" — the split lets real conversation surface.
+  const filter = String(req.query.filter ?? 'all');
+  const PROGRESS_KINDS = ['completion', 'streak', 'levelup'];
+  const kindWhere =
+    filter === 'posts'
+      ? { kind: { notIn: PROGRESS_KINDS } }
+      : filter === 'progress'
+        ? { kind: { in: PROGRESS_KINDS } }
+        : {};
+
   // The pinned announcement reaches everyone, not only people you follow, and
   // stops appearing the moment its window closes - no cron needed.
   const [pinned, posts] = await Promise.all([
@@ -208,7 +221,7 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
       include,
     }),
     prisma.feedPost.findMany({
-      where: { userId: { in: ids } },
+      where: { userId: { in: ids }, ...kindWhere },
       orderBy: { createdAt: 'desc' },
       take: 50,
       include,
@@ -223,12 +236,13 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
   // from the rest of the community — Facebook-style — until the page feels
   // alive; people you follow still dominate because their posts come first
   // in the merge when dates tie.
-  if (rest.length < 30) {
+  if (filter !== 'progress' && rest.length < 30) {
     const discover = await prisma.feedPost.findMany({
       where: {
         userId: { notIn: [...ids, ...blockedSet] },
         pinned: false,
         createdAt: { gte: new Date(Date.now() - 7 * 86400000) },
+        ...kindWhere,
       },
       orderBy: { createdAt: 'desc' },
       take: 30 - rest.length,

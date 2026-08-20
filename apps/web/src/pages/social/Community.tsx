@@ -32,16 +32,23 @@ const PROMPTS: { ar: string; en: string }[] = [
 
 export default function Community() {
   const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [text, setText] = useState('');
+  // Feed lens: everything, only real posts, or only buddies' progress.
+  const [feedFilter, setFeedFilter] = useState<'all' | 'posts' | 'progress'>('all');
   const [media, setMedia] = useState<{ mediaType: string; mediaUrl: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   // Admin surveys: a poll rides on the post («التحدي الجاي يبقى إيه؟»).
   const [pollOptions, setPollOptions] = useState<string[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
-  const { data: feed, isLoading } = useQuery({ queryKey: FEED_KEY, queryFn: () => api.get('/api/social/feed') });
+  const { data: feed, isLoading } = useQuery({
+    queryKey: [...FEED_KEY, feedFilter],
+    queryFn: () => api.get(`/api/social/feed?filter=${feedFilter}`),
+  });
   const { data: unread } = useQuery({ queryKey: ['chat-unread'], queryFn: () => api.get('/api/chat/unread'), refetchInterval: 20000 });
   const { data: ads } = useQuery({ queryKey: ['feed-ad'], queryFn: () => api.get('/api/banners?section=feed_ad') });
   const ad = pickAd<any>(ads);
@@ -102,9 +109,18 @@ export default function Community() {
           </motion.h1>
         </div>
         <div className="flex items-center gap-1">
-          {/* Group live lost its drawer tile — this pill is its Community front door. */}
-          <button onClick={() => navigate('/group')} className="flex h-8 items-center gap-1 rounded-full bg-white/15 px-2.5 text-[11px] font-bold">
-            <Radio size={13} /> {i18n.language.startsWith('ar') ? 'تمرين جماعي' : 'Group live'}
+          {/* Group live lost its drawer tile — this pill is its Community front
+              door, styled like a live badge so it actually reads as LIVE. */}
+          <button
+            onClick={() => navigate('/group')}
+            className="flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-extrabold text-white shadow-md active:scale-95"
+            style={{ backgroundImage: 'linear-gradient(135deg,#f43f5e,#ea580c)' }}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+            </span>
+            {L('LIVE groups', 'لايف جماعي')}
           </button>
           <button onClick={() => navigate('/coaches-community')} aria-label="Coaches" className="flex h-10 w-10 items-center justify-center rounded-full"><Award size={24} /></button>
           <button onClick={() => navigate('/people')} aria-label="People" className="flex h-10 w-10 items-center justify-center rounded-full"><Users size={24} /></button>
@@ -123,11 +139,31 @@ export default function Community() {
           className="flex-1 rounded-full py-2 text-white shadow-sm"
           style={{ backgroundImage: 'linear-gradient(135deg,#fb923c,#ea580c)' }}
         >
-          Feed
+          {L('Feed', 'الفيد')}
         </button>
         <button onClick={() => navigate('/reels')} className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-gray-500">
-          <Clapperboard size={15} /> Reels
+          <Clapperboard size={15} /> {L('Reels', 'ريلز')}
         </button>
+      </div>
+
+      {/* Feed lenses — real posts vs. buddies' progress (mixed view default).
+          Splitting them answers "the community is only nudges". */}
+      <div className="mx-4 mb-3 flex gap-1.5 text-xs font-bold">
+        {([
+          ['all', L('All', 'الكل')],
+          ['posts', L('Posts', 'بوستات')],
+          ['progress', L("Buddies' progress", 'تقدّم أصحابي')],
+        ] as const).map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setFeedFilter(k)}
+            className={`rounded-full px-3 py-1.5 transition ${
+              feedFilter === k ? 'bg-ink text-white shadow-sm' : 'glass text-gray-500'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <motion.div

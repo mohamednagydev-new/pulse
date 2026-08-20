@@ -28,6 +28,7 @@ const JOB_NAMES = [
   'video-sweep',
   'new-user-drip',
   'connection-nudge',
+  'auto-posts',
   'broadcast',
 ] as const;
 
@@ -81,11 +82,25 @@ adminSystemRouter.get('/', async (_req: AuthedRequest, res: Response) => {
   }
 
   const mem = process.memoryUsage();
+
+  // ffmpeg is load-bearing for user videos: without it uploads fall back to
+  // storing the phone's original (HEVC/3GP) which most browsers can't play —
+  // "my reel is black after posting". Surface its state where it can be seen.
+  const ffmpeg = await new Promise<{ ok: boolean; detail: string }>((resolve) => {
+    import('child_process').then(({ execFile }) => {
+      execFile(process.env.FFMPEG_PATH || 'ffmpeg', ['-version'], { timeout: 4000 }, (err, stdout) => {
+        if (err) resolve({ ok: false, detail: 'NOT FOUND — user videos are stored untranscoded and may not play. Install ffmpeg and run prisma/retranscode-videos.ts' });
+        else resolve({ ok: true, detail: String(stdout).split('\n')[0]?.slice(0, 60) ?? 'ok' });
+      });
+    });
+  });
+
   res.json({
     jobs,
     recent,
     db,
     backup,
+    ffmpeg,
     process: {
       uptimeSec: Math.round(process.uptime()),
       rssMb: Math.round(mem.rss / 1048576),
@@ -124,6 +139,10 @@ adminSystemRouter.post('/run/:name', async (req: AuthedRequest, res: Response) =
     'connection-nudge': async () => {
       const { runConnectionNudge } = await import('../lib/drip');
       return runConnectionNudge();
+    },
+    'auto-posts': async () => {
+      const { postCommunityPulse } = await import('../lib/autoPosts');
+      return postCommunityPulse();
     },
   };
 
