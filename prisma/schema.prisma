@@ -334,6 +334,11 @@ model Partner {
   /** JSON array of image paths — gyms sell on photos, and one cover is not enough. */
   gallery       String?
   featured      Boolean  @default(false)
+  /** Rate-card middle tier: badge + gallery + directory boost. featured stays the top tier. */
+  verified      Boolean  @default(false)
+  /** Founding-partner free period end, YYYY-MM-DD (string on purpose — an
+   *  operational note edited in the generic admin form, never computed on). */
+  foundingUntil String?
   active        Boolean  @default(true)
   order         Int      @default(0)
   views         Int      @default(0)

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, ChevronRight, Clock, MapPin, Navigation, Phone, Star, X } from 'lucide-react';
+import { BadgeCheck, Building2, ChevronRight, Clock, MapPin, Navigation, Phone, Star, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { priceLabel } from '../lib/money';
 import { Loader, ErrorMsg, EmptyState, MediaImage } from '../components/ui';
@@ -43,6 +43,7 @@ type Venue = {
   openNow: boolean | null;
   distanceKm: number | null;
   featured: boolean;
+  verified?: boolean;
 };
 
 const spring = { type: 'spring', stiffness: 260, damping: 24 } as const;
@@ -233,6 +234,7 @@ export default function Venues() {
                     <p className="min-w-0 truncate font-bold leading-snug">
                       {v.featured && <Star size={12} className="mb-0.5 me-1 inline text-amber-400" fill="currentColor" />}
                       {v.name}
+                      {v.verified && <BadgeCheck size={13} className="mb-0.5 ms-1 inline text-brand-blue" />}
                     </p>
                     {v.distanceKm != null && (
                       <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-brand-blue" dir="ltr">

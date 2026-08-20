@@ -31,6 +31,7 @@ interface CountRow {
 interface AnalyticsData {
   onlineNow?: number;
   pushUsers?: number;
+  activation?: { signups: number; onboarded: number; activated24h: number };
   dau: DauPoint[];
   funnel?: Record<string, Record<string, number>>;
   clientErrors?: { message: string; count: number }[];
@@ -70,10 +71,10 @@ function buildDauSeries(dau: DauPoint[] | undefined): { key: string; label: numb
   return out;
 }
 
-function StatTile({ value, label }: { value: number; label: string }) {
+function StatTile({ value, label }: { value: number | string; label: string }) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm">
-      <p className="text-2xl font-extrabold">{value.toLocaleString()}</p>
+      <p className="text-2xl font-extrabold">{typeof value === 'number' ? value.toLocaleString() : value}</p>
       <p className="mt-0.5 text-xs font-medium text-gray-400">{label}</p>
     </div>
   );
@@ -402,9 +403,15 @@ export default function AdminAnalytics() {
   });
 
   const totals = data?.totals;
-  const tiles: { label: string; value: number }[] = [
+  const act = data?.activation;
+  const pct = (n: number, of: number) => (of > 0 ? `${Math.round((n / of) * 100)}%` : '—');
+  const tiles: { label: string; value: number | string }[] = [
     { label: '🟢 Online now', value: data?.onlineNow ?? 0 },
     { label: '🔔 Push-enabled', value: data?.pushUsers ?? 0 },
+    // The retention predictor: of last-30d signups, how many finished a workout
+    // within 24h. Move this number and day-3 retention follows.
+    { label: '⚡ Activated ≤24h (30d)', value: act ? `${act.activated24h}/${act.signups} (${pct(act.activated24h, act.signups)})` : '—' },
+    { label: '📋 Intake done (30d)', value: act ? pct(act.onboarded, act.signups) : '—' },
     { label: 'Users', value: totals?.users ?? 0 },
     { label: 'Workouts', value: totals?.workouts ?? 0 },
     { label: 'Reel views', value: totals?.reelWatches ?? 0 },

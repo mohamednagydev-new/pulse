@@ -614,9 +614,36 @@ adminRouter.get('/analytics', async (_req, res) => {
   });
 
   const pushUsers = (await prisma.pushSubscription.findMany({ select: { userId: true }, distinct: ['userId'] })).length;
+
+  // Activation (last 30 days of signups): the retention-predicting first win —
+  // did they complete a workout within 24h of signing up?
+  const signups30 = await prisma.user.findMany({
+    where: { createdAt: { gte: since30 } },
+    select: { id: true, createdAt: true, onboarded: true },
+  });
+  let activated24h = 0;
+  if (signups30.length) {
+    const firstDone = await prisma.lessonCompletion.groupBy({
+      by: ['userId'],
+      where: { userId: { in: signups30.map((u) => u.id) } },
+      _min: { completedAt: true },
+    });
+    const firstMap = new Map(firstDone.map((f) => [f.userId, f._min.completedAt]));
+    for (const u of signups30) {
+      const first = firstMap.get(u.id);
+      if (first && first.getTime() - u.createdAt.getTime() <= 86_400_000) activated24h++;
+    }
+  }
+  const activation = {
+    signups: signups30.length,
+    onboarded: signups30.filter((u) => u.onboarded).length,
+    activated24h,
+  };
+
   res.json({
     onlineNow: onlineCount(),
     pushUsers,
+    activation,
     dau: dau.map((d) => ({ day: d.day, users: Number(d.users) })),
     funnel,
     clientErrors: clientErrorsRaw.map((e) => ({ message: e.meta, count: e._count })),

@@ -26,7 +26,7 @@ const SELECT = {
   mapUrl: true, lat: true, lng: true, facilities: true, hours: true,
   ladiesOnly: true, ladiesHours: true,
   country: true, currency: true, priceFromAmount: true, priceFrom: true, priceFromAr: true,
-  featured: true, views: true, contacts: true,
+  featured: true, verified: true, views: true, contacts: true,
 } as const;
 
 function parseList(json: string | null | undefined): string[] {
@@ -117,7 +117,7 @@ venuesRouter.get('/', async (req, res) => {
       ...(ladies ? { ladiesOnly: true } : {}),
     },
     select: SELECT,
-    orderBy: [{ featured: 'desc' }, { order: 'asc' }],
+    orderBy: [{ featured: 'desc' }, { verified: 'desc' }, { order: 'asc' }],
     take: 100,
   });
 

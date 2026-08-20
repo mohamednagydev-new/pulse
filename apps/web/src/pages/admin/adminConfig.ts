@@ -262,7 +262,7 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'partners', label: 'Partners / Sponsors', api: 'partners', listLabel: 'name', group: 'business',
-    table: ['logo', 'name', 'type', 'city', 'country', 'featured', 'active', 'views'],
+    table: ['logo', 'name', 'type', 'city', 'country', 'featured', 'verified', 'foundingUntil', 'active', 'views'],
     fields: [
       { name: 'name', label: 'Partner name', type: 'text' },
       { name: 'nameAr', label: 'Name (Arabic)', type: 'text' },
@@ -297,7 +297,9 @@ export const RESOURCES: Resource[] = [
       { name: 'website', label: 'Website (https://)', type: 'text' },
       { name: 'instagram', label: 'Instagram URL', type: 'text' },
       { name: 'mapUrl', label: 'Google Maps link', type: 'text' },
-      { name: 'featured', label: 'Featured', type: 'select', options: ['true', 'false'] },
+      { name: 'featured', label: 'Featured (top tier — home placement)', type: 'select', options: ['true', 'false'] },
+      { name: 'verified', label: 'Verified (paid middle tier — badge + boost)', type: 'select', options: ['true', 'false'] },
+      { name: 'foundingUntil', label: 'Founding free until (YYYY-MM-DD — renewal pitch date)', type: 'text' },
       { name: 'active', label: 'Active', type: 'select', options: ['true', 'false'] },
       { name: 'views', label: 'Views (stat)', type: 'number' },
       { name: 'contacts', label: 'Contacts (stat)', type: 'number' },

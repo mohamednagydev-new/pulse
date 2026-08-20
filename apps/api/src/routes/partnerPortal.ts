@@ -78,3 +78,12 @@ partnerPortalRouter.patch('/leads/:id', async (req: AuthedRequest, res) => {
   if (!updated.count) return res.status(404).json({ error: 'Lead not found' });
   res.json({ ok: true });
 });
+
+// ---- Monthly report (rate card §7, self-serve) ----
+partnerPortalRouter.get('/report', async (req: AuthedRequest, res) => {
+  const partner = await myPartner(req.userId!);
+  if (!partner) return res.status(404).json({ error: 'No partner page linked to this account' });
+  const { buildPartnerReport } = await import('../lib/partnerReport');
+  const report = await buildPartnerReport(partner.id, String(req.query.month ?? '') || undefined);
+  res.json(report);
+});

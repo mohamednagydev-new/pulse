@@ -1,0 +1,2 @@
+ALTER TABLE "Partner" ADD COLUMN "verified" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Partner" ADD COLUMN "foundingUntil" TEXT;

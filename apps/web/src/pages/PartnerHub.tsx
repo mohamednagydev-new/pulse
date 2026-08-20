@@ -186,6 +186,9 @@ export default function PartnerHub() {
         <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage('cover', e.target.files[0])} />
       </motion.section>
 
+      {/* ---- Monthly report: the rate-card one-pager, self-serve ---- */}
+      <MonthlyReport L={L} isGym={isGym} />
+
       {/* ---- Gym toolkit: invite card, analytics, TV board ---- */}
       {isGym && (
         <>
@@ -407,5 +410,88 @@ export default function PartnerHub() {
         </div>
       </motion.section>
     </div>
+  );
+}
+
+/** The rate-card monthly one-pager, self-serve: pick a month, see the numbers,
+ *  copy a WhatsApp-ready summary. Same data the admin sends on the 1st. */
+function MonthlyReport({ L, isGym }: { L: (en: string, ar: string) => string; isGym: boolean }) {
+  const now = new Date();
+  const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const options = [0, 1, 2].map((back) => monthKey(new Date(now.getFullYear(), now.getMonth() - back, 1)));
+  const [month, setMonth] = useState(options[0]);
+  const { data: report } = useQuery({
+    queryKey: ['partner-report', month],
+    queryFn: () => api.get(`/api/partner-portal/report?month=${month}`),
+  });
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={spring}
+      className="mx-4 mt-4 rounded-2xl bg-white p-4 shadow-sm"
+    >
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-extrabold">📊 {L('Monthly report', 'التقرير الشهري')}</h2>
+        <select
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="rounded-xl border border-gray-200 bg-transparent px-2 py-1 text-xs font-bold"
+        >
+          {options.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+      {!report ? (
+        <p className="py-4 text-center text-xs text-gray-400">…</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl bg-gray-50 p-2">
+              <p className="text-lg font-extrabold">{report.monthStats.leads}</p>
+              <p className="text-[10px] text-gray-400">{L('Leads this month', 'عملاء الشهر')}</p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-2">
+              <p className="text-lg font-extrabold">{report.allTime.views}</p>
+              <p className="text-[10px] text-gray-400">{L('Page views (all-time)', 'مشاهدات (إجمالي)')}</p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-2">
+              <p className="text-lg font-extrabold">{report.allTime.contacts}</p>
+              <p className="text-[10px] text-gray-400">{L('Contact taps', 'تواصل')}</p>
+            </div>
+            {isGym && (
+              <>
+                <div className="rounded-xl bg-gray-50 p-2">
+                  <p className="text-lg font-extrabold">{report.monthStats.newMembers}</p>
+                  <p className="text-[10px] text-gray-400">{L('New members', 'أعضاء جدد')}</p>
+                </div>
+                <div className="rounded-xl bg-gray-50 p-2">
+                  <p className="text-lg font-extrabold">{report.members.active30}<span className="text-xs text-gray-400">/{report.members.total}</span></p>
+                  <p className="text-[10px] text-gray-400">{L('Active members (30d)', 'نشطين (٣٠ يوم)')}</p>
+                </div>
+                <div className="rounded-xl bg-gray-50 p-2">
+                  <p className="text-lg font-extrabold">{report.monthStats.memberWorkouts}</p>
+                  <p className="text-[10px] text-gray-400">{L('Member workouts', 'تمرينات أعضاءك')}</p>
+                </div>
+              </>
+            )}
+          </div>
+          {isGym && report.topPerformers?.length > 0 && (
+            <p className="mt-2 text-xs text-gray-500">
+              🏆 {report.topPerformers.map((p: any) => `${p.firstName} (${p.workouts})`).join(' · ')}
+            </p>
+          )}
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(report.summaryText);
+              toast(L('Report copied — paste it anywhere', 'التقرير اتنسخ — الصقه في أي مكان'), 'success');
+            }}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-gray-100 py-2 text-xs font-bold text-gray-600"
+          >
+            <Copy size={12} /> {L('Copy summary', 'انسخ الملخص')}
+          </button>
+        </>
+      )}
+    </motion.section>
   );
 }

@@ -524,3 +524,14 @@ adminOpsRouter.post('/group-sessions/:id/timer', async (req: AuthedRequest, res)
   });
   res.json({ ok: true });
 });
+
+// =========================================================================
+// Partner monthly report — same builder the portal uses; this is what gets
+// pasted into the partner's WhatsApp on the first of the month.
+// =========================================================================
+adminOpsRouter.get('/partners/:id/report', async (req: AuthedRequest, res) => {
+  const { buildPartnerReport } = await import('../lib/partnerReport');
+  const report = await buildPartnerReport(req.params.id, String(req.query.month ?? '') || undefined);
+  if (!report) return res.status(404).json({ error: 'Partner not found' });
+  res.json(report);
+});
