@@ -210,7 +210,7 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
   // level-ups) of people you follow. Mixing them made the feed read as
   // "only nudges" — the split lets real conversation surface.
   const filter = String(req.query.filter ?? 'all');
-  const PROGRESS_KINDS = ['completion', 'streak', 'levelup'];
+  const PROGRESS_KINDS = ['completion', 'streak', 'levelup', 'badge'];
   const kindWhere =
     filter === 'posts'
       ? { kind: { notIn: PROGRESS_KINDS } }
@@ -255,6 +255,12 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
     });
     rest = [...rest, ...discover].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
+
+  // The 2-hour community pulse must not drown the humans: recency sorting was
+  // filling the whole window with official posts, which made every lens look
+  // identical. At most 4 per load — the rest of the slots go to real people.
+  let pulseSeen = 0;
+  rest = rest.filter((p) => (p.refType === 'autopost' ? ++pulseSeen <= 4 : true));
 
   const shaped = rest.map((p) => shapePost(p, req.userId!));
   res.json(pinned ? [{ ...shapePost(pinned, req.userId!), pinned: true, pinnedUntil: pinned.pinnedUntil }, ...shaped] : shaped);
