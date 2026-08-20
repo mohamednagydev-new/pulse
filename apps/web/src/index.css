@@ -75,6 +75,23 @@ h3 {
 .dark .admin-frame {
   background: #0e0d11;
 }
+/* Admin surfaces stay SOLID in dark mode. The app's glass remaps
+   (.dark .bg-white → 6.5% tint) suit phone screens over a gradient, but they
+   made admin drawers, modals, dropdowns and panels see-through over the
+   dashboard behind them. Higher specificity than the global remaps, so these
+   win in both declaration orders. */
+.dark .admin-frame .bg-white,
+.dark .admin-frame .bg-white\/95,
+.dark .admin-frame .bg-white\/90,
+.dark .admin-frame .bg-white\/80,
+.dark .admin-frame .bg-white\/70,
+.dark .admin-frame .bg-white\/60 {
+  background-color: #17161c !important;
+}
+.dark .admin-frame .bg-gray-50,
+.dark .admin-frame .bg-gray-100 {
+  background-color: #1f1e24 !important;
+}
 
 .app-frame {
   @apply relative z-10 mx-auto min-h-screen w-full max-w-[480px];
