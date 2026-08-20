@@ -338,6 +338,8 @@ socialRouter.post('/posts', async (req: AuthedRequest, res) => {
       mediaUrl: z.string().optional(),
       /** Poll options — admin-only surveys/announcement questions. */
       poll: z.array(z.string().min(1).max(80)).min(2).max(4).optional(),
+      /** Tagged friends (userIds) — each gets a "tagged you" notification. */
+      mentions: z.array(z.string()).max(10).optional(),
     })
     .safeParse(req.body);
   if (!parsed.success || (!parsed.data.text?.trim() && !parsed.data.mediaUrl && !parsed.data.poll)) {
@@ -367,6 +369,30 @@ socialRouter.post('/posts', async (req: AuthedRequest, res) => {
     mediaUrl: parsed.data.mediaUrl,
     pollJson: parsed.data.poll ? JSON.stringify(parsed.data.poll) : undefined,
   });
+
+  // Tag notifications — validated against real users, never the author, never
+  // across a block in either direction (a mention must not be a harassment path).
+  const mentionIds = (parsed.data.mentions ?? []).filter((id) => id !== req.userId);
+  if (mentionIds.length) {
+    const [author, targets, blocks] = await Promise.all([
+      prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } }),
+      prisma.user.findMany({ where: { id: { in: mentionIds } }, select: { id: true } }),
+      prisma.block.findMany({ where: { OR: [{ blockerId: req.userId! }, { blockedId: req.userId! }] } }),
+    ]);
+    const blocked = new Set(blocks.flatMap((b) => [b.blockerId, b.blockedId]));
+    for (const t of targets) {
+      if (blocked.has(t.id)) continue;
+      notifyUser(t.id, {
+        title: 'You were tagged 💬',
+        titleAr: 'اتعملك منشن 💬',
+        body: `${author?.firstName ?? 'Someone'} tagged you in a post`,
+        bodyAr: `${author?.firstName ?? 'حد'} عملك منشن في بوست`,
+        url: '/community',
+        type: 'general',
+      }).catch(() => {});
+    }
+  }
+
   res.status(201).json(shapePost({ ...post, reactions: [], comments: [], pollVotes: [] }, req.userId!));
 });
 

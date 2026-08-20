@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Users, MessageSquare, Send, ImagePlus, X, Award, Clapperboard, BarChart3, Radio } from 'lucide-react';
-import { api, uploadWithAuth } from '../../lib/api';
+import { Users, MessageSquare, ImagePlus, AtSign, Award, Clapperboard, Radio } from 'lucide-react';
+import { api } from '../../lib/api';
+import Avatar from '../../components/Avatar';
+import PostComposer from '../../components/PostComposer';
 import { trackAd, pickAd } from '../../lib/ads';
 import { getSocket } from '../../lib/socket';
 import { MediaImage } from '../../components/ui';
@@ -36,14 +38,11 @@ export default function Community() {
   const L = (en: string, ar: string) => (isAr ? ar : en);
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [text, setText] = useState('');
   // Feed lens: everything, only real posts, or only buddies' progress.
   const [feedFilter, setFeedFilter] = useState<'all' | 'posts' | 'progress'>('all');
-  const [media, setMedia] = useState<{ mediaType: string; mediaUrl: string } | null>(null);
-  const [uploading, setUploading] = useState(false);
-  // Admin surveys: a poll rides on the post («التحدي الجاي يبقى إيه؟»).
-  const [pollOptions, setPollOptions] = useState<string[] | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  // Composer sheet — draft carries the daily prompt in when tapped.
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [draft, setDraft] = useState('');
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
   const { data: feed, isLoading } = useQuery({
     queryKey: [...FEED_KEY, feedFilter],
@@ -52,31 +51,6 @@ export default function Community() {
   const { data: unread } = useQuery({ queryKey: ['chat-unread'], queryFn: () => api.get('/api/chat/unread'), refetchInterval: 20000 });
   const { data: ads } = useQuery({ queryKey: ['feed-ad'], queryFn: () => api.get('/api/banners?section=feed_ad') });
   const ad = pickAd<any>(ads);
-
-  const post = useMutation({
-    mutationFn: () => {
-      const poll = pollOptions?.map((o) => o.trim()).filter(Boolean);
-      return api.post('/api/social/posts', { text, ...(media ?? {}), ...(poll && poll.length >= 2 ? { poll } : {}) });
-    },
-    onSuccess: () => {
-      setText('');
-      setMedia(null);
-      setPollOptions(null);
-      qc.invalidateQueries({ queryKey: FEED_KEY });
-    },
-  });
-
-  const onFile = async (file: File) => {
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await uploadWithAuth('/api/social/upload', fd);
-      if (res.ok) setMedia(await res.json());
-    } finally {
-      setUploading(false);
-    }
-  };
 
   useEffect(() => {
     if (ad) trackAd(ad.id, 'impression');
@@ -172,15 +146,14 @@ export default function Community() {
         transition={{ ...spring, delay: 0.05 }}
         className="mx-4 rounded-2xl glass p-3"
       >
-        {/* Daily conversation starter — tap to answer it as your post. */}
-        {!text && (() => {
+        {/* Daily conversation starter — tap to answer it in the composer. */}
+        {(() => {
           const day = Math.floor(Date.now() / 86400000);
           const prompt = PROMPTS[day % PROMPTS.length];
-          const isArNow = document.documentElement.dir === 'rtl';
-          const q = isArNow ? prompt.ar : prompt.en;
+          const q = isAr ? prompt.ar : prompt.en;
           return (
             <button
-              onClick={() => setText(`${q}\n`)}
+              onClick={() => { setDraft(`${q}\n`); setComposerOpen(true); }}
               className="mb-2 flex w-full items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500/15 to-purple-500/10 px-3 py-2.5 text-start"
             >
               <span className="text-base" aria-hidden>💬</span>
@@ -192,62 +165,26 @@ export default function Community() {
             </button>
           );
         })()}
-        <div className="flex items-center gap-2">
-          <input
-            className="flex-1 bg-transparent text-sm outline-none"
-            placeholder={t('community.sharePh')}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (text.trim() || media) && post.mutate()}
-          />
-          <button onClick={() => fileRef.current?.click()} disabled={uploading} className="text-gray-400" aria-label={t('community.addMedia')}>
-            <ImagePlus size={20} />
-          </button>
-          {me?.role === 'ADMIN' && (
-            <button
-              onClick={() => setPollOptions(pollOptions ? null : ['', ''])}
-              className={pollOptions ? 'text-violet-500' : 'text-gray-400'}
-              aria-label={t('community.addPoll')}
-            >
-              <BarChart3 size={20} />
-            </button>
-          )}
-          <button onClick={() => (text.trim() || media) && post.mutate()} disabled={post.isPending || uploading} className="rounded-full btn-primary p-2 disabled:opacity-60">
-            <Send size={16} />
-          </button>
-          <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
-        </div>
-        {uploading && <p className="mt-2 text-xs text-gray-400">Uploading…</p>}
-        {pollOptions && (
-          <div className="mt-2 space-y-1.5">
-            {pollOptions.map((opt, i) => (
-              <input
-                key={i}
-                className="w-full rounded-xl bg-gray-100 px-3 py-2 text-sm outline-none"
-                placeholder={`${t('community.pollOption')} ${i + 1}`}
-                value={opt}
-                maxLength={80}
-                onChange={(e) => setPollOptions(pollOptions.map((o, j) => (j === i ? e.target.value : o)))}
-              />
-            ))}
-            {pollOptions.length < 4 && (
-              <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-xs font-bold text-violet-500">
-                + {t('community.pollAddOption')}
-              </button>
-            )}
-          </div>
-        )}
-        {media && (
-          <div className="relative mt-2 w-fit">
-            {media.mediaType === 'image' ? (
-              <MediaImage path={media.mediaUrl} className="h-24 w-24 rounded-lg object-cover" />
-            ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-500">Video ready</div>
-            )}
-            <button onClick={() => setMedia(null)} aria-label="Remove media" className="absolute -end-2 -top-2 rounded-full bg-black/70 p-1.5 text-white"><X size={12} /></button>
-          </div>
-        )}
+        {/* Fake-input trigger — the real composer is a full bottom sheet with
+            room to type, upload, tag friends. The strip was too cramped. */}
+        <button
+          onClick={() => { setDraft(''); setComposerOpen(true); }}
+          className="flex w-full items-center gap-2.5 text-start"
+        >
+          <Avatar path={me?.avatarUrl ?? undefined} name={me?.firstName} className="h-9 w-9 shrink-0" />
+          <span className="flex-1 rounded-full bg-gray-100 px-4 py-2.5 text-sm text-gray-400">{t('community.sharePh')}</span>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400"><ImagePlus size={17} /></span>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400"><AtSign size={17} /></span>
+        </button>
       </motion.div>
+
+      <PostComposer
+        open={composerOpen}
+        onClose={() => setComposerOpen(false)}
+        draft={draft}
+        isAdmin={me?.role === 'ADMIN'}
+        onPosted={() => setComposerOpen(false)}
+      />
 
       {isLoading ? (
         /* Skeleton posts instead of a bare spinner: the screen keeps its shape
