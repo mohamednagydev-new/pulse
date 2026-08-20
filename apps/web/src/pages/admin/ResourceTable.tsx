@@ -186,7 +186,9 @@ export default function ResourceTable({
       </div>
 
       {/* Table */}
-      <div className="max-h-[calc(100vh-16rem)] overflow-auto rounded-xl border border-gray-200 bg-white">
+      {/* Horizontal-only scroll: an inner vertical scroller doubled up with the
+          page scrollbar. Sticky headers now pin against the page scroll. */}
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
         <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead>
             <tr>

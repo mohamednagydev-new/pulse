@@ -68,6 +68,12 @@ h3 {
 /* Admin escapes the phone frame: the dashboard is the one desktop-first surface. */
 .admin-frame {
   @apply relative z-10 min-h-screen w-full;
+  /* Solid, theme-aware base: the dark-mode gray remaps are translucent, which
+     let the body backdrop bleed through the dashboard. */
+  background: #f3f4f6;
+}
+.dark .admin-frame {
+  background: #0e0d11;
 }
 
 .app-frame {

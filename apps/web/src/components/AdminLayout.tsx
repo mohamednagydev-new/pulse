@@ -83,7 +83,7 @@ export default function AdminLayout() {
     to === '/admin' ? location.pathname === '/admin' : location.pathname.startsWith(to);
 
   const SideNav = ({ onNavigate }: { onNavigate?: () => void }) => (
-    <nav className="flex h-full flex-col gap-4 overflow-y-auto px-3 py-4">
+    <nav className="no-scrollbar flex h-full flex-col gap-4 overflow-y-auto px-3 py-4">
       <Link to="/admin" onClick={onNavigate} className="flex items-center gap-2 px-2">
         <img src="/pwa-192.png" alt="" className="h-8 w-auto" />
         <span className="text-sm font-extrabold tracking-wide text-white">ADMIN</span>

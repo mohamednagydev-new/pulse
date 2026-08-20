@@ -301,7 +301,9 @@ export default function App() {
 
   return (
     <>
-      <DesktopBackdrop />
+      {/* The fixed brand backdrop shows through the admin shell (whose grays go
+          translucent in dark mode) — admin is full-width, so skip it there. */}
+      {!location.pathname.startsWith('/admin') && <DesktopBackdrop />}
       <Toaster />
       <FeatureToast />
       <OfflineBanner />
