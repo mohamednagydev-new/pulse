@@ -152,10 +152,15 @@ function shapePost(p: any, me: string) {
       };
     } catch { /* malformed poll — render as a plain post */ }
   }
+  let mentions: { id: string; name: string }[] | null = null;
+  if (p.mentionsJson) {
+    try { mentions = JSON.parse(p.mentionsJson); } catch { /* malformed — plain text */ }
+  }
   return {
     id: p.id,
     kind: p.kind,
     poll,
+    mentions,
     text: p.text,
     textAr: p.textAr,
     mediaType: p.mediaType,
@@ -364,24 +369,31 @@ socialRouter.post('/posts', async (req: AuthedRequest, res) => {
       return res.status(400).json({ error: 'Invalid media' });
     }
   }
+  // Mentions are validated BEFORE the post exists so they can be stored on it —
+  // real users only, never the author, never across a block in either direction
+  // (a mention must not be a harassment path). Stored as [{id,name}] so the
+  // client can linkify @name to the right profile without guessing.
+  let validMentions: { id: string; name: string }[] = [];
+  const mentionIds = (parsed.data.mentions ?? []).filter((id) => id !== req.userId);
+  if (mentionIds.length) {
+    const [targets, blocks] = await Promise.all([
+      prisma.user.findMany({ where: { id: { in: mentionIds } }, select: { id: true, firstName: true } }),
+      prisma.block.findMany({ where: { OR: [{ blockerId: req.userId! }, { blockedId: req.userId! }] } }),
+    ]);
+    const blocked = new Set(blocks.flatMap((b) => [b.blockerId, b.blockedId]));
+    validMentions = targets.filter((t) => !blocked.has(t.id)).map((t) => ({ id: t.id, name: t.firstName }));
+  }
+
   const post = await createFeedPost(req.userId!, parsed.data.poll ? 'poll' : 'text', parsed.data.text, undefined, undefined, {
     mediaType: parsed.data.mediaType,
     mediaUrl: parsed.data.mediaUrl,
     pollJson: parsed.data.poll ? JSON.stringify(parsed.data.poll) : undefined,
+    mentionsJson: validMentions.length ? JSON.stringify(validMentions) : undefined,
   });
 
-  // Tag notifications — validated against real users, never the author, never
-  // across a block in either direction (a mention must not be a harassment path).
-  const mentionIds = (parsed.data.mentions ?? []).filter((id) => id !== req.userId);
-  if (mentionIds.length) {
-    const [author, targets, blocks] = await Promise.all([
-      prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } }),
-      prisma.user.findMany({ where: { id: { in: mentionIds } }, select: { id: true } }),
-      prisma.block.findMany({ where: { OR: [{ blockerId: req.userId! }, { blockedId: req.userId! }] } }),
-    ]);
-    const blocked = new Set(blocks.flatMap((b) => [b.blockerId, b.blockedId]));
-    for (const t of targets) {
-      if (blocked.has(t.id)) continue;
+  if (validMentions.length) {
+    const author = await prisma.user.findUnique({ where: { id: req.userId! }, select: { firstName: true } });
+    for (const t of validMentions) {
       notifyUser(t.id, {
         title: 'You were tagged 💬',
         titleAr: 'اتعملك منشن 💬',

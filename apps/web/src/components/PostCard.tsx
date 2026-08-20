@@ -36,6 +36,30 @@ function PostVideo({ id }: { id: string }) {
   return <video controls playsInline className="mt-3 max-h-96 w-full rounded-xl bg-black" src={src} />;
 }
 
+/** Turn each stored @name into a profile link. Mentions ride on the post as
+ *  [{id,name}], so linking never guesses — an @ in plain prose stays text. */
+function linkifyMentions(text: string, mentions?: { id: string; name: string }[] | null) {
+  if (!mentions?.length) return text;
+  const names = [...mentions]
+    .sort((a, b) => b.name.length - a.name.length)
+    .map((m) => m.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const parts = text.split(new RegExp(`@(${names.join('|')})`, 'g'));
+  return parts.map((part, i) => {
+    if (i % 2 === 1) {
+      const m = mentions.find((x) => x.name === part);
+      if (m) {
+        return (
+          <Link key={i} to={`/u/${m.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-brand-blue">
+            @{part}
+          </Link>
+        );
+      }
+      return `@${part}`;
+    }
+    return part;
+  });
+}
+
 export default function PostCard({ post, queryKey }: { post: any; queryKey: any[] }) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
@@ -112,7 +136,7 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
         const text = i18n.language === 'ar' && post.textAr ? post.textAr : post.text;
         if (!text) return null;
         const banner = KIND_BANNER[post.kind];
-        if (!banner) return <p className="mt-3 text-ink">{text}</p>;
+        if (!banner) return <p className="mt-3 text-ink">{linkifyMentions(text, post.mentions)}</p>;
         const inner = (
           <div className={`mt-3 flex items-center gap-3 rounded-xl bg-gradient-to-r ${banner.grad} p-3 text-white shadow-sm`}>
             <motion.span

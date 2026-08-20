@@ -743,6 +743,8 @@ model FeedPost {
   userId    String
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   kind      String         // text | completion | badge | levelup | challenge
+  /** Tagged friends, JSON [{id,name}] — lets the client linkify @name reliably. */
+  mentionsJson String?
   text      String?
   /** Arabic copy for system-generated posts (completions, level-ups, badges) —
    *  the client picks text/textAr by UI language. User-written posts leave it null. */

@@ -39,10 +39,10 @@ export async function createFeedPost(
   text?: string,
   refType?: string,
   refId?: string,
-  media?: { mediaType?: string; mediaUrl?: string; textAr?: string; pollJson?: string },
+  media?: { mediaType?: string; mediaUrl?: string; textAr?: string; pollJson?: string; mentionsJson?: string },
 ) {
   const post = await prisma.feedPost.create({
-    data: { userId, kind, text, textAr: media?.textAr, refType, refId, mediaType: media?.mediaType, mediaUrl: media?.mediaUrl, pollJson: media?.pollJson },
+    data: { userId, kind, text, textAr: media?.textAr, refType, refId, mediaType: media?.mediaType, mediaUrl: media?.mediaUrl, pollJson: media?.pollJson, mentionsJson: media?.mentionsJson },
     include: { user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true, level: true } } },
   });
   await emitFeed(userId, 'feed:new', post);
