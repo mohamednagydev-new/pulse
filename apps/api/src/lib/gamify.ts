@@ -9,6 +9,33 @@ const yesterday = () => daysAgoStr(1);
 
 const MAX_FREEZES = 3;
 
+// Streak repair (Duolingo-style): a dead streak of >= 3 days can be bought
+// back with one active day inside a 48h window.
+const REPAIR_MIN_STREAK = 3;
+const REPAIR_WINDOW_MS = 48 * 60 * 60 * 1000;
+const REPAIR_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** ISO week-of-year label, e.g. "2026w34" — keys the repair-used claim rows. */
+function weekOfYear(d: Date): string {
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = date.getUTCDay() || 7; // Mon=1 … Sun=7
+  date.setUTCDate(date.getUTCDate() + 4 - day); // Thursday of this ISO week
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${date.getUTCFullYear()}w${week}`;
+}
+
+/** Did this user cash in a streak repair in the last 7 days? (anti-abuse gate) */
+async function restoredRecently(userId: string): Promise<boolean> {
+  const row = await prisma.jobRun.findFirst({
+    where: {
+      key: { startsWith: `streakrepairused:${userId}:` },
+      ranAt: { gte: new Date(Date.now() - REPAIR_COOLDOWN_MS) },
+    },
+  });
+  return !!row;
+}
+
 /** Called on any activity (lesson complete, food logged). Updates streak (with freeze mercy) + badges. */
 export async function touchStreak(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -19,9 +46,11 @@ export async function touchStreak(userId: string) {
     return;
   }
 
+  const now = new Date();
   let current: number;
   let freezes = user.streakFreezes;
   let usedFreeze = false;
+  let isReset = false;
   if (user.lastActiveOn === yesterday()) {
     current = user.currentStreak + 1;
   } else if (user.lastActiveOn === daysAgo(2) && freezes > 0 && user.currentStreak > 0) {
@@ -31,15 +60,75 @@ export async function touchStreak(userId: string) {
     usedFreeze = true;
   } else {
     current = 1;
+    isReset = true;
   }
-  // Earn a freeze at every 7-day milestone (capped).
-  if (current >= 7 && current % 7 === 0 && freezes < MAX_FREEZES) freezes += 1;
+
+  // Streak repair. Both fields are rewritten on every touch: an offer sets
+  // them, everything else (restore, expiry, plain increment) clears them.
+  let repairValue: number | null = null;
+  let repairUntil: Date | null = null;
+  let offeredRepair = 0; // dying streak value, when a new offer was just set
+  let restored = false;
+  const repairOpen = user.streakRepairUntil != null && now < user.streakRepairUntil;
+  if (!isReset) {
+    // INCREMENT (incl. freeze save): an open repair window turns today's
+    // activity into a restore — the dead streak comes back, plus today.
+    // An expired window just falls through and the stale fields clear silently.
+    if (repairOpen && user.streakRepairValue != null) {
+      current = user.streakRepairValue + 1;
+      restored = true;
+    }
+  } else {
+    // RESET: the streak is dying for real (no freeze could save it). Offer a
+    // 48h repair if it was worth saving — unless a repair was already cashed
+    // in within the last 7 days (no cheap back-to-back revivals).
+    const prev = user.currentStreak;
+    if (prev >= REPAIR_MIN_STREAK && !(await restoredRecently(userId))) {
+      repairValue = prev;
+      repairUntil = new Date(now.getTime() + REPAIR_WINDOW_MS);
+      offeredRepair = prev;
+    }
+  }
+
+  // Earn a freeze at every 7-day milestone (capped). A restore skips this:
+  // those milestones already paid out when the streak first reached them.
+  if (!restored && current >= 7 && current % 7 === 0 && freezes < MAX_FREEZES) freezes += 1;
 
   const longest = Math.max(current, user.longestStreak);
   await prisma.user.update({
     where: { id: userId },
-    data: { lastActiveOn: t, currentStreak: current, longestStreak: longest, streakFreezes: freezes },
+    data: {
+      lastActiveOn: t, currentStreak: current, longestStreak: longest, streakFreezes: freezes,
+      streakRepairValue: repairValue, streakRepairUntil: repairUntil,
+    },
   });
+  if (restored) {
+    // Claim the week-keyed lock so a fresh offer can't be minted for 7 days
+    // (unique key — a dup create just means it's already claimed this week).
+    try {
+      await prisma.jobRun.create({ data: { key: `streakrepairused:${userId}:${weekOfYear(now)}` } });
+    } catch {}
+    const { notifyUser } = await import('../routes/push');
+    notifyUser(userId, {
+      type: 'general',
+      title: `Streak restored! 🔥 ${current} days`,
+      titleAr: `رجعت السلسلة! 🔥 ${current} يوم`,
+      body: `Your streak is back like you never missed a day.`,
+      bodyAr: `سلسلتك رجعت كأنك ماغبتش يوم.`,
+      url: '/',
+    }).catch(() => {});
+  }
+  if (offeredRepair > 0) {
+    const { notifyUser } = await import('../routes/push');
+    notifyUser(userId, {
+      type: 'general',
+      title: 'Your streak is not dead yet 🔥',
+      titleAr: 'سلسلتك لسه ماماتتش 🔥',
+      body: `One full workout in the next 48 hours brings your ${offeredRepair}-day streak back.`,
+      bodyAr: `تمرينة واحدة كاملة خلال 48 ساعة ترجّع سلسلة الـ${offeredRepair} يوم.`,
+      url: '/',
+    }).catch(() => {});
+  }
   if (usedFreeze) {
     // notifyUser, not a bare row: this deserves the push banner + live bell too.
     const { notifyUser } = await import('../routes/push');

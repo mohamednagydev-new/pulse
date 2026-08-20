@@ -416,6 +416,14 @@ async function runCheck() {
     });
   }
 
+  // Saturday 07:00 — squad battles turn over: settle last week's head-to-heads
+  // (winners get their XP, both sides get the score) and pair the new week's
+  // matchups before anyone opens the app.
+  if (localDow(now) === 6 && hour === 7 && (await claimJob(`squadbattles:${day}`))) {
+    const { pairSquadBattles } = await import('./squadBattles');
+    await runLogged('squad-battles', false, pairSquadBattles);
+  }
+
   // Saturday 12:00 — auto-post last week's league promotions to the Facebook
   // Page (the fixed weekly appointment from LAUNCH-CAMPAIGNS.md, on autopilot).
   // Requires FB_PAGE_ID/FB_PAGE_TOKEN in .env; silently skipped otherwise.

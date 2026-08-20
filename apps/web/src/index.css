@@ -116,7 +116,10 @@ h3 {
 }
 
 .safe-bottom {
-  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0));
+  /* 76px hid the last card behind the bar on Android: gesture-nav overlays the
+     bottom while env(safe-area-inset-bottom) reports 0 in many WebViews. 96px
+     clears the tallest real-world combination (bar + labels + gesture area). */
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0));
 }
 
 /* ---- Global type scale (user feedback: fonts too small, eyes hurt) ----
@@ -124,6 +127,19 @@ h3 {
    below don't scale with rem, so each gets nudged up a step explicitly. */
 html {
   font-size: 18px;
+}
+/* Android/small screens: 18px rem-base made everything oversized on narrow
+   devices (user report). Scale down with the viewport — desktop/tablets keep 18. */
+@media (max-width: 440px) {
+  html { font-size: 17px; }
+}
+@media (max-width: 390px) {
+  html { font-size: 16px; }
+}
+@media (max-width: 360px) {
+  html { font-size: 15px; }
+}
+html {
   /* Android Chrome "font boosting" inflates SOME text blocks and not others —
      that's the inconsistent-sizes report from Android users. 100% pins every
      block to the sizes we set (users can still zoom, and OS accessibility

@@ -486,6 +486,25 @@ export function Buddies() {
             </div>
           )}
 
+          {/* ── Squads — team battles entry point. ── */}
+          {view === 'friends' && (
+            <button
+              onClick={() => navigate('/squads')}
+              className="flex w-full items-center gap-3 rounded-2xl bg-white p-3 text-start shadow-sm"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-pink/10 text-xl" aria-hidden>
+                ⚔️
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-bold leading-tight">{L('Squads — team battles', 'السكواد — معارك الفرق')}</span>
+                <span className="block text-[11px] text-gray-400">
+                  {L('2-8 friends vs another squad, every week', 'من ٢ لـ٨ صحاب ضد سكواد تاني كل أسبوع')}
+                </span>
+              </span>
+              <span className="shrink-0 text-gray-300 rtl:rotate-180" aria-hidden>›</span>
+            </button>
+          )}
+
           {view === 'friends' && (buddies?.length ?? 0) > 0 && leaderboard.length > 0 && (
             <div>
               <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('battle.compete')}</p>

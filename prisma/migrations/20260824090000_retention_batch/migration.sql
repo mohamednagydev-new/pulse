@@ -1,0 +1,10 @@
+CREATE TABLE "ProgressPhoto" ("id" TEXT NOT NULL PRIMARY KEY, "userId" TEXT NOT NULL, "imagePath" TEXT NOT NULL, "weightKg" REAL, "note" TEXT, "takenOn" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "ProgressPhoto_userId_takenOn_idx" ON "ProgressPhoto"("userId", "takenOn");
+CREATE TABLE "Squad" ("id" TEXT NOT NULL PRIMARY KEY, "name" TEXT NOT NULL, "emoji" TEXT, "inviteCode" TEXT NOT NULL, "creatorId" TEXT NOT NULL, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE UNIQUE INDEX "Squad_inviteCode_key" ON "Squad"("inviteCode");
+CREATE TABLE "SquadMember" ("id" TEXT NOT NULL PRIMARY KEY, "squadId" TEXT NOT NULL, "userId" TEXT NOT NULL, "joinedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "SquadMember_squadId_fkey" FOREIGN KEY ("squadId") REFERENCES "Squad" ("id") ON DELETE CASCADE ON UPDATE CASCADE);
+CREATE UNIQUE INDEX "SquadMember_squadId_userId_key" ON "SquadMember"("squadId", "userId");
+CREATE TABLE "SquadBattle" ("id" TEXT NOT NULL PRIMARY KEY, "aId" TEXT NOT NULL, "bId" TEXT NOT NULL, "startsOn" TEXT NOT NULL, "endsOn" TEXT NOT NULL, "status" TEXT NOT NULL DEFAULT 'active', "winnerId" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX "SquadBattle_status_endsOn_idx" ON "SquadBattle"("status", "endsOn");
+ALTER TABLE "User" ADD COLUMN "streakRepairValue" INTEGER;
+ALTER TABLE "User" ADD COLUMN "streakRepairUntil" DATETIME;

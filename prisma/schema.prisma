@@ -64,6 +64,10 @@ model User {
   dietStartWeightKg Float?
   targetWeightKg    Float?
   streakFreezes Int      @default(1) // mercy tokens: one missed day consumes a freeze instead of resetting
+  /** Streak repair: when a 3+ streak dies, one full workout before the deadline
+   *  restores it — the quit moment becomes a comeback workout. */
+  streakRepairValue Int?
+  streakRepairUntil DateTime?
   reminderHour  Int?     // preferred daily reminder hour (0-23), local
   onboarded     Boolean  @default(false)
   scheduleJson  String?  // JSON: user's editable weekly training split [{day,focus,groups[]}]
@@ -1676,4 +1680,53 @@ model ContentIssue {
 
   @@unique([kind, refId])
   @@index([status])
+}
+
+// ---------------- Retention batch: photos / squads / streak repair ----------------
+
+/** Private progress photos — the proof that keeps people through plateaus. */
+model ProgressPhoto {
+  id        String   @id @default(cuid())
+  userId    String
+  imagePath String // images/ path from the upload pipeline
+  weightKg  Float?
+  note      String?
+  takenOn   DateTime @default(now())
+
+  @@index([userId, takenOn])
+}
+
+/** Small teams (2-8) that battle other squads weekly on workout counts. */
+model Squad {
+  id         String        @id @default(cuid())
+  name       String
+  emoji      String?
+  inviteCode String        @unique
+  creatorId  String
+  createdAt  DateTime      @default(now())
+  members    SquadMember[]
+}
+
+model SquadMember {
+  id       String   @id @default(cuid())
+  squadId  String
+  squad    Squad    @relation(fields: [squadId], references: [id], onDelete: Cascade)
+  userId   String
+  joinedAt DateTime @default(now())
+
+  @@unique([squadId, userId])
+}
+
+/** One week-long head-to-head between two squads (Saturday-paired). */
+model SquadBattle {
+  id        String   @id @default(cuid())
+  aId       String
+  bId       String
+  startsOn  String // YYYY-MM-DD (Saturday)
+  endsOn    String
+  status    String   @default("active") // active | done
+  winnerId  String? // squad id, null = draw
+  createdAt DateTime @default(now())
+
+  @@index([status, endsOn])
 }

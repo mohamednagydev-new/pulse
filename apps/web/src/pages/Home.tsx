@@ -10,6 +10,8 @@ import { currentTheme, toggleTheme } from '../lib/theme';
 import { api } from '../lib/api';
 import { Loader, ErrorMsg, MediaImage, HScroll, formatDuration } from '../components/ui';
 import TodayStrip from '../components/TodayStrip';
+import WeeklyRecapCard from '../components/WeeklyRecapCard';
+import StreakRepairBanner from '../components/StreakRepairBanner';
 import GettingStarted from '../components/GettingStarted';
 import PushNudge from '../components/PushNudge';
 import ComebackCard from '../components/ComebackCard';
@@ -112,7 +114,14 @@ export default function Home() {
           user sees the easy way back before anything asks for effort. */}
       <ComebackCard />
 
+      {/* Streak repair: a dead streak is the #1 quit trigger — the 48h
+          redemption offer must be the first thing a returning user sees. */}
+      <StreakRepairBanner />
+
       <TodayStrip />
+
+      {/* Sunday weekly recap — the ritual appointment with your own numbers. */}
+      <WeeklyRecapCard />
 
       {/* First-session orientation — users said they log in and don't know
           what's here or where to start. Gone once the four steps are done. */}

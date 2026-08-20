@@ -168,6 +168,10 @@ const CoachProfileEdit = lazyRoute(() => import('./pages/social/CoachProfileEdit
 const CoachDashboard = lazyRoute(() => import('./pages/social/CoachDashboard'));
 const CoachProgramDetail = lazyRoute(() => import('./pages/social/CoachProgramDetail'));
 const GroupSessions = lazyRoute(() => import('./pages/social/GroupSessions'));
+const Recap = lazyRoute(() => import('./pages/Recap'));
+const ProgressPhotos = lazyRoute(() => import('./pages/ProgressPhotos'));
+const Squads = lazyRoute(() => import('./pages/Squads'));
+const SquadDetail = lazyRoute(() => import('./pages/SquadDetail'));
 const GroupSessionDetail = lazyRoute(() => import('./pages/social/GroupSessionDetail'));
 const WeekZero = lazyRoute(() => import('./pages/WeekZero'));
 const Routines = lazyRoute(() => import('./pages/Routines'));
@@ -437,6 +441,10 @@ export default function App() {
           <Route path="/coach-program/:id" element={<CoachProgramDetail />} />
           <Route path="/group" element={<GroupSessions />} />
           <Route path="/group/:id" element={<GroupSessionDetail />} />
+          <Route path="/recap" element={<Recap />} />
+          <Route path="/progress-photos" element={<ProgressPhotos />} />
+          <Route path="/squads" element={<Squads />} />
+          <Route path="/squads/:id" element={<SquadDetail />} />
           <Route path="/week-zero" element={<WeekZero />} />
           <Route path="/routines" element={<Routines />} />
           <Route path="/coach-client/:id" element={<CoachClientDetail />} />

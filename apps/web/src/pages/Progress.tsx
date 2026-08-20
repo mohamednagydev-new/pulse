@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Flame, Trophy, CheckCircle2, TrendingDown, Medal, Share2, Ruler, Plus, Trash2, X, ImagePlus } from 'lucide-react';
+import { Flame, Trophy, CheckCircle2, TrendingDown, Medal, Share2, Ruler, Plus, Trash2, X, ImagePlus, ChevronRight } from 'lucide-react';
 import { api, uploadWithAuth } from '../lib/api';
 import { shareMilestone } from '../lib/shareCard';
 import { toast } from '../lib/toast';
@@ -81,6 +81,24 @@ export default function Progress() {
         )}
         {weights.length <= 1 && <p className="mt-2 text-xs text-gray-400">{t('progress2.weightHint')}</p>}
       </motion.section>
+
+      {/* Private before/after vault — lives next to the scale because photos are
+          the proof the scale can't give. */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '0px 0px -40px 0px' }}
+        transition={spring}
+      >
+        <Link to="/progress-photos" className="mx-4 mt-4 flex items-center gap-3 rounded-2xl bg-white p-5 shadow-sm">
+          <span className="text-2xl">📸</span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-bold">{i18n.language.startsWith('ar') ? 'صور التقدم' : 'Progress photos'}</span>
+            <span className="block truncate text-xs text-gray-400">{i18n.language.startsWith('ar') ? 'قبل/بعد — خاصة بيك' : 'Before/after, private'}</span>
+          </span>
+          <ChevronRight size={18} className="shrink-0 text-gray-300 rtl:rotate-180" />
+        </Link>
+      </motion.div>
 
       {/* Everything below is opt-in — same chips+pin pattern as Home. */}
       <MoreSections
