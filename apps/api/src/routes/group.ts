@@ -31,8 +31,13 @@ async function shape(sessions: { id: string; coachUserId: string }[], meId: stri
 
 // ---- Create ----
 groupRouter.post('/', async (req: AuthedRequest, res) => {
-  const me = await prisma.user.findUnique({ where: { id: req.userId! } });
-  if (!me?.isCoach) return res.status(403).json({ error: 'Coaches only' });
+  // Open to everyone — training together is a community feature, not a coach
+  // perk. The creator becomes the session host (timer/video controls). A cap
+  // on upcoming sessions keeps the schedule from being spammed.
+  const upcoming = await prisma.groupSession.count({
+    where: { coachUserId: req.userId!, scheduledAt: { gte: new Date() } },
+  });
+  if (upcoming >= 5) return res.status(429).json({ error: 'You already have 5 upcoming sessions — run those first 💪' });
   const schema = z.object({
     title: z.string().min(1),
     description: z.string().optional(),

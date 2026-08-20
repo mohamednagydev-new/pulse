@@ -59,7 +59,8 @@ export default function GroupSessions() {
       <AmbientBg tone="warm" />
       <TopBar title={t('group.sessionsTitle')} color="fitness-hero" textColor="text-white" />
 
-      {me?.isCoach && (
+      {/* Hosting is open to everyone — the creator gets the timer/video controls. */}
+      {me && (
         <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="px-4 pt-4">
           <h2 className="mb-2 font-bold">🔴 {t('group.host')}</h2>
           <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
@@ -75,16 +76,20 @@ export default function GroupSessions() {
               <span className="mb-1 block text-xs font-bold text-gray-500">📅 {t('group.fieldWhen')}</span>
               <input className="input-field" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
             </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-bold text-gray-500">🎬 {t('group.fieldWorkout')}</span>
-              <select className="input-field" value={workoutId} onChange={(e) => setWorkoutId(e.target.value)}>
-                <option value="">{t('group.linkWorkout')}</option>
-                {(myWorkouts ?? []).map((w: any) => (
-                  <option key={w.id} value={w.id}>{w.title}</option>
-                ))}
-              </select>
-              <span className="mt-1 block text-[11px] text-gray-400">{t('group.workoutHint')}</span>
-            </label>
+            {/* Coach workouts only exist for coaches — for everyone else this
+                select was permanently empty, so it simply doesn't render. */}
+            {me?.isCoach && (
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold text-gray-500">🎬 {t('group.fieldWorkout')}</span>
+                <select className="input-field" value={workoutId} onChange={(e) => setWorkoutId(e.target.value)}>
+                  <option value="">{t('group.linkWorkout')}</option>
+                  {(myWorkouts ?? []).map((w: any) => (
+                    <option key={w.id} value={w.id}>{w.title}</option>
+                  ))}
+                </select>
+                <span className="mt-1 block text-[11px] text-gray-400">{t('group.workoutHint')}</span>
+              </label>
+            )}
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-gray-500">📋 {L('Session plan (what you’ll do)', 'خطة الجلسة (هنعمل إيه)')}</span>
               <textarea

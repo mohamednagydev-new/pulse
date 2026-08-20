@@ -83,18 +83,18 @@ export default function Community() {
           </motion.h1>
         </div>
         <div className="flex items-center gap-1">
-          {/* Group live lost its drawer tile — this pill is its Community front
-              door, styled like a live badge so it actually reads as LIVE. */}
+          {/* Live groups as a header icon, same visual weight as friends/chat,
+              with a pulsing red dot so it still reads as LIVE. */}
           <button
             onClick={() => navigate('/group')}
-            className="flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-extrabold text-white shadow-md active:scale-95"
-            style={{ backgroundImage: 'linear-gradient(135deg,#f43f5e,#ea580c)' }}
+            aria-label={L('Live group sessions', 'جلسات لايف جماعية')}
+            className="relative flex h-10 w-10 items-center justify-center rounded-full"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+            <Radio size={24} />
+            <span className="absolute end-0.5 top-0.5 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-400" />
             </span>
-            {L('LIVE groups', 'لايف جماعي')}
           </button>
           <button onClick={() => navigate('/coaches-community')} aria-label="Coaches" className="flex h-10 w-10 items-center justify-center rounded-full"><Award size={24} /></button>
           <button onClick={() => navigate('/people')} aria-label="People" className="flex h-10 w-10 items-center justify-center rounded-full"><Users size={24} /></button>
