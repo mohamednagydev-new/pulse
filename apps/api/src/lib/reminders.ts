@@ -459,6 +459,11 @@ const GROUP_SLOTS = [
     muscleFocus: 'Full body',
     description:
       'Open live session with Coach PULSE — all levels welcome. جلسة لايف مفتوحة مع كوتش PULSE، كل المستويات — انضم وشد حيلك مع الناس.',
+    instructions:
+      'التسخين (٥ دقايق): مشي سريع في مكانك + لف الذراعين + سكوات خفيف.\n' +
+      '٣ جولات — كل تمرين ٤٥ ثانية شغل و١٥ ثانية راحة:\n' +
+      '١) سكوات Squat\n٢) ضغط Push-ups (على ركبتك عادي)\n٣) بلانك Plank\n٤) طعنات Lunges\n٥) جسر المؤخرة Glute Bridge\n' +
+      'راحة دقيقة بين الجولات. الكوتش هيشغّل التايمر المشترك — امشي معاه.',
   },
   {
     dow: 2, // Tuesday
@@ -467,6 +472,11 @@ const GROUP_SLOTS = [
     muscleFocus: 'Cardio',
     description:
       '25 minutes, maximum burn, shared timer. ٢٥ دقيقة حرق على الآخر، بتايمر مشترك — نبدأ مع بعض ونخلص مع بعض.',
+    instructions:
+      'تسخين ٣ دقايق.\n' +
+      '٥ جولات × (٤٠ ثانية شغل / ٢٠ ثانية راحة):\n' +
+      '١) Jumping Jacks\n٢) High Knees جري في المكان\n٣) Mountain Climbers\n٤) Burpees (أو سكوات سريع لو جديد)\n' +
+      'هدفك تكمّل الجولات مع التايمر — السرعة على قدّك، المهم متقفش.',
   },
   {
     dow: 4, // Thursday
@@ -475,6 +485,11 @@ const GROUP_SLOTS = [
     muscleFocus: 'Mobility',
     description:
       'Slow stretch & breathing to close the week. تمدد هادي وتنفس نقفل بيه الأسبوع — جسمك يستاهل.',
+    instructions:
+      'هات مات (أو سجادة) وميّة.\n' +
+      'هنمشي هادي — كل حركة ٤٥-٦٠ ثانية مع التايمر:\n' +
+      '١) تنفس عميق (دقيقتين)\n٢) Cat-Cow\n٣) Child’s Pose\n٤) تمدد خلفية الفخد\n٥) لفة جذع على الأرض\n٦) استرخاء ٣ دقايق\n' +
+      'من غير عفرتة — التمدد براحة لحد ما تحس شد خفيف بس.',
   },
 ];
 
@@ -493,14 +508,22 @@ async function ensureGroupSessions() {
       if (localDow(scheduledAt) !== slot.dow) continue;
       const exists = await prisma.groupSession.findFirst({
         where: { coachUserId: coach.id, scheduledAt },
-        select: { id: true },
+        select: { id: true, instructions: true },
       });
-      if (exists) continue;
+      if (exists) {
+        // Backfill: sessions created before slots carried a written plan left
+        // joiners staring at an empty room ("what do I actually do?").
+        if (!exists.instructions) {
+          await prisma.groupSession.update({ where: { id: exists.id }, data: { instructions: slot.instructions } });
+        }
+        continue;
+      }
       await prisma.groupSession.create({
         data: {
           coachUserId: coach.id,
           title: slot.title,
           description: slot.description,
+          instructions: slot.instructions,
           muscleFocus: slot.muscleFocus,
           scheduledAt,
         },

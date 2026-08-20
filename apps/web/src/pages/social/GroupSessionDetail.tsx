@@ -313,7 +313,11 @@ export default function GroupSessionDetail() {
           )}
           <div className="mt-3 space-y-1 border-t border-gray-100 pt-3 text-xs text-gray-400">
             <p>1️⃣ {L('Join before the start time — you get a reminder an hour before.', 'انضم قبل الميعاد — هيجيلك تنبيه قبلها بساعة.')}</p>
-            <p>2️⃣ {L('At start, everyone follows the same shared timer and the coach’s video.', 'وقت البداية الكل بيمشي على نفس التايمر المشترك وفيديو الكوتش.')}</p>
+            <p>2️⃣ {data.coachWorkout?.videoId
+              ? L('At start, everyone follows the same shared timer and the coach’s video.', 'وقت البداية الكل بيمشي على نفس التايمر المشترك وفيديو الكوتش.')
+              : data.coachWorkoutId
+                ? L('At start, tap “Start together” to open the session workout — the shared timer keeps everyone in sync.', 'وقت البداية دوس «ابدأوا مع بعض» وافتح تمرين الجلسة — والتايمر المشترك يمشّي الكل مع بعض.')
+                : L('At start, follow the plan above with the shared timer — the coach runs the rounds and guides you in the room chat.', 'وقت البداية امشي على الخطة اللي فوق مع التايمر المشترك — الكوتش بيدير الجولات ويوجهك في شات الروم.')}</p>
             <p>3️⃣ {L('Use the room chat and reactions — rest when you need, form beats speed.', 'استخدم شات الروم والتفاعلات — ارتاح لما تحتاج، الأداء الصح أهم من السرعة.')}</p>
           </div>
         </div>
