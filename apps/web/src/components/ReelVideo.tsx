@@ -137,6 +137,19 @@ export default function ReelVideo({
       flushRef.current();
     };
   }, []);
+  // Embeds can't report playback position (cross-origin player), so watch time
+  // is approximated as active-on-screen seconds — with autoplay that's ~true.
+  // Without this, watching embeds never counted for the reels quest (user report).
+  useEffect(() => {
+    if (reel.source !== 'embed' || !active) return;
+    const id = setInterval(() => {
+      if (!document.hidden) {
+        watchSecRef.current += 1;
+        if (watchSecRef.current >= 25) completedRef.current = true;
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [active, reel.source]);
   // -------------------------------------------------------------------------
 
   // Curated + community videos are local files that need a signed URL; legacy
@@ -218,17 +231,27 @@ export default function ReelVideo({
    * matters.
    */
   if (reel.source === 'embed') {
+    // Shorts-style behavior for embeds (user report: "why should I click play,
+    // and the previous one keeps playing"): the iframe exists ONLY while this
+    // slide is active — mounting with autoplay starts it (muted, as browsers
+    // require), and unmounting on scroll-away is the one guaranteed way to
+    // stop a cross-origin player. Inactive slides show the poster.
+    const sep = (reel.embedUrl ?? '').includes('?') ? '&' : '?';
+    const autoSrc = `${reel.embedUrl}${sep}autoplay=1&mute=1&playsinline=1`;
     return (
       <section ref={sectionRef} className="relative h-full snap-start overflow-hidden bg-black">
-        <iframe
-          src={reel.embedUrl}
-          title={reel.title}
-          loading="lazy"
-          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
-          className="absolute inset-0 h-full w-full border-0"
-        />
+        {active ? (
+          <iframe
+            src={autoSrc}
+            title={reel.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            className="absolute inset-0 h-full w-full border-0"
+          />
+        ) : (
+          poster && <img src={poster} alt={reel.title} className="absolute inset-0 h-full w-full object-cover opacity-60" />
+        )}
         {/* Attribution sits above the frame — the creator made this, not us. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 to-transparent p-4 pb-24">
           <p className="line-clamp-2 text-sm font-semibold text-white">{reel.title}</p>

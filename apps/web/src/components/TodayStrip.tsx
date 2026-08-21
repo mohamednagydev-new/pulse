@@ -41,9 +41,10 @@ export default function TodayStrip() {
 
   const cheer = useMutation({
     mutationFn: (id: string) => api.post(`/api/social/buddies/${id}/cheer`),
-    onSuccess: () => {
+    onSuccess: (_d, id) => {
       tapFeedback();
       toast(t('buddies.cheered'), 'success');
+      markCheered(id); // rotate to the next buddy right away
     },
   });
 
@@ -79,12 +80,25 @@ export default function TodayStrip() {
     navigate(id ? `/session/${id}` : '/programs');
   };
 
-  // The cheer row rotates through ALL buddies (daily), quiet ones first — it
-  // used to pin buddies[0] forever, so one person got all the cheers.
-  const buddyList: any[] = buddies ?? [];
+  // The cheer row rotates through ALL buddies, quiet ones first — and a buddy
+  // you already cheered today leaves the slot immediately so the next one
+  // shows (it used to sit "stuck" on the same person — user report).
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const [cheeredIds, setCheeredIds] = useState<string[]>(() => {
+    try {
+      const j = JSON.parse(localStorage.getItem(`cheered_${todayKey}`) ?? '[]');
+      return Array.isArray(j) ? j : [];
+    } catch { return []; }
+  });
+  const buddyList: any[] = (buddies ?? []).filter((b: any) => !cheeredIds.includes(b.id));
   const quiet = buddyList.filter((b) => !(b.weeklyXp > 0));
   const cheerPool = quiet.length ? quiet : buddyList;
   const buddy = cheerPool.length ? cheerPool[new Date().getDate() % cheerPool.length] : undefined;
+  const markCheered = (id: string) => {
+    const next = [...cheeredIds, id];
+    setCheeredIds(next);
+    try { localStorage.setItem(`cheered_${todayKey}`, JSON.stringify(next)); } catch { /* storage full */ }
+  };
 
   // Water chip logs a glass in place — WaterCard's optimistic mutation verbatim,
   // because deep-linking to '/' would just land on the collapsed card.
@@ -147,16 +161,26 @@ export default function TodayStrip() {
               and pushing the hero taller (user feedback). */}
           <div className="mt-1.5 flex items-center gap-2 text-[11px]">
             <span className="flex shrink-0 items-center gap-1 font-semibold text-orange-500"><Flame size={12} /> {t('today.streakDays', { n: streak })}</span>
-            <span className="flex min-w-0 items-center gap-1.5 text-brand-green">
-              <span className="live-dot relative inline-block h-2 w-2 shrink-0 rounded-full bg-brand-green text-brand-green" />
-              <span className="truncate">{t('today.trainingNow', { n: liveOnline })}</span>
-            </span>
           </div>
         </div>
         <button onClick={startToday} className="btn-pill btn-primary shrink-0 px-6 py-2.5 text-sm">
           {isRest && !path?.enrolled ? t('today.explore') : t('today.start')}
         </button>
       </div>
+
+      {/* Online now, on its own line: five real faces beat a cramped number
+          (the inline text used to truncate unreadably — user report). */}
+      {liveOnline > 0 && (
+        <div className="mt-2.5 flex items-center gap-2 border-t border-gray-200/40 pt-2.5">
+          <span className="live-dot relative inline-block h-2 w-2 shrink-0 rounded-full bg-brand-green text-brand-green" />
+          <div className="flex -space-x-2 rtl:space-x-reverse">
+            {(presence?.sample ?? []).slice(0, 5).map((u: any) => (
+              <MediaImage key={u.id} path={u.avatarUrl} label={u.firstName} className="h-6 w-6 rounded-full ring-2 ring-white" />
+            ))}
+          </div>
+          <span className="text-[11px] font-semibold text-brand-green">{t('today.trainingNow', { n: liveOnline })}</span>
+        </div>
+      )}
 
       {/* Rest of the day: the weight-loss half of the day (food, water, weigh-in)
           lived on three screens — one glance here covers it. Chips render only
@@ -206,7 +230,7 @@ export default function TodayStrip() {
           {/* Log-food shortcut: the calories chip only *shows* the number —
               this is the one-tap way to add to it (user: "only two buttons?"). */}
           <button
-            onClick={() => navigate('/food')}
+            onClick={() => navigate('/tracker')}
             className="flex min-h-[30px] shrink-0 items-center gap-1.5 rounded-full bg-emerald-100 px-3 text-[11px] font-bold text-emerald-700 transition active:scale-95"
           >
             ➕ {isAr ? 'سجّل أكل' : 'Log food'}

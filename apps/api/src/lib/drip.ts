@@ -33,7 +33,7 @@ const D2: Msg = {
   titleAr: 'سجّل وجبة واحدة وشوف سعراتك 🥗',
   body: 'Snap or type what you ate and the app counts the calories for you. Takes 20 seconds.',
   bodyAr: 'صوّر أو اكتب اللي أكلته والتطبيق يحسبلك السعرات. ٢٠ ثانية بالظبط.',
-  url: '/food',
+  url: '/tracker',
 };
 const D3: Msg = {
   title: 'Day 3: your first badge is one workout away 🔥',

@@ -90,6 +90,9 @@ async function tryRefresh(): Promise<boolean> {
 
 function extractError(payload: any, fallback: string): string {
   if (!payload) return fallback;
+  // Arabic UI shows the Arabic variant when the server sent one — a guard
+  // message in English-only reads like a bug to an Arabic user.
+  if (typeof payload.errorAr === 'string' && document.documentElement.dir === 'rtl') return payload.errorAr;
   if (typeof payload.error === 'string') return payload.error;
   const zod = payload.error?.formErrors ?? payload.error?.fieldErrors;
   if (zod) return 'Please check the form and try again.';

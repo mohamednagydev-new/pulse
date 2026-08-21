@@ -260,7 +260,7 @@ meRouter.post('/completions', async (req: AuthedRequest, res) => {
     });
     if (last && Date.now() - last.completedAt.getTime() < MIN_GAP_MS) {
       flagIntegrity(req.userId!, 'lesson-pace');
-      return res.status(429).json({ error: 'Slow down — finish this one first 💪' });
+      return res.status(429).json({ error: 'Slow down — finish this one first 💪', errorAr: 'بشويش — خلّص التمرينة دي الأول 💪' });
     }
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
@@ -269,7 +269,7 @@ meRouter.post('/completions', async (req: AuthedRequest, res) => {
     });
     if (today >= DAILY_CAP) {
       flagIntegrity(req.userId!, 'lesson-cap');
-      return res.status(429).json({ error: 'Daily limit reached — rest is part of the program 😴' });
+      return res.status(429).json({ error: 'Daily limit reached — rest is part of the program 😴', errorAr: 'وصلت للحد اليومي — الراحة جزء من البرنامج 😴' });
     }
   }
   // Re-completing must NOT bump completedAt — that would let old lessons be

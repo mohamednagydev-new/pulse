@@ -207,7 +207,7 @@ coachRouter.post('/programs/:id/day-done', async (req: AuthedRequest, res) => {
     const daysElapsed = Math.floor((Date.now() - row.startedAt.getTime()) / 86_400_000);
     if (set.size >= daysElapsed + 1) {
       flagIntegrity(req.userId!, 'program-day', `program ${req.params.id}`);
-      return res.status(429).json({ error: 'One program day per day — come back tomorrow 💪' });
+      return res.status(429).json({ error: 'One program day per day — come back tomorrow 💪', errorAr: 'يوم واحد من البرنامج في اليوم — ارجع بكرة 💪' });
     }
   }
   if (parsed.data.done) set.add(parsed.data.day);

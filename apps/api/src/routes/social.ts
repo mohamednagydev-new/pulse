@@ -11,13 +11,24 @@ import { touchStreak } from '../lib/gamify';
 import { bumpWalkChallenges } from '../lib/walks';
 import { dayString, startOfDayTz } from '../lib/time';
 import { processVideo } from '../lib/video';
-import { emitToUser, onlineCount, isOnline } from '../lib/realtime';
+import { emitToUser, onlineCount, onlineIds, isOnline } from '../lib/realtime';
 import { notifyUser } from './push';
 
 export const socialRouter = Router();
 socialRouter.use(requireAuth);
 
-socialRouter.get('/presence', (_req, res) => res.json({ online: onlineCount() }));
+socialRouter.get('/presence', async (_req, res) => {
+  // A number alone is abstract — five real faces make "N online" feel alive.
+  const ids = onlineIds().slice(0, 5);
+  const sample = ids.length
+    ? await prisma.user.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, firstName: true, avatarUrl: true },
+        take: 5,
+      })
+    : [];
+  res.json({ online: onlineCount(), sample });
+});
 
 /** Block in either direction kills all social interaction between two users. */
 export async function isBlockedEither(a: string, b: string): Promise<boolean> {

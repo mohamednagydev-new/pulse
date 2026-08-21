@@ -44,7 +44,7 @@ async function gatherWindow(userId: string, startDay: string, endDay: string): P
   const from = startOfDayTz(startDay);
   const to = endOfDayTz(endDay);
 
-  const [workouts, xpEvents, entries, weights] = await Promise.all([
+  const [workouts, xpEvents, entries, weights, baseline] = await Promise.all([
     prisma.lessonCompletion.count({ where: { userId, completedAt: { gte: from, lte: to } } }),
     prisma.xpEvent.findMany({
       where: { userId, createdAt: { gte: from, lte: to } },
@@ -57,6 +57,14 @@ async function gatherWindow(userId: string, startDay: string, endDay: string): P
     prisma.weightLog.findMany({
       where: { userId, date: { gte: startDay, lte: endDay } },
       orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
+      select: { weightKg: true },
+    }),
+    // Carry-forward baseline: the last weigh-in BEFORE the window. Without it,
+    // one log inside the week showed nothing ("I logged weight but the recap
+    // doesn't reflect it" — user report), because start and end were the same row.
+    prisma.weightLog.findFirst({
+      where: { userId, date: { lt: startDay } },
+      orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       select: { weightKg: true },
     }),
   ]);
@@ -84,8 +92,8 @@ async function gatherWindow(userId: string, startDay: string, endDay: string): P
     activeDays: active.size,
     calorieDaysLogged,
     avgCalories,
-    weightStart: weights.length ? weights[0].weightKg : null,
-    weightEnd: weights.length ? weights[weights.length - 1].weightKg : null,
+    weightStart: baseline?.weightKg ?? (weights.length ? weights[0].weightKg : null),
+    weightEnd: weights.length ? weights[weights.length - 1].weightKg : baseline?.weightKg ?? null,
   };
 }
 

@@ -46,7 +46,8 @@ const loadPins = (): string[] => {
 
 export default function Home() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language.startsWith('ar');
   const { data, isLoading, error } = useQuery({ queryKey: ['home'], queryFn: () => api.get('/api/home') });
   const [playing, setPlaying] = useState<{ videoId: string; title?: string } | null>(null);
   const [pins, setPins] = useState<string[]>(loadPins);
@@ -122,6 +123,30 @@ export default function Home() {
 
       {/* Sunday weekly recap — the ritual appointment with your own numbers. */}
       <WeeklyRecapCard />
+
+      {/* Explore rail: challenges, squads and the rest lived only in the
+          drawer — "not easy findable" (user report). One always-visible row. */}
+      <div className="no-scrollbar mx-4 mt-3 flex gap-2 overflow-x-auto pb-1">
+        {[
+          { to: '/achievements', e: '🏆', en: 'Challenges', ar: 'التحديات' },
+          { to: '/squads', e: '⚔️', en: 'Squads', ar: 'السكواد' },
+          { to: '/leagues', e: '🥇', en: 'League', ar: 'الدوري' },
+          { to: '/group', e: '🔴', en: 'Live', ar: 'لايف' },
+          { to: '/reels', e: '🎬', en: 'Reels', ar: 'ريلز' },
+          { to: '/coaches-community', e: '🎓', en: 'Coaches', ar: 'الكوتشات' },
+          { to: '/progress-photos', e: '📸', en: 'Photos', ar: 'صوري' },
+          { to: '/gyms', e: '🏋️', en: 'Gyms', ar: 'الجيمات' },
+        ].map((x) => (
+          <button
+            key={x.to}
+            onClick={() => navigate(x.to)}
+            className="flex shrink-0 flex-col items-center gap-1 rounded-2xl glass px-3 py-2 active:scale-95"
+          >
+            <span className="text-xl" aria-hidden>{x.e}</span>
+            <span className="text-[10px] font-bold text-gray-600">{isAr ? x.ar : x.en}</span>
+          </button>
+        ))}
+      </div>
 
       {/* First-session orientation — users said they log in and don't know
           what's here or where to start. Gone once the four steps are done. */}

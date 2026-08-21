@@ -17,12 +17,20 @@ export default function StreakRepairBanner() {
   const L = (en: string, ar: string) => (isAr ? ar : en);
   const navigate = useNavigate();
 
-  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => api.get('/api/me') });
+  // refetchInterval keeps the card honest: the restore happens server-side the
+  // moment a workout lands, and without a refetch the card sat here "stuck"
+  // after the user already completed (user report).
+  const { data: me } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => api.get('/api/me'),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: 'always',
+  });
 
-  // Live countdown — re-render every minute so the HH:MM stays honest.
+  // Live countdown — 1s tick so the timer visibly runs (a minute-tick read as broken).
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
+    const id = setInterval(() => setNow(Date.now()), 1_000);
     return () => clearInterval(id);
   }, []);
 
@@ -33,6 +41,7 @@ export default function StreakRepairBanner() {
   const msLeft = until - now;
   const hh = String(Math.floor(msLeft / 3_600_000)).padStart(2, '0');
   const mm = String(Math.floor((msLeft % 3_600_000) / 60_000)).padStart(2, '0');
+  const ss = String(Math.floor((msLeft % 60_000) / 1_000)).padStart(2, '0');
 
   return (
     <div className="mx-4 mt-3 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 p-4 text-white shadow-lg">
@@ -49,7 +58,7 @@ export default function StreakRepairBanner() {
           </p>
         </div>
         <div className="shrink-0 rounded-xl bg-white/20 px-2.5 py-1.5 text-center">
-          <div className="font-mono text-lg font-bold tabular-nums leading-none" dir="ltr">{hh}:{mm}</div>
+          <div className="font-mono text-lg font-bold tabular-nums leading-none" dir="ltr">{hh}:{mm}:{ss}</div>
           <div className="mt-0.5 text-[10px] uppercase tracking-wide text-white/80">{L('left', 'باقي')}</div>
         </div>
       </div>
