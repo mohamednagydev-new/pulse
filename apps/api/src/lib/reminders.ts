@@ -158,6 +158,7 @@ async function runCheck() {
 
   // Daily nudge — people who haven't trained today, at their preferred hour (default 19:00).
   // (When push isn't configured these still land in the in-app notifications center.)
+  try {
   const nudgeSlot = await claimJob(`nudge:${day}:${hour}`);
   const candidates = nudgeSlot
     ? await prisma.user.findMany({
@@ -212,9 +213,14 @@ async function runCheck() {
     notifyUser(u.id, { ...msg, url: u.currentStreak > 0 ? '/' : '/workout', type: 'reminder' });
   }
 
+  } catch (e: any) { console.warn('[nudge]', e?.message); logJobFailure('daily-nudge', e); }
+
   // Plan re-check — once, at 11:00, when the four weeks are up. Waiting on the plan
   // screen to be discovered means most people never re-check at all.
   if (hour === 11) {
+    // One failing job must not abort the rest of the hour (the claim is
+    // already burned) — each block fails alone and lands in the JobLog.
+    try {
     const due = await prisma.assessment.findMany({
       where: { nextCheckOn: { lte: day } },
       orderBy: { createdAt: 'desc' },
@@ -239,11 +245,12 @@ async function runCheck() {
       }).catch(() => {});
     }
     if (seen.size) console.log(`[coach] invited ${seen.size} user(s) to re-check`);
+      } catch (e: any) { console.warn('[plan-recheck]', e?.message); logJobFailure('plan-recheck', e); }
   }
 
   // Weekly recap — Friday 10:00 (start of the Egyptian weekend): your week in numbers.
   if (localDow(now) === 5 && hour === 10 && (await claimJob(`recap:${day}`))) {
-    await sendWeeklyRecaps();
+    await sendWeeklyRecaps().catch((e) => { console.warn('[recap]', e?.message); logJobFailure('weekly-recap', e); });
   }
 
   // League cliffhanger — Friday 17:00, hours before Saturday settlement: people
@@ -287,6 +294,9 @@ async function runCheck() {
   // into this by starting a journey — no nagging for casual trackers. ----
   // 15:00 — nothing logged yet today → lunch nudge.
   if (hour === 15 && (await claimJob(`dietlog:${day}`))) {
+    // One failing job must not abort the rest of the hour (the claim is
+    // already burned) — each block fails alone and lands in the JobLog.
+    try {
     // Journey users AND active diet-program enrollees — both opted into food accountability.
     const enrolled = await prisma.dietEnrollment.findMany({ where: { finishedAt: null }, select: { userId: true } });
     const journeyers = await prisma.user.findMany({
@@ -305,10 +315,14 @@ async function runCheck() {
         type: 'reminder',
       }).catch(() => {});
     }
+      } catch (e: any) { console.warn('[diet-nudge]', e?.message); logJobFailure('diet-nudge', e); }
   }
   // Friday 09:00 — weekly weigh-in: the journey's progress needle only moves
   // when a weight lands.
   if (localDow(now) === 5 && hour === 9 && (await claimJob(`weighin:${day}`))) {
+    // One failing job must not abort the rest of the hour (the claim is
+    // already burned) — each block fails alone and lands in the JobLog.
+    try {
     const journeyers = await prisma.user.findMany({
       where: { dietStartedAt: { not: null } },
       select: { id: true, firstName: true },
@@ -325,12 +339,16 @@ async function runCheck() {
         type: 'reminder',
       }).catch(() => {});
     }
+      } catch (e: any) { console.warn('[weighin-nudge]', e?.message); logJobFailure('weighin-nudge', e); }
   }
 
   // 10:00 daily — the PODIUM: prize challenges that ended yesterday get their
   // top-3 computed, winners notified with their prize, and a feed announcement
   // everyone sees. Per-challenge claim so each podium fires exactly once.
   if (hour === 10 && (await claimJob(`podiumscan:${day}`))) {
+    // One failing job must not abort the rest of the hour (the claim is
+    // already burned) — each block fails alone and lands in the JobLog.
+    try {
     const yesterday = daysAgoStr(1);
     const ended = await prisma.challenge.findMany({
       where: { kind: 'global', endsOn: yesterday, prizeText: { not: null } },
@@ -398,6 +416,7 @@ async function runCheck() {
       }
       console.log(`[podium] announced ${ch.title}: ${lines}`);
     }
+      } catch (e: any) { console.warn('[podium]', e?.message); logJobFailure('podium', e); }
   }
 
   // 11:00 daily — install/notifications email for users with no push channel.
@@ -451,6 +470,9 @@ async function runCheck() {
   // Streak rescue — 20:00: trained yesterday, nothing today, streak worth
   // saving. Streaks die silently at midnight; this is the save-point ping.
   if (hour === 20 && (await claimJob(`streaksave:${day}`))) {
+    // One failing job must not abort the rest of the hour (the claim is
+    // already burned) — each block fails alone and lands in the JobLog.
+    try {
     const atRisk = await prisma.user.findMany({
       where: {
         lastActiveOn: daysAgoStr(1),
@@ -471,10 +493,14 @@ async function runCheck() {
       });
     }
     if (atRisk.length) console.log(`[streak] rescued-pinged ${atRisk.length} user(s)`);
+      } catch (e: any) { console.warn('[streak-save]', e?.message); logJobFailure('streak-save', e); }
   }
 
   // Lapsed re-engagement — no activity for 3+ days (once, at 18:00).
   if (hour === 18 && (await claimJob(`lapsed:${day}`))) {
+    // One failing job must not abort the rest of the hour (the claim is
+    // already burned) — each block fails alone and lands in the JobLog.
+    try {
     const threeAgo = daysAgoStr(3);
     const lapsed = await prisma.user.findMany({
       // lastActiveOn: null catches users who signed up but never came back —
@@ -495,6 +521,7 @@ async function runCheck() {
         type: 'reminder',
       });
     }
+      } catch (e: any) { console.warn('[lapsed-nudge]', e?.message); logJobFailure('lapsed-nudge', e); }
   }
 }
 

@@ -142,7 +142,7 @@ meRouter.patch('/email', async (req: AuthedRequest, res) => {
   const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { passwordHash: true } });
   if (me?.passwordHash) {
     if (!parsed.data.currentPassword || !(await verifyPassword(parsed.data.currentPassword, me.passwordHash))) {
-      return res.status(401).json({ error: 'Current password is wrong' });
+      return res.status(403).json({ error: 'Current password is wrong', errorAr: 'كلمة السر الحالية غلط' });
     }
   }
   const taken = await prisma.user.findUnique({ where: { email: parsed.data.email } });
@@ -157,7 +157,7 @@ meRouter.patch('/password', async (req: AuthedRequest, res) => {
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
   const user = await prisma.user.findUnique({ where: { id: req.userId! } });
   if (!user?.passwordHash || !(await verifyPassword(parsed.data.currentPassword, user.passwordHash))) {
-    return res.status(401).json({ error: 'Current password is wrong' });
+    return res.status(403).json({ error: 'Current password is wrong', errorAr: 'كلمة السر الحالية غلط' });
   }
   await prisma.user.update({
     where: { id: req.userId! },
@@ -178,7 +178,7 @@ meRouter.post('/delete-account', async (req: AuthedRequest, res) => {
   if (!user) return res.status(404).json({ error: 'Not found' });
   if (user.passwordHash) {
     if (!parsed.data.password || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
-      return res.status(401).json({ error: 'Password is wrong' });
+      return res.status(403).json({ error: 'Password is wrong', errorAr: 'كلمة السر غلط' });
     }
   }
   console.log(`[account] user ${req.userId} (${user.email}) deleted their own account`);
@@ -284,7 +284,7 @@ meRouter.post('/completions', async (req: AuthedRequest, res) => {
       where: { id: parsed.data.lessonId },
       include: { program: true },
     });
-    await awardXp(req.userId!, XP_PER_LESSON, 'workout-lesson'); // named so quests/badges see it
+    await awardXp(req.userId!, XP_PER_LESSON, 'workout-lesson').catch(() => {}); // named so quests/badges see it
     await createFeedPost(
       req.userId!,
       'completion',
@@ -312,7 +312,7 @@ meRouter.post('/workout-done', async (req: AuthedRequest, res) => {
     flagIntegrity(req.userId!, 'workout-throttle');
     return res.json({ ok: true, throttled: true });
   }
-  await awardXp(req.userId!, 60, 'workout-session');
+  await awardXp(req.userId!, 60, 'workout-session').catch(() => {});
   await createFeedPost(req.userId!, 'completion', `Crushed a workout${name ? ` — ${name}` : ''} 💪`, 'workout', undefined, {
     textAr: `كسّر تمرين${name ? ` — ${name}` : ''} 💪`,
   });

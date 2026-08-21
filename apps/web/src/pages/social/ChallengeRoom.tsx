@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Send, Trophy, MessageSquare, Users, Zap, CalendarDays, Info, Camera, Loader2 } from 'lucide-react';
@@ -16,6 +17,7 @@ import { toast } from '../../lib/toast';
  */
 export default function ChallengeRoom() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { id } = useParams();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'about' | 'chat' | 'board'>('about');
@@ -29,7 +31,7 @@ export default function ChallengeRoom() {
   const endRef = useRef<HTMLDivElement>(null);
   const proofRef = useRef<HTMLInputElement>(null);
 
-  const { data: challenge, isLoading } = useQuery({
+  const { data: challenge, isLoading, isError } = useQuery({
     queryKey: ['challenge', id],
     queryFn: () => api.get(`/api/gamification/challenges/${id}/detail`),
   });
@@ -138,6 +140,16 @@ export default function ChallengeRoom() {
   };
 
   if (isLoading) return <Loader />;
+  // A shared link to a deleted/ended challenge used to render a hollow room.
+  if (isError || !challenge) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 px-8 text-center">
+        <p className="text-5xl" aria-hidden>🏁</p>
+        <p className="text-lg font-bold">{i18n.language.startsWith('ar') ? 'التحدي ده خلص أو اتشال' : 'This challenge is over or gone'}</p>
+        <button onClick={() => navigate('/achievements')} className="btn-pill btn-primary mt-2 px-8">{i18n.language.startsWith('ar') ? 'شوف التحديات الحالية' : 'See current challenges'}</button>
+      </div>
+    );
+  }
 
   const rows: any[] = Array.isArray(board) ? board : [];
   const isAr = i18n.language.startsWith('ar');

@@ -115,7 +115,8 @@
     "confirmPassword": "Confirm password",
     "badLinkTitle": "Invalid reset link",
     "creating": "Creating…",
-    "invitedBonus": "🎁 You were invited — you'll start with a bonus streak freeze!"
+    "invitedBonus": "🎁 You were invited — you'll start with a bonus streak freeze!",
+    "oauthSuspended": "This account is suspended. Contact support."
   },
   "home": {
     "fitForLife": "Fit For Life",

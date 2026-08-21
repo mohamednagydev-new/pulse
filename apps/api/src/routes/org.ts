@@ -169,7 +169,7 @@ orgRouter.post('/invite/:code/redeem', requireAuth, async (req: AuthedRequest, r
         titleAr: 'انضملك متدرب جديد! 🎉',
         body: `${clientName} joined you through your invite link.`,
         bodyAr: `${clientName} انضملك من لينك الدعوة بتاعك.`,
-        url: '/coach/clients',
+        url: '/coach-dashboard',
         type: 'coach',
       }).catch(() => {});
     }

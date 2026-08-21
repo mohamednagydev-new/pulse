@@ -11,13 +11,18 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
+    setError(null);
     try {
       await api.post('/api/auth/forgot-password', { email });
       setSent(true);
+    } catch (err: any) {
+      // A silent failure here locks the user out with no signal — show it.
+      setError(err?.message ?? 'Could not send the email — try again.');
     } finally {
       setBusy(false);
     }
@@ -65,6 +70,7 @@ export default function ForgotPassword() {
                     required
                   />
                 </div>
+                {error && <p className="rounded-xl bg-red-500/20 px-3 py-2 text-center text-sm text-red-200">{error}</p>}
                 <button
                   type="submit"
                   disabled={busy}

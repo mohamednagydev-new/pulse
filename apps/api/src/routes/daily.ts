@@ -318,7 +318,7 @@ dailyRouter.post('/quests/claim', async (req: AuthedRequest, res) => {
     } catch { /* raced */ }
   }
 
-  if (awarded > 0) await awardXp(req.userId!, awarded, 'daily_quest');
+  if (awarded > 0) await awardXp(req.userId!, awarded, 'daily_quest').catch(() => {});
   res.json({ awarded, bonus, claimed: newlyClaimed, allDone });
 });
 
@@ -432,7 +432,7 @@ dailyRouter.post('/spin', async (req: AuthedRequest, res) => {
     return res.status(409).json({ error: 'Already spun today', prize: again?.prize });
   }
 
-  if (won.xp > 0) await awardXp(req.userId!, won.xp, 'daily_spin');
+  if (won.xp > 0) await awardXp(req.userId!, won.xp, 'daily_spin').catch(() => {});
   if (won.key === 'freeze') {
     const u = await prisma.user.findUnique({ where: { id: req.userId! }, select: { streakFreezes: true } });
     await prisma.user.update({

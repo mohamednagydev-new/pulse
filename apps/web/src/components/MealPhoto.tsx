@@ -82,11 +82,12 @@ export default function MealPhoto({ onClose }: { onClose: () => void }) {
       const r = await api.post('/api/ai/meal-photo', { image });
       setItems(r.items ?? []);
       setMessage(r.message ?? '');
-    } catch (e) {
-      // Raw server errors are English (and often technical) — log them for
-      // debugging but always show the localized message to the user.
+    } catch (e: any) {
       console.error('meal-photo estimate failed:', e);
-      setErr(t('photo.failed'));
+      // Server guard messages (AI budget 429s etc.) are already localized via
+      // errorAr — masking them with a generic line hid the real explanation.
+      const status = e?.status ?? 0;
+      setErr(status >= 400 && status < 500 && e?.message ? e.message : t('photo.failed'));
     } finally {
       setBusy(false);
     }
@@ -147,7 +148,7 @@ export default function MealPhoto({ onClose }: { onClose: () => void }) {
             <img src={preview} alt="" className="mb-3 h-40 w-full rounded-2xl object-cover" />
           ) : null}
 
-          {!items && (
+          {(!items || items.length === 0) && (
             <motion.button
               whileTap={{ scale: 0.98 }}
               transition={tapSpring}

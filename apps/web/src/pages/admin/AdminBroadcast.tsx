@@ -199,7 +199,7 @@ export default function AdminBroadcast() {
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-gray-400">Link URL (optional)</span>
-              <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="/challenges or https://…" className={inputCls} />
+              <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="/achievements or https://…" className={inputCls} />
             </label>
             <div className="flex flex-wrap items-center gap-4 pt-1">
               <label className="inline-flex items-center gap-2 text-sm font-semibold">

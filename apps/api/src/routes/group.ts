@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import { parseArray } from '../lib/json';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { emitToUser } from '../lib/realtime';
 import { notifyUser } from './push';
@@ -96,7 +97,7 @@ groupRouter.get('/:id', async (req: AuthedRequest, res) => {
   let coachWorkout = null;
   if (session.coachWorkoutId) {
     const w = await prisma.coachWorkout.findUnique({ where: { id: session.coachWorkoutId } });
-    if (w) coachWorkout = { ...w, exercises: JSON.parse(w.exercises || '[]') };
+    if (w) coachWorkout = { ...w, exercises: parseArray(w.exercises) }; // one bad row must not 500 the room for everyone
   }
   res.json({ ...session, coach, participants, participantCount: rows.length, isJoined, coachWorkout });
 });

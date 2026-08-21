@@ -52,7 +52,18 @@ export function setApiLang(l: string) {
  *  connection must never sign anyone out). */
 type RefreshResult = 'ok' | 'denied' | 'offline';
 
+/** Single-flight: parallel 401s (Home mounts ~6 queries) must share ONE
+ *  refresh. The server rotates the token on first use, so concurrent refresh
+ *  calls with the same cookie made the losers look "denied" → random logouts. */
+let refreshInFlight: Promise<RefreshResult> | null = null;
+
 async function tryRefreshEx(): Promise<RefreshResult> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = doRefresh().finally(() => { refreshInFlight = null; });
+  return refreshInFlight;
+}
+
+async function doRefresh(): Promise<RefreshResult> {
   // Native: no stored refresh token means there is no session to refresh —
   // short-circuit instead of a doomed network round-trip at every app open.
   if (IS_NATIVE && !getNativeRefreshToken()) return 'denied';

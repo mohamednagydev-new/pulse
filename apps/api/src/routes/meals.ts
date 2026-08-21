@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import { parseArray } from '../lib/json';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
 import { localizeResponse } from '../lib/localize';
 import { touchStreak } from '../lib/gamify';
@@ -221,8 +222,10 @@ mealsRouter.post('/log', async (req: AuthedRequest, res) => {
   });
   // Same credit as /api/tracker/calories: logging food is logging food,
   // whichever tab it came through.
-  await touchStreak(req.userId!);
-  await bumpChallenges(req.userId!, 'calorie');
+  // Best-effort gamification: the entry is already written — a hiccup here must
+  // not 500 the request (the client would retry and duplicate the meal).
+  await touchStreak(req.userId!).catch(() => {});
+  await bumpChallenges(req.userId!, 'calorie').catch(() => {});
   res.status(201).json(entry);
 });
 
@@ -299,8 +302,10 @@ mealsRouter.post('/foods/log', async (req: AuthedRequest, res) => {
   });
   // Same credit as /api/tracker/calories: logging food is logging food,
   // whichever tab it came through.
-  await touchStreak(req.userId!);
-  await bumpChallenges(req.userId!, 'calorie');
+  // Best-effort gamification: the entry is already written — a hiccup here must
+  // not 500 the request (the client would retry and duplicate the meal).
+  await touchStreak(req.userId!).catch(() => {});
+  await bumpChallenges(req.userId!, 'calorie').catch(() => {});
   res.status(201).json(entry);
 });
 
@@ -313,7 +318,7 @@ mealsRouter.get('/my-recipes', async (req: AuthedRequest, res) => {
     where: { userId: req.userId! },
     orderBy: { createdAt: 'desc' },
   });
-  res.json({ recipes: recipes.map((r) => ({ ...r, items: JSON.parse(r.items) })) });
+  res.json({ recipes: recipes.map((r) => ({ ...r, items: parseArray(r.items) })) }); // never 500 My Recipes on one bad row
 });
 
 mealsRouter.post('/my-recipes', async (req: AuthedRequest, res) => {
@@ -385,8 +390,10 @@ mealsRouter.post('/my-recipes/:id/log', async (req: AuthedRequest, res) => {
   });
   // Same credit as /api/tracker/calories: logging food is logging food,
   // whichever tab it came through.
-  await touchStreak(req.userId!);
-  await bumpChallenges(req.userId!, 'calorie');
+  // Best-effort gamification: the entry is already written — a hiccup here must
+  // not 500 the request (the client would retry and duplicate the meal).
+  await touchStreak(req.userId!).catch(() => {});
+  await bumpChallenges(req.userId!, 'calorie').catch(() => {});
   res.status(201).json(entry);
 });
 
@@ -501,12 +508,18 @@ mealsRouter.get('/recap', async (req: AuthedRequest, res) => {
     where: { userId_weekKey: { userId: req.userId!, weekKey: week } },
   });
   if (cached) {
-    return res.json({
-      weekKey: week,
-      stats: JSON.parse(cached.stats),
-      text: lang === 'ar' ? cached.aiTextAr || cached.textAr : cached.aiText || cached.text,
-      polished: Boolean(lang === 'ar' ? cached.aiTextAr : cached.aiText),
-    });
+    // A malformed cached row must not brick the recap forever — drop it and
+    // fall through to a fresh regeneration instead of 500ing.
+    try {
+      return res.json({
+        weekKey: week,
+        stats: JSON.parse(cached.stats),
+        text: lang === 'ar' ? cached.aiTextAr || cached.textAr : cached.aiText || cached.text,
+        polished: Boolean(lang === 'ar' ? cached.aiTextAr : cached.aiText),
+      });
+    } catch {
+      await prisma.weeklyRecap.delete({ where: { userId_weekKey: { userId: req.userId!, weekKey: week } } }).catch(() => {});
+    }
   }
 
   const stats = await gatherStats(req.userId!, week);

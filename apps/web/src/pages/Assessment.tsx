@@ -57,6 +57,7 @@ export default function Assessment() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const refreshUser = useAuth((s) => s.refreshUser);
+  const logout = useAuth((s) => s.logout);
   const isAr = i18n.language.startsWith('ar');
   const say = (b: Bilingual) => (isAr ? b.ar : b.en);
 
@@ -262,6 +263,15 @@ export default function Assessment() {
   return (
     <div className="fitness-hero relative min-h-screen overflow-x-hidden pb-10 text-white">
       <TopBar title={t('assess.title')} color="bg-transparent" textColor="text-white" />
+
+      {/* Escape hatch: the intake gate confines non-onboarded users here — if
+          the wizard ever misbehaves they must still be able to sign out. */}
+      <button
+        onClick={() => logout()}
+        className="absolute end-4 top-[calc(env(safe-area-inset-top,0px)+1.1rem)] z-10 text-xs font-semibold text-white/60 underline"
+      >
+        {i18n.language.startsWith('ar') ? 'تسجيل خروج' : 'Sign out'}
+      </button>
 
       <div className="px-5">
         {/* Progress across the whole intake */}

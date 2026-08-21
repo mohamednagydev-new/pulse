@@ -280,7 +280,7 @@ export default function App() {
   useEffect(() => {
     if (status !== 'authed' || !gateUser || gateUser.onboarded || gateUser.role === 'ADMIN') return;
     const p = location.pathname;
-    const exempt = ['/my-plan', '/welcome', '/onboarding', '/login', '/register', '/forgot-password', '/reset-password', '/contact'];
+    const exempt = ['/my-plan', '/welcome', '/onboarding', '/login', '/register', '/forgot-password', '/reset-password', '/contact', '/help', '/support'];
     if (exempt.includes(p) || p.startsWith('/invite/') || p.startsWith('/tv/') || p.startsWith('/admin')) return;
     navigate('/my-plan', { replace: true });
   }, [status, gateUser, location.pathname]);

@@ -69,8 +69,10 @@ trackerRouter.post('/calories', async (req: AuthedRequest, res) => {
       mealType: d.mealType ?? 'meal',
     },
   });
-  await touchStreak(req.userId!);
-  await bumpChallenges(req.userId!, 'calorie');
+  // Best-effort gamification: the entry is already written — a hiccup here must
+  // not 500 the request (the client would retry and duplicate the meal).
+  await touchStreak(req.userId!).catch(() => {});
+  await bumpChallenges(req.userId!, 'calorie').catch(() => {});
   res.status(201).json(entry);
 });
 
