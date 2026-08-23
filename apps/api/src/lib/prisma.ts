@@ -24,6 +24,10 @@ export const prisma = new PrismaClient({
   datasources: { db: { url: hardenedUrl() } },
 });
 
-prisma.$executeRawUnsafe('PRAGMA busy_timeout = 5000').catch(() => {
+// $queryRawUnsafe, not $executeRawUnsafe: PRAGMA returns a row on SQLite and
+// execute() rejects that ("Execute returned results…") — the hardening was
+// silently never applied (caught during a smoke scan, visible at every boot
+// as one swallowed prisma:error).
+prisma.$queryRawUnsafe('PRAGMA busy_timeout = 5000').catch(() => {
   /* non-SQLite or startup race — the default (throw immediately) simply remains */
 });

@@ -1,0 +1,70 @@
+# Codemagic CI — builds the PULSE iOS app in the cloud (no Mac needed) and
+# uploads it to TestFlight / App Store Connect.
+#
+# One-time setup in the Codemagic UI (see deploy/CODEMAGIC.md for the walkthrough):
+#   1. Connect the GitHub repo (mohamednagydev-new/pulse).
+#   2. Teams > Integrations > App Store Connect: add an API key from the Apple
+#      Developer account (Issuer ID + Key ID + .p8 file) and name it exactly
+#      `appstore-key` (referenced below).
+#   3. In the app settings enable "Automatic code signing" for that key.
+# After that: every push of a tag like ios-v1.0.0 (or a manual Start build)
+# produces a signed .ipa on TestFlight.
+
+workflows:
+  ios-testflight:
+    name: PULSE iOS → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 20.11.0
+      xcode: latest
+      vars:
+        BUNDLE_ID: online.geddo.pulse
+        XCODE_PROJECT: apps/web/ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+        # Numeric Apple app ID — fill in after creating the app in App Store
+        # Connect (App Information → Apple ID). Used only for build-number bumps;
+        # with the placeholder the first build simply starts at 1.
+        APP_APPLE_ID: "0"
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: online.geddo.pulse
+    integrations:
+      app_store_connect: appstore-key
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'ios-v*'
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Build web bundle (iOS mode — bakes VITE_API_BASE)
+        script: |
+          cd apps/web
+          npx vite build --mode ios
+      - name: Sync Capacitor iOS project
+        script: |
+          cd apps/web
+          npx cap sync ios
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+      - name: Bump build number to App Store Connect latest + 1
+        script: |
+          cd apps/web/ios/App
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_APPLE_ID" || echo 0)
+          agvtool new-version -all $((LATEST + 1))
+      - name: Build signed .ipa
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
