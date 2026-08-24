@@ -46,9 +46,19 @@ console.log('after login:', page.url());
 for (const s of SHOTS) {
   try {
     await page.goto(`https://pulse.geddo.online${s.path}`, { waitUntil: 'networkidle', timeout: 45000 }).catch(() => {});
-    // Mirror the xl-breakpoint fix before it's deployed: at iPad width the
-    // desktop backdrop text clips behind the phone column — hide it.
-    if (IPAD) await page.addStyleTag({ content: '.pointer-events-none.fixed.inset-0.z-0{display:none!important}' });
+    // At iPad width the desktop backdrop text clips behind the phone column.
+    // For store shots, shrink it to FIT instead of hiding: a branded surround
+    // reads as a designed tablet layout, not letterboxing (Apple 2.3.3).
+    if (IPAD) await page.addStyleTag({ content: `
+      .pointer-events-none.fixed.inset-0.z-0{display:flex!important;padding-left:1.75rem;padding-right:1.75rem}
+      .pointer-events-none.fixed.inset-0.z-0 .max-w-sm{max-width:15rem}
+      .pointer-events-none.fixed.inset-0.z-0 .text-6xl{font-size:2.4rem}
+      .pointer-events-none.fixed.inset-0.z-0 .text-xl{font-size:0.9rem;margin-top:0.5rem}
+      .pointer-events-none.fixed.inset-0.z-0 .text-2xl{font-size:1.05rem}
+      .pointer-events-none.fixed.inset-0.z-0 .space-y-3{margin-top:1.5rem}
+      .pointer-events-none.fixed.inset-0.z-0 .space-y-3 p{font-size:0.78rem}
+      .pointer-events-none.fixed.inset-0.z-0 .text-\\[9rem\\]{font-size:4.2rem;line-height:0.9}
+    ` });
     await page.waitForTimeout(s.wait);
     await page.screenshot({ path: `${OUT}/${s.name}.png` });
     console.log('shot', s.name);
