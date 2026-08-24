@@ -25,7 +25,7 @@ workflows:
         # Numeric Apple app ID — fill in after creating the app in App Store
         # Connect (App Information → Apple ID). Used only for build-number bumps;
         # with the placeholder the first build simply starts at 1.
-        APP_APPLE_ID: "0"
+        APP_APPLE_ID: "6803530099"
       ios_signing:
         distribution_type: app_store
         bundle_identifier: online.geddo.pulse

@@ -5,7 +5,10 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 
 const IPAD = process.argv.includes('--ipad');
-const OUT = IPAD ? 'F:/FIT_IT/deploy/appstore-screens-ipad' : 'F:/FIT_IT/deploy/appstore-screens';
+// --iphone65: 6.5" size class (1284x2778) = 428x926 logical @3x — what App
+// Store Connect demands when the app record uses the older size slots.
+const P65 = process.argv.includes('--iphone65');
+const OUT = IPAD ? 'F:/FIT_IT/deploy/appstore-screens-ipad' : P65 ? 'F:/FIT_IT/deploy/appstore-screens-65' : 'F:/FIT_IT/deploy/appstore-screens';
 fs.mkdirSync(OUT, { recursive: true });
 
 const SHOTS = [
@@ -21,7 +24,7 @@ const SHOTS = [
 
 const browser = await chromium.launch();
 const page = await browser.newPage({
-  viewport: IPAD ? { width: 1032, height: 1376 } : { width: 440, height: 956 },
+  viewport: IPAD ? { width: 1032, height: 1376 } : P65 ? { width: 428, height: 926 } : { width: 440, height: 956 },
   deviceScaleFactor: IPAD ? 2 : 3,
   isMobile: true,
   hasTouch: true,
