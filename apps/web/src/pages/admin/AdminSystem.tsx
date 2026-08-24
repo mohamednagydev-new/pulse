@@ -35,6 +35,7 @@ const JOBS: { name: string; label: string; schedule: string; runnable: boolean }
   { name: 'new-user-drip', label: 'New-user drip (D1-D3)', schedule: 'Daily 18:00', runnable: true },
   { name: 'connection-nudge', label: 'Week-1 buddy nudge', schedule: 'Daily 18:00', runnable: true },
   { name: 'auto-posts', label: 'Community pulse posts', schedule: 'Every 2h · 09-23', runnable: true },
+  { name: 'growth-cadence', label: 'Growth cadence', schedule: 'Daily 08:00', runnable: true },
   { name: 'broadcast', label: 'Broadcast', schedule: 'Manual only', runnable: false },
 ];
 

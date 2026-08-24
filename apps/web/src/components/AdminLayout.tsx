@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Dumbbell, UtensilsCrossed, Newspaper, Clapperboard, Users, Award,
   MessagesSquare, Shield, Store, Ticket, CalendarDays, Building2, Mail, BarChart3,
   Upload, Search, ExternalLink, Menu, X, Trophy, Import, ClipboardList, Radio,
-  Megaphone, ShieldAlert, VideoOff, Activity, ScrollText, type LucideIcon,
+  Megaphone, ShieldAlert, VideoOff, Activity, ScrollText, Target, type LucideIcon,
 } from 'lucide-react';
 
 /**
@@ -64,6 +64,7 @@ const NAV: NavGroup[] = [
   {
     label: 'Business',
     items: [
+      { to: '/admin/growth', label: 'Growth team', icon: Target },
       { to: '/admin/partners', label: 'Partners', icon: Building2 },
       { to: '/admin/banners', label: 'Banners', icon: Ticket },
       { to: '/admin/events', label: 'Events', icon: CalendarDays },

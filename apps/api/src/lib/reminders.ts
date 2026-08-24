@@ -118,6 +118,13 @@ async function runCheck() {
     });
   }
 
+  // Daily 08:00 — growth cadence: AI-draft follow-ups for partner leads whose
+  // next touch is due (nothing auto-sends; a human reviews on /admin/growth).
+  if (hour === 8 && (await claimJob(`growthcadence:${day}`))) {
+    const { runGrowthCadence } = await import('./growth');
+    await runLogged('growth-cadence', false, runGrowthCadence);
+  }
+
   // Monday 05:00 — weekly video health sweep: probe curated library links and
   // flag/park anything that has gone dead since import.
   if (localDow(now) === 1 && hour === 5 && (await claimJob(`videosweep:${day}`))) {

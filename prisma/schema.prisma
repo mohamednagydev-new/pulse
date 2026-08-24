@@ -1730,3 +1730,55 @@ model SquadBattle {
 
   @@index([status, endsOn])
 }
+
+// ---------------- Growth team: AI-assisted marketing & sales pipeline ----------------
+
+/** A prospect the AI/team is working — partner-focused B2B outreach. */
+model GrowthLead {
+  id          String        @id @default(cuid())
+  name        String
+  org         String?
+  type        String        @default("gym") // gym | coach | store | sponsor | influencer | other
+  email       String?
+  phone       String?
+  source      String? // fb-group | maps | referral | inbound | list | manual
+  stage       String        @default("new") // new | contacted | replied | qualified | meeting | won | lost | human
+  aiBrief     String? // one-paragraph AI summary of who this is + state of play
+  notes       String?
+  needsAction Boolean       @default(false) // surfaced on the board: a human decision is waiting
+  nextTouchAt DateTime? // when the cadence job should bump this lead
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  touches     GrowthTouch[]
+
+  @@index([stage, nextTouchAt])
+  @@index([needsAction])
+}
+
+/** One interaction on a lead — outgoing drafts/sends and logged replies. */
+model GrowthTouch {
+  id        String     @id @default(cuid())
+  leadId    String
+  lead      GrowthLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  direction String // out | in
+  channel   String     @default("email") // email | whatsapp | call | social | note
+  subject   String?
+  body      String
+  aiDrafted Boolean    @default(false)
+  status    String     @default("draft") // draft | sent | received | logged
+  createdAt DateTime   @default(now())
+
+  @@index([leadId, createdAt])
+}
+
+/** The reels/images pool the posting-plan generator draws from (least-used first). */
+model MarketingAsset {
+  id         String    @id @default(cuid())
+  kind       String    @default("reel") // reel | image
+  filePath   String
+  caption    String?
+  active     Boolean   @default(true)
+  usedCount  Int       @default(0)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+}

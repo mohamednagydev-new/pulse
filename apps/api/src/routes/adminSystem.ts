@@ -29,6 +29,7 @@ const JOB_NAMES = [
   'new-user-drip',
   'connection-nudge',
   'auto-posts',
+  'growth-cadence',
   'broadcast',
 ] as const;
 
@@ -143,6 +144,10 @@ adminSystemRouter.post('/run/:name', async (req: AuthedRequest, res: Response) =
     'auto-posts': async () => {
       const { postCommunityPulse } = await import('../lib/autoPosts');
       return postCommunityPulse();
+    },
+    'growth-cadence': async () => {
+      const { runGrowthCadence } = await import('../lib/growth');
+      return runGrowthCadence();
     },
   };
 

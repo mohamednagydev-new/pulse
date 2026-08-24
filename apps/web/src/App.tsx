@@ -148,6 +148,7 @@ const AdminSupport = lazyRoute(() => import('./pages/admin/AdminSupport'));
 const AdminPosts = lazyRoute(() => import('./pages/admin/AdminPosts'));
 const AdminModeration = lazyRoute(() => import('./pages/admin/AdminModeration'));
 const AdminSessions = lazyRoute(() => import('./pages/admin/AdminSessions'));
+const AdminGrowth = lazyRoute(() => import('./pages/admin/AdminGrowth'));
 const AdminAudit = lazyRoute(() => import('./pages/admin/AdminAudit'));
 const AdminBroadcast = lazyRoute(() => import('./pages/admin/AdminBroadcast'));
 const AdminSystem = lazyRoute(() => import('./pages/admin/AdminSystem'));
@@ -474,6 +475,7 @@ export default function App() {
           <Route path="/admin/posts" element={<AdminPosts />} />
           <Route path="/admin/moderation" element={<AdminModeration />} />
           <Route path="/admin/sessions" element={<AdminSessions />} />
+          <Route path="/admin/growth" element={<AdminGrowth />} />
           <Route path="/admin/audit" element={<AdminAudit />} />
           <Route path="/admin/broadcast" element={<AdminBroadcast />} />
           <Route path="/admin/system" element={<AdminSystem />} />
