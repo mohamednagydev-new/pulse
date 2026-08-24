@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Rocket, X, Plus, FileUp, Copy, Trash2, Upload, Video, Image as ImageIcon, File as FileIcon,
-  Megaphone, KanbanSquare, FolderOpen, Download, Loader2,
+  Megaphone, KanbanSquare, FolderOpen, Download, Loader2, Mail, Phone,
 } from 'lucide-react';
 import { api, uploadWithAuth, API_BASE } from '../../lib/api';
 import { toast } from '../../lib/toast';
@@ -174,9 +174,19 @@ export default function AdminGrowth() {
 // TAB 1 — Pipeline
 // ---------------------------------------------------------------------------
 
+/** Which outreach channel a lead supports — decides HOW you'll engage it. */
+type ContactFilter = 'all' | 'email' | 'phone' | 'both' | 'none';
+function contactKind(l: Lead): Exclude<ContactFilter, 'all'> {
+  const e = Boolean(l.email?.trim());
+  const p = Boolean(l.phone?.trim());
+  return e && p ? 'both' : e ? 'email' : p ? 'phone' : 'none';
+}
+
 function PipelineTab() {
   const qc = useQueryClient();
   const [flaggedOnly, setFlaggedOnly] = useState(false);
+  const [contactFilter, setContactFilter] = useState<ContactFilter>('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -221,6 +231,46 @@ function PipelineTab() {
         </div>
       </div>
 
+      {/* Filters: contact channel (what you CAN do) + lead type (who they are) */}
+      {(() => {
+        const everyone = Object.values(data?.board ?? {}).flat();
+        const kindCount = (k: ContactFilter) => (k === 'all' ? everyone.length : everyone.filter((l) => contactKind(l) === k).length);
+        const types = Array.from(new Set(everyone.map((l) => l.type))).sort();
+        const chip = (active: boolean) =>
+          `rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+            active ? 'bg-ink text-white dark:bg-white dark:text-gray-900' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'
+          }`;
+        return (
+          <div className="mb-3 flex flex-wrap items-center gap-1.5">
+            {(
+              [
+                ['all', 'All'],
+                ['email', '📧 Email only'],
+                ['phone', '📱 Phone only'],
+                ['both', '📧+📱 Both'],
+                ['none', '⚠️ No contact'],
+              ] as [ContactFilter, string][]
+            ).map(([k, label]) => (
+              <button key={k} onClick={() => setContactFilter(k)} className={chip(contactFilter === k)}>
+                {label} {kindCount(k)}
+              </button>
+            ))}
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="ms-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-bold text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+            >
+              <option value="all">All types</option>
+              {types.map((t) => (
+                <option key={t} value={t}>
+                  {t} ({everyone.filter((l) => l.type === t).length})
+                </option>
+              ))}
+            </select>
+          </div>
+        );
+      })()}
+
       {isLoading ? (
         <p className="py-10 text-center text-sm text-gray-400">Loading pipeline…</p>
       ) : (
@@ -228,7 +278,12 @@ function PipelineTab() {
           <div className="flex min-w-max gap-3">
             {STAGES.map((s) => {
               const all = data?.board?.[s.key] ?? [];
-              const leads = flaggedOnly ? all.filter((l) => l.needsAction) : all;
+              const leads = all.filter(
+                (l) =>
+                  (!flaggedOnly || l.needsAction) &&
+                  (contactFilter === 'all' || contactKind(l) === contactFilter) &&
+                  (typeFilter === 'all' || l.type === typeFilter),
+              );
               return (
                 <div key={s.key} className={`w-64 shrink-0 rounded-2xl border p-2 ${columnTone(s.key)}`}>
                   <p className={`mb-2 flex items-center justify-between px-1 text-xs font-extrabold uppercase tracking-wide ${headerTone(s.key)}`}>
@@ -249,7 +304,11 @@ function PipelineTab() {
                         </p>
                         {l.org && <p className="truncate text-xs text-gray-400">{l.org}</p>}
                         <p className="mt-1.5 flex items-center justify-between gap-1">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${typeBadgeCls(l.type)}`}>{l.type}</span>
+                          <span className="flex items-center gap-1.5">
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${typeBadgeCls(l.type)}`}>{l.type}</span>
+                            {l.email?.trim() && <Mail size={11} className="text-emerald-500" aria-label="Has email" />}
+                            {l.phone?.trim() && <Phone size={11} className="text-blue-500" aria-label="Has phone" />}
+                          </span>
                           <span className="text-[10px] text-gray-400">
                             {l.lastTouchAt ? timeAgo(l.lastTouchAt) : 'no touches'}
                           </span>
