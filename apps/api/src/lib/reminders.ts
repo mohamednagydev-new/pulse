@@ -13,6 +13,25 @@ import { runLogged, logJobFailure } from './jobslog';
 export function startReminderScheduler() {
   setInterval(runCheck, 60 * 60 * 1000); // hourly
   runCheck();
+  // Growth inbox: replies deserve minutes, not hours — its own 10-min loop.
+  // No-ops cleanly when GROWTH_IMAP_* is unset; failures land in the JobLog.
+  setInterval(pollInboxSafely, 10 * 60 * 1000);
+  pollInboxSafely();
+}
+
+async function pollInboxSafely() {
+  try {
+    const { pollGrowthInbox, inboxConfigured } = await import('./inbox');
+    if (!inboxConfigured()) return;
+    const note = await pollGrowthInbox();
+    // Log only runs that did something — a quiet mailbox 6x/hour is not news.
+    if (!note.startsWith('processed:0') && !note.startsWith('skipped')) {
+      await prisma.jobLog.create({ data: { name: 'growth-inbox', ok: true, note } }).catch(() => {});
+    }
+  } catch (e: any) {
+    console.warn('[growth-inbox]', e?.message);
+    logJobFailure('growth-inbox', e);
+  }
 }
 
 /**
@@ -97,6 +116,13 @@ async function runCheck() {
   if (hour >= 9 && hour <= 23 && hour % pulseEvery === 0 && (await claimJob(`autopost:${day}:${hour}`))) {
     const { postCommunityPulse } = await import('./autoPosts');
     await runLogged('auto-posts', false, postCommunityPulse);
+  }
+
+  // Daily 17:00 — auto-publish today's posting plan to the platforms whose
+  // APIs allow it (FB Page / Telegram / IG when the token has scopes).
+  if (hour === 17 && (await claimJob(`socialpost:${day}`))) {
+    const { runDailySocialPost } = await import('./socialPoster');
+    await runLogged('social-post', false, runDailySocialPost);
   }
 
   // Daily 18:00 — new-user activation drip (D1/D2/D3, each tied to one action)

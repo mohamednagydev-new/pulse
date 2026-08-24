@@ -1746,6 +1746,9 @@ model GrowthLead {
   aiBrief     String? // one-paragraph AI summary of who this is + state of play
   notes       String?
   needsAction Boolean       @default(false) // surfaced on the board: a human decision is waiting
+  /** Autopilot: the agent sends its own drafts on this lead (activates only
+   *  after the lead has replied at least once — cold first touches stay human). */
+  autoSend    Boolean       @default(false)
   nextTouchAt DateTime? // when the cadence job should bump this lead
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

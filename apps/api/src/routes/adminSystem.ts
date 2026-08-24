@@ -30,6 +30,8 @@ const JOB_NAMES = [
   'connection-nudge',
   'auto-posts',
   'growth-cadence',
+  'growth-inbox',
+  'social-post',
   'broadcast',
 ] as const;
 
@@ -148,6 +150,14 @@ adminSystemRouter.post('/run/:name', async (req: AuthedRequest, res: Response) =
     'growth-cadence': async () => {
       const { runGrowthCadence } = await import('../lib/growth');
       return runGrowthCadence();
+    },
+    'growth-inbox': async () => {
+      const { pollGrowthInbox } = await import('../lib/inbox');
+      return pollGrowthInbox();
+    },
+    'social-post': async () => {
+      const { runDailySocialPost } = await import('../lib/socialPoster');
+      return runDailySocialPost();
     },
   };
 

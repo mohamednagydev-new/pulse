@@ -1,0 +1,1 @@
+ALTER TABLE "GrowthLead" ADD COLUMN "autoSend" BOOLEAN NOT NULL DEFAULT false;

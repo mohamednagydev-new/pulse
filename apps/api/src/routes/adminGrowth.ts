@@ -154,6 +154,8 @@ const patchLeadSchema = z.object({
   notes: z.string().trim().max(4000).optional(),
   needsAction: z.boolean().optional(),
   nextTouchAt: z.coerce.date().nullable().optional(),
+  /** Autopilot: agent auto-sends its drafts on this lead (post-reply threads). */
+  autoSend: z.boolean().optional(),
 });
 
 /** PATCH /leads/:id → stage / notes / attention flags. Stage moves are audited. */
@@ -249,7 +251,7 @@ adminGrowthRouter.post('/touches/:id/send', async (req: AuthedRequest, res) => {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/\n/g, '<br/>')}</div>`;
-  const result = await sendMail({ to: touch.lead.email, subject: touch.subject ?? 'PULSE', html, text: touch.body });
+  const result = await sendMail({ to: touch.lead.email, subject: touch.subject ?? 'PULSE', replyTo: process.env.GROWTH_IMAP_USER, html, text: touch.body });
   if (!result.ok) return res.status(502).json({ error: `Send failed: ${result.reason}` });
 
   const [updatedTouch] = await Promise.all([
@@ -426,43 +428,50 @@ const planSchema = z.object({
  *  asset in rotation. Nothing is stored — hit it again for a fresh plan. */
 adminGrowthRouter.post('/posting-plan', async (_req: AuthedRequest, res) => {
   if (!aiEnabled()) return res.status(502).json({ error: 'OPENAI_API_KEY is not configured' });
-
-  let items: { platform: (typeof PLATFORMS)[number]; text: string }[];
   try {
-    const raw = await chatComplete(
-      [
-        {
-          role: 'system',
-          content:
-            `You write daily social posts for PULSE — a free Egyptian bilingual fitness app (pulse.geddo.online): ` +
-            `workouts, streaks, weekly leagues, prize challenges, food tracking, community. ` +
-            `Write in Egyptian Arabic (عامية مصرية), energetic but not cringe. ` +
-            `NEVER invent user counts or numbers; never name competitors. ` +
-            `Reply ONLY as JSON: {"items":[{"platform":"facebook","text":"..."},{"platform":"instagram","text":"..."},{"platform":"tiktok","text":"..."},{"platform":"whatsapp-channel","text":"..."}]}`,
-        },
-        {
-          role: 'user',
-          content:
-            `Generate today's posting plan — ONE post per platform, each with a DISTINCT angle:\n` +
-            `- facebook: a practical fitness/nutrition value tip (end with a soft link to pulse.geddo.online)\n` +
-            `- instagram: a short demo of one real app feature (streaks, leagues, TV board, food photo logging...)\n` +
-            `- tiktok: a push to join the current challenge — hype, short lines, hook first\n` +
-            `- whatsapp-channel: a question to the community that sparks replies\n` +
-            `Keep each under 80 words. Emojis welcome, hashtags only on instagram/tiktok (2-4 max).`,
-        },
-      ],
-      { json: true, temperature: 0.8, maxTokens: 800 },
-    );
-    const parsed = planSchema.safeParse(JSON.parse(raw));
-    if (!parsed.success) throw new Error('Model returned an invalid plan');
-    items = parsed.data.items;
+    const { generatePostingPlan } = await import('../lib/growth');
+    const plan = await generatePostingPlan();
+    res.json({
+      items: plan.items,
+      asset: plan.asset ? { id: plan.asset.id, caption: plan.asset.caption, fileUrl: plan.asset.fileUrl } : null,
+    });
   } catch (e: any) {
-    return res.status(502).json({ error: e?.message ?? 'Posting-plan generation failed' });
+    res.status(502).json({ error: e?.message ?? 'Posting-plan generation failed' });
   }
+});
 
-  const asset = await pickAsset();
+
+// ---------------------------------------------------------------------------
+// Auto-posting controls
+// ---------------------------------------------------------------------------
+
+/** GET /social-status → which platforms the auto-poster can reach right now. */
+adminGrowthRouter.get('/social-status', async (_req: AuthedRequest, res) => {
+  const { socialConfigured } = await import('../lib/socialPoster');
+  const { inboxConfigured } = await import('../lib/inbox');
   res.json({
-    items,
-    asset: asset ? { id: asset.id, caption: asset.caption, fileUrl: assetFileUrl(asset.id) } : null,
+    ...socialConfigured(),
+    inbox: inboxConfigured(),
+    autoPostDaily: (process.env.AUTO_POST_SOCIAL ?? 'on') !== 'off',
   });
+});
+
+/** POST /posting-plan/publish {items, assetId?} → publish NOW to every
+ *  configured platform. The dashboard's one-click alternative to the 17:00 job. */
+adminGrowthRouter.post('/posting-plan/publish', async (req: AuthedRequest, res) => {
+  const schema = z.object({
+    items: z.array(z.object({ platform: z.string(), text: z.string().min(5).max(2000) })).min(1).max(6),
+    assetId: z.string().optional(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid plan' });
+  const asset = parsed.data.assetId
+    ? await prisma.marketingAsset.findUnique({ where: { id: parsed.data.assetId } })
+    : null;
+  const { publishPlan } = await import('../lib/socialPoster');
+  const origin = process.env.WEB_ORIGIN?.replace(/\/$/, '') ?? '';
+  const withUrl = asset ? { id: asset.id, filePath: asset.filePath, fileUrl: assetFileUrl(asset.id) } : null;
+  const summary = await publishPlan(parsed.data.items, withUrl, origin);
+  audit(req.userId!, 'growth.publish', { targetType: 'broadcast', detail: summary.slice(0, 180) });
+  res.json({ summary });
 });

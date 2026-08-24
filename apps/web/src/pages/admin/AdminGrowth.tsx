@@ -25,6 +25,7 @@ type Lead = {
   aiBrief?: string | null;
   notes?: string | null;
   needsAction: boolean;
+  autoSend?: boolean;
   nextTouchAt?: string | null;
   createdAt: string;
   touchCount: number;
@@ -408,7 +409,7 @@ function LeadDrawer({ leadId, onClose }: { leadId: string; onClose: () => void }
   };
 
   const patch = useMutation({
-    mutationFn: (body: Partial<Pick<Lead, 'stage' | 'notes' | 'needsAction' | 'nextTouchAt'>>) =>
+    mutationFn: (body: Partial<Pick<Lead, 'stage' | 'notes' | 'needsAction' | 'nextTouchAt' | 'autoSend'>>) =>
       api.patch(`/api/admin-growth/leads/${leadId}`, body),
     onSuccess: () => { toast('Saved', 'success'); invalidate(); },
     onError: (e: any) => toast(e?.message ?? 'Save failed', 'error'),
@@ -498,6 +499,13 @@ function LeadDrawer({ leadId, onClose }: { leadId: string; onClose: () => void }
               className={`${btnGhost} ${lead.needsAction ? 'border-amber-300 text-amber-600 dark:border-amber-700 dark:text-amber-400' : ''}`}
             >
               {lead.needsAction ? 'Clear "needs action" flag' : 'Flag as needs action'}
+            </button>
+            <button
+              onClick={() => patch.mutate({ autoSend: !lead.autoSend })}
+              className={`${btnGhost} ${lead.autoSend ? 'border-emerald-300 text-emerald-600 dark:border-emerald-700 dark:text-emerald-400' : ''}`}
+              title="When ON, the agent sends its own follow-up drafts on this lead (threads that have replied). Cold first touches always wait for you."
+            >
+              {lead.autoSend ? '🤖 Autopilot ON — agent replies alone' : '🤖 Autopilot OFF — drafts wait for you'}
             </button>
 
             {/* Notes */}
@@ -704,6 +712,16 @@ function PostingPlanTab() {
     onError: (e: any) => toast(e?.message ?? 'Failed to generate the plan', 'error'),
   });
 
+
+  const { data: social } = useQuery<{ facebook: boolean; telegram: boolean; inbox: boolean; autoPostDaily: boolean }>({
+    queryKey: ['growth-social-status'],
+    queryFn: () => api.get('/api/admin-growth/social-status'),
+  });
+  const publish = useMutation({
+    mutationFn: () => api.post('/api/admin-growth/posting-plan/publish', { items: plan!.items, assetId: plan?.asset?.id }),
+    onSuccess: (r: any) => toast(`Published: ${r.summary}`, 'success'),
+    onError: (e: any) => toast(e?.message ?? 'Publish failed', 'error'),
+  });
   const assetSrc = plan?.asset ? fileUrlAbs(plan.asset.fileUrl) : null;
   const assetIsVideo = assetSrc ? /\.(mp4|mov|webm|m4v)(\?|$)/i.test(assetSrc) : false;
 
@@ -717,10 +735,21 @@ function PostingPlanTab() {
               One AI-written post per platform, plus the reel to attach.
             </p>
           </div>
+          <span className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
+            <span className={`rounded-full px-2 py-0.5 ${social?.facebook ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>FB {social?.facebook ? '✓' : '—'}</span>
+            <span className={`rounded-full px-2 py-0.5 ${social?.telegram ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>TG {social?.telegram ? '✓' : '—'}</span>
+            <span className={`rounded-full px-2 py-0.5 ${social?.inbox ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>Inbox {social?.inbox ? '✓' : '—'}</span>
+            <span className={`rounded-full px-2 py-0.5 ${social?.autoPostDaily ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>Daily 17:00 {social?.autoPostDaily ? 'ON' : 'OFF'}</span>
+          </span>
           <button onClick={() => generate.mutate()} disabled={generate.isPending} className={btnPrimary}>
             {generate.isPending ? <Loader2 size={13} className="animate-spin" /> : '🎯'}{' '}
             {generate.isPending ? 'Generating…' : "Generate today's plan"}
           </button>
+          {plan && (social?.facebook || social?.telegram) && (
+            <button onClick={() => publish.mutate()} disabled={publish.isPending} className={btnPrimary}>
+              {publish.isPending ? 'Publishing…' : '🚀 Publish to platforms now'}
+            </button>
+          )}
         </div>
         <p className="mt-3 rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
           Posting to groups/pages stays manual — paste, attach the reel, post. ~15 minutes.

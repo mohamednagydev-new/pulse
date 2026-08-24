@@ -5,6 +5,8 @@ export interface MailOptions {
   subject: string;
   html: string;
   text?: string;
+  /** Growth outreach sets this to the agent's mailbox so replies flow to the inbox poller. */
+  replyTo?: string;
 }
 
 let transporter: Transporter | null = null;
@@ -46,7 +48,7 @@ export type MailResult = { ok: true } | { ok: false; reason: string };
  * reported "sent ✅" for months while SMTP was unconfigured because every
  * caller assumed resolve = delivered.
  */
-export async function sendMail({ to, subject, html, text }: MailOptions): Promise<MailResult> {
+export async function sendMail({ to, subject, html, text, replyTo }: MailOptions): Promise<MailResult> {
   const tx = getTransporter();
   if (!tx) {
     logFallback(to, subject, text ?? html);
@@ -59,6 +61,7 @@ export async function sendMail({ to, subject, html, text }: MailOptions): Promis
       subject,
       html,
       text: text ?? stripHtml(html),
+      ...(replyTo ? { replyTo } : {}),
     });
     return { ok: true };
   } catch (err) {

@@ -271,3 +271,70 @@ export async function runGrowthCadence(): Promise<string> {
 
   return `drafted ${drafted} follow-up(s)${failed ? `, ${failed} failed` : ''} of ${due.length} due`;
 }
+
+// ---------------------------------------------------------------------------
+// Posting plan — shared by the dashboard endpoint AND the daily auto-poster
+// ---------------------------------------------------------------------------
+
+import { signMedia } from './mediaSign';
+
+const PLAN_PLATFORMS = ['facebook', 'instagram', 'tiktok', 'whatsapp-channel'] as const;
+const planItemsSchema = z.object({
+  items: z
+    .array(z.object({ platform: z.enum(PLAN_PLATFORMS), text: z.string().min(10).max(1200) }))
+    .min(3)
+    .max(6),
+});
+
+export async function pickMarketingAsset() {
+  const asset = await prisma.marketingAsset.findFirst({
+    where: { active: true },
+    orderBy: [{ usedCount: 'asc' }, { lastUsedAt: 'asc' }],
+  });
+  if (!asset) return null;
+  const updated = await prisma.marketingAsset.update({
+    where: { id: asset.id },
+    data: { usedCount: { increment: 1 }, lastUsedAt: new Date() },
+  });
+  const { exp, sig } = signMedia('marketing', updated.id);
+  return { ...updated, fileUrl: `/api/admin-growth/assets/${updated.id}/file?exp=${exp}&sig=${sig}` };
+}
+
+export async function generatePostingPlan(): Promise<{
+  items: { platform: string; text: string }[];
+  asset: Awaited<ReturnType<typeof pickMarketingAsset>>;
+}> {
+  const raw = await chatComplete(
+    [
+      {
+        role: 'system',
+        content:
+          `You write daily social posts for PULSE — a free Egyptian bilingual fitness app (pulse.geddo.online): ` +
+          `workouts, streaks, weekly leagues, prize challenges, food tracking, community. ` +
+          `Write in Egyptian Arabic (عامية مصرية), energetic but not cringe. ` +
+          `NEVER invent user counts or numbers; never name competitors. ` +
+          `Reply ONLY as JSON: {"items":[{"platform":"facebook","text":"..."},{"platform":"instagram","text":"..."},{"platform":"tiktok","text":"..."},{"platform":"whatsapp-channel","text":"..."}]}`,
+      },
+      {
+        role: 'user',
+        content:
+          `Generate today's posting plan — ONE post per platform, each with a DISTINCT angle:
+` +
+          `- facebook: a practical fitness/nutrition value tip (end with a soft link to pulse.geddo.online)
+` +
+          `- instagram: a short demo of one real app feature (streaks, leagues, TV board, food photo logging...)
+` +
+          `- tiktok: a push to join the current challenge — hype, short lines, hook first
+` +
+          `- whatsapp-channel: a question to the community that sparks replies
+` +
+          `Keep each under 80 words. Emojis welcome, hashtags only on instagram/tiktok (2-4 max).`,
+      },
+    ],
+    { json: true, temperature: 0.8, maxTokens: 800 },
+  );
+  const parsed = planItemsSchema.safeParse(JSON.parse(raw));
+  if (!parsed.success) throw new Error('Model returned an invalid plan');
+  return { items: parsed.data.items, asset: await pickMarketingAsset() };
+}
+
