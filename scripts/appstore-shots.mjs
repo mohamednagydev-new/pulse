@@ -1,9 +1,11 @@
-// App Store screenshots: 6.9" iPhone (1320x2868) = 440x956 logical @3x,
-// captured from production as the reviewer account.
+// App Store screenshots, captured from production as the reviewer account.
+//   default    → 6.9" iPhone (1320x2868) = 440x956 logical @3x
+//   --ipad     → 13"  iPad  (2064x2752) = 1032x1376 logical @2x
 import { chromium } from 'playwright';
 import fs from 'fs';
 
-const OUT = 'F:/FIT_IT/deploy/appstore-screens';
+const IPAD = process.argv.includes('--ipad');
+const OUT = IPAD ? 'F:/FIT_IT/deploy/appstore-screens-ipad' : 'F:/FIT_IT/deploy/appstore-screens';
 fs.mkdirSync(OUT, { recursive: true });
 
 const SHOTS = [
@@ -19,12 +21,13 @@ const SHOTS = [
 
 const browser = await chromium.launch();
 const page = await browser.newPage({
-  viewport: { width: 440, height: 956 },
-  deviceScaleFactor: 3,
+  viewport: IPAD ? { width: 1032, height: 1376 } : { width: 440, height: 956 },
+  deviceScaleFactor: IPAD ? 2 : 3,
   isMobile: true,
   hasTouch: true,
-  userAgent:
-    'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+  userAgent: IPAD
+    ? 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
+    : 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
 });
 
 await page.goto('https://pulse.geddo.online/login', { waitUntil: 'networkidle', timeout: 60000 });
@@ -32,6 +35,7 @@ await page.goto('https://pulse.geddo.online/login', { waitUntil: 'networkidle', 
 await page.evaluate(() => {
   localStorage.setItem('pulse_install_snooze', String(Date.now()));
   localStorage.setItem('pulse_push_nudge_snooze', String(Date.now()));
+  localStorage.setItem('pulse_installed', '1'); // hides the install FAB too
 });
 await page.fill('input[type="email"]', 'playreview@geddo.online');
 await page.fill('input[type="password"]', 'PulseReview#2026');
@@ -42,6 +46,9 @@ console.log('after login:', page.url());
 for (const s of SHOTS) {
   try {
     await page.goto(`https://pulse.geddo.online${s.path}`, { waitUntil: 'networkidle', timeout: 45000 }).catch(() => {});
+    // Mirror the xl-breakpoint fix before it's deployed: at iPad width the
+    // desktop backdrop text clips behind the phone column — hide it.
+    if (IPAD) await page.addStyleTag({ content: '.pointer-events-none.fixed.inset-0.z-0{display:none!important}' });
     await page.waitForTimeout(s.wait);
     await page.screenshot({ path: `${OUT}/${s.name}.png` });
     console.log('shot', s.name);

@@ -592,7 +592,9 @@ function TabOrGuest() {
 /** Motivational branded surround shown around the phone frame on desktop. */
 function DesktopBackdrop() {
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 hidden select-none items-center justify-between px-[7vw] text-white lg:flex">
+    {/* xl, not lg: iPad-portrait widths (~1024px) leave no room beside the
+        phone column — the text clipped behind it. */}
+    <div className="pointer-events-none fixed inset-0 z-0 hidden select-none items-center justify-between px-[7vw] text-white xl:flex">
       <div className="max-w-sm">
         <div className="text-6xl font-extrabold italic tracking-tight text-white/90">PULSE</div>
         <p className="mt-4 text-xl font-medium text-white/50">
