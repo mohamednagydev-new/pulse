@@ -278,7 +278,7 @@ export async function runGrowthCadence(): Promise<string> {
 
 import { signMedia } from './mediaSign';
 
-const PLAN_PLATFORMS = ['facebook', 'instagram', 'tiktok', 'whatsapp-channel'] as const;
+const PLAN_PLATFORMS = ['facebook', 'instagram', 'tiktok', 'whatsapp-channel', 'fb-group'] as const;
 const planItemsSchema = z.object({
   items: z
     .array(z.object({ platform: z.enum(PLAN_PLATFORMS), text: z.string().min(10).max(1200) }))
@@ -313,7 +313,7 @@ export async function generatePostingPlan(): Promise<{
           `workouts, streaks, weekly leagues, prize challenges, food tracking, community. ` +
           `Write in Egyptian Arabic (عامية مصرية), energetic but not cringe. ` +
           `NEVER invent user counts or numbers; never name competitors. ` +
-          `Reply ONLY as JSON: {"items":[{"platform":"facebook","text":"..."},{"platform":"instagram","text":"..."},{"platform":"tiktok","text":"..."},{"platform":"whatsapp-channel","text":"..."}]}`,
+          `Reply ONLY as JSON: {"items":[{"platform":"facebook","text":"..."},{"platform":"instagram","text":"..."},{"platform":"tiktok","text":"..."},{"platform":"whatsapp-channel","text":"..."},{"platform":"fb-group","text":"..."}]}`,
       },
       {
         role: 'user',
@@ -327,6 +327,8 @@ export async function generatePostingPlan(): Promise<{
           `- tiktok: a push to join the current challenge — hype, short lines, hook first
 ` +
           `- whatsapp-channel: a question to the community that sparks replies
+` +
+            `- fb-group: for posting INSIDE fitness/diet Facebook groups (the #1 newcomer channel): pure value — answer a common beginner problem fully, ZERO links, zero salesy tone, end with a soft "لو حد عايز التطبيق المجاني اللي بستخدمه يقولي في الكومنتات" style line. Groups delete promotional posts.
 ` +
           `Keep each under 80 words. Emojis welcome, hashtags only on instagram/tiktok (2-4 max).`,
       },
