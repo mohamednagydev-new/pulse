@@ -10,7 +10,7 @@ import CountUp from '../components/CountUp';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
 import { pixelViewContent } from '../lib/pixels';
-import { PLAY_STORE_URL, isIOS } from '../lib/install';
+import { PLAY_STORE_URL, isIOS, isStandalone } from '../lib/install';
 import ScreenshotRail from '../components/ScreenshotRail';
 
 /**
@@ -92,8 +92,9 @@ export default function Landing() {
         {L('Look around first — no account', 'اتفرج الأول من غير حساب')}
       </button>
       {/* The app is on Google Play now — the badge goes wherever the CTAs go.
-          Hidden on iPhones only (nothing for them to install there yet). */}
-      {!isIOS() && (
+          Hidden on iPhones (nothing to install there yet) and inside the
+          installed app/TWA itself. */}
+      {!isIOS() && !isStandalone() && (
         <a
           href={PLAY_STORE_URL}
           target="_blank"

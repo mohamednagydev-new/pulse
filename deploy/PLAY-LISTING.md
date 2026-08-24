@@ -125,6 +125,11 @@ Start today — your body will thank you 🧡
 
 \* Meal photos/text are processed ephemerally by our AI provider to generate estimates and are not used for training — under Play's rules, ephemeral service-provider processing does not need to be declared as "shared", but keep the answer consistent with the privacy page.
 
+**Account deletion (Data safety → Data deletion):**
+- "Users can request account deletion": **Yes**
+- Deletion URL to paste: `https://pulse.geddo.online/delete-account` (public page, live after the next deploy; in-app path is Settings → Delete my account)
+- "Some data may be kept for legitimate reasons": No (deletion removes profile + logs)
+
 - Data encrypted in transit: **Yes** (HTTPS everywhere)
 - Users can request deletion: **Yes** (in-app account deletion + support contact)
 

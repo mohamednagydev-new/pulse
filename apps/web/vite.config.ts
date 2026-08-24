@@ -26,8 +26,13 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/',
         // Lets Chrome answer getInstalledRelatedApps() so the browser tab can
-        // tell the PWA is already installed and stop offering the install.
-        related_applications: [{ platform: 'webapp', url: 'https://pulse.geddo.online/manifest.webmanifest' }],
+        // tell the app is already installed (PWA or the Play TWA) and stop
+        // offering the install. No prefer_related_applications flag: our own
+        // UI steers Android to Play, and the flag would kill desktop install.
+        related_applications: [
+          { platform: 'webapp', url: 'https://pulse.geddo.online/manifest.webmanifest' },
+          { platform: 'play', id: 'online.geddo.pulse', url: 'https://play.google.com/store/apps/details?id=online.geddo.pulse' },
+        ],
         shortcuts: [
           { name: 'Start a workout', short_name: 'Workout', url: '/workout', icons: [{ src: 'pwa-192.png', sizes: '192x192' }] },
           { name: 'Log a meal', short_name: 'Tracker', url: '/tracker', icons: [{ src: 'pwa-192.png', sizes: '192x192' }] },

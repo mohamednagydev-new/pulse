@@ -183,6 +183,7 @@ const CoachClientDetail = lazyRoute(() => import('./pages/social/CoachClientDeta
 const MyInvite = lazyRoute(() => import('./pages/MyInvite'));
 const AdminLayout = lazyRoute(() => import('./components/AdminLayout'));
 const Privacy = lazyRoute(() => import('./pages/Privacy'));
+const DeleteAccount = lazyRoute(() => import('./pages/DeleteAccount'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const status = useAuth((s) => s.status);
@@ -383,8 +384,10 @@ export default function App() {
 
         {/* Fully public, no shell: runs on a gym's TV screen. */}
         <Route path="/tv/:id" element={<TvBoard />} />
-        {/* Public legal page — Play Store requires a reachable privacy policy URL. */}
+        {/* Public legal pages — Play Store requires reachable privacy-policy
+            and account-deletion URLs (Data safety form). */}
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/delete-account" element={<DeleteAccount />} />
 
         <Route
           element={
@@ -592,8 +595,8 @@ function TabOrGuest() {
 /** Motivational branded surround shown around the phone frame on desktop. */
 function DesktopBackdrop() {
   return (
-    {/* xl, not lg: iPad-portrait widths (~1024px) leave no room beside the
-        phone column — the text clipped behind it. */}
+    // xl, not lg: iPad-portrait widths (~1024px) leave no room beside the
+    // phone column — the text clipped behind it.
     <div className="pointer-events-none fixed inset-0 z-0 hidden select-none items-center justify-between px-[7vw] text-white xl:flex">
       <div className="max-w-sm">
         <div className="text-6xl font-extrabold italic tracking-tight text-white/90">PULSE</div>
