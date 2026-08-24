@@ -344,13 +344,18 @@ function ImportModal({ onClose, onImported }: { onClose: () => void; onImported:
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [name, org, type, email, phone] = line.split(',').map((c) => c.trim());
+      const parts = line.split(',').map((c) => c.trim());
+      const [name, org, type, email, phone] = parts;
+      // Everything after the 5th comma is notes (page URLs often contain commas-free
+      // but descriptions may not) — joined back so nothing is lost.
+      const notes = parts.slice(5).join(', ');
       return {
         name: name || '',
         org: org || undefined,
         type: type || undefined,
         email: email || undefined,
         phone: phone || undefined,
+        notes: notes || undefined,
       };
     })
     .filter((r) => r.name);
@@ -364,7 +369,7 @@ function ImportModal({ onClose, onImported }: { onClose: () => void; onImported:
   return (
     <Modal title="Import leads (CSV)" onClose={onClose}>
       <p className="mb-2 text-xs text-gray-400">
-        One lead per line: <code dir="ltr" className="rounded bg-gray-100 px-1 dark:bg-gray-800">name, org, type, email, phone</code> — only name is required.
+        One lead per line: <code dir="ltr" className="rounded bg-gray-100 px-1 dark:bg-gray-800">name, org, type, email, phone, notes/page-link</code> — only name is required.
       </p>
       <textarea
         value={text}

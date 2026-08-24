@@ -108,6 +108,7 @@ const importSchema = z.object({
         email: z.string().trim().email().max(200).optional(),
         phone: z.string().trim().max(50).optional(),
         source: z.string().trim().max(100).optional(),
+        notes: z.string().trim().max(500).optional(),
       }),
     )
     .min(1)
