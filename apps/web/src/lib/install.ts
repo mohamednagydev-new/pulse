@@ -52,6 +52,25 @@ export function clearDeferredPrompt() {
   deferredPrompt = null;
 }
 
+/** The native Android app on Google Play — a TWA wrapping this site, so the
+ *  content is always current. On Android the store app beats the PWA: real
+ *  push delivery, auto-updates, a guaranteed launcher icon, store reviews. */
+export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=online.geddo.pulse';
+
+export function isAndroid() {
+  return /android/i.test(navigator.userAgent);
+}
+
+/** Android browser (or even an in-app webview — the Play link escapes those
+ *  fine, it opens the Play app) that hasn't installed yet → send to the store. */
+export function preferPlayStore() {
+  return isAndroid() && installAvailable();
+}
+
+export function openPlayStore() {
+  window.location.href = PLAY_STORE_URL;
+}
+
 export function isIOS() {
   // iPadOS 13+ reports a Macintosh UA — the touch check catches it.
   return /iphone|ipad|ipod/i.test(navigator.userAgent)

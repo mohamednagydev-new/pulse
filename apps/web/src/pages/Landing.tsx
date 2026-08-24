@@ -10,6 +10,7 @@ import CountUp from '../components/CountUp';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
 import { pixelViewContent } from '../lib/pixels';
+import { PLAY_STORE_URL, isIOS } from '../lib/install';
 import ScreenshotRail from '../components/ScreenshotRail';
 
 /**
@@ -90,6 +91,28 @@ export default function Landing() {
       >
         {L('Look around first — no account', 'اتفرج الأول من غير حساب')}
       </button>
+      {/* The app is on Google Play now — the badge goes wherever the CTAs go.
+          Hidden on iPhones only (nothing for them to install there yet). */}
+      {!isIOS() && (
+        <a
+          href={PLAY_STORE_URL}
+          target="_blank"
+          rel="noopener"
+          onClick={() => track('funnel-play-store', utmMeta())}
+          className={`flex items-center justify-center gap-2.5 rounded-full bg-black/60 font-bold text-white ring-1 ring-white/25 backdrop-blur transition active:scale-[0.98] ${big ? 'min-h-[46px] text-sm' : 'min-h-12 px-8 text-sm'}`}
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden>
+            <path fill="#00d97c" d="M3.6 1.8 13.5 12 3.6 22.2c-.4-.3-.6-.8-.6-1.4V3.2c0-.6.2-1.1.6-1.4Z" />
+            <path fill="#ffd400" d="m16.9 8.6-3.4 3.4-9.9-10.2c.3-.2.8-.2 1.3.1l12 6.7Z" />
+            <path fill="#f43f5e" d="m16.9 15.4-12 6.7c-.5.3-1 .3-1.3.1l9.9-10.2 3.4 3.4Z" />
+            <path fill="#00c3ff" d="M16.9 8.6 20.6 10.7c1 .6 1 1.5 0 2.1l-3.7 2.1-3.4-3.4 3.4-2.9Z" />
+          </svg>
+          <span className="text-start leading-tight">
+            <span className="block text-[9px] font-semibold uppercase tracking-wide text-white/70">{L('Get it on', 'نزّله من')}</span>
+            Google Play
+          </span>
+        </a>
+      )}
     </div>
   );
 

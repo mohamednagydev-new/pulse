@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import Sheet from './Sheet';
 import { api } from '../lib/api';
 import { useAuth } from '../store/auth';
-import { getDeferredPrompt, clearDeferredPrompt, isIOS, isInAppBrowser, isStandalone, markInstalled } from '../lib/install';
+import { getDeferredPrompt, clearDeferredPrompt, isIOS, isInAppBrowser, isStandalone, markInstalled, preferPlayStore, openPlayStore } from '../lib/install';
 
 const SNOOZE_KEY = 'pulse_install_snooze';
 const SNOOZE_DAYS = 3;
@@ -41,6 +41,8 @@ export default function InstallPrompt() {
     // Manual trigger (Settings → Install app) always works, even after snoozing.
     const onManual = () => {
       if (isStandalone()) return;
+      // Android now has a real store listing — that's the install path there.
+      if (preferPlayStore()) { openPlayStore(); return; }
       setVisible(true);
       // No native prompt available → straight to the platform guide (iOS share
       // steps, browser-menu steps, or escape-the-webview steps).
@@ -69,6 +71,11 @@ export default function InstallPrompt() {
   };
 
   const install = async () => {
+    if (preferPlayStore()) {
+      openPlayStore();
+      dismiss(); // coming back from Play un-installed shouldn't re-nag instantly
+      return;
+    }
     const prompt = getDeferredPrompt();
     if (prompt) {
       await prompt.prompt();
@@ -101,9 +108,9 @@ export default function InstallPrompt() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-ink">{t('install.title')}</p>
-              <p className="truncate text-xs text-gray-500">{t('install.desc')}</p>
+              <p className="truncate text-xs text-gray-500">{preferPlayStore() ? t('install.playDesc') : t('install.desc')}</p>
             </div>
-            <button onClick={install} className="btn-pill btn-primary shrink-0 px-4 py-2 text-sm">{t('install.btn')}</button>
+            <button onClick={install} className="btn-pill btn-primary shrink-0 px-4 py-2 text-sm">{preferPlayStore() ? t('install.playBtn') : t('install.btn')}</button>
             <button onClick={dismiss} aria-label={t('install.gotIt')} className="shrink-0 p-1 text-gray-400"><X size={18} /></button>
           </div>
         </motion.div>
