@@ -146,7 +146,10 @@ adminGrowthRouter.get('/leads/:id', async (req: AuthedRequest, res) => {
     include: { touches: { orderBy: { createdAt: 'asc' } } },
   });
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
-  res.json(lead);
+  // {lead, touches} — the drawer's contract; returning the lead flat left the
+  // UI reading data.lead === undefined and spinning forever (user report).
+  const { touches, ...rest } = lead;
+  res.json({ lead: rest, touches });
 });
 
 const patchLeadSchema = z.object({
