@@ -32,6 +32,7 @@ const JOB_NAMES = [
   'growth-cadence',
   'growth-inbox',
   'social-post',
+  'ig-refresh',
   'broadcast',
 ] as const;
 
@@ -158,6 +159,10 @@ adminSystemRouter.post('/run/:name', async (req: AuthedRequest, res: Response) =
     'social-post': async () => {
       const { runDailySocialPost } = await import('../lib/socialPoster');
       return runDailySocialPost();
+    },
+    'ig-refresh': async () => {
+      const { refreshIgToken } = await import('../lib/socialPoster');
+      return refreshIgToken();
     },
   };
 

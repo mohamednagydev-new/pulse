@@ -1,4 +1,6 @@
 import fs from 'fs';
+import path from 'path';
+import { env } from '../env';
 import { prisma } from './prisma';
 import { openai } from './openai';
 
@@ -18,11 +20,41 @@ const GRAPH = 'https://graph.facebook.com/v21.0';
 
 type PlanItem = { platform: string; text: string };
 
-export function socialConfigured(): { facebook: boolean; telegram: boolean } {
+export function socialConfigured(): { facebook: boolean; telegram: boolean; instagram: boolean } {
   return {
     facebook: Boolean(process.env.FB_PAGE_ID && process.env.FB_PAGE_TOKEN),
     telegram: Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHANNEL),
+    instagram: Boolean(igToken()),
   };
+}
+
+// ---- Instagram (API with Instagram Login) ----------------------------------
+// Tokens last 60 days and refresh to a NEW value, so the live token persists
+// in a file (env is only the seed); the weekly ig-refresh job keeps it alive.
+const IG_TOKEN_FILE = path.join(env.UPLOAD_DIR, 'ig-token.json');
+
+export function igToken(): string | null {
+  try {
+    const j = JSON.parse(fs.readFileSync(IG_TOKEN_FILE, 'utf8'));
+    if (typeof j.token === 'string' && j.token) return j.token;
+  } catch { /* no file yet — fall back to the env seed */ }
+  return process.env.IG_ACCESS_TOKEN || null;
+}
+
+function saveIgToken(token: string) {
+  try { fs.writeFileSync(IG_TOKEN_FILE, JSON.stringify({ token, savedAt: new Date().toISOString() })); } catch { /* keep env */ }
+}
+
+/** Weekly: extend the IG token's 60-day life (refresh needs it >=24h old). */
+export async function refreshIgToken(): Promise<string> {
+  const tok = igToken();
+  if (!tok) return 'skipped — no IG token configured';
+  const r: any = await (
+    await fetch(`https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${tok}`)
+  ).json();
+  if (r.error) return `refresh failed: ${r.error.message ?? 'unknown'} (token still valid until its original expiry)`;
+  saveIgToken(r.access_token);
+  return `refreshed — valid ${Math.round((r.expires_in ?? 0) / 86400)} more days`;
 }
 
 export async function postToFacebook(text: string): Promise<string> {
@@ -39,8 +71,41 @@ export async function postToFacebook(text: string): Promise<string> {
   return `fb:${j.id}`;
 }
 
-/** IG needs a PUBLIC media URL; we publish the reel via its signed asset URL. */
+/** IG needs a PUBLIC media URL; we publish the reel via its signed asset URL.
+ *  Preferred path: Instagram-Login token (graph.instagram.com, no Page link
+ *  needed). Fallback: the classic FB-Page-linked flow. */
 export async function postToInstagram(caption: string, videoUrl: string | null): Promise<string> {
+  const ig = igToken();
+  if (ig) {
+    if (!videoUrl) throw new Error('instagram: reels need a video asset');
+    const me: any = await (await fetch(`https://graph.instagram.com/v21.0/me?fields=id&access_token=${ig}`)).json();
+    if (me.error) throw new Error(`instagram: ${me.error.message}`);
+    const container: any = await (
+      await fetch(`https://graph.instagram.com/v21.0/${me.id}/media`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ media_type: 'REELS', video_url: videoUrl, caption, access_token: ig }),
+      })
+    ).json();
+    if (container.error) throw new Error(`instagram: ${container.error.message}`);
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 6000));
+      const st: any = await (
+        await fetch(`https://graph.instagram.com/v21.0/${container.id}?fields=status_code&access_token=${ig}`)
+      ).json();
+      if (st.status_code === 'FINISHED') break;
+      if (st.status_code === 'ERROR') throw new Error('instagram: media processing failed');
+    }
+    const pub: any = await (
+      await fetch(`https://graph.instagram.com/v21.0/${me.id}/media_publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ creation_id: container.id, access_token: ig }),
+      })
+    ).json();
+    if (pub.error) throw new Error(`instagram publish: ${pub.error.message}`);
+    return `ig:${pub.id}`;
+  }
   const token = process.env.FB_PAGE_TOKEN;
   const pageId = process.env.FB_PAGE_ID;
   if (!token || !pageId) throw new Error('FB token not configured');

@@ -38,6 +38,7 @@ const JOBS: { name: string; label: string; schedule: string; runnable: boolean }
   { name: 'growth-cadence', label: 'Growth cadence', schedule: 'Daily 08:00', runnable: true },
   { name: 'growth-inbox', label: 'Growth inbox poll', schedule: 'Every 10 min', runnable: true },
   { name: 'social-post', label: 'Daily social auto-post', schedule: 'Daily 17:00', runnable: true },
+  { name: 'ig-refresh', label: 'Instagram token refresh', schedule: 'Sunday 03:00', runnable: true },
   { name: 'broadcast', label: 'Broadcast', schedule: 'Manual only', runnable: false },
 ];
 

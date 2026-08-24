@@ -118,6 +118,12 @@ async function runCheck() {
     await runLogged('auto-posts', false, postCommunityPulse);
   }
 
+  // Sunday 03:00 — extend the Instagram token's 60-day life.
+  if (localDow(now) === 0 && hour === 3 && (await claimJob(`igrefresh:${day}`))) {
+    const { refreshIgToken } = await import('./socialPoster');
+    await runLogged('ig-refresh', false, refreshIgToken);
+  }
+
   // Daily 17:00 — auto-publish today's posting plan to the platforms whose
   // APIs allow it (FB Page / Telegram / IG when the token has scopes).
   if (hour === 17 && (await claimJob(`socialpost:${day}`))) {

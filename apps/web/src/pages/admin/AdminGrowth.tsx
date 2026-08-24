@@ -713,7 +713,7 @@ function PostingPlanTab() {
   });
 
 
-  const { data: social } = useQuery<{ facebook: boolean; telegram: boolean; inbox: boolean; autoPostDaily: boolean }>({
+  const { data: social } = useQuery<{ facebook: boolean; telegram: boolean; instagram?: boolean; inbox: boolean; autoPostDaily: boolean }>({
     queryKey: ['growth-social-status'],
     queryFn: () => api.get('/api/admin-growth/social-status'),
   });
@@ -738,6 +738,7 @@ function PostingPlanTab() {
           <span className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
             <span className={`rounded-full px-2 py-0.5 ${social?.facebook ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>FB {social?.facebook ? '✓' : '—'}</span>
             <span className={`rounded-full px-2 py-0.5 ${social?.telegram ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>TG {social?.telegram ? '✓' : '—'}</span>
+            <span className={`rounded-full px-2 py-0.5 ${social?.instagram ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>IG {social?.instagram ? '✓' : '—'}</span>
             <span className={`rounded-full px-2 py-0.5 ${social?.inbox ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>Inbox {social?.inbox ? '✓' : '—'}</span>
             <span className={`rounded-full px-2 py-0.5 ${social?.autoPostDaily ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>Daily 17:00 {social?.autoPostDaily ? 'ON' : 'OFF'}</span>
           </span>
@@ -745,7 +746,7 @@ function PostingPlanTab() {
             {generate.isPending ? <Loader2 size={13} className="animate-spin" /> : '🎯'}{' '}
             {generate.isPending ? 'Generating…' : "Generate today's plan"}
           </button>
-          {plan && (social?.facebook || social?.telegram) && (
+          {plan && (social?.facebook || social?.telegram || social?.instagram) && (
             <button onClick={() => publish.mutate()} disabled={publish.isPending} className={btnPrimary}>
               {publish.isPending ? 'Publishing…' : '🚀 Publish to platforms now'}
             </button>
