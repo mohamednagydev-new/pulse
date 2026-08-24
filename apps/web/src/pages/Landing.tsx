@@ -10,7 +10,7 @@ import CountUp from '../components/CountUp';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
 import { pixelViewContent } from '../lib/pixels';
-import { PLAY_STORE_URL, isIOS, isStandalone } from '../lib/install';
+import { PLAY_STORE_URL, APP_STORE_URL, isIOS, isAndroid, isStandalone } from '../lib/install';
 import ScreenshotRail from '../components/ScreenshotRail';
 
 /**
@@ -111,6 +111,27 @@ export default function Landing() {
           <span className="text-start leading-tight">
             <span className="block text-[9px] font-semibold uppercase tracking-wide text-white/70">{L('Get it on', 'نزّله من')}</span>
             Google Play
+          </span>
+        </a>
+      )}
+      {/* App Store: live link once APP_STORE_URL is set; "coming soon" until
+          then. Android phones skip it — nothing for them there. */}
+      {!isAndroid() && !isStandalone() && (
+        <a
+          href={APP_STORE_URL ?? undefined}
+          {...(APP_STORE_URL
+            ? { target: '_blank', rel: 'noopener', onClick: () => track('funnel-app-store', utmMeta()) }
+            : { role: 'note', 'aria-disabled': true })}
+          className={`flex items-center justify-center gap-2.5 rounded-full bg-black/60 font-bold text-white ring-1 ring-white/25 backdrop-blur transition ${APP_STORE_URL ? 'active:scale-[0.98]' : 'cursor-default opacity-60'} ${big ? 'min-h-[46px] text-sm' : 'min-h-12 px-8 text-sm'}`}
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor" aria-hidden>
+            <path d="M16.365 12.79c-.023-2.4 1.962-3.55 2.05-3.607-1.117-1.633-2.855-1.857-3.472-1.882-1.478-.15-2.884.868-3.633.868-.748 0-1.905-.847-3.132-.824-1.61.024-3.096.936-3.924 2.377-1.674 2.902-.427 7.194 1.203 9.55.797 1.152 1.747 2.446 2.994 2.4 1.202-.048 1.656-.777 3.108-.777 1.451 0 1.86.777 3.132.753 1.294-.024 2.113-1.175 2.905-2.33.914-1.336 1.29-2.63 1.312-2.697-.029-.012-2.517-.965-2.543-3.831zM14.02 5.74c.662-.802 1.108-1.917.986-3.028-.953.038-2.107.635-2.79 1.436-.612.71-1.148 1.845-1.004 2.933 1.063.083 2.148-.54 2.808-1.34z" />
+          </svg>
+          <span className="text-start leading-tight">
+            <span className="block text-[9px] font-semibold uppercase tracking-wide text-white/70">
+              {APP_STORE_URL ? L('Download on the', 'نزّله من الـ') : L('Coming soon to the', 'قريباً على الـ')}
+            </span>
+            App Store
           </span>
         </a>
       )}

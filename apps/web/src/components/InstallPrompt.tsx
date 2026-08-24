@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import Sheet from './Sheet';
 import { api } from '../lib/api';
 import { useAuth } from '../store/auth';
-import { getDeferredPrompt, clearDeferredPrompt, isIOS, isInAppBrowser, isStandalone, markInstalled, preferPlayStore, openPlayStore } from '../lib/install';
+import { getDeferredPrompt, clearDeferredPrompt, isIOS, isInAppBrowser, isStandalone, markInstalled, preferPlayStore, openPlayStore, APP_STORE_URL } from '../lib/install';
 
 const SNOOZE_KEY = 'pulse_install_snooze';
 const SNOOZE_DAYS = 3;
@@ -74,6 +74,12 @@ export default function InstallPrompt() {
     if (preferPlayStore()) {
       openPlayStore();
       dismiss(); // coming back from Play un-installed shouldn't re-nag instantly
+      return;
+    }
+    // The day the iOS app ships, iPhones jump straight to the App Store too.
+    if (isIOS() && APP_STORE_URL) {
+      window.location.href = APP_STORE_URL;
+      dismiss();
       return;
     }
     const prompt = getDeferredPrompt();
@@ -170,6 +176,11 @@ function InstallGuide({ onDone }: { onDone: () => void }) {
           </li>
         ))}
       </ol>
+      {kind === 'ios' && !APP_STORE_URL && (
+        <p className="mt-5 rounded-xl bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-500">
+          🍎 {t('install.appleSoon')}
+        </p>
+      )}
       <button onClick={onDone} className="btn-pill btn-primary mt-6 w-full">{t('install.gotIt')}</button>
     </div>
   );

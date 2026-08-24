@@ -57,6 +57,10 @@ export function clearDeferredPrompt() {
  *  push delivery, auto-updates, a guaranteed launcher icon, store reviews. */
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=online.geddo.pulse';
 
+/** Set to the real App Store URL the day Apple approves — every "coming soon"
+ *  badge flips to a live install link automatically. */
+export const APP_STORE_URL: string | null = null;
+
 export function isAndroid() {
   return /android/i.test(navigator.userAgent);
 }
