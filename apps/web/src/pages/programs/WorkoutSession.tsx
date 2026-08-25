@@ -16,7 +16,7 @@ import ExerciseVisual, { exercisePoster } from '../../components/ExerciseVisual'
 import HumanMove, { patternFor } from '../../components/HumanMove';
 import ContentVideo from '../../components/ContentVideo';
 import Confetti from '../../components/Confetti';
-import { signedMediaUrl } from '../../lib/media';
+import { signedMediaUrl, useSignedMedia } from '../../lib/media';
 import { successFeedback, celebrateFeedback, tapFeedback } from '../../lib/haptics';
 import { coach, cancel as cancelVoice, voiceEnabled, setVoiceEnabled } from '../../lib/voice';
 import { getRestTip } from '../../lib/restTips';
@@ -115,6 +115,52 @@ function AmbientGlow({ active }: { active: boolean }) {
   );
 }
 
+/** Follow-along mode: the demo loops MUTED during the set so you can mirror
+ *  the movement in real time. YouTube demos loop via embed params; coach
+ *  uploads loop as plain muted <video>. pointer-events-none keeps stray taps
+ *  from pausing it — the session controls stay in charge. */
+function FollowAlongVideo({ videoUrl, videoId }: { videoUrl?: string | null; videoId?: string | null }) {
+  const hosted = useSignedMedia('video', videoId ?? null);
+  const yt = videoUrl?.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,})/)?.[1] ?? null;
+  if (videoId && hosted) {
+    return (
+      <video
+        src={hosted}
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="pointer-events-none aspect-video w-full rounded-3xl bg-black object-cover"
+      />
+    );
+  }
+  if (yt) {
+    return (
+      <div className="overflow-hidden rounded-3xl bg-black">
+        <iframe
+          src={`https://www.youtube.com/embed/${yt}?autoplay=1&mute=1&loop=1&playlist=${yt}&playsinline=1&controls=0&rel=0&modestbranding=1`}
+          className="pointer-events-none aspect-video w-full"
+          allow="autoplay; encrypted-media"
+          title="Follow along"
+        />
+      </div>
+    );
+  }
+  if (videoUrl) {
+    return (
+      <video
+        src={videoUrl}
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="pointer-events-none aspect-video w-full rounded-3xl bg-black object-cover"
+      />
+    );
+  }
+  return null;
+}
+
 export default function WorkoutSession() {
   const { groupId, workoutId, routineId } = useParams();
   const navigate = useNavigate();
@@ -147,6 +193,14 @@ export default function WorkoutSession() {
   // Form demo opens on demand: a video autoplaying mid-set would fight the timer,
   // but not being able to check the movement at all is worse.
   const [showForm, setShowForm] = useState(false);
+  // Follow-along: opt-in, remembered across sessions.
+  const [followAlong, setFollowAlong] = useState(() => {
+    try { return localStorage.getItem('pulse_follow_along') === '1'; } catch { return false; }
+  });
+  const toggleFollowAlong = () => setFollowAlong((v) => {
+    try { localStorage.setItem('pulse_follow_along', v ? '0' : '1'); } catch { /* private mode */ }
+    return !v;
+  });
   const [rest, setRest] = useState(DEFAULT_REST_SECONDS);
   const [doneList, setDoneList] = useState<string[]>([]);
   const [musicOn, setMusicOn] = useState(false);
@@ -812,6 +866,12 @@ export default function WorkoutSession() {
           exit={{ opacity: 0, x: -26 }}
           transition={{ type: 'spring', stiffness: 380, damping: 34 }}
         >
+          {followAlong && (current?.videoUrl || current?.videoId) ? (
+            /* Follow-along ON: the looping demo IS the stage — mirror it live. */
+            <div className="mx-auto my-4 w-full max-w-lg">
+              <FollowAlongVideo key={current?.videoUrl ?? current?.videoId ?? i} videoUrl={current?.videoUrl} videoId={current?.videoId} />
+            </div>
+          ) : (
           <div className="mx-auto my-4 flex items-center justify-center gap-3">
             <button
               onClick={() => { if (current?.videoUrl || current?.videoId) { tapFeedback(); setShowForm(true); } }}
@@ -834,16 +894,27 @@ export default function WorkoutSession() {
               </div>
             )}
           </div>
+          )}
           <h1 className="text-2xl font-extrabold">{current?.name}</h1>
 
           {/* Every exercise has a real demo; the animation is only a shape cue. */}
           {(current?.videoUrl || current?.videoId) && (
-            <button
-              onClick={() => { tapFeedback(); setShowForm(true); }}
-              className="mx-auto mt-2 flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold transition active:scale-95"
-            >
-              <PlayCircle size={14} /> {t('session.watchForm')}
-            </button>
+            <div className="mx-auto mt-2 flex items-center gap-2">
+              <button
+                onClick={() => { tapFeedback(); setShowForm(true); }}
+                className="flex items-center gap-1.5 rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-orange-500/30 transition active:scale-95"
+              >
+                <PlayCircle size={16} /> {t('session.watchForm')}
+              </button>
+              <button
+                onClick={() => { tapFeedback(); toggleFollowAlong(); }}
+                className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 ${
+                  followAlong ? 'bg-white text-ink' : 'bg-white/10 text-white/85'
+                }`}
+              >
+                🎬 {t('session.followAlong')}
+              </button>
+            </div>
           )}
           <motion.p
             key={`hype-${i}`}

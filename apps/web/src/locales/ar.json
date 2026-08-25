@@ -342,6 +342,7 @@
     "exerciseOf": "تمرين {{n}} من {{total}}",
     "careArea": "خد بالك — التمرين ده بيحمّل على {{areas}}",
     "trySafer": "بدّله بـ{{name}} لو حسيت بوجع.",
+    "followAlong": "اتحرك معاه",
     "watchForm": "شوف الأداء الصح",
     "showingDemo": "أقرب شرح عندنا: {{name}}",
     "doneNext": "خلصت — راحة واللي بعده",

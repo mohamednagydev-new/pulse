@@ -142,6 +142,24 @@ export default function ExercisesPage() {
           <span className="text-[11px] capitalize text-white/70">{side === 'front' ? t('exercises.back') : t('exercises.front')}</span>
         </button>
       </div>
+
+      {/* Every muscle as a plain chip — the map is the pretty way in, this is
+          the guaranteed one. Hunting overlapping dots hid whole groups. */}
+      <div className="mt-4 flex flex-wrap justify-center gap-2 px-5">
+        {all.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => pick(g)}
+            className={`rounded-full border px-3.5 py-1.5 text-xs font-bold backdrop-blur transition active:scale-95 ${
+              active?.id === g.id
+                ? 'border-orange-400/60 bg-orange-500 text-white'
+                : 'border-white/15 bg-white/10 text-white/85'
+            }`}
+          >
+            {g.name}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

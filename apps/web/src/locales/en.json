@@ -342,6 +342,7 @@
     "exerciseOf": "Exercise {{n}} of {{total}}",
     "careArea": "Take care — this one loads your {{areas}}",
     "trySafer": "Swap for {{name}} if it complains.",
+    "followAlong": "Follow along",
     "watchForm": "Watch the form",
     "showingDemo": "Closest demo we have: {{name}}",
     "doneNext": "Done — rest & next",
