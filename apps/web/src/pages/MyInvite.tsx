@@ -57,8 +57,8 @@ export default function MyInvite() {
             icon={<Gift size={20} />}
             title={L('Invite a friend', 'اعزم صاحبك')}
             sub={L(
-              'They start with a gift streak-freeze — and you level up when they train.',
-              'صاحبك يبدأ ومعاه فريز سلسلة هدية — وانت بتكسب لما يتمرن.',
+              'They start with 2 gift streak-freezes. When they finish their first workout, YOU get +100 XP and a streak freeze.',
+              'صاحبك يبدأ ومعاه فريزتين هدية — ولما يخلّص أول تمرين، انت تاخد ‎+100 XP وفريزة سلسلة.',
             )}
             link={referral.link}
             waText={L(

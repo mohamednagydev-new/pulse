@@ -312,12 +312,37 @@ meRouter.post('/workout-done', async (req: AuthedRequest, res) => {
     flagIntegrity(req.userId!, 'workout-throttle');
     return res.json({ ok: true, throttled: true });
   }
+  // First-EVER completion? (checked before the award writes this session's event)
+  const firstEver = !(await prisma.xpEvent.findFirst({
+    where: { userId: req.userId!, reason: 'workout-session' },
+    select: { id: true },
+  }));
   await awardXp(req.userId!, 60, 'workout-session').catch(() => {});
   await createFeedPost(req.userId!, 'completion', `Crushed a workout${name ? ` — ${name}` : ''} 💪`, 'workout', undefined, {
     textAr: `كسّر تمرين${name ? ` — ${name}` : ''} 💪`,
   });
   await touchStreak(req.userId!);
   await bumpChallenges(req.userId!);
+  // Referral payout lands on the friend's FIRST WORKOUT, not on signup — a
+  // signup is a click, a first workout is a real person training. Two-sided:
+  // the invitee already starts with +2 streak freezes at register.
+  if (firstEver) {
+    try {
+      const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { referredById: true, firstName: true } });
+      if (me?.referredById) {
+        await awardXp(me.referredById, 100, 'referral-first-workout').catch(() => {});
+        await prisma.user.update({ where: { id: me.referredById }, data: { streakFreezes: { increment: 1 } } });
+        notifyUser(me.referredById, {
+          title: `${me.firstName ?? 'Your friend'} just did their first workout! 🎉`,
+          titleAr: `${me.firstName ?? 'صاحبك'} خلّص أول تمرين! 🎉`,
+          body: 'You earned +100 XP and a streak freeze for bringing them in. Invite another?',
+          bodyAr: 'كسبت ‎+100 XP وفريزة سلسلة عشان جبته معانا. تعزم حد تاني؟',
+          url: '/my-invite',
+          type: 'general',
+        }).catch(() => {});
+      }
+    } catch { /* the workout itself is already saved — referral bonus must never fail it */ }
+  }
   res.json({ ok: true });
 });
 
