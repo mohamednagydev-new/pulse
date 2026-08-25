@@ -684,6 +684,9 @@ model GroupSession {
   instructions   String?
   coachWorkoutId String?
   muscleFocus    String?
+  /** YouTube/Facebook LIVE embed for flagship classes — the coach streams there,
+      the room embeds it alongside the synced stepper + chat. */
+  streamUrl      String?
   scheduledAt    DateTime
   createdAt      DateTime           @default(now())
   participants   GroupParticipant[]

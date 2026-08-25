@@ -17,6 +17,7 @@ import PushNudge from '../components/PushNudge';
 import ComebackCard from '../components/ComebackCard';
 import DailyReset from '../components/DailyReset';
 import DailyQuests from '../components/DailyQuests';
+import LiveClassCard from '../components/LiveClassCard';
 import WaterCard from '../components/WaterCard';
 import SpinWheel from '../components/SpinWheel';
 import HallOfFame from '../components/HallOfFame';
@@ -189,6 +190,10 @@ export default function Home() {
           </motion.button>
         );
       })()}
+
+      {/* Next flagship live class — countdown that rallies everyone into ONE
+          room at the same time (the cure for the empty-room problem). */}
+      <LiveClassCard />
 
       {/* Today's habits — the things that reset every morning */}
       <DailyQuests />

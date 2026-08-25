@@ -23,6 +23,31 @@ function fmt(sec: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
+/** YouTube or Facebook LIVE embed — the only two hosts the API accepts. */
+function StreamEmbed({ url }: { url: string }) {
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,})/)?.[1] ?? null;
+  if (yt) {
+    return (
+      <iframe
+        src={`https://www.youtube.com/embed/${yt}?autoplay=1&playsinline=1&rel=0`}
+        className="aspect-video w-full"
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+        allowFullScreen
+        title="Live class"
+      />
+    );
+  }
+  return (
+    <iframe
+      src={`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true`}
+      className="aspect-video w-full"
+      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+      allowFullScreen
+      title="Live class"
+    />
+  );
+}
+
 export default function GroupSessionDetail() {
   const { t, i18n } = useTranslation();
   const isAr = i18n.language.startsWith('ar');
@@ -288,6 +313,21 @@ export default function GroupSessionDetail() {
         {data.muscleFocus && <p className="mt-2 text-sm font-semibold text-brand-blue">{data.muscleFocus}</p>}
         {data.description && <p className="mt-3 text-sm text-gray-600">{data.description}</p>}
       </div>
+
+      {/* Flagship class: the coach streams on YouTube/Facebook Live and the
+          room embeds it — their CDN does the video, we keep the chat, roster
+          and synced stepper around it. */}
+      {data.streamUrl && (
+        <section className="mt-4 px-4">
+          <div className="overflow-hidden rounded-2xl bg-black shadow-lg">
+            <StreamEmbed url={data.streamUrl} />
+          </div>
+          <p className="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-red-500">
+            <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" /><span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" /></span>
+            {L('Live class — the coach is streaming here', 'حصة لايف — الكوتش بيبث هنا')}
+          </p>
+        </section>
+      )}
 
       {/* Session plan: the coach's own steps/rules, then a default "how a live
           session works" explainer so a first-time joiner is never guessing. */}

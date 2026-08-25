@@ -285,6 +285,20 @@ const HOW_TO: Step[] = [
  * ------------------------------------------------------------------ */
 const NEW_TRAINING: Step[] = [
   {
+    icon: Clapperboard, to: '/programs',
+    en: 'Follow-along mode — train WITH the video',
+    ar: 'وضع «اتحرك معاه» — اتمرن مع الفيديو',
+    enBody: 'Inside a session tap 🎬 Follow along and the demo video loops silently while your set runs — mirror the movement in real time. Your choice is remembered. The orange ▶ button still opens the full form video with sound any time.',
+    arBody: 'جوه التمرينة دوس 🎬 «اتحرك معاه» وفيديو الأداء هيفضل شغال من غير صوت طول المجموعة — اتحرك معاه في نفس اللحظة. اختيارك بيتحفظ. وزرار ▶ البرتقاني لسه بيفتحلك فيديو الأداء كامل بالصوت في أي وقت.',
+  },
+  {
+    icon: Target, to: '/exercises',
+    en: 'Find any muscle in one tap',
+    ar: 'لاقي أي عضلة بضغطة واحدة',
+    enBody: 'Under the muscle map there is now a row of chips — every muscle group (biceps, chest, lats…) as plain text. Tap one and you are inside its exercises, no hunting dots on the body.',
+    arBody: 'تحت خريطة العضلات فيه دلوقتي شريط اختيارات — كل عضلة (باي، صدر، ظهر…) مكتوبة قدامك. دوس عليها وانت جوه تمريناتها على طول، من غير ما تدوّر على النقط.',
+  },
+  {
     icon: Trophy, to: '/programs',
     en: 'Pro programs for advanced lifters',
     ar: 'برامج احترافية للمتقدمين',
@@ -322,6 +336,27 @@ const NEW_TRAINING: Step[] = [
 ];
 
 const NEW_BUDDIES: Step[] = [
+  {
+    icon: Radio, to: '/group',
+    en: 'Flagship live classes — coach on stream',
+    ar: 'حصص لايف مع الكوتش — بث مباشر',
+    enBody: 'Coaches can now attach a YouTube/Facebook live stream to a scheduled group session — you see the coach streaming inside the room with the chat, roster and synced timer around it. When a class is coming up, a countdown card appears on Home.',
+    arBody: 'الكوتشات بقى يقدروا يحطوا بث يوتيوب/فيسبوك لايف جوه الجلسة الجماعية — بتشوف الكوتش بيبث جوه الأوضة ومعاه الشات والتايمر المتزامن. ولما فيه حصة جاية، كارت عدّاد تنازلي بيظهر في الرئيسية.',
+  },
+  {
+    icon: Gift, to: '/my-invite',
+    en: 'Invite a friend — you BOTH win',
+    ar: 'اعزم صاحبك — انتوا الاتنين كسبانين',
+    enBody: 'Your friend starts with 2 gift streak-freezes. The moment they finish their first workout, YOU get +100 XP and a streak freeze, with a notification telling you. Your invite link is in اعزم ناس.',
+    arBody: 'صاحبك يبدأ ومعاه فريزتين هدية. وأول ما يخلّص أول تمرين، انت بتاخد ‎+100 XP وفريزة سلسلة وإشعار يقولك. لينكك في صفحة «اعزم ناس».',
+  },
+  {
+    icon: Download, to: '/',
+    en: 'PULSE is on Google Play (App Store soon)',
+    ar: 'PULSE على Google Play (والآب ستور قريباً)',
+    enBody: 'The real Android app is live on Google Play — same account, faster feel, notifications that always arrive. iPhone users: the App Store version is on its way; until then add PULSE to your Home Screen from Safari.',
+    arBody: 'تطبيق أندرويد الحقيقي نزل على Google Play — نفس حسابك، وإحساس أسرع، وإشعارات بتوصل دايماً. مستخدمين الآيفون: نسخة الآب ستور في الطريق، ولحد ما تنزل ضيف PULSE على الشاشة الرئيسية من سفاري.',
+  },
   {
     icon: MessageSquare, to: '/community',
     en: 'Filter the feed your way',

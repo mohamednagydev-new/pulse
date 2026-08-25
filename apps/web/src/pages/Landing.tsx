@@ -40,8 +40,8 @@ const FEATURES = [
     img: '/landing/session.jpg',
     icon: ScanLine,
     tint: 'from-sky-500 to-blue-600',
-    en: ['Tap a muscle, start training', 'Muscle map sessions with video form guides, set logging and PR celebrations — home or gym, every level.'],
-    ar: ['دوس على العضلة وابدأ', 'خريطة عضلات بجلسات جاهزة: فيديو لكل تمرينة، سجّل أوزانك، واحتفال لما تكسر رقمك — بيت أو جيم.'],
+    en: ['Tap a muscle, start training', 'Muscle map sessions with follow-along videos — the demo plays while you train. Log sets, break records, home or gym.'],
+    ar: ['دوس على العضلة وابدأ', 'خريطة عضلات بجلسات جاهزة: فيديو «اتحرك معاه» بيشتغل وانت بتتمرن، سجّل أوزانك، واحتفال لما تكسر رقمك — بيت أو جيم.'],
   },
   {
     img: '/landing/kitchen.jpg',
@@ -54,8 +54,8 @@ const FEATURES = [
     img: '/landing/challenge.jpg',
     icon: Trophy,
     tint: 'from-violet-500 to-purple-600',
-    en: ["You won't train alone", 'Challenges with badges, weekly XP leagues, 1v1 duels with friends, and live group sessions with Coach PULSE.'],
-    ar: ['مش هتتمرن لوحدك', 'تحديات ببادجات، دوري أسبوعي بالنقط، تحدي ١ضد١ مع صاحبك، وحصص لايف جماعية مع كوتش PULSE.'],
+    en: ["You won't train alone", 'Challenges with badges, weekly XP leagues, 1v1 duels — and live classes where the coach streams into the room.'],
+    ar: ['مش هتتمرن لوحدك', 'تحديات ببادجات، دوري أسبوعي بالنقط، تحدي ١ضد١ مع صاحبك — وحصص لايف الكوتش بيبث فيها جوه الأوضة.'],
   },
 ];
 

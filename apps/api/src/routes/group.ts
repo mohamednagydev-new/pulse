@@ -46,11 +46,22 @@ groupRouter.post('/', async (req: AuthedRequest, res) => {
     muscleFocus: z.string().optional(),
     coachWorkoutId: z.string().optional(),
     scheduledAt: z.string().min(1),
+    streamUrl: z.string().trim().max(300).optional(),
   });
   const p = schema.safeParse(req.body);
   if (!p.success) return res.status(400).json({ error: 'Add a title and a scheduled time' });
   const scheduledAt = new Date(p.data.scheduledAt);
   if (Number.isNaN(scheduledAt.getTime())) return res.status(400).json({ error: 'Invalid scheduled time' });
+  // Live stream embeds are a coach/admin feature (flagship classes) — and only
+  // YouTube/Facebook, so a room can never frame an arbitrary site.
+  let streamUrl: string | null = null;
+  if (p.data.streamUrl) {
+    if (!/^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be|facebook\.com|fb\.watch)\//i.test(p.data.streamUrl)) {
+      return res.status(400).json({ error: 'Stream link must be a YouTube or Facebook URL', errorAr: 'لينك البث لازم يكون يوتيوب أو فيسبوك' });
+    }
+    const creator = await prisma.user.findUnique({ where: { id: req.userId! }, select: { isCoach: true, role: true } });
+    if (creator?.isCoach || creator?.role === 'ADMIN') streamUrl = p.data.streamUrl;
+  }
   const session = await prisma.groupSession.create({
     data: {
       coachUserId: req.userId!,
@@ -59,10 +70,24 @@ groupRouter.post('/', async (req: AuthedRequest, res) => {
       instructions: p.data.instructions,
       muscleFocus: p.data.muscleFocus,
       coachWorkoutId: p.data.coachWorkoutId,
+      streamUrl,
       scheduledAt,
     },
   });
   res.status(201).json(session);
+});
+
+/** Next flagship LIVE class (has a stream) inside 7 days — the Home countdown. */
+groupRouter.get('/next-live', async (req: AuthedRequest, res) => {
+  const s = await prisma.groupSession.findFirst({
+    where: {
+      streamUrl: { not: null },
+      scheduledAt: { gte: new Date(Date.now() - 90 * 60 * 1000), lte: new Date(Date.now() + 7 * 86400000) },
+    },
+    orderBy: { scheduledAt: 'asc' },
+    select: { id: true, title: true, scheduledAt: true, muscleFocus: true },
+  });
+  res.json({ session: s });
 });
 
 // ---- Upcoming ----

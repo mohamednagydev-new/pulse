@@ -33,6 +33,7 @@ export default function GroupSessions() {
   const [scheduledAt, setScheduledAt] = useState('');
   const [workoutId, setWorkoutId] = useState('');
   const [instructions, setInstructions] = useState('');
+  const [streamUrl, setStreamUrl] = useState('');
 
   const create = useMutation({
     mutationFn: () => api.post('/api/group', {
@@ -40,10 +41,11 @@ export default function GroupSessions() {
       muscleFocus: focus || undefined,
       coachWorkoutId: workoutId || undefined,
       instructions: instructions.trim() || undefined,
+      streamUrl: streamUrl.trim() || undefined,
       scheduledAt: new Date(scheduledAt).toISOString(),
     }),
     onSuccess: () => {
-      setTitle(''); setFocus(''); setScheduledAt(''); setWorkoutId(''); setInstructions('');
+      setTitle(''); setFocus(''); setScheduledAt(''); setWorkoutId(''); setInstructions(''); setStreamUrl('');
       qc.invalidateQueries({ queryKey: ['group-upcoming'] });
       toast(t('group.scheduled'), 'success');
     },
@@ -88,6 +90,19 @@ export default function GroupSessions() {
                   ))}
                 </select>
                 <span className="mt-1 block text-[11px] text-gray-400">{t('group.workoutHint')}</span>
+              </label>
+            )}
+            {/* Flagship classes: coaches stream on YT/FB Live, the room embeds it. */}
+            {me?.isCoach && (
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold text-gray-500">📺 {L('Live stream link (optional)', 'لينك البث المباشر (اختياري)')}</span>
+                <input
+                  className="input-field"
+                  placeholder={L('YouTube or Facebook Live URL', 'لينك بث يوتيوب أو فيسبوك')}
+                  value={streamUrl}
+                  onChange={(e) => setStreamUrl(e.target.value)}
+                />
+                <span className="mt-1 block text-[11px] text-gray-400">{L('Go live on YouTube/Facebook and paste the link — everyone in the room sees your stream with the chat and timer around it.', 'ابدأ بث على يوتيوب/فيسبوك وحط اللينك — كل اللي في الجلسة هيشوفوا بثك ومعاه الشات والتايمر.')}</span>
               </label>
             )}
             <label className="block">
