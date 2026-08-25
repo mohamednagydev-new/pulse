@@ -185,8 +185,16 @@ authRouter.post('/refresh', async (req, res) => {
     await prisma.refreshToken.deleteMany({ where: { userId: token.user.id } });
     return res.status(403).json({ error: 'This account is suspended. Contact support.' });
   }
-  // rotate: delete old, issue new (deleteMany is idempotent under concurrent refreshes)
-  await prisma.refreshToken.deleteMany({ where: { id: token.id } });
+  // Rotate with a 60s GRACE window instead of instant delete: when the browser
+  // restores several tabs (or the Play app and a tab wake together — they share
+  // Chrome's cookie jar), every surface presents the SAME old cookie. Instant
+  // deletion meant only the first one survived and the rest got logged out.
+  // Within the grace window each presenter rotates successfully.
+  if (token.expiresAt.getTime() - Date.now() > 60_000) {
+    await prisma.refreshToken.update({ where: { id: token.id }, data: { expiresAt: new Date(Date.now() + 60_000) } }).catch(() => {});
+  }
+  // Opportunistic sweep so grace tombstones never accumulate.
+  await prisma.refreshToken.deleteMany({ where: { userId: token.user.id, expiresAt: { lt: new Date(Date.now() - 3_600_000) } } }).catch(() => {});
   const { accessToken, refreshToken } = await issueTokensEx(res, token.user);
   res.json({
     accessToken,
