@@ -210,6 +210,18 @@ export default function ChallengeRoom() {
                 <p className="mt-1 text-[11px] text-amber-600">📸 {t('challenge.proofHint')}</p>
               </div>
             )}
+
+            {/* Sponsored challenge: the sponsor's name lives IN the room —
+                that daily visibility is the placement they pay/gift prizes for. */}
+            {challenge?.sponsorName && (
+              <a
+                href={challenge.sponsorUrl || undefined}
+                {...(challenge.sponsorUrl ? { target: '_blank', rel: 'noopener' } : {})}
+                className="mt-2 flex items-center justify-center gap-1.5 rounded-xl bg-gray-50 py-2 text-xs font-bold text-gray-500 ring-1 ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700"
+              >
+                🤝 {isAr ? 'برعاية' : 'Sponsored by'} <span className="text-ink dark:text-white">{challenge.sponsorName}</span>
+              </a>
+            )}
           </div>
 
           {challenge?.joined ? (
