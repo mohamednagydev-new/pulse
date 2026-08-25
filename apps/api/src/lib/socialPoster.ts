@@ -57,10 +57,27 @@ export async function refreshIgToken(): Promise<string> {
   return `refreshed — valid ${Math.round((r.expires_in ?? 0) / 86400)} more days`;
 }
 
-export async function postToFacebook(text: string): Promise<string> {
+export async function postToFacebook(text: string, videoUrl?: string | null): Promise<string> {
   const id = process.env.FB_PAGE_ID;
   const token = process.env.FB_PAGE_TOKEN;
   if (!id || !token) throw new Error('FB_PAGE_ID/FB_PAGE_TOKEN not configured');
+  // With a reel attached, publish a VIDEO post (text becomes the caption) —
+  // a text-only feed post wastes the asset. Graph fetches the video itself
+  // from the public signed URL. Any video failure degrades to the text post.
+  if (videoUrl) {
+    try {
+      const res = await fetch(`${GRAPH}/${id}/videos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: text, file_url: videoUrl, access_token: token }),
+      });
+      const j: any = await res.json();
+      if (res.ok && !j.error) return `fb:video:${j.id}`;
+      console.warn('[social] fb video post failed, falling back to text:', j.error?.message ?? res.status);
+    } catch (e: any) {
+      console.warn('[social] fb video post failed, falling back to text:', e?.message);
+    }
+  }
   const res = await fetch(`${GRAPH}/${id}/feed`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -174,9 +191,10 @@ export async function publishPlan(
   const results: string[] = [];
   const byPlatform = new Map(items.map((i) => [i.platform, i.text]));
 
+  const mediaUrl = asset?.fileUrl ? `${origin}${asset.fileUrl}` : null;
   const fb = byPlatform.get('facebook');
   if (fb) {
-    try { results.push(await postToFacebook(fb)); } catch (e: any) { results.push(`fb:FAIL ${e.message?.slice(0, 60)}`); }
+    try { results.push(await postToFacebook(fb, mediaUrl)); } catch (e: any) { results.push(`fb:FAIL ${e.message?.slice(0, 60)}`); }
   }
   const tg = byPlatform.get('whatsapp-channel') ?? byPlatform.get('facebook');
   if (tg && process.env.TELEGRAM_BOT_TOKEN) {
