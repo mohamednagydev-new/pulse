@@ -75,6 +75,14 @@ export function openPlayStore() {
   window.location.href = PLAY_STORE_URL;
 }
 
+/** Where THIS platform's users can leave a store review — null when nowhere
+ *  (desktop web, or iPhone before the App Store release goes live). */
+export function storeReviewUrl(): string | null {
+  if (isAndroid()) return PLAY_STORE_URL;
+  if (isIOS() && APP_STORE_URL) return APP_STORE_URL;
+  return null;
+}
+
 export function isIOS() {
   // iPadOS 13+ reports a Macintosh UA — the touch check catches it.
   return /iphone|ipad|ipod/i.test(navigator.userAgent)

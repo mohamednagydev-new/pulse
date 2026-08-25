@@ -10,6 +10,7 @@ import Toaster from './components/Toaster';
 import FeatureToast from './components/FeatureToast';
 import DesktopGate from './components/DesktopGate';
 import InstallPrompt from './components/InstallPrompt';
+import RateNudge from './components/RateNudge';
 import InstallFab from './components/InstallFab';
 import ErrorBoundary from './components/ErrorBoundary';
 import OfflineBanner from './components/OfflineBanner';
@@ -502,6 +503,7 @@ export default function App() {
         </>
       )}
       <InstallPrompt />
+      <RateNudge />
       <DesktopGate />
       <CelebrationListener />
       </div>

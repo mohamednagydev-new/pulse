@@ -388,6 +388,12 @@
     "scan": "Scan with your phone camera",
     "cont": "Continue on desktop anyway"
   },
+  "rate": {
+    "title": "Enjoying PULSE? ⭐",
+    "desc": "A quick rating helps other people find the app — it takes 20 seconds and means a lot.",
+    "cta": "Rate PULSE",
+    "later": "Later"
+  },
   "install": {
     "title": "Install PULSE",
     "desc": "Full-screen, faster, works like a real app",

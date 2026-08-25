@@ -495,6 +495,8 @@ export default function WorkoutSession() {
 
   const finishSession = async () => {
     celebrateFeedback();
+    // Win moment — the store-review nudge (RateNudge) keys off this.
+    window.dispatchEvent(new CustomEvent('pulse:win-moment'));
     coach('done', i18n.language);
     setSessionSecs(Math.max(1, Math.round((Date.now() - startedAt) / 1000)));
     setPhase('done');
