@@ -108,9 +108,7 @@ const SOCIALS: { label: string; href: string; bg: string; icon: React.ReactNode 
   },
   {
     label: 'Facebook',
-    // TODO: replace with the Page's direct URL (Page → Share → Copy link).
-    // Until then this search reliably lands on the page.
-    href: 'https://www.facebook.com/search/top?q=PULSE%20-%20Get%20Stronger',
+    href: 'https://www.facebook.com/pulsefitegypt',
     bg: '#1877F2',
     icon: (
       <svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" aria-hidden>
