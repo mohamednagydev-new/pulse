@@ -40,6 +40,13 @@ export default function Community() {
   const qc = useQueryClient();
   // Feed lens: everything, only real posts, or only buddies' progress.
   const [feedFilter, setFeedFilter] = useState<'all' | 'posts' | 'progress'>('all');
+  const [tgDismissed, setTgDismissed] = useState(() => {
+    try { return localStorage.getItem('pulse_tg_card') === '1'; } catch { return true; }
+  });
+  const dismissTg = () => {
+    try { localStorage.setItem('pulse_tg_card', '1'); } catch { /* private mode */ }
+    setTgDismissed(true);
+  };
   // Composer sheet — draft carries the daily prompt in when tapped.
   const [composerOpen, setComposerOpen] = useState(false);
   const [draft, setDraft] = useState('');
@@ -119,6 +126,28 @@ export default function Community() {
           <Clapperboard size={15} /> {L('Reels', 'ريلز')}
         </button>
       </div>
+
+      {/* Telegram channel card — the ONLY legitimate way to grow the channel
+          is asking our own users where they already are. Dismiss is remembered. */}
+      {!tgDismissed && (
+        <div className="mx-4 mb-3 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 p-3 text-white shadow-md shadow-sky-500/25">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-xl" aria-hidden>✈️</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-extrabold">{L('Join our Telegram channel', 'انضم لقناتنا على تيليجرام')}</p>
+            <p className="truncate text-[11px] text-white/85">{L('Challenge results & surprises drop there FIRST', 'نتايج التحديات والمفاجآت بتنزل هناك الأول')}</p>
+          </div>
+          <a
+            href="https://t.me/pulse_egypt"
+            target="_blank"
+            rel="noopener"
+            onClick={dismissTg}
+            className="shrink-0 rounded-full bg-white px-3.5 py-1.5 text-xs font-extrabold text-sky-600"
+          >
+            {L('Join', 'انضم')}
+          </a>
+          <button onClick={dismissTg} aria-label={L('Dismiss', 'إخفاء')} className="shrink-0 p-1 text-white/70">✕</button>
+        </div>
+      )}
 
       {/* Feed lenses — real posts vs. buddies' progress (mixed view default).
           Splitting them answers "the community is only nudges". */}
