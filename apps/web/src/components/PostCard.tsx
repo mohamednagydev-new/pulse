@@ -121,12 +121,14 @@ export default function PostCard({ post, queryKey }: { post: any; queryKey: any[
             <Trash2 size={15} />
           </button>
         ) : (
+          /* A labeled chip, not a 14px ghost icon: moderation must be FINDABLE —
+             users in the moment, and store reviewers checking UGC rules. */
           <button
             onClick={() => window.confirm(t('community.reportConfirm')) && report.mutate()}
             aria-label={t('community.report')}
-            className="shrink-0 p-1.5 text-gray-300 hover:text-amber-500"
+            className="flex shrink-0 items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-bold text-gray-500 transition hover:bg-amber-100 hover:text-amber-600 dark:bg-gray-800 dark:text-gray-400"
           >
-            <Flag size={14} />
+            <Flag size={12} /> {t('community.report')}
           </button>
         )}
       </div>

@@ -39,8 +39,16 @@ body,
   }
 }
 
+/* Both elements: on iOS WKWebView a too-wide child could still pan the
+   PAGE sideways when only body clipped — html must clip too. `clip` beats
+   `hidden` (no phantom scroll container). */
+html {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
 body {
   overflow-x: hidden;
+  overflow-x: clip;
   overscroll-behavior-y: none;
 }
 

@@ -96,6 +96,10 @@ export function isInAppBrowser() {
 }
 
 export function isStandalone() {
+  // The Capacitor iOS/Android app IS the installed app — but its WKWebView
+  // reports neither display-mode:standalone nor navigator.standalone, so
+  // without this check every install banner showed INSIDE the native app.
+  if ((window as any).Capacitor?.isNativePlatform?.()) return true;
   return window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
 }
 

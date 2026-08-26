@@ -16,6 +16,10 @@ const config: CapacitorConfig = {
   },
   server: {
     androidScheme: 'https',
+    // https origin (https://localhost) instead of capacitor://localhost —
+    // YouTube's embed player refuses non-http(s) origins ("configuration
+    // error" on every demo video in the iOS app).
+    iosScheme: 'https',
   },
 };
 

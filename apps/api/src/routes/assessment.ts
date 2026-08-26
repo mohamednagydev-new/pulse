@@ -60,6 +60,12 @@ assessmentRouter.get('/', async (req: AuthedRequest, res) => {
   });
   if (!latest) return res.json({ hasPlan: false });
 
+  // Self-heal: a saved plan IS a finished intake. If the onboarded flag is
+  // stale-false (pre-gate accounts, seeded/demo users), every exit from the
+  // plan page bounced straight back to it — an inescapable loop until the
+  // user redid the whole wizard.
+  prisma.user.updateMany({ where: { id: req.userId!, onboarded: false }, data: { onboarded: true } }).catch(() => {});
+
   const program = latest.programId
     ? await prisma.program.findUnique({
         where: { id: latest.programId },

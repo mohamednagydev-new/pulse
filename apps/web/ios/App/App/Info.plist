@@ -66,5 +66,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>PULSE uses the camera to photograph your meals for calorie estimates, scan food barcodes, and record workout proof videos for challenges.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PULSE lets you pick photos from your library for meal logging, progress photos, and your profile picture.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>PULSE can save your progress share-cards and achievement images to your photo library.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>PULSE uses the microphone when you log food by voice or record a workout video with sound.</string>
 </dict>
 </plist>

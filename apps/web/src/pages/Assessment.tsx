@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -70,6 +70,16 @@ export default function Assessment() {
     queryKey: ['assessment'],
     queryFn: () => api.get('/api/assessment'),
   });
+
+  // A saved plan with a stale onboarded=false flag trapped users here: the
+  // server self-heals the flag when the plan loads, but the gate reads the
+  // CACHED auth user — refresh it so the very next tap can leave the page.
+  const gateUser = useAuth((s) => s.user);
+  useEffect(() => {
+    if (existing?.hasPlan && gateUser && !gateUser.onboarded) {
+      refreshUser().catch(() => { /* next bootstrap picks it up */ });
+    }
+  }, [existing?.hasPlan, gateUser?.onboarded]);
 
   const submit = useMutation({
     mutationFn: () => api.post('/api/assessment', a),
