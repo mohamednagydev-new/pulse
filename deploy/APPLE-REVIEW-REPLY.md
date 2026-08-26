@@ -11,7 +11,9 @@ Two things only YOU can do first:
 
 Hello App Review team,
 
-Thank you for the review. Here is the requested information:
+Thank you for the review. Here is the requested information.
+
+First, please note: since the initial submission we have uploaded an improved build (**build `<<N — the number you tested, from TestFlight>>`**) that resolves several issues found in our own device testing. We have selected it for this app version — please review that latest build. The screen recording below was captured on it.
 
 **1. Screen recording**
 A full demo recorded on a physical device is available here (view access enabled):
@@ -19,7 +21,7 @@ A full demo recorded on a physical device is available here (view access enabled
 The recording starts at app launch and shows: registration, login, the onboarding intake, browsing and completing a workout (with exercise demo videos), logging food (including the camera-based meal photo flow and its permission prompt), the community feed with user-generated content — including the report and block mechanisms — the notifications permission prompt, and the account-deletion flow in Settings.
 
 **2. Devices and OS tested**
-`<<e.g. iPhone 13, iOS 18.6 — via TestFlight build 3>>` (fill honestly)
+`iPhone 16, iOS <<check: Settings → General → About → iOS Version>> — via TestFlight, build <<N>>`
 
 **3. App functions and target audience**
 PULSE is a free fitness and nutrition app for Arabic-speaking users (primarily in Egypt), also fully usable in English. It solves the problem that mainstream fitness apps don't fit Egyptian users: workout guidance in Egyptian Arabic, and calorie tracking for Egyptian foods (koshary, foul, taameya, etc.) that international databases don't cover well. Core features: guided video workouts and weekly plans, food and water logging with calorie targets, progress tracking (weight, measurements, exercise charts), streaks/challenges/leaderboards for motivation, an optional community feed with friends, and an AI assistant that answers fitness and nutrition questions. The target audience is adults 18+ who want to train at home or in the gym. The app is 100% free: no purchases, no subscriptions, no paid content of any kind.
