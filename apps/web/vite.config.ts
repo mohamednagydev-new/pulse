@@ -52,7 +52,7 @@ export default defineConfig({
         // login button) and media must reach the server. Without this denylist
         // the NavigationRoute answers /api/auth/google with the cached SPA
         // shell and sign-in silently breaks once the service worker activates.
-        navigateFallbackDenylist: [/^\/api/, /^\/media/, /^\/\.well-known/, /^\/privacy\.html/],
+        navigateFallbackDenylist: [/^\/api/, /^\/media/, /^\/\.well-known/, /^\/privacy\.html/, /^\/yt\.html/],
         importScripts: ['/push-sw.js'],
         runtimeCaching: [
           {

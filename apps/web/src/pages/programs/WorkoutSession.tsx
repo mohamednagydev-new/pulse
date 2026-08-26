@@ -17,6 +17,7 @@ import HumanMove, { patternFor } from '../../components/HumanMove';
 import ContentVideo from '../../components/ContentVideo';
 import Confetti from '../../components/Confetti';
 import { signedMediaUrl, useSignedMedia } from '../../lib/media';
+import { youTubeId, ytEmbedSrc } from '../../lib/youtube';
 import { successFeedback, celebrateFeedback, tapFeedback } from '../../lib/haptics';
 import { coach, cancel as cancelVoice, voiceEnabled, setVoiceEnabled } from '../../lib/voice';
 import { getRestTip } from '../../lib/restTips';
@@ -121,7 +122,7 @@ function AmbientGlow({ active }: { active: boolean }) {
  *  from pausing it — the session controls stay in charge. */
 function FollowAlongVideo({ videoUrl, videoId }: { videoUrl?: string | null; videoId?: string | null }) {
   const hosted = useSignedMedia('video', videoId ?? null);
-  const yt = videoUrl?.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,})/)?.[1] ?? null;
+  const yt = youTubeId(videoUrl);
   if (videoId && hosted) {
     return (
       <video
@@ -138,7 +139,7 @@ function FollowAlongVideo({ videoUrl, videoId }: { videoUrl?: string | null; vid
     return (
       <div className="overflow-hidden rounded-3xl bg-black">
         <iframe
-          src={`https://www.youtube.com/embed/${yt}?autoplay=1&mute=1&loop=1&playlist=${yt}&playsinline=1&controls=0&rel=0&modestbranding=1`}
+          src={ytEmbedSrc(yt, { autoplay: true, mute: true, loop: true, controls: false })}
           className="pointer-events-none aspect-video w-full"
           allow="autoplay; encrypted-media"
           title="Follow along"

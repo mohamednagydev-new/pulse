@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Calendar, Play, Pause, Trash2, Dumbbell, Timer, Square, Mic, Send, RotateCcw, RotateCw, ListChecks } from 'lucide-react';
 import { api, uploadWithAuth, mediaUrl } from '../../lib/api';
+import { youTubeId, ytEmbedSrc } from '../../lib/youtube';
 import { useSignedMedia } from '../../lib/media';
 import { toast } from '../../lib/toast';
 import { getSocket } from '../../lib/socket';
@@ -25,11 +26,11 @@ function fmt(sec: number) {
 
 /** YouTube or Facebook LIVE embed — the only two hosts the API accepts. */
 function StreamEmbed({ url }: { url: string }) {
-  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,})/)?.[1] ?? null;
+  const yt = youTubeId(url);
   if (yt) {
     return (
       <iframe
-        src={`https://www.youtube.com/embed/${yt}?autoplay=1&playsinline=1&rel=0`}
+        src={ytEmbedSrc(yt, { autoplay: true })}
         className="aspect-video w-full"
         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
         allowFullScreen

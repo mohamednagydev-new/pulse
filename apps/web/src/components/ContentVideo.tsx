@@ -1,10 +1,5 @@
 import VideoPlayer from './VideoPlayer';
-
-/** Accepts a watch URL, a youtu.be short link, a Shorts link or an embed URL. */
-function youTubeId(url: string): string | null {
-  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,})/);
-  return m ? m[1] : null;
-}
+import { youTubeId, ytEmbedSrc } from '../lib/youtube';
 
 /**
  * The one video renderer for content screens. Resolution order:
@@ -44,7 +39,7 @@ export default function ContentVideo({
       return (
         <div className={`overflow-hidden rounded-2xl bg-black ${className}`}>
           <iframe
-            src={`https://www.youtube.com/embed/${yt}?playsinline=1&rel=0&modestbranding=1`}
+            src={ytEmbedSrc(yt)}
             className="aspect-video w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
