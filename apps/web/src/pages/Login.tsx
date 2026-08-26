@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -39,6 +39,7 @@ export default function Login() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const login = useAuth((s) => s.login);
+  const status = useAuth((s) => s.status);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
@@ -46,6 +47,11 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   // Funnel step: ad click → landing → this screen.
   useEffect(() => { track('funnel-login-view', utmMeta()); }, []);
+
+  // Signed-in users never see the login form — including via the BACK button
+  // (auth pages sat in the history stack under the whole session). Not during
+  // our own submit: the deep-link redirect in onSubmit must win.
+  if (status === 'authed' && !busy) return <Navigate to="/" replace />;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

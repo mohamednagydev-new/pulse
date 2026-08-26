@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { User, Phone, Mail, Lock, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +26,7 @@ export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const register = useAuth((s) => s.register);
+  const status = useAuth((s) => s.status);
   // Funnel step: how many ad clicks make it to the register form.
   useEffect(() => { track('funnel-register-view', utmMeta()); }, []);
   const [searchParams] = useSearchParams();
@@ -33,6 +34,12 @@ export default function Register() {
   const [form, setForm] = useState({ firstName: '', lastName: '', mobile: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // Signed-in users never see this form — including arriving via the BACK
+  // button (register sat in the history stack under the whole session).
+  // busy guard: not during our own submit, or we'd redirect mid-registration
+  // before the funnel events fire.
+  if (status === 'authed' && !busy) return <Navigate to="/" replace />;
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [k]: e.target.value });
@@ -54,7 +61,9 @@ export default function Register() {
        * "build my plan" card, and the intake is asked for again the moment they try
        * to start a programme — by which point the question makes sense to them.
        */
-      navigate('/');
+      // replace: register must not stay in the back-stack — pressing Back
+      // from inside the app used to walk users back onto this form.
+      navigate('/', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.signUpFailed'));
     } finally {
