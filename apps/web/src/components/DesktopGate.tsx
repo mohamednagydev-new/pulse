@@ -22,7 +22,16 @@ export default function DesktopGate() {
     setShow(isDesktop && !isStandalone && !dismissed);
   }, []);
 
-  if (!show || user?.role === 'ADMIN' || location.pathname.startsWith('/admin')) return null;
+  // Legal/compliance pages must be readable by DESKTOP visitors — store
+  // reviewers (Google/Apple bots and humans) browse them from a desktop, and
+  // gating them behind the QR screen reads as "no policy published".
+  const publicExempt = ['/privacy', '/delete-account', '/help', '/why-partner'];
+  if (
+    !show ||
+    user?.role === 'ADMIN' ||
+    location.pathname.startsWith('/admin') ||
+    publicExempt.some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`))
+  ) return null;
 
   const appUrl = window.location.origin;
   const qr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(appUrl)}`;
