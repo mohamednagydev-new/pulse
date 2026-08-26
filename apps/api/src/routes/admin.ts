@@ -562,6 +562,14 @@ adminRouter.get('/analytics', async (_req, res) => {
     since14.getTime(),
   );
 
+  // Platform mix of ACTIVE users (7d): ios-app / twa (Play) / pwa / web.
+  // Distinct users, so one heavy user can't skew the split.
+  const platforms = await prisma.$queryRawUnsafe<{ platform: string; users: number }[]>(
+    `SELECT COALESCE(meta, 'web') as platform, COUNT(DISTINCT userId) as users
+     FROM Event WHERE name = 'app-open' AND createdAt >= ? GROUP BY platform ORDER BY users DESC`,
+    since7.getTime(),
+  );
+
   const [topScreensRaw, topEventsRaw, totals] = await Promise.all([
     prisma.event.groupBy({
       by: ['meta'],
@@ -645,6 +653,7 @@ adminRouter.get('/analytics', async (_req, res) => {
     pushUsers,
     activation,
     dau: dau.map((d) => ({ day: d.day, users: Number(d.users) })),
+    platforms: platforms.map((p) => ({ platform: p.platform, users: Number(p.users) })),
     funnel,
     clientErrors: clientErrorsRaw.map((e) => ({ message: e.meta, count: e._count })),
     // (clear with DELETE /analytics/client-errors)

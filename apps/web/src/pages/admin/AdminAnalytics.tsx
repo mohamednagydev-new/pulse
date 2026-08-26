@@ -33,6 +33,7 @@ interface AnalyticsData {
   pushUsers?: number;
   activation?: { signups: number; onboarded: number; activated24h: number };
   dau: DauPoint[];
+  platforms?: { platform: string; users: number }[];
   funnel?: Record<string, Record<string, number>>;
   clientErrors?: { message: string; count: number }[];
   topScreens: { path: string; count: number }[];
@@ -452,6 +453,35 @@ export default function AdminAnalytics() {
           <Card title="Daily active users (14 days)">
             <DauChart dau={data.dau} />
           </Card>
+
+          {/* Where actives actually run the app: store apps vs installed PWA
+              vs plain browser — the store-migration scoreboard. */}
+          {(data.platforms?.length ?? 0) > 0 && (
+            <Card title="Platforms — active users (7 days)">
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  const total = data.platforms!.reduce((s, p) => s + p.users, 0) || 1;
+                  const META: Record<string, { label: string; cls: string }> = {
+                    'ios-app': { label: '🍎 iOS app', cls: 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' },
+                    twa: { label: '🤖 Play app', cls: 'bg-green-100 text-green-700' },
+                    pwa: { label: '📲 Installed PWA', cls: 'bg-blue-100 text-blue-700' },
+                    web: { label: '🌐 Browser', cls: 'bg-gray-100 text-gray-600' },
+                  };
+                  return data.platforms!.map((p) => {
+                    const m = META[p.platform] ?? { label: p.platform, cls: 'bg-gray-100 text-gray-600' };
+                    return (
+                      <span key={p.platform} className={`rounded-full px-3 py-1.5 text-xs font-bold ${m.cls}`}>
+                        {m.label} · {p.users} ({Math.round((p.users / total) * 100)}%)
+                      </span>
+                    );
+                  });
+                })()}
+              </div>
+              <p className="mt-2 text-[11px] text-gray-400">
+                Store DOWNLOAD counts live in Play Console / App Store Connect — this shows where active users actually run PULSE.
+              </p>
+            </Card>
+          )}
 
           {/* Ad-funnel card removed at owner request (Aug 2026) — the events
               still record, so it can return if ad debugging is ever needed. */}

@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { api, setAccessToken, IS_NATIVE, getNativeRefreshToken, setNativeRefreshToken } from '../lib/api';
 import { refreshSocketAuth, disconnectSocket } from '../lib/socket';
+import { track } from '../lib/track';
+import { detectPlatform } from '../lib/install';
 
 export interface User {
   id: string;
@@ -58,6 +60,7 @@ export const useAuth = create<AuthState>((set) => ({
         set({ user, status: 'authed' });
         syncLangToAccount(user);
         refreshSocketAuth(); // the socket may have tried (and failed) before the token existed
+        track('app-open', detectPlatform()); // platform analytics: ios-app / twa / pwa / web
         return;
       } catch {
         /* fall through */
@@ -73,6 +76,7 @@ export const useAuth = create<AuthState>((set) => ({
     set({ user, status: 'authed' });
     syncLangToAccount(user);
     refreshSocketAuth();
+    track('app-open', detectPlatform());
   },
 
   register: async (data) => {
@@ -81,6 +85,7 @@ export const useAuth = create<AuthState>((set) => ({
     setNativeRefreshToken(refreshToken);
     set({ user, status: 'authed' });
     refreshSocketAuth();
+    track('app-open', detectPlatform());
   },
 
   logout: async () => {

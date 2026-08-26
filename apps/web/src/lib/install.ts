@@ -71,6 +71,25 @@ export function preferPlayStore() {
   return isAndroid() && installAvailable();
 }
 
+// The Play (TWA) app announces itself only on its FIRST navigation via the
+// android-app:// referrer — remember it, or later loads look like a plain PWA.
+const TWA_KEY = 'pulse_twa';
+if (typeof document !== 'undefined' && document.referrer.startsWith('android-app://')) {
+  try { localStorage.setItem(TWA_KEY, '1'); } catch { /* private mode */ }
+}
+
+/** Which surface is running — feeds the platform analytics.
+ *  ios-app = App Store build · twa = Google Play app · pwa = installed
+ *  web app · web = plain browser tab. */
+export function detectPlatform(): 'ios-app' | 'twa' | 'pwa' | 'web' {
+  if ((window as any).Capacitor?.isNativePlatform?.()) return 'ios-app';
+  let twa = false;
+  try { twa = localStorage.getItem(TWA_KEY) === '1'; } catch { /* private mode */ }
+  if (twa) return 'twa';
+  if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true) return 'pwa';
+  return 'web';
+}
+
 export function openPlayStore() {
   window.location.href = PLAY_STORE_URL;
 }
