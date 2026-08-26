@@ -66,6 +66,10 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Standard HTTPS/TLS only — exempt from export-compliance docs. Declaring
+	     it here answers the question automatically for every future build. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>PULSE uses the camera to photograph your meals for calorie estimates, scan food barcodes, and record workout proof videos for challenges.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
