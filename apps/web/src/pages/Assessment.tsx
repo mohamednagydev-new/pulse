@@ -271,7 +271,11 @@ export default function Assessment() {
   const Icon = current.icon;
 
   return (
-    <div className="fitness-hero relative min-h-screen overflow-x-hidden pb-10 text-white">
+    // overflowX clip, not hidden: the step transition slides content 40px
+    // sideways, and iOS auto-scrolls a `hidden` container to a focused input
+    // mid-animation — leaving the whole wizard shifted off-screen. `clip`
+    // forbids scrolling entirely.
+    <div className="fitness-hero relative min-h-screen overflow-x-hidden pb-10 text-white" style={{ overflowX: 'clip' }}>
       <TopBar title={t('assess.title')} color="bg-transparent" textColor="text-white" />
 
       {/* Escape hatch: the intake gate confines non-onboarded users here — if
@@ -353,7 +357,7 @@ function PlanView({
   const kcalTarget: number | null = data.targets?.calories ?? me?.goalCalories ?? null;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden pb-24">
+    <div className="relative min-h-screen overflow-x-hidden pb-24" style={{ overflowX: 'clip' }}>
       {party && <Confetti onDone={onPartyDone} />}
       <AmbientBg tone="green" />
       <TopBar title={t('assess.planTitle')} color="fitness-hero" textColor="text-white" />
