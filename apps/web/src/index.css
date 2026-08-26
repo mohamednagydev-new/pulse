@@ -293,7 +293,9 @@ button {
   }
 
   .input-field {
-    @apply w-full rounded-2xl border border-gray-200 bg-white px-5 py-3.5 text-[15px] text-ink transition-all duration-150 outline-none placeholder:text-gray-400;
+    /* 16px minimum, NOT 15px: iOS zooms the whole page in when focusing any
+       input under 16px — the zoom sticks and the app pans sideways after. */
+    @apply w-full rounded-2xl border border-gray-200 bg-white px-5 py-3.5 text-base text-ink transition-all duration-150 outline-none placeholder:text-gray-400;
   }
   .input-field:focus {
     @apply border-brand-pink;

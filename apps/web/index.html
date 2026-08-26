@@ -14,7 +14,10 @@
     <!-- interactive-widget: Android Chrome shrinks the LAYOUT viewport when the
          keyboard opens, so bottom sheets (food search) resize above it instead
          of having their lists swallowed behind the keys. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+    <!-- maximum-scale=1 stops iOS's input-focus auto-zoom (the stuck sideways
+         pan). Users can STILL pinch-zoom: Safari/WKWebView deliberately ignore
+         maximum-scale for pinch gestures, so accessibility is unaffected. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#F97316" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
