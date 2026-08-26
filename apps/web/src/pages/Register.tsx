@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { User, Phone, Mail, Lock, MapPin, ChevronRight } from 'lucide-react';
+import { User, Phone, Mail, Lock, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../store/auth';
@@ -30,7 +30,7 @@ export default function Register() {
   useEffect(() => { track('funnel-register-view', utmMeta()); }, []);
   const [searchParams] = useSearchParams();
   const [ref] = useState(() => searchParams.get('ref') ?? '');
-  const [form, setForm] = useState({ firstName: '', lastName: '', mobile: '', email: '', password: '', zip: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', mobile: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -68,7 +68,6 @@ export default function Register() {
     { k: 'mobile' as const, ph: t('auth.mobile'), icon: Phone, type: 'tel', ac: 'tel' },
     { k: 'email' as const, ph: t('auth.email'), icon: Mail, type: 'email', ac: 'email' },
     { k: 'password' as const, ph: t('auth.password'), icon: Lock, type: 'password', ac: 'new-password' },
-    { k: 'zip' as const, ph: t('auth.zip'), icon: MapPin, type: 'text', ac: 'postal-code' },
   ];
 
   return (
@@ -136,7 +135,7 @@ export default function Register() {
                   placeholder={ph}
                   value={form[k]}
                   onChange={set(k)}
-                  required={k !== 'mobile' && k !== 'zip'}
+                  required={k !== 'mobile'}
                 />
               </div>
             ))}
