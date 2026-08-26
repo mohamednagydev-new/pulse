@@ -94,6 +94,44 @@ const GROUPS: Group[] = [
   },
 ];
 
+/** Official channels. Facebook: keep in sync with the live Page URL. */
+const SOCIALS: { label: string; href: string; bg: string; icon: React.ReactNode }[] = [
+  {
+    label: 'Telegram',
+    href: 'https://t.me/pulse_egypt',
+    bg: '#229ED9',
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" width="18" height="18" fill="#fff" aria-hidden>
+        <path d="M21.9 4.6 18.9 19c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-.9.5l.3-4.6L18.2 7c.4-.3-.1-.5-.6-.2L7.3 13.3l-4.4-1.4c-1-.3-1-.9.2-1.4L20.6 3.5c.8-.3 1.5.2 1.3 1.1Z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Facebook',
+    // TODO: replace with the Page's direct URL (Page → Share → Copy link).
+    // Until then this search reliably lands on the page.
+    href: 'https://www.facebook.com/search/top?q=PULSE%20-%20Get%20Stronger',
+    bg: '#1877F2',
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" aria-hidden>
+        <path d="M13.5 21v-7.5h2.5l.5-3h-3V8.6c0-.9.3-1.6 1.7-1.6h1.4V4.3c-.3 0-1.2-.1-2.2-.1-2.3 0-3.9 1.4-3.9 4v2.3H8v3h2.5V21h3Z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Instagram',
+    href: 'https://www.instagram.com/pulse2029eg',
+    bg: 'linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)',
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" strokeWidth="1.8" aria-hidden>
+        <rect x="3.5" y="3.5" width="17" height="17" rx="4.5" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="17.2" cy="6.8" r="1" fill="#fff" stroke="none" />
+      </svg>
+    ),
+  },
+];
+
 export default function MenuDrawer({ className = '' }: { className?: string }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -254,6 +292,25 @@ export default function MenuDrawer({ className = '' }: { className?: string }) {
               </nav>
 
               <div className="shrink-0 space-y-2 border-t border-white/10 p-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}>
+                {/* Social channels — brand-colored, official icons. */}
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-bold text-white/50">{L('Follow PULSE', 'تابع PULSE')}</span>
+                  <div className="flex items-center gap-2">
+                    {SOCIALS.map((s) => (
+                      <a
+                        key={s.label}
+                        href={s.href}
+                        target="_blank"
+                        rel="noopener"
+                        aria-label={s.label}
+                        className="flex h-9 w-9 items-center justify-center rounded-full transition active:scale-90"
+                        style={{ background: s.bg }}
+                      >
+                        {s.icon}
+                      </a>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex items-center justify-between px-1">
                   <button onClick={() => setTheme(toggleTheme())} className="flex items-center gap-2 text-sm font-medium">
                     {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />} {theme === 'dark' ? L('Light', 'فاتح') : L('Dark', 'داكن')}
