@@ -55,11 +55,15 @@ $scripts = @(
   'prisma\seed-coach-programs.ts',       #   which only fills coaches that exist and have no programs yet
   'prisma\seed-program-naming.ts',       # readable programme names, levels, and specialised-audience marks
   'prisma\seed-program-covers.ts',       # bundled cover images for the 9 programs that shipped without one
+  'prisma\tag-program-equipment.ts',     # tag each programme none|home_basic|full_gym so the intake's
+                                         #   equipment answer picks the plan (leaves unproven ones untagged)
   'prisma\seed-engagement.ts',
   'prisma\seed-onboarding.ts',
   'prisma\seed-reel-overrides.ts',
   'prisma\seed-gamification.ts',         # badges, challenges, league enrolment
   'prisma\seed-videos.ts',               # YouTube lesson links (verified; --clear undoes it)
+  'prisma\seed-bodyweight.ts',           # no-equipment movements for every muscle group (must precede
+                                         #   seed-exercise-videos so its demos can attach to them)
   'prisma\seed-exercise-videos.ts',      # YouTube exercise demos + woman-led variants
   'prisma\seed-contraindications.ts',    # tag exercises by the joint they load (injury-aware sessions)
   'prisma\seed-progressions.ts',         # easier/harder ladder between exercises (session progression chips)
