@@ -896,6 +896,11 @@ model Program {
   descriptionAr String?
   coverImage    String?
   level         String?  // BEGINNER | INTERMEDIATE | ADVANCED | null
+  /** What you need to follow it: none | home_basic | full_gym.
+      null = unknown/works for anyone, so nothing is hidden by default.
+      The intake asks the same question — this is what makes the answer matter
+      when a plan is chosen. */
+  equipment     String?
   reelKeyword   String?  // admin override for the related-reels strip
   order         Int      @default(0)
   lessons       Lesson[]

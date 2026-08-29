@@ -216,6 +216,8 @@ export type ProgramLike = {
   level: string | null;
   /** prenatal | postnatal | senior | rehab — null means suitable for everyone. */
   audience?: string | null;
+  /** none | home_basic | full_gym — null means unknown, so it fits anyone. */
+  equipment?: string | null;
   coach: { type: string } | null;
   _count: { lessons: number };
 };
@@ -244,8 +246,20 @@ export function pickProgram(programs: ProgramLike[], a: Answers, level: Level): 
       const isYoga = p.coach?.type === 'YOGA';
       if (wantYoga === isYoga) score += 3;
 
-      // With no equipment, prefer programs that read as bodyweight/home.
-      if (a.equipment === 'none' && /home|bodyweight|no equipment|calm|foundations/i.test(p.title)) score += 2;
+      // Equipment fit, from the program's own tag rather than guesswork about
+      // its title. Recommending a barbell programme to someone who told us they
+      // own nothing is the fastest way to lose them in week one.
+      const TIER: Record<string, number> = { none: 0, home_basic: 1, full_gym: 2 };
+      const need = p.equipment ? TIER[p.equipment] : null;
+      const have = TIER[a.equipment] ?? 2;
+      if (need !== null && need !== undefined) {
+        if (need > have) score -= 8; // can't be done at all — push it right down
+        else if (need === have) score += 3;
+        else score += 1; // needs less than they own: always doable
+      } else if (a.equipment === 'none' && /home|bodyweight|no equipment|calm|foundations/i.test(p.title)) {
+        // Untagged fallback for programmes nobody has classified yet.
+        score += 2;
+      }
 
       // Match the length of the commitment to how many days they can give.
       const ideal = a.daysPerWeek * 2;

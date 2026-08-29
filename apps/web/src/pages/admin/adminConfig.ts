@@ -65,12 +65,15 @@ export const RESOURCES: Resource[] = [
   },
   {
     key: 'programs', label: 'Programs', api: 'programs', listLabel: 'title', group: 'training',
-    table: ['coverImage', 'title', 'titleAr', 'level', 'order'],
+    table: ['coverImage', 'title', 'titleAr', 'level', 'equipment', 'order'],
     fields: [
       { name: 'coachId', label: 'Coach', type: 'remote', remote: 'coaches', remoteLabel: 'name' },
       { name: 'title', label: 'Title', type: 'text' },
       { name: 'titleAr', label: 'Title (Arabic)', type: 'text' },
       { name: 'level', label: 'Level', type: 'select', options: ['', 'BEGINNER', 'INTERMEDIATE', 'ADVANCED'] },
+      // Drives which plan the intake picks: a full_gym programme is never
+      // recommended to someone who said they train with nothing.
+      { name: 'equipment', label: 'Equipment needed (blank = suits anyone)', type: 'select', options: ['', 'none', 'home_basic', 'full_gym'] },
       { name: 'description', label: 'Description', type: 'textarea' },
       { name: 'coverImage', label: 'Cover image', type: 'text' },
       { name: 'reelKeyword', label: 'Related-reels keyword (override)', type: 'text' },

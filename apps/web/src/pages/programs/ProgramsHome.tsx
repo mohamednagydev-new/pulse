@@ -280,6 +280,18 @@ export default function ProgramsHome() {
                       {String(p.level).toLowerCase()}
                     </span>
                   )}
+                  {/* Can I actually follow this at home? Answer it on the card,
+                      before they open a programme built around a barbell. */}
+                  {p.equipment === 'none' && (
+                    <span className="absolute end-2 top-2 rounded-full bg-emerald-500/90 px-2 py-1 text-[10px] font-bold text-white backdrop-blur">
+                      🏠 {isAr ? 'من غير معدات' : 'No kit'}
+                    </span>
+                  )}
+                  {p.equipment === 'full_gym' && (
+                    <span className="absolute end-2 top-2 rounded-full bg-black/50 px-2 py-1 text-[10px] font-bold text-white backdrop-blur">
+                      🏋️ {isAr ? 'جيم' : 'Gym'}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-2 truncate text-sm font-semibold">{p.title}</p>
                 {p.coach?.name && <p className="truncate text-xs text-gray-400">{p.coach.name}</p>}
