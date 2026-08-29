@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ShieldCheck, AlertTriangle, Trophy } from 'lucide-react';
 import { api } from '../../lib/api';
+import { toast } from '../../lib/toast';
 
 /**
  * Winner verification before prizes get paid. Self-reported data can't be
@@ -11,6 +12,20 @@ import { api } from '../../lib/api';
  */
 export default function AdminChallengeAudit() {
   const [picked, setPicked] = useState<string | null>(null);
+  const qc = useQueryClient();
+
+  const disqualify = useMutation({
+    mutationFn: ({ userId, name }: { userId: string; name: string }) => {
+      const reason = window.prompt(`Disqualify ${name}? They are removed from the leaderboard and told why.\n\nReason (optional, shown to them):`, 'Suspicious activity pattern');
+      if (reason === null) return Promise.reject(new Error('cancelled'));
+      return api.post(`/api/admin/challenge-audit/${picked}/disqualify`, { userId, reason });
+    },
+    onSuccess: () => {
+      toast('Removed from the leaderboard', 'success');
+      qc.invalidateQueries({ queryKey: ['admin-chal-audit', picked] });
+    },
+    onError: (e: any) => { if (e?.message !== 'cancelled') toast(e?.message ?? 'Failed', 'error'); },
+  });
 
   const { data: list } = useQuery({
     queryKey: ['admin-chal-audit'],
@@ -76,6 +91,22 @@ export default function AdminChallengeAudit() {
                       ))}
                     </ul>
                   )}
+                  {/* The remedy. Without it a farmed account just sat at #1. */}
+                  <div className="mt-2 flex items-center gap-2">
+                    <a
+                      href={`mailto:${p.email}?subject=${encodeURIComponent(`PULSE — ${detail.challenge.title}`)}`}
+                      className="rounded-full bg-gray-100 px-3 py-1 text-[11px] font-bold text-gray-600"
+                    >
+                      ✉️ Ask for proof
+                    </a>
+                    <button
+                      onClick={() => disqualify.mutate({ userId: p.userId, name: p.name })}
+                      disabled={disqualify.isPending}
+                      className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+                    >
+                      🚫 Disqualify
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

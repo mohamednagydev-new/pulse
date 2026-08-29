@@ -124,6 +124,13 @@ async function runCheck() {
     await runLogged('ig-refresh', false, refreshIgToken);
   }
 
+  // Daily 20:00 — fair-play watch on PRIZE challenges. Cheating gets caught
+  // during the challenge instead of after the money is announced.
+  if (hour === 20 && (await claimJob(`chalwatch:${day}`))) {
+    const { runChallengeWatch } = await import('./challengeWatch');
+    await runLogged('challenge-watch', false, runChallengeWatch);
+  }
+
   // Daily 17:00 — auto-publish today's posting plan to the platforms whose
   // APIs allow it (FB Page / Telegram / IG when the token has scopes).
   if (hour === 17 && (await claimJob(`socialpost:${day}`))) {

@@ -12,6 +12,7 @@ import { buildTranslationPatch } from '../lib/translate';
 import { aiEnabled, chatComplete } from '../lib/openai';
 import { onlineCount, onlineIds } from '../lib/realtime';
 import { notifyUser } from './push';
+import { flagIntegrity } from '../lib/integrity';
 import { daysAgoStr, dayString, startOfDayTz } from '../lib/time';
 import { verifySmtp } from '../lib/mailer';
 
@@ -1459,6 +1460,33 @@ adminRouter.get('/challenge-audit/:id', async (req, res) => {
     challenge: { id: ch.id, title: ch.title, goalType: ch.goalType, goalValue: ch.goalValue, startsOn: ch.startsOn, endsOn: ch.endsOn, prizeText: ch.prizeText },
     participants: rows,
   });
+});
+
+/** Remove a cheater from a challenge: drops them off the leaderboard and out of
+ *  the podium/raffle. Auditing without a remedy left a farmed account sitting
+ *  at #1 with nothing the admin could do about it. */
+adminRouter.post('/challenge-audit/:id/disqualify', async (req: AuthedRequest, res) => {
+  const { userId, reason } = (req.body ?? {}) as { userId?: string; reason?: string };
+  if (!userId) return res.status(400).json({ error: 'userId is required' });
+  const ch = await prisma.challenge.findUnique({ where: { id: req.params.id }, select: { id: true, title: true, titleAr: true } });
+  if (!ch) return res.status(404).json({ error: 'Challenge not found' });
+
+  const removed = await prisma.challengeParticipant.deleteMany({ where: { challengeId: ch.id, userId } });
+  if (removed.count === 0) return res.status(404).json({ error: 'That user is not in this challenge' });
+
+  flagIntegrity(userId, 'challenge-disqualified', `${ch.id}${reason ? `: ${reason}` : ''}`);
+  // Told, not silently erased — a wrongly-flagged user needs to know so they
+  // can reply, and a real cheater learns the rule is enforced.
+  notifyUser(userId, {
+    title: 'Removed from a challenge',
+    titleAr: 'اتشلت من تحدي',
+    body: `You were removed from "${ch.title}" after a fair-play review.${reason ? ` Reason: ${reason}` : ''} Contact support if you think this is a mistake.`,
+    bodyAr: `اتشلت من تحدي «${ch.titleAr ?? ch.title}» بعد مراجعة اللعب النظيف.${reason ? ` السبب: ${reason}` : ''} لو شايف إن فيه غلط كلّم الدعم.`,
+    url: '/support',
+    type: 'general',
+  }).catch(() => {});
+
+  res.json({ ok: true });
 });
 
 // ============================ Dashboard overview ============================
