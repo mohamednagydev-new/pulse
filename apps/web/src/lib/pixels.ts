@@ -73,12 +73,20 @@ export function initPixels() {
   }
 }
 
+/** PROXY values in EGP: the app is free, but Meta's event diagnostics demand
+ *  value+currency, and value-based optimization needs SOME consistent scale.
+ *  These are our own lead-value estimates, not prices — a registration is
+ *  simply worth ~20x a page view to us. */
+const CURRENCY = 'EGP';
+const VALUE_VIEW = 0.25;
+const VALUE_REGISTRATION = 5;
+
 /** The one event that matters: an account was created. Both platforms use it
  *  as the optimization goal for signup campaigns. */
 export function pixelRegistration() {
   try {
-    window.fbq?.('track', 'CompleteRegistration');
-    window.ttq?.track('CompleteRegistration');
+    window.fbq?.('track', 'CompleteRegistration', { value: VALUE_REGISTRATION, currency: CURRENCY });
+    window.ttq?.track('CompleteRegistration', { value: VALUE_REGISTRATION, currency: CURRENCY });
   } catch {
     /* ad blockers — never break the app for tracking */
   }
@@ -87,8 +95,8 @@ export function pixelRegistration() {
 /** Softer intent signals — useful for retargeting audiences. */
 export function pixelViewContent(name: string) {
   try {
-    window.fbq?.('track', 'ViewContent', { content_name: name });
-    window.ttq?.track('ViewContent', { content_name: name });
+    window.fbq?.('track', 'ViewContent', { content_name: name, value: VALUE_VIEW, currency: CURRENCY });
+    window.ttq?.track('ViewContent', { content_name: name, value: VALUE_VIEW, currency: CURRENCY });
   } catch {
     /* ignore */
   }
