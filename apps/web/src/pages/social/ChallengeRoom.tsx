@@ -175,7 +175,9 @@ export default function ChallengeRoom() {
           {challenge?.coverImage && <MediaImage path={challenge.coverImage} label={title} className="h-36 w-full rounded-2xl" />}
 
           <div className="rounded-2xl bg-white p-4 shadow-sm">
-            {description && <p className="text-sm leading-relaxed text-gray-600">{description}</p>}
+            {/* pre-line: rules are written as multiple lines; plain <p> collapses
+                every newline into a space and turns them into one blob. */}
+            {description && <p className="whitespace-pre-line text-sm leading-relaxed text-gray-600">{description}</p>}
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
               <span className="flex items-center gap-1 rounded-full bg-brand-blue/10 px-3 py-1.5 text-brand-blue">
                 <Trophy size={13} /> {t('challenge.goal')}: {challenge?.goalValue}
@@ -200,7 +202,7 @@ export default function ChallengeRoom() {
             {challenge?.prizeText && (
               <div className="mt-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 p-3 ring-1 ring-amber-200">
                 <p className="text-xs font-extrabold text-amber-700">🏆 {t('challenge.prizes')}</p>
-                <p className="mt-1 text-sm font-semibold leading-relaxed text-amber-900">
+                <p className="mt-1 whitespace-pre-line text-sm font-semibold leading-relaxed text-amber-900">
                   {(isAr && challenge.prizeTextAr) || challenge.prizeText}
                 </p>
                 <p className="mt-1 text-[11px] text-amber-600">{t('challenge.prizesNote')}</p>

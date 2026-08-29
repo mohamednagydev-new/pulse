@@ -246,7 +246,10 @@ export const RESOURCES: Resource[] = [
     fields: [
       { name: 'title', label: 'Title', type: 'text' },
       { name: 'titleAr', label: 'Title (Arabic)', type: 'text' },
-      { name: 'description', label: 'Description', type: 'textarea' },
+      { name: 'description', label: 'Description (rules — line breaks are kept)', type: 'textarea' },
+      // The app shows descriptionAr to Arabic users; without this field it could
+      // never be filled and Arabic readers fell back to the English column.
+      { name: 'descriptionAr', label: 'Description (Arabic)', type: 'textarea' },
       { name: 'coverImage', label: 'Cover image (from Upload)', type: 'text' },
       // 'days' = distinct training days — the cheat-proof one, use it for prize challenges.
       { name: 'goalType', label: 'Goal type (days = distinct training days, safest for prizes)', type: 'select', options: ['days', 'lessons', 'streak', 'calories', 'water', 'lifts', 'xp'] },
