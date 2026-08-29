@@ -8,7 +8,7 @@ import {
   ChevronDown, Award, UserPlus, ShoppingBag, HelpCircle, Ticket, Building2,
   Bot, Gem, Salad, Handshake, Dumbbell, Users, Flame, HeartHandshake,
   TrendingUp, Medal, HeartPulse, ClipboardList, ScanLine, ListChecks, Music,
-  UtensilsCrossed, Trophy, Clapperboard, Crown, type LucideIcon,
+  UtensilsCrossed, Trophy, Clapperboard, Crown, Search, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
@@ -31,6 +31,10 @@ const GROUPS: Group[] = [
     // accordion open at a time so it stays compact.
     en: 'Main', ar: 'الأساسية',
     items: [
+      // Search reads programs, exercises, recipes, articles, lessons, coaches
+      // and gyms in BOTH languages — but it used to live only in the Home
+      // header, so from any inner screen you had to go Home first to find it.
+      { to: '/search', en: 'Search everything', ar: 'دوّر على أي حاجة', icon: Search },
       { to: '/programs', en: 'Train', ar: 'التمرين', icon: Dumbbell },
       { to: '/community', en: 'Community', ar: 'المجتمع', icon: Users },
       { to: '/tracker', en: 'Food', ar: 'الأكل', icon: Flame },
