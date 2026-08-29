@@ -96,9 +96,9 @@ workout,gym,diet,calories,coach,fitness,egypt,arabic,weight loss,meal
 
 | Field | Value |
 |---|---|
-| Support URL | `https://pulse.geddo.online/help` |
+| Support URL | `https://pulse.geddo.online/support.html` |
 | Marketing URL | `https://pulse.geddo.online` |
-| Privacy Policy URL | `https://pulse.geddo.online/privacy` |
+| Privacy Policy URL | `https://pulse.geddo.online/privacy.html` |
 
 ## 7 · Screenshots
 
