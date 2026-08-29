@@ -13,11 +13,17 @@
 
 const FB_ID = (import.meta.env.VITE_FB_PIXEL_ID as string | undefined)?.trim();
 const TT_ID = (import.meta.env.VITE_TIKTOK_PIXEL_ID as string | undefined)?.trim();
+// Google Ads: AW-XXXXXXXXX plus the signup conversion LABEL from
+// Google Ads → Goals → Conversions → your action → tag setup.
+const GADS_ID = (import.meta.env.VITE_GOOGLE_ADS_ID as string | undefined)?.trim();
+const GADS_SIGNUP = (import.meta.env.VITE_GOOGLE_ADS_SIGNUP_LABEL as string | undefined)?.trim();
 
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
     ttq?: { track: (e: string, p?: object) => void; page: () => void; load: (id: string) => void };
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
   }
 }
 
@@ -71,6 +77,22 @@ export function initPixels() {
       ttq.page();
     }
   }
+
+  if (GADS_ID) {
+    // Google Ads (gtag) — for search/YouTube/display campaigns pointed at the
+    // website. Play App Campaigns need NO tag: Google counts installs itself.
+    const w = window as any;
+    if (!w.gtag) {
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = `https://www.googletagmanager.com/gtag/js?id=${GADS_ID}`;
+      document.head.appendChild(s);
+      w.dataLayer = w.dataLayer || [];
+      w.gtag = function () { w.dataLayer.push(arguments); };
+      w.gtag('js', new Date());
+      w.gtag('config', GADS_ID);
+    }
+  }
 }
 
 /** PROXY values in EGP: the app is free, but Meta's event diagnostics demand
@@ -87,6 +109,9 @@ export function pixelRegistration() {
   try {
     window.fbq?.('track', 'CompleteRegistration', { value: VALUE_REGISTRATION, currency: CURRENCY });
     window.ttq?.track('CompleteRegistration', { value: VALUE_REGISTRATION, currency: CURRENCY });
+    if (GADS_ID && GADS_SIGNUP) {
+      window.gtag?.('event', 'conversion', { send_to: `${GADS_ID}/${GADS_SIGNUP}`, value: VALUE_REGISTRATION, currency: CURRENCY });
+    }
   } catch {
     /* ad blockers — never break the app for tracking */
   }
