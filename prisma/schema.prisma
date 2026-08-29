@@ -728,6 +728,10 @@ model ChallengeMessage {
   mediaType   String?
   mediaUrl    String?
   isProof     Boolean   @default(false)
+  /** Private proof: visible ONLY to its author and admins, never in the room
+      or the feed. Photo evidence must never force anyone — women especially —
+      to show themselves publicly to compete for a prize. */
+  isPrivate   Boolean   @default(false)
   createdAt   DateTime  @default(now())
 
   @@index([challengeId, createdAt])

@@ -28,6 +28,7 @@ export default function ChallengeRoom() {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [shareToFeed, setShareToFeed] = useState(true);
+  const [privateProof, setPrivateProof] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const proofRef = useRef<HTMLInputElement>(null);
 
@@ -109,6 +110,7 @@ export default function ChallengeRoom() {
     setProofFile(file);
     setProofPreview(URL.createObjectURL(file));
     setShareToFeed(true);
+    setPrivateProof(false);
   };
   const cancelProof = () => {
     if (proofPreview) URL.revokeObjectURL(proofPreview);
@@ -126,11 +128,11 @@ export default function ChallengeRoom() {
       if (!res.ok) throw new Error('upload failed');
       const { mediaType, mediaUrl } = await res.json();
       const m = await api.post(`/api/gamification/challenges/${id}/messages`, {
-        text: text.trim(), mediaType, mediaUrl, isProof: true, shareToFeed,
+        text: text.trim(), mediaType, mediaUrl, isProof: true, shareToFeed: privateProof ? false : shareToFeed, isPrivate: privateProof,
       });
       setText('');
       setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-      toast(shareToFeed ? t('challenge.proofSent') : t('challenge.proofSentPrivate'), 'success');
+      toast(!privateProof && shareToFeed ? t('challenge.proofSent') : t('challenge.proofSentPrivate'), 'success');
       cancelProof();
     } catch (e: any) {
       toast(e?.message || t('common.somethingWrong'), 'error');
@@ -153,6 +155,7 @@ export default function ChallengeRoom() {
 
   const rows: any[] = Array.isArray(board) ? board : [];
   const isAr = i18n.language.startsWith('ar');
+  const L = (en: string, ar: string) => (isAr ? ar : en);
   const title = (isAr && challenge?.titleAr) || challenge?.title || 'Challenge';
   const description = (isAr && challenge?.descriptionAr) || challenge?.description;
   const goalPct = challenge?.goalValue > 0 ? Math.min(100, Math.round(((challenge?.myProgress ?? 0) / challenge.goalValue) * 100)) : 0;
@@ -316,16 +319,33 @@ export default function ChallengeRoom() {
                     : <img src={proofPreview} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover" />}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold">📸 {t('challenge.proofBadge')}</p>
+                    {/* Privacy first: nobody should have to appear publicly to
+                        compete for a prize. Private = reviewers only. */}
                     <label className="mt-2 flex items-center gap-2 text-xs font-semibold text-gray-600">
                       <input
                         type="checkbox"
-                        checked={shareToFeed}
-                        onChange={(e) => setShareToFeed(e.target.checked)}
-                        className="h-4 w-4 accent-emerald-500"
+                        checked={privateProof}
+                        onChange={(e) => { setPrivateProof(e.target.checked); if (e.target.checked) setShareToFeed(false); }}
+                        className="h-4 w-4 accent-brand-blue"
                       />
-                      {t('challenge.shareToFeed')}
+                      🔒 {L('Private — reviewers only', 'خاص — للمراجعة بس')}
                     </label>
-                    <p className="mt-1 text-[11px] text-gray-400">{shareToFeed ? t('challenge.shareOnHint') : t('challenge.shareOffHint')}</p>
+                    {!privateProof && (
+                      <label className="mt-1.5 flex items-center gap-2 text-xs font-semibold text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={shareToFeed}
+                          onChange={(e) => setShareToFeed(e.target.checked)}
+                          className="h-4 w-4 accent-emerald-500"
+                        />
+                        {t('challenge.shareToFeed')}
+                      </label>
+                    )}
+                    <p className="mt-1 text-[11px] text-gray-400">
+                      {privateProof
+                        ? L('Only you and the review team can see this. It still counts.', 'انت وفريق المراجعة بس اللي يشوفوها. وبتتحسب عادي.')
+                        : shareToFeed ? t('challenge.shareOnHint') : t('challenge.shareOffHint')}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-2 flex gap-2">

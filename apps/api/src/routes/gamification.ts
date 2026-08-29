@@ -201,8 +201,14 @@ gamificationRouter.get('/challenges/:id/messages', async (req: AuthedRequest, re
   const challenge = await challengeForViewer(req.params.id, req.userId!);
   if (challenge === null) return res.status(404).json({ error: 'Not found' });
   if (challenge === false) return res.status(403).json({ error: 'This challenge is private' });
+  // Private proofs belong to their author and the admins only — everyone else
+  // sees the room without them.
+  const me = await prisma.user.findUnique({ where: { id: req.userId! }, select: { role: true } });
   const messages = await prisma.challengeMessage.findMany({
-    where: { challengeId: req.params.id },
+    where: {
+      challengeId: req.params.id,
+      ...(me?.role === 'ADMIN' ? {} : { OR: [{ isPrivate: false }, { userId: req.userId! }] }),
+    },
     include: { user: { select: chatUserSelect } },
     orderBy: { createdAt: 'asc' },
     take: 200,
@@ -221,6 +227,8 @@ gamificationRouter.post('/challenges/:id/messages', async (req: AuthedRequest, r
       isProof: z.boolean().optional(),
       /** Consent: cross-post this proof to the community feed (default yes). */
       shareToFeed: z.boolean().optional(),
+      /** Private proof — reviewers only, never shown in the room or the feed. */
+      isPrivate: z.boolean().optional(),
     })
     .safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });
@@ -241,15 +249,17 @@ gamificationRouter.post('/challenges/:id/messages', async (req: AuthedRequest, r
       mediaType: d.mediaUrl ? d.mediaType : null,
       mediaUrl: d.mediaUrl || null,
       isProof: !!d.isProof && !!d.mediaUrl,
+      isPrivate: !!d.isPrivate,
     },
     include: { user: { select: chatUserSelect } },
   });
-  emitToChallenge(req.params.id, 'challenge:msg', message);
+  // A private proof is never broadcast to the room.
+  if (!message.isPrivate) emitToChallenge(req.params.id, 'challenge:msg', message);
 
   // Proof check-ins in GLOBAL challenges cross-post to the community feed —
   // real people sweating is the best content this feed can carry. The user
   // consents via a checkbox on the proof composer (defaults to sharing).
-  if (message.isProof && message.mediaUrl && d.shareToFeed !== false) {
+  if (message.isProof && message.mediaUrl && !message.isPrivate && d.shareToFeed !== false) {
     const ch = await prisma.challenge.findUnique({
       where: { id: req.params.id },
       select: { kind: true, title: true, titleAr: true },
