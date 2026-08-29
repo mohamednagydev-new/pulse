@@ -4,7 +4,7 @@ import { Mail, Lock, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../store/auth';
-import { API_BASE } from '../lib/api';
+import { API_BASE, IS_NATIVE } from '../lib/api';
 import LanguageToggle from '../components/LanguageToggle';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
@@ -162,9 +162,11 @@ export default function Login() {
               <span className="h-px flex-1 bg-white/20" /> {t('auth.or')} <span className="h-px flex-1 bg-white/20" />
             </div>
 
-            {/* Google BLOCKS OAuth inside in-app webviews (403 disallowed_useragent) —
-                exactly where FB/TikTok ad traffic lands. Steer them to email there. */}
-            {isInAppBrowser() ? (
+            {/* iOS App Store build: NO third-party login at all. Offering
+                Google there triggers guideline 4.8 (must add an "equivalent
+                privacy" option, i.e. Sign in with Apple). Email/password only
+                until Apple Sign-In ships. Web/Android keep Google. */}
+            {IS_NATIVE ? null : isInAppBrowser() ? (
               <p className="rounded-xl bg-amber-400/20 px-4 py-3 text-center text-xs text-amber-200">
                 {t('auth.webviewGoogle')}
               </p>
