@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PULSE — إنشاء حملات جديدة خطوة بخطوة</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f6f4f1; color: #1c1917; line-height: 1.85; }
+  .page { max-width: 920px; margin: 0 auto; padding: 24px 20px 80px; }
+  header.hero { background: linear-gradient(135deg, #ea580c, #dc2626); color: #fff; border-radius: 20px; padding: 36px 28px; margin-bottom: 26px; }
+  header.hero h1 { font-size: 30px; margin-bottom: 8px; }
+  header.hero p { opacity: .93; font-size: 15px; }
+  .meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; font-size: 13px; }
+  .meta span { background: rgba(255,255,255,.16); border-radius: 999px; padding: 4px 14px; }
+  nav.toc { background: #fff; border-radius: 16px; padding: 18px 22px; margin-bottom: 26px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  nav.toc strong { display: block; margin-bottom: 8px; color: #ea580c; }
+  nav.toc a { color: #1c1917; text-decoration: none; font-size: 13.5px; display: block; padding: 3px 0; }
+  nav.toc a:hover { color: #ea580c; }
+  section { background: #fff; border-radius: 16px; padding: 26px 24px; margin-bottom: 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  h2 { font-size: 21px; color: #ea580c; margin-bottom: 6px; padding-bottom: 8px; border-bottom: 2px solid #fee2d5; }
+  h3 { font-size: 16.5px; margin: 20px 0 8px; color: #292524; background: #fafaf9; border-right: 4px solid #fb923c; padding: 6px 12px; border-radius: 8px; }
+  p { margin-bottom: 10px; font-size: 14.5px; }
+  ul, ol { margin: 8px 26px 14px 0; font-size: 14.5px; }
+  li { margin-bottom: 7px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13.5px; }
+  th { background: #1c1917; color: #fff; padding: 9px 10px; text-align: right; font-weight: 700; }
+  td { padding: 9px 10px; border-bottom: 1px solid #e7e5e4; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafaf9; }
+  td b { color: #9a3412; }
+  .callout { border-radius: 12px; padding: 14px 16px; margin: 12px 0; font-size: 14px; }
+  .callout.gold { background: #fef3c7; border-right: 4px solid #f59e0b; }
+  .callout.red { background: #fee2e2; border-right: 4px solid #dc2626; }
+  .callout.green { background: #dcfce7; border-right: 4px solid #16a34a; }
+  .callout.blue { background: #dbeafe; border-right: 4px solid #2563eb; }
+  .num, code, .en { font-family: Consolas, 'Courier New', monospace; direction: ltr; display: inline-block; background: #f5f5f4; border-radius: 6px; padding: 1px 8px; font-size: 13px; }
+  .copybox { background: #1c1917; color: #fafaf9; border-radius: 12px; padding: 14px 16px; margin: 10px 0; font-size: 14px; white-space: pre-line; }
+  .step { counter-increment: st; }
+  .step h4 { font-size: 15px; margin: 14px 0 6px; color: #1c1917; }
+  .step h4::before { content: "خطوة " counter(st) " — "; color: #ea580c; font-weight: 800; }
+  .steps { counter-reset: st; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+  .kpi { background: #1c1917; color: #fff; border-radius: 14px; padding: 14px; text-align: center; }
+  .kpi b { display: block; font-size: 22px; color: #fb923c; }
+  .kpi span { font-size: 12px; opacity: .85; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="hero">
+  <h1>حملات جديدة من الصفر — خطوة بخطوة</h1>
+  <p>الحملات القديمة اتقفلت وخلاص. الدليل ده بيمشي معاك شاشة بشاشة في Ads Manager — كل زرار وكل خانة وكل رقم.</p>
+  <div class="meta"><span>ابدأ من فوق لتحت</span><span>وقت التنفيذ: ٩٠ دقيقة</span><span>ميزانية البداية: ٣٠٠ ج/يوم</span></div>
+</header>
+
+<nav class="toc">
+  <strong>المحتويات</strong>
+  <a href="#p0">صفر · تجهيزات قبل ما تفتح Ads Manager (١٥ دقيقة)</a>
+  <a href="#p1">١ · حملة التسجيلات — الإنشاء الكامل خطوة بخطوة</a>
+  <a href="#p2">٢ · الإعلانات الثلاثة: النصوص والفيديوهات جاهزة للنسخ</a>
+  <a href="#p3">٣ · حملة المشاهدات (بتبني حوض الريتارجت)</a>
+  <a href="#p4">٤ · حملة الريتارجت — بعد ٧ أيام بالظبط</a>
+  <a href="#p5">٥ · أول ٧٢ ساعة: اعمل إيه ومتعملش إيه</a>
+  <a href="#p6">٦ · الروتين الأسبوعي الثابت</a>
+  <a href="#p7">٧ · جدول حل المشاكل</a>
+</nav>
+
+<section id="p0">
+  <h2>صفر · تجهيزات قبل ما تفتح Ads Manager</h2>
+  <div class="steps">
+    <div class="step">
+      <h4>اتأكد إن البيكسل بيسجل التسجيلات</h4>
+      <ol>
+        <li>افتح <span class="en">business.facebook.com</span> ← <span class="en">Events Manager</span> ← اختار البيكسل بتاعك (<span class="num">2228033330935037</span>).</li>
+        <li>ادخل على تبويب <span class="en">Test events</span>.</li>
+        <li>في تبويب تاني افتح <span class="en">pulse.geddo.online</span> ← لازم يظهر عندك حدث <span class="en">PageView</span> خلال ثواني.</li>
+        <li>سجّل حساب تجريبي بإيميل وهمي ← لازم يظهر حدث <span class="en">CompleteRegistration</span> وجنبه القيمة <span class="num">5 EGP</span>.</li>
+      </ol>
+      <div class="callout red"><b>لو مظهرش:</b> متعملش حملة خالص. الحملة من غير الحدث ده بتشتري كلكات مش مستخدمين. كلمني وأنا أظبطه.</div>
+    </div>
+    <div class="step">
+      <h4>اقفل القديم بشكل نضيف</h4>
+      <ul>
+        <li>في Ads Manager: اقفل (<span class="en">Off</span>) كل الحملات القديمة — <b>متمسحهاش</b>، سيبها كأرشيف عشان تقارن الأرقام بعدين.</li>
+        <li>خد سكرين للنتايج القديمة (٦٦٢ تسجيل / ٥ ج) عشان تفضل مرجع للمقارنة.</li>
+      </ul>
+    </div>
+    <div class="step">
+      <h4>جهّز الفيديوهات (٣ ريلز) قبل ما تبدأ</h4>
+      <ul>
+        <li>مقاس <span class="num">1080×1920</span> رأسي · مدة <span class="num">15–25</span> ثانية · نص كبير على الفيديو (٨٥٪ بيتفرجوا من غير صوت).</li>
+        <li>محتوى الفيديو: تصوير شاشة حقيقي من التطبيق (شاشة التمرين، حساب سعرات الكشري، الليدربورد) — الحقيقي بيكسب المصنوع.</li>
+        <li>النصوص كلها جاهزة في القسم ٢ تحت. لو محتاج تصميم: <span class="en">CANVA-COPY.md</span> فيه الخطافات.</li>
+      </ul>
+    </div>
+    <div class="step">
+      <h4>حدد الميزانية بصدق</h4>
+      <p>ابدأ بـ<b>٣٠٠ ج/يوم</b> موزعة: <span class="num">200</span> ج تسجيلات + <span class="num">100</span> ج مشاهدات. لو ميزانيتك أقل، ابدأ بحملة التسجيلات بس بـ<span class="num">150</span> ج/يوم — <b>متقسمش مبلغ صغير على حملتين</b>، فيسبوك محتاج ٥٠ تحويل أسبوعياً لكل مجموعة إعلانية عشان يتعلم.</p>
+    </div>
+  </div>
+</section>
+
+<section id="p1">
+  <h2>١ · حملة التسجيلات — الإنشاء الكامل</h2>
+  <p>دي الحملة الأساسية اللي هتجيب المستخدمين. في Ads Manager دوس <span class="en">+ Create</span> وامشي بالظبط كده:</p>
+
+  <h3>شاشة ١ — مستوى الحملة (Campaign)</h3>
+  <table>
+    <tr><th>الخانة</th><th>تحطّ إيه</th><th>ليه</th></tr>
+    <tr><td><span class="en">Buying type</span></td><td><b>Auction</b></td><td>الافتراضي الصح</td></tr>
+    <tr><td><span class="en">Objective</span></td><td><b>Sales</b> (أو <span class="en">Conversions</span> في الواجهة القديمة)</td><td>ده اللي بيخلي فيسبوك يدوّر على ناس بتسجل فعلاً — <b>مش Traffic</b></td></tr>
+    <tr><td><span class="en">Campaign name</span></td><td><span class="num">REG-Sept-Fresh</span></td><td>اسم واضح تعرفه في التقارير</td></tr>
+    <tr><td><span class="en">Special ad categories</span></td><td><b>سيبها فاضية</b></td><td>احنا مش صحة/سياسة/إسكان بالتعريف الإعلاني — لو اخترت واحدة هتخسر الاستهداف</td></tr>
+    <tr><td><span class="en">Advantage campaign budget (CBO)</span></td><td><b>OFF</b></td><td>عايز تتحكم في ميزانية كل مجموعة بنفسك في البداية</td></tr>
+    <tr><td><span class="en">A/B test</span></td><td><b>OFF</b></td><td>الاختبار هيحصل طبيعي بين الإعلانات</td></tr>
+  </table>
+
+  <h3>شاشة ٢ — مجموعة الإعلانات الأولى (Ad Set 1: Broad)</h3>
+  <table>
+    <tr><th>الخانة</th><th>تحطّ إيه</th></tr>
+    <tr><td><span class="en">Ad set name</span></td><td><span class="num">AS1-Broad-18-35</span></td></tr>
+    <tr><td><span class="en">Conversion location</span></td><td><b>Website</b></td></tr>
+    <tr><td><span class="en">Pixel / Dataset</span></td><td>بيكسل PULSE (<span class="num">2228033330935037</span>)</td></tr>
+    <tr><td><span class="en">Conversion event</span></td><td><b>CompleteRegistration</b> ← <b>ده أهم اختيار في الحملة كلها</b></td></tr>
+    <tr><td><span class="en">Daily budget</span></td><td><span class="num">100</span> ج</td></tr>
+    <tr><td><span class="en">Schedule</span></td><td>ابدأ بكرة الصبح <span class="num">9:00</span> — متبدأش بالليل (بيصرف الميزانية في ساعات غالية)</td></tr>
+    <tr><td><span class="en">Location</span></td><td>Egypt — واختار <b>People living in this location</b></td></tr>
+    <tr><td><span class="en">Age</span></td><td><span class="num">18 – 35</span></td></tr>
+    <tr><td><span class="en">Gender</span></td><td>All</td></tr>
+    <tr><td><span class="en">Detailed targeting</span></td><td><b>سيبها فاضية تماماً</b> (Broad) — الخوارزمية بقت أذكى من الاهتمامات اليدوية</td></tr>
+    <tr><td><span class="en">Advantage+ audience</span></td><td>لو ظهرت: <b>ON</b></td></tr>
+    <tr><td><span class="en">Placements</span></td><td><b>Advantage+ placements</b> (تلقائي) — سيب فيسبوك يوزّع</td></tr>
+    <tr><td><span class="en">Performance goal</span></td><td><span class="en">Maximize number of conversions</span></td></tr>
+    <tr><td><span class="en">Bid strategy</span></td><td><span class="en">Highest volume</span> — <b>من غير</b> حد أقصى للسعر في البداية</td></tr>
+  </table>
+  <div class="callout blue"><b>ليه Broad من غير اهتمامات؟</b> إنت عندك بيكسل فيه <span class="num">662</span> تسجيل قديم — دي داتا كافية إن فيسبوك يعرف شكل المستخدم بتاعك لوحده. الاهتمامات اليدوية بتضيّق الجمهور وبترفع السعر.</div>
+
+  <h3>شاشة ٣ — الإعلانات (٣ إعلانات جوه نفس المجموعة)</h3>
+  <p>اعمل <b>٣ إعلانات</b> بنفس الإعدادات دي، كل واحد بفيديو وخطاف مختلف (النصوص في القسم ٢):</p>
+  <table>
+    <tr><th>الخانة</th><th>تحطّ إيه</th></tr>
+    <tr><td><span class="en">Ad name</span></td><td><span class="num">AD1-Cash</span> / <span class="num">AD2-Food</span> / <span class="num">AD3-Free</span></td></tr>
+    <tr><td><span class="en">Identity</span></td><td>صفحة <b>PULSE</b> (واربط حساب إنستجرام لو ظهر الاختيار)</td></tr>
+    <tr><td><span class="en">Format</span></td><td><b>Single image or video</b></td></tr>
+    <tr><td><span class="en">Media</span></td><td>ارفع الريل الرأسي — واختار <span class="en">Crop</span> تلقائي لباقي المقاسات</td></tr>
+    <tr><td><span class="en">Primary text</span></td><td>من القسم ٢ (الجزء الأول أهم — بيتقطع بعد ٣ أسطر)</td></tr>
+    <tr><td><span class="en">Headline</span></td><td>من القسم ٢</td></tr>
+    <tr><td><span class="en">Call to action</span></td><td><b>Sign Up</b></td></tr>
+    <tr><td><span class="en">Website URL</span></td><td>اللينك بالـUTM من القسم ٢ — <b>لازم</b></td></tr>
+    <tr><td><span class="en">Advantage+ creative</span></td><td>اقفل <span class="en">Music</span> و<span class="en">3D animation</span>، سيب الباقي</td></tr>
+  </table>
+
+  <h3>شاشة ٤ — النشر</h3>
+  <ol>
+    <li>دوس <span class="en">Publish</span>.</li>
+    <li>هتلاقي حالة الإعلانات <span class="en">In review</span> — المراجعة بتاخد من ساعة لـ٢٤ ساعة.</li>
+    <li>لو اترفض إعلان: شوف السبب، وغالباً هيكون وعد وزن أو صورة قبل/بعد (شوف الممنوعات في الدليل التاني) — عدّل النص وأعد الإرسال.</li>
+  </ol>
+  <div class="callout gold"><b>مجموعة إعلانية تانية اختيارية:</b> لو ميزانيتك ٣٠٠ ج+، اعمل نسخة (<span class="en">Duplicate</span>) من AS1 وسمّيها <span class="num">AS2-Interests</span> وحط فيها اهتمامات: <span class="en">Gym, Physical fitness, Weight loss, Healthy diet</span> — وخلّي الاتنين يتنافسوا أسبوع.</div>
+</section>
+
+<section id="p2">
+  <h2>٢ · الإعلانات الثلاثة — نصوص جاهزة للنسخ</h2>
+
+  <h3>الإعلان ١ — الجوايز الكاش (الأقوى دلوقتي)</h3>
+  <p><b>الفيديو:</b> تصوير شاشة لصفحة التحدي + الليدربورد.</p>
+  <p><b>النص الأساسي (Primary text):</b></p>
+  <div class="copybox">٩٠٠ جنيه جوايز كاش 💸
+
+اتمرن ٢٠ يوم في سبتمبر وادخل السباق:
+🥇 الأول ٥٠٠ ج · 🥈🥉 ٢٠٠ ج · وقرعة ١٠٠ ج لكل اللي يكمّلوا
+
+التطبيق مصري ومجاني ١٠٠٪ — تمارين بالفيديو وحساب سعرات بالأكل المصري.
+سجّل وادخل التحدي 👇</div>
+  <p><b>العنوان (Headline):</b></p>
+  <div class="copybox">تحدي سبتمبر — سجّل مجاناً وادخل السباق</div>
+  <p><b>اللينك:</b></p>
+  <div class="copybox">https://pulse.geddo.online/?utm_source=facebook&utm_medium=cpc&utm_campaign=reg-fresh&utm_content=cash</div>
+
+  <h3>الإعلان ٢ — الأكل المصري</h3>
+  <p><b>الفيديو:</b> تصوير شاشة تسجيل أكلة (كشري/فول) والسعرات بتظهر.</p>
+  <div class="copybox">الكشري ليه سعرات قد إيه؟ 👀
+
+أغلب تطبيقات الدايت مش عارفة أكلنا. PULSE بيحسب الكشري والفول والطعمية والمحشي — بالعربي، وبصورة كمان.
+
+تمارين بالفيديو + حساب سعرات + تحديات — كله مجاني ١٠٠٪.</div>
+  <p><b>العنوان:</b></p>
+  <div class="copybox">حاسب سعراتك بالأكل المصري — مجاناً</div>
+  <p><b>اللينك:</b></p>
+  <div class="copybox">https://pulse.geddo.online/?utm_source=facebook&utm_medium=cpc&utm_campaign=reg-fresh&utm_content=food</div>
+
+  <h3>الإعلان ٣ — ضد الاشتراكات</h3>
+  <p><b>الفيديو:</b> تصوير شاشة تمرين بالفيديو + السلسلة والـXP.</p>
+  <div class="copybox">اشتراك جيم بـ١٥٠٠ جنيه؟ 🤔
+
+جيم في موبايلك: خطة أسبوعية على مقاسك، فيديو لكل تمرينة، وناس بتشد معاك.
+من غير فيزا، من غير اشتراك، من غير نسخة مدفوعة مخفية.
+
+٢٠ دقيقة في اليوم بس — والباقي علينا.</div>
+  <p><b>العنوان:</b></p>
+  <div class="copybox">جيم في موبايلك — مجاني ١٠٠٪</div>
+  <p><b>اللينك:</b></p>
+  <div class="copybox">https://pulse.geddo.online/?utm_source=facebook&utm_medium=cpc&utm_campaign=reg-fresh&utm_content=free</div>
+
+  <div class="callout green"><b>ليه الـ<span class="en">utm_content</span> مختلف؟</b> عشان تعرف من لوحة الأدمن (Analytics ← فانل فيسبوك) أنهي <b>رسالة</b> جابت مستخدمين حقيقيين — مش بس أنهي إعلان جاب كلكات.</div>
+</section>
+
+<section id="p3">
+  <h2>٣ · حملة المشاهدات (اعملها في نفس اليوم)</h2>
+  <p>هدفها مش التسجيلات — هدفها تملى «حوض» ناس شافتك بأرخص سعر ممكن، عشان حملة الريتارجت بعد أسبوع.</p>
+  <table>
+    <tr><th>الخانة</th><th>القيمة</th></tr>
+    <tr><td><span class="en">Objective</span></td><td><b>Engagement</b> ← <span class="en">Video views</span></td></tr>
+    <tr><td><span class="en">Campaign name</span></td><td><span class="num">VIEWS-Sept-Fresh</span></td></tr>
+    <tr><td><span class="en">Performance goal</span></td><td><span class="en">Maximize ThruPlay views</span></td></tr>
+    <tr><td><span class="en">Daily budget</span></td><td><span class="num">100</span> ج</td></tr>
+    <tr><td><span class="en">Location / Age</span></td><td>Egypt · <span class="num">18–40</span> (أوسع شوية عن حملة التسجيل)</td></tr>
+    <tr><td><span class="en">Detailed targeting</span></td><td>فاضية (Broad)</td></tr>
+    <tr><td>الإعلانات</td><td>نفس الـ٣ ريلز — أو أحسن ريلز أورجانيك عندك (اللي جابت مشاهدات على الصفحة)</td></tr>
+    <tr><td><span class="en">Call to action</span></td><td><span class="en">Learn more</span> + نفس اللينك بـ<span class="num">utm_campaign=views-fresh</span></td></tr>
+  </table>
+  <div class="callout blue">هنا التكلفة اللي تراقبها هي <b>تكلفة الـThruPlay</b> — في مصر المفروض تكون قروش (أقل من <span class="num">0.20</span> ج للمشاهدة). المشاهدات دي هي وقود الحملة التالتة.</div>
+</section>
+
+<section id="p4">
+  <h2>٤ · حملة الريتارجت — يوم ٨ بالظبط</h2>
+  <p>استنى ٧ أيام عشان يبقى فيه ناس كفاية في الحوض. بعدين:</p>
+  <div class="steps">
+    <div class="step">
+      <h4>اعمل الجمهور المخصص (Custom Audience)</h4>
+      <ol>
+        <li><span class="en">Ads Manager</span> ← <span class="en">Audiences</span> ← <span class="en">Create audience</span> ← <span class="en">Custom audience</span>.</li>
+        <li>اختار <span class="en">Video</span> ← <span class="en">People who viewed at least 50% of your video</span> ← اختار كل فيديوهات الحملات ← المدة <span class="num">30</span> يوم ← سمّيه <span class="num">AUD-VideoViewers-50</span>.</li>
+        <li>كرر: <span class="en">Custom audience</span> ← <span class="en">Website</span> ← <span class="en">All website visitors</span> ← <span class="num">30</span> يوم ← سمّيه <span class="num">AUD-WebVisitors</span>.</li>
+        <li>كرر: <span class="en">Custom audience</span> ← <span class="en">Facebook page</span> / <span class="en">Instagram account</span> ← <span class="en">Everyone who engaged</span> ← <span class="num">30</span> يوم.</li>
+      </ol>
+    </div>
+    <div class="step">
+      <h4>اعمل الحملة</h4>
+      <table>
+        <tr><th>الخانة</th><th>القيمة</th></tr>
+        <tr><td><span class="en">Objective</span></td><td><b>Sales</b> ← حدث <b>CompleteRegistration</b></td></tr>
+        <tr><td><span class="en">Campaign name</span></td><td><span class="num">RETARGET-Sept</span></td></tr>
+        <tr><td><span class="en">Daily budget</span></td><td><span class="num">50–70</span> ج (الجمهور صغير — ميزانية كبيرة هتحرقه)</td></tr>
+        <tr><td><span class="en">Audience</span></td><td>الـ٣ جماهير اللي عملتهم فوق مع بعض</td></tr>
+        <tr><td><span class="en">Exclude</span></td><td>مهم جداً: استبعد <span class="num">AUD-Registered</span> (اعمل جمهور من اللي زاروا صفحة بعد التسجيل) عشان متدفعش لناس مسجلة</td></tr>
+        <tr><td>الإعلان</td><td>رسالة تانية خالص — «لسه مجربتش؟» أو بوست الفايزين بالتحويلات</td></tr>
+      </table>
+      <p><b>نص إعلان الريتارجت:</b></p>
+      <div class="copybox">شوفت PULSE قبل كده وما سجلتش؟ 👀
+
+التطبيق مجاني ١٠٠٪ ومفيش أي اشتراك — تمارين بالفيديو، سعرات الأكل المصري، وتحديات بجوايز كاش حقيقية.
+دقيقة واحدة والحساب بقى عندك.</div>
+    </div>
+  </div>
+  <div class="callout green">توقّع تكلفة تسجيل <b>أقل ٣٠–٥٠٪</b> من الحملة الأساسية — دول ناس شافوك قبل كده.</div>
+</section>
+
+<section id="p5">
+  <h2>٥ · أول ٧٢ ساعة — الجزء اللي بيغلط فيه الكل</h2>
+  <div class="callout red"><b>القاعدة المقدسة:</b> أول ٧٢ ساعة <b>متلمسش أي حاجة</b>. متغيّرش ميزانية، متقفلش إعلان، متعدّلش نص. فيسبوك بيكون في مرحلة التعلّم (<span class="en">Learning</span>) وأي تعديل بيصفّرها ويرجّعك للبداية بسعر أغلى.</div>
+  <table>
+    <tr><th>الوقت</th><th>المتوقع</th><th>تعمل إيه</th></tr>
+    <tr><td>أول ٦ ساعات</td><td>صرف بطيء، تكلفة عالية (١٥–٣٠ ج للتسجيل)</td><td>لا شيء. ده طبيعي ١٠٠٪</td></tr>
+    <tr><td>يوم ١</td><td>التكلفة بتبدأ تنزل</td><td>بص وبس</td></tr>
+    <tr><td>يوم ٢–٣</td><td>التكلفة بتستقر</td><td>بص وبس</td></tr>
+    <tr><td>يوم ٤</td><td>عندك داتا حقيقية</td><td>أول قرار: اقفل الإعلان الأغلى لو تكلفته ضعف الأحسن</td></tr>
+    <tr><td>يوم ٧</td><td>الصورة كاملة</td><td>قارن بلوحة Admin ← Analytics (الأرقام الحقيقية)</td></tr>
+  </table>
+</section>
+
+<section id="p6">
+  <h2>٦ · الروتين الأسبوعي الثابت (من الأسبوع الثاني)</h2>
+  <table>
+    <tr><th>اليوم</th><th>المهمة (١٠ دقايق)</th></tr>
+    <tr><td><b>الإتنين</b></td><td>ضيف <b>إعلانين جداد</b> بخطاف مختلف جوه نفس المجموعة — <b>من غير</b> ما تقفل الشغالين</td></tr>
+    <tr><td><b>الخميس</b></td><td>ضيف عمود <span class="en">Frequency</span>: أي إعلان فوق <span class="num">3</span> أو تكلفته ضعف الأحسن ← <span class="en">Off</span></td></tr>
+    <tr><td><b>الجمعة</b></td><td>راجع: Ads Manager (التكلفة) + Admin Analytics (التسجيلات الحقيقية) + Play Console (التنزيلات) + Analytics ← Platforms</td></tr>
+    <tr><td><b>لما التكلفة تستقر ٥–١٠ ج</b></td><td>زوّد الميزانية <b>+٢٠٪ بس</b> كل ٣ أيام — القفزات الكبيرة بتحرق الحملة</td></tr>
+  </table>
+  <div class="kpi-grid">
+    <div class="kpi"><b>٥–١٠ ج</b><span>تكلفة التسجيل المستهدفة</span></div>
+    <div class="kpi"><b>+٢٠٪</b><span>أقصى زيادة ميزانية / ٣ أيام</span></div>
+    <div class="kpi"><b>&lt; ٣</b><span>الـFrequency الآمن</span></div>
+    <div class="kpi"><b>٧٢ ساعة</b><span>متلمسش قبلها</span></div>
+  </div>
+</section>
+
+<section id="p7">
+  <h2>٧ · جدول حل المشاكل</h2>
+  <table>
+    <tr><th>المشكلة</th><th>السبب الحقيقي</th><th>الحل</th></tr>
+    <tr><td>الحملة مش بتصرف الميزانية</td><td>الجمهور ضيق أو المزايدة محدودة</td><td>وسّع العمر، شيل أي حد أقصى للسعر، اتأكد إن الاستهداف Broad</td></tr>
+    <tr><td>تكلفة التسجيل عالية من أول يوم</td><td>مرحلة التعلّم</td><td>استنى ٧٢ ساعة قبل أي حكم</td></tr>
+    <tr><td>التكلفة زادت فجأة بعد أسبوعين</td><td><b>إرهاق الكرياتيف</b> (اللي حصل قبل كده)</td><td>إعلانات جديدة جنب القديم — <b>متعدلش</b> على الشغال</td></tr>
+    <tr><td>كلكات كتير وتسجيلات قليلة</td><td>الرسالة بتوعد بحاجة والصفحة بتقول حاجة تانية</td><td>خلّي أول سطر في الإعلان يطابق أول شاشة في الموقع</td></tr>
+    <tr><td>الإعلان اترفض</td><td>وعد وزن / قبل-بعد / ادعاء صحي</td><td>غيّر النص لصيغة سلوك مش نتيجة («اتمرن ٢٠ يوم» مش «اخس ١٠ كيلو»)</td></tr>
+    <tr><td>أرقام فيسبوك ≠ أرقام لوحتك</td><td>فيسبوك بينسب تسجيلات لناس شافت الإعلان وما دستش</td><td>صدّق <b>لوحة الأدمن</b> دايماً — هي مصدر الحقيقة</td></tr>
+  </table>
+</section>
+
+<footer style="text-align:center; color:#a8a29e; font-size:12px; padding-top:8px;">
+  PULSE — pulse.geddo.online · دليل تنفيذي داخلي · مكمّل: ADS-GUIDE-AR.html (المبادئ) · CANVA-COPY.md (نصوص التصميم)
+</footer>
+
+</div>
+</body>
+</html>
