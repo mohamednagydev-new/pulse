@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +16,8 @@ export default function ExercisesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [side, setSide] = useState<'front' | 'back'>('front');
+  const [params] = useSearchParams();
+  const homeMode = params.get('home') === '1';
   const [active, setActive] = useState<Group | null>(null);
   const { data: groups, isLoading, error } = useQuery({
     queryKey: ['muscle-groups'],
@@ -45,7 +47,9 @@ export default function ExercisesPage() {
     // One tap = go. setActive gives the dot a brief highlight flash while the
     // route transition starts — no second tap required anymore.
     setActive(g);
-    navigate(`/exercises/${g.id}`);
+    // Carry the "no equipment" intent into the group so the filter is already
+    // applied — the door the user came through stays open.
+    navigate(`/exercises/${g.id}${homeMode ? '?home=1' : ''}`);
   };
 
   return (

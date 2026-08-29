@@ -180,6 +180,9 @@ export default function ProgramsHome() {
           {[
             { icon: <CalendarDays className="shrink-0 text-brand-blue" />, label: t('schedule.title'), to: '/schedule' },
             { icon: <ScanLine className="shrink-0 text-brand-pink" />, label: t('workout.muscleMap'), to: '/exercises' },
+            // "I have nothing at home" needs its own door, not a filter buried
+            // two screens deep.
+            { icon: <span className="shrink-0 text-xl">🏠</span>, label: isAr ? 'تمارين من غير معدات' : 'No-equipment workouts', to: '/exercises?home=1' },
             { icon: <BreatheAnim className="h-7 w-7 shrink-0" />, label: t('programs.yoga'), to: '/yoga' },
             { icon: <Users className="shrink-0 text-brand-green" />, label: t('programs.group'), to: '/group' },
           ].map((l, i) => (

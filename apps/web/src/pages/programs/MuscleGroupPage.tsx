@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +17,9 @@ export default function MuscleGroupPage() {
   const navigate = useNavigate();
   const { groupId } = useParams();
   const [open, setOpen] = useState<string | null>(null);
+  /** null = follow the user's intake answer; true/false = they chose here. */
+  const [params] = useSearchParams();
+  const [homeFilter, setHomeFilter] = useState<boolean | null>(params.get('home') === '1' ? true : null);
   const { data: group, isLoading, error } = useQuery({
     queryKey: ['muscle-group', groupId],
     queryFn: () => api.get(`/api/muscle-groups/${groupId}`),
@@ -32,6 +35,13 @@ export default function MuscleGroupPage() {
     );
   }
 
+  const all: any[] = group.exercises ?? [];
+  const noKitCount = all.filter((e) => e.equipmentTier === 0).length;
+  // Someone who told us they own nothing shouldn't have to filter every time —
+  // default to their answer, but let anyone flip it.
+  const homeOnly = homeFilter ?? group.myEquipmentTier === 0;
+  const shown = homeOnly ? all.filter((e) => e.equipmentTier === 0) : all;
+
   return (
     <div className="min-h-screen bg-gray-900 pb-10 text-white">
       <TopBar title={t('exercises.title')} color="bg-transparent" textColor="text-white" />
@@ -39,8 +49,27 @@ export default function MuscleGroupPage() {
         {group.name}
       </div>
 
+      {/* Browse by what you actually own — the intake answer was invisible
+          until now, and "no equipment" users had to guess which rows applied. */}
+      {noKitCount > 0 && noKitCount < all.length && (
+        <div className="mb-3 flex gap-2 px-4">
+          <button
+            onClick={() => setHomeFilter(false)}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${!homeOnly ? 'bg-white text-gray-900' : 'bg-white/10 text-white/70'}`}
+          >
+            {isAr ? `الكل (${all.length})` : `All (${all.length})`}
+          </button>
+          <button
+            onClick={() => setHomeFilter(true)}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${homeOnly ? 'bg-emerald-400 text-gray-900' : 'bg-white/10 text-white/70'}`}
+          >
+            🏠 {isAr ? `من غير معدات (${noKitCount})` : `No equipment (${noKitCount})`}
+          </button>
+        </div>
+      )}
+
       <div className="space-y-3 px-4">
-        {(group.exercises ?? []).map((ex: any, idx: number) => {
+        {shown.map((ex: any, idx: number) => {
           const isOpen = open === ex.id;
           const chips = [ex.sets, ex.reps, ex.level].filter(Boolean) as string[];
           return (
