@@ -90,8 +90,39 @@ export async function bumpChallenges(userId: string, trigger: 'workout' | 'calor
     let progress = p.progress;
     const goal = p.challenge.goalType;
 
-    if (goal === 'lessons' && trigger === 'workout') progress = p.progress + 1;
-    else if (goal === 'streak') progress = user?.currentStreak ?? p.progress;
+    /** Workout activity per app-timezone day, recomputed from the XP ledger.
+     *  Both workout goal types read from this instead of incrementing a
+     *  counter: the finish endpoint throttles to one session per 8 minutes,
+     *  which still allows ~180 "workouts" a day — fatal for a prize
+     *  leaderboard. Wearable imports count too, so Strava users aren't
+     *  punished for training outside the app. */
+    const workoutsPerDay = async () => {
+      const rows = await prisma.xpEvent.findMany({
+        where: {
+          userId,
+          reason: { in: ['workout-session', 'wearable_import'] },
+          createdAt: { gte: since(p.challenge.startsOn) },
+        },
+        select: { createdAt: true },
+      });
+      const perDay = new Map<string, number>();
+      for (const r of rows) {
+        const d = dayString(r.createdAt);
+        perDay.set(d, (perDay.get(d) ?? 0) + 1);
+      }
+      return perDay;
+    };
+
+    if (goal === 'lessons' && trigger === 'workout') {
+      // At most 3 counted sessions per day: a genuine double session still
+      // counts, tap-farming stops paying.
+      const perDay = await workoutsPerDay();
+      progress = [...perDay.values()].reduce((s, n) => s + Math.min(n, 3), 0);
+    } else if (goal === 'days' && trigger === 'workout') {
+      // "Train N days" — one per calendar day, so the number cannot be
+      // inflated at all. The safest goal type for cash-prize challenges.
+      progress = (await workoutsPerDay()).size;
+    } else if (goal === 'streak') progress = user?.currentStreak ?? p.progress;
     else if (goal === 'calories') {
       // Since the challenge opened, like every other cumulative goal — the old
       // today-only sum made any multi-day calorie challenge mathematically

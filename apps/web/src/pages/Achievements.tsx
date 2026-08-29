@@ -25,6 +25,7 @@ const tapSpring = { type: 'spring', stiffness: 500, damping: 30 } as const;
 /** goalType → animated icon for cover-less challenge cards. Keyed loosely on
  *  purpose: the server may grow goal types beyond the current union. */
 const GOAL_ANIM: Record<string, (p: { className?: string }) => JSX.Element> = {
+  days: FlameAnim,
   lessons: CurlAnim,
   workout: CurlAnim,
   water: WaterAnim,
@@ -36,7 +37,7 @@ const GOAL_ANIM: Record<string, (p: { className?: string }) => JSX.Element> = {
 };
 
 type ChallengeKind = 'global' | 'personal' | 'group';
-type GoalType = 'lessons' | 'streak' | 'calories' | 'water' | 'lifts' | 'xp' | 'walk';
+type GoalType = 'days' | 'lessons' | 'streak' | 'calories' | 'water' | 'lifts' | 'xp' | 'walk';
 
 type Challenge = {
   id: string;
@@ -59,6 +60,8 @@ type Challenge = {
 };
 
 const GOAL_OPTIONS: { value: GoalType; emoji: string; labelKey: string; def: number }[] = [
+  // labelKey '' → bilingual inline label (see goalLabel).
+  { value: 'days', emoji: '📅', labelKey: '', def: 20 },
   { value: 'lessons', emoji: '💪', labelKey: 'challenges.workouts', def: 12 },
   { value: 'streak', emoji: '🔥', labelKey: 'challenges.streakDays', def: 7 },
   { value: 'calories', emoji: '⚡', labelKey: 'challenges.calories', def: 5000 },
@@ -107,6 +110,7 @@ export default function Achievements() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ['challenges'] });
 
   const goalLabel = (g: GoalType) => {
+    if (g === 'days') return L('training days', 'يوم تمرين');
     if (g === 'walk') return L('walks', 'مشاوير مشي');
     return t(GOAL_OPTIONS.find((o) => o.value === g)?.labelKey || 'challenges.workouts');
   };

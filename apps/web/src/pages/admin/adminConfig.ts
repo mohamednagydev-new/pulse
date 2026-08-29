@@ -248,7 +248,8 @@ export const RESOURCES: Resource[] = [
       { name: 'titleAr', label: 'Title (Arabic)', type: 'text' },
       { name: 'description', label: 'Description', type: 'textarea' },
       { name: 'coverImage', label: 'Cover image (from Upload)', type: 'text' },
-      { name: 'goalType', label: 'Goal type', type: 'select', options: ['lessons', 'streak', 'calories', 'water', 'lifts'] },
+      // 'days' = distinct training days — the cheat-proof one, use it for prize challenges.
+      { name: 'goalType', label: 'Goal type (days = distinct training days, safest for prizes)', type: 'select', options: ['days', 'lessons', 'streak', 'calories', 'water', 'lifts', 'xp'] },
       { name: 'goalValue', label: 'Goal value', type: 'number' },
       { name: 'startsOn', label: 'Starts on', type: 'date' },
       { name: 'endsOn', label: 'Ends on', type: 'date' },
