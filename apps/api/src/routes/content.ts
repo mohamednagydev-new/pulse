@@ -173,10 +173,13 @@ contentRouter.get('/muscle-groups/:id', async (req: AuthedRequest, res) => {
   res.json({ ...group, myEquipmentTier: myTier, exercises: shaped });
 });
 
-/** Equipment tiers. 0 = nothing but your body (and household objects),
- *  1 = the basics a home trainee owns, 2 = a real gym. */
-const HOME_BASIC = /dumbbell|band|kettlebell|bench|pull-?up bar|jump rope|ball|mat|chair|towel|step/i;
-const GYM_ONLY = /barbell|machine|cable|smith|rack|press|pulldown|pulley|sled|treadmill|bike|rower|ez.?bar|plate/i;
+/** Equipment tiers. 0 = nothing you'd have to buy, 1 = the basics a home
+ *  trainee owns, 2 = a real gym. */
+// Everyone has a chair, a wall and a towel — needing one is NOT a barrier,
+// so these stay tier 0 alongside pure bodyweight.
+const HOUSEHOLD = /towel|chair|wall|floor|stairs?|step|book|backpack|bottle|mat|couch|sofa/i;
+const HOME_BASIC = /dumbbell|band|kettlebell|bench|pull-?up bar|jump rope|ball|weight/i;
+const GYM_ONLY = /barbell|machine|cable|smith|rack|pulldown|pulley|sled|treadmill|bike|rower|ez.?bar|plate|press/i;
 
 /** Highest tier of kit an exercise demands. */
 export function equipmentTier(equipment: string[]): 0 | 1 | 2 {
@@ -184,7 +187,7 @@ export function equipmentTier(equipment: string[]): 0 | 1 | 2 {
   let tier: 0 | 1 | 2 = 0;
   for (const raw of equipment) {
     const item = String(raw);
-    if (/bodyweight|none|no equipment/i.test(item)) continue;
+    if (/bodyweight|none|no equipment/i.test(item) || HOUSEHOLD.test(item)) continue;
     if (GYM_ONLY.test(item)) return 2;
     if (HOME_BASIC.test(item)) tier = 1;
     else tier = tier === 0 ? 1 : tier; // unknown kit: treat as home-basic, not gym
