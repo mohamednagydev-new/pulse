@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PULSE — إدارة التحدي يوم بيوم (دليل الأدمن)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f6f4f1; color: #1c1917; line-height: 1.85; }
+  .page { max-width: 940px; margin: 0 auto; padding: 24px 20px 80px; }
+  header.hero { background: linear-gradient(135deg, #16a34a, #0f766e); color: #fff; border-radius: 20px; padding: 36px 28px; margin-bottom: 26px; }
+  header.hero h1 { font-size: 30px; margin-bottom: 8px; }
+  header.hero p { opacity: .93; font-size: 15px; }
+  .meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; font-size: 13px; }
+  .meta span { background: rgba(255,255,255,.16); border-radius: 999px; padding: 4px 14px; }
+  nav.toc { background: #fff; border-radius: 16px; padding: 18px 22px; margin-bottom: 26px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  nav.toc strong { display: block; margin-bottom: 8px; color: #16a34a; }
+  nav.toc a { color: #1c1917; text-decoration: none; font-size: 13.5px; display: block; padding: 3px 0; }
+  nav.toc a:hover { color: #16a34a; }
+  section { background: #fff; border-radius: 16px; padding: 26px 24px; margin-bottom: 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  h2 { font-size: 21px; color: #16a34a; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid #dcfce7; }
+  h3 { font-size: 16.5px; margin: 20px 0 8px; color: #292524; background: #fafaf9; border-right: 4px solid #4ade80; padding: 6px 12px; border-radius: 8px; }
+  p { margin-bottom: 10px; font-size: 14.5px; }
+  ul, ol { margin: 8px 26px 14px 0; font-size: 14.5px; }
+  li { margin-bottom: 7px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13.5px; }
+  th { background: #1c1917; color: #fff; padding: 9px 10px; text-align: right; font-weight: 700; }
+  td { padding: 9px 10px; border-bottom: 1px solid #e7e5e4; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafaf9; }
+  .callout { border-radius: 12px; padding: 14px 16px; margin: 12px 0; font-size: 14px; }
+  .callout.gold { background: #fef3c7; border-right: 4px solid #f59e0b; }
+  .callout.red { background: #fee2e2; border-right: 4px solid #dc2626; }
+  .callout.green { background: #dcfce7; border-right: 4px solid #16a34a; }
+  .callout.blue { background: #dbeafe; border-right: 4px solid #2563eb; }
+  .num, code, .en { font-family: Consolas, 'Courier New', monospace; direction: ltr; display: inline-block; background: #f5f5f4; border-radius: 6px; padding: 1px 8px; font-size: 13px; }
+  .copybox { background: #1c1917; color: #fafaf9; border-radius: 12px; padding: 14px 16px; margin: 10px 0; font-size: 14px; white-space: pre-line; }
+  .case { border-right: 4px solid #0891b2; background: #ecfeff; border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+  .case b.q { color: #0e7490; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="hero">
+  <h1>إدارة التحدي — من أول يوم للجايزة</h1>
+  <p>الروتين اليومي، الحالات اللي هتقابلك، ورد جاهز على كل شكوى. التحدي بيدير نفسه ٩٠٪ — دورك في الـ١٠٪ الباقية.</p>
+  <div class="meta"><span>١٠ دقايق يومياً</span><span>+ حالات عملية</span><span>+ ردود جاهزة</span></div>
+</header>
+
+<nav class="toc">
+  <strong>المحتويات</strong>
+  <a href="#p1">١ · اللي شغال لوحده (اعرفه عشان متقلقش)</a>
+  <a href="#p2">٢ · الروتين اليومي — ٥ دقايق</a>
+  <a href="#p3">٣ · جدول الـ٣٠ يوم بالمهام</a>
+  <a href="#p4">٤ · حالات عملية وردود جاهزة</a>
+  <a href="#p5">٥ · التواصل مع المشاركين — القنوات</a>
+  <a href="#p6">٦ · يوم النتيجة: التحقق والتسليم</a>
+  <a href="#p7">٧ · الخصوصية — الصور مش شرط</a>
+</nav>
+
+<section id="p1">
+  <h2>١ · اللي شغال لوحده — متعملهوش بإيدك</h2>
+  <table>
+    <tr><th>الحاجة</th><th>بتحصل إمتى</th></tr>
+    <tr><td>احتساب التقدم (يوم تمرين = +١)</td><td>لحظياً مع كل تمرين بيخلص</td></tr>
+    <tr><td>بانر التحدي في الشاشة الرئيسية</td><td>طول ما التحدي شغال وفيه جوايز</td></tr>
+    <tr><td>هدية نص الطريق (فريز سلسلة)</td><td>أوتوماتيك عند ٥٠٪ من الهدف</td></tr>
+    <tr><td>إشعار «خلصت التحدي» + بوست في الفيد</td><td>أول ما حد يوصل الهدف</td></tr>
+    <tr><td><b>مراقبة الغش</b> — فحص المتصدرين</td><td>كل يوم ٨ مساءً، وبيبعتلك إشعار لو فيه مشبوه</td></tr>
+    <tr><td>إعلان البوديوم + القرعة</td><td>اليوم اللي بعد نهاية التحدي أوتوماتيك</td></tr>
+    <tr><td>حيطة الأبطال (Wall of Champions)</td><td>بعد الإعلان، بشكل دائم</td></tr>
+  </table>
+  <div class="callout green"><b>يعني إيه؟</b> إنت مش محتاج تحسب ولا ترتب ولا تعلن. دورك: تتابع، ترد على الناس، وتتحقق قبل ما تدفع.</div>
+</section>
+
+<section id="p2">
+  <h2>٢ · الروتين اليومي (٥ دقايق)</h2>
+  <ol>
+    <li><b>افتح الإشعارات</b> — لو جالك «⚠️ متصدر مشبوه» ادخل على <span class="en">Admin ← Challenge Audit</span> فوراً (شوف الحالة ١ تحت).</li>
+    <li><b>افتح أوضة التحدي</b> (من التطبيق زي أي مستخدم) — رد على أي سؤال، وحيّي اللي رافعين إثباتات. <b>وجودك في الشات بيرفع الالتزام أكتر من أي إشعار.</b></li>
+    <li><b>بص على عدد المشاركين</b> في <span class="en">Admin ← Challenge Audit</span> — لو واقف كذا يوم، ابعت بوش أو بوست تنشيط.</li>
+  </ol>
+  <div class="callout blue"><b>أهم عادة:</b> علّق بنفسك على إثبات واحد على الأقل كل يوم («جامد يا بطل 🔥»). الناس بتكمّل عشان حد شايفهم.</div>
+</section>
+
+<section id="p3">
+  <h2>٣ · جدول الـ٣٠ يوم</h2>
+  <table>
+    <tr><th>اليوم</th><th>المهمة</th><th>ليه</th></tr>
+    <tr><td><b>-١ (٣١ أغسطس)</b></td><td>أنشئ التحدي · بوش برودكاست · بوست فيسبوك/تيليجرام · ثبّت رسالة القواعد في الأوضة</td><td>البداية القوية بتحدد عدد المشاركين كله</td></tr>
+    <tr><td><b>١</b></td><td>بوست «التحدي بدأ 🔥» · رد على أول إثباتات</td><td>أول يوم بيحدد الإيقاع</td></tr>
+    <tr><td><b>٢–٦</b></td><td>الروتين اليومي بس</td><td>سيب الناس تتحرك</td></tr>
+    <tr><td><b>٧</b></td><td>سكرين الليدربورد → بوست + ستوري «مين في الصدارة؟»</td><td>الـFOMO بيرجّع اللي فتروا</td></tr>
+    <tr><td><b>١٠</b></td><td>بوش للناس اللي مكملوش: «لسه فيه وقت — الهدف ٢٠ يوم»</td><td>إنقاذ المترددين قبل ما ييأسوا</td></tr>
+    <tr><td><b>١٤</b></td><td>سكرين الليدربورد + <b>مراجعة أولى للمتصدرين</b> في Challenge Audit</td><td>لو فيه غش، تشيله دلوقتي مش آخر يوم</td></tr>
+    <tr><td><b>٢١</b></td><td>بوست «أسبوع باقي» + ذكّر بالقرعة (اللي يكمّل يدخل)</td><td>القرعة بتشد اللي مش في البوديوم</td></tr>
+    <tr><td><b>٢٧–٣٠</b></td><td>بوش «آخر أيام» يومياً</td><td>أكبر موجة إتمام بتحصل هنا</td></tr>
+    <tr><td><b>٣٠ (آخر يوم)</b></td><td>بوست «آخر ٢٤ ساعة» · متعملش أي تعديل على التحدي</td><td>أي تعديل في آخر لحظة بيولّع شكاوى</td></tr>
+    <tr><td><b>٣١ / ١ أكتوبر</b></td><td>النظام بيعلن الفايزين → إنت تتحقق وتدفع وتعلن</td><td>القسم ٦</td></tr>
+  </table>
+</section>
+
+<section id="p4">
+  <h2>٤ · حالات عملية — كل واحدة وردها</h2>
+
+  <div class="case">
+    <b class="q">الحالة ١: جالك إشعار «متصدر مشبوه»</b>
+    <ol>
+      <li><span class="en">Admin ← Challenge Audit</span> ← اختار التحدي.</li>
+      <li>بص على السطر الأصفر: <b>أقصى تمارين في يوم</b> · <b>عمر الحساب</b> · <b>عدد الإثباتات</b> · نشاط الأكل.</li>
+      <li><b>مش كل علامة صفراء = غش.</b> حد اتمرن مرتين في يوم إجازة ده طبيعي.</li>
+      <li>لو الصورة مريبة (حساب جديد + صفر إثبات + كل التقدم في يومين): دوس <b>✉️ Ask for proof</b> واطلب منه إثبات.</li>
+      <li>مرد خلال ٤٨ ساعة أو الرد مقنعش → دوس <b>🚫 Disqualify</b> واكتب السبب. بيتشال من الليدربورد ويوصله إشعار بالسبب.</li>
+    </ol>
+  </div>
+
+  <div class="case">
+    <b class="q">الحالة ٢: مستخدم بيقول «تقدمي مش بيتحسب»</b>
+    <p>اسأله ٣ أسئلة بالترتيب:</p>
+    <ul>
+      <li><b>انضميت للتحدي فعلاً؟</b> (لازم يدوس «انضم» — التمرين لوحده مش بيحسب لو مش مشارك)</li>
+      <li><b>خلّصت التمرين لحد آخر خطوة؟</b> (لازم يوصل لشاشة «خلصت» — قفل التطبيق في النص مش بيتسجل)</li>
+      <li><b>اتمرن النهاردة قبل كده؟</b> اليوم بيتحسب <b>مرة واحدة</b> — تمرينين في يوم = يوم واحد. (ده مقصود، وهو اللي بيمنع الغش)</li>
+    </ul>
+    <div class="copybox">أهلاً 👋 التقدم بيتحسب «يوم تمرين» مش عدد تمارين — يعني اليوم بيتحسب مرة واحدة مهما اتمرنت فيه. اتأكد إنك: (١) داخل التحدي، (٢) بتخلّص التمرين لآخر خطوة. لو لسه مش ظاهر ابعتلي وقت آخر تمرين وهراجعه بنفسي.</div>
+  </div>
+
+  <div class="case">
+    <b class="q">الحالة ٣: «أنا اتمرنت بره التطبيق (جيم/جري)»</b>
+    <p>لو رابط <b>Strava</b> أو ساعته — بيتحسب أوتوماتيك عند المزامنة. لو لأ، اشرحله إن التحدي بيقيس التمرين داخل التطبيق، ووجّهه إنه يسجّل التمرين هنا كمان.</p>
+    <div class="copybox">تمام يا بطل 💪 لو معاك ساعة أو Strava اربطها من الإعدادات وتمارينك هتتحسب لوحدها. من غير كده سجّل تمرينك جوه التطبيق عشان يدخل في التحدي.</div>
+  </div>
+
+  <div class="case">
+    <b class="q">الحالة ٤: حد بيشتكي إن اللي فوق بيغش</b>
+    <p><b>متدافعش ومتتهمش.</b> قوله إن فيه مراجعة يومية أوتوماتيك ومراجعة يدوية قبل التسليم — وإنه لو عنده تفاصيل يبعتها خاص.</p>
+    <div class="copybox">شكراً إنك قلتلنا 🙏 فيه مراجعة يومية أوتوماتيكية للمتصدرين، وكمان مراجعة يدوية قبل تسليم أي جايزة. لو عندك تفاصيل محددة ابعتهالي خاص وهراجعها بنفسي.</div>
+  </div>
+
+  <div class="case">
+    <b class="q">الحالة ٥: مستخدم اتشال وهو مظلوم</b>
+    <p>الإشعار اللي بيوصله فيه لينك الدعم. لو رد بإثبات مقنع: ارجّعه بإنه ينضم للتحدي تاني — <b>بس تقدمه القديم مش هيرجع</b>. لو الوقت لسه بدري يقدر يعوّض؛ لو آخر أيام، اعتبره في القرعة استثناءً وسجّل السبب.</p>
+    <div class="callout gold"><b>درس:</b> عشان كده المراجعة يوم ١٤ مهمة — الشيل المتأخر بيعمل مشاكل مالهاش حل عادل.</div>
+  </div>
+
+  <div class="case">
+    <b class="q">الحالة ٦: المشاركة ضعيفة (أقل من ٢٠ مشارك بعد ٣ أيام)</b>
+    <ul>
+      <li>بوش برودكاست تاني بصيغة مختلفة (ركّز على الجايزة الكاش).</li>
+      <li>بوست في الجروبات بقيمة + ذكر التحدي في الكومنت.</li>
+      <li>اطلب من أنشط ٥ مستخدمين إنهم يعزموا أصحابهم (وذكّرهم بمكافأة الدعوة: ‎+100 XP لما صاحبهم يخلص أول تمرين).</li>
+    </ul>
+  </div>
+
+  <div class="case">
+    <b class="q">الحالة ٧: عايز تعدّل التحدي وهو شغال</b>
+    <p><b>القاعدة: متغيّرش الهدف ولا التواريخ ولا الجوايز بعد ما يبدأ.</b> ده أسرع طريق لفقد الثقة. المسموح: تحسين النص التوضيحي، وإضافة رسايل في الأوضة، ورفع الجايزة (زيادة بس، مش تقليل).</p>
+  </div>
+</section>
+
+<section id="p5">
+  <h2>٥ · التواصل — إيه تستخدم لإيه</h2>
+  <table>
+    <tr><th>القناة</th><th>لإيه</th><th>من فين</th></tr>
+    <tr><td><b>أوضة التحدي</b></td><td>رد يومي، تشجيع، توضيح قواعد للكل</td><td>التطبيق ← التحدي ← شات</td></tr>
+    <tr><td><b>بوش برودكاست</b></td><td>إعلانات للكل (بداية، آخر أيام، النتيجة)</td><td><span class="en">Admin ← Broadcast</span></td></tr>
+    <tr><td><b>رسالة خاصة</b></td><td>طلب إثبات · تبليغ استبعاد · تنسيق تسليم جايزة</td><td>شات التطبيق أو <span class="en">✉️ Ask for proof</span> في الأوديت</td></tr>
+    <tr><td><b>إيميل الدعم</b></td><td>الشكاوى الرسمية والاعتراضات</td><td><span class="en">pulse.growth.eg@gmail.com</span></td></tr>
+    <tr><td><b>تيليجرام/فيسبوك</b></td><td>الليدربورد الأسبوعي وإعلان الفايزين للجمهور</td><td>Growth ← Publish</td></tr>
+  </table>
+  <div class="callout blue"><b>قاعدة الرد:</b> أي سؤال عن التحدي يترد عليه <b>في نفس اليوم</b>. تحدي بجوايز من غير رد = شك في المصداقية.</div>
+</section>
+
+<section id="p6">
+  <h2>٦ · يوم النتيجة — التحقق والتسليم</h2>
+  <ol>
+    <li><b>النظام أعلن البوديوم والقرعة</b> أوتوماتيك (اليوم اللي بعد النهاية).</li>
+    <li>افتح <span class="en">Admin ← Challenge Audit</span> وراجع أول ٥: عمر الحساب · توزيع الأيام · الإثباتات · نشاط الأكل/الوزن.</li>
+    <li>لو حد مريب: اطلب إثبات وامهله ٤٨ ساعة قبل التسليم.</li>
+    <li>كلّم كل فايز خاص واطلب رقم فودافون كاش.</li>
+    <li>حوّل الفلوس · <b>صوّر التحويل</b>.</li>
+    <li>انشر بوست الفايزين بصور التحويلات على كل القنوات.</li>
+  </ol>
+  <div class="callout green"><b>بوست التحويلات هو أهم أصل تسويقي هيطلع من التحدي ده.</b> هو اللي هيخلي تحدي أكتوبر يجيب ٣ أضعاف المشاركين، وهو اللي هيقنع أول راعي يدفع.</div>
+</section>
+
+<section id="p7">
+  <h2>٧ · الخصوصية — الصور مش شرط</h2>
+  <div class="callout red"><b>قاعدة ثابتة:</b> مفيش حد — وخصوصاً البنات — مطالب يعرض نفسه عشان يكسب جايزة.</div>
+  <ul>
+    <li><b>الإثبات اختياري تماماً</b> — التقدم بيتحسب أوتوماتيك من التمارين، والإثبات إشارة إضافية مش شرط للفوز.</li>
+    <li><b>إثبات خاص:</b> في الأوضة عند رفع الإثبات فيه اختيار <b>🔒 خاص — للمراجعة بس</b>. الصورة بتوصل للأدمن بس، مش بتظهر لأي مشارك ولا في الفيد، <b>وبتتحسب عادي</b>.</li>
+    <li><b>بدائل مقبولة تماماً:</b> سكرين شوت لشاشة التمرين بعد ما يخلص · صورة للأجهزة/المكان من غير أي شخص · مزامنة الساعة أو Strava.</li>
+    <li>لو حد رفض يرفع أي إثبات: <b>مش سبب للاستبعاد</b> لوحده. الاستبعاد بيكون على نمط نشاط مريب، مش على رفض التصوير.</li>
+  </ul>
+  <p>اكتب ده صراحة في وصف التحدي:</p>
+  <div class="copybox">الإثبات اختياري — ولو حابب ترفعه تقدر تخليه «خاص» ميشوفهوش غيرك وفريق المراجعة. تقدر كمان تصوّر شاشة التمرين بس من غير ما تظهر انت.</div>
+</section>
+
+<footer style="text-align:center; color:#a8a29e; font-size:12px; padding-top:8px;">
+  PULSE — pulse.geddo.online · دليل داخلي · مكمّل: SEPT-CHALLENGE.md (نصوص الإطلاق) · SPONSORSHIP-RATES.md (الرعاة)
+</footer>
+
+</div>
+</body>
+</html>
