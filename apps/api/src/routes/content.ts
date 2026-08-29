@@ -134,6 +134,7 @@ contentRouter.get('/muscle-groups/:id', async (req: AuthedRequest, res) => {
   if (!group) return res.status(404).json({ error: 'Not found' });
   const gender = await preferredGender(req.userId);
   const limits = await userLimitations(req.userId);
+  const myTier = await userEquipmentTier(req.userId);
 
   // Resolve the progression ladder to names in one query, so the session can
   // show "easier: incline push-up / harder: archer push-up" chips directly.
@@ -143,26 +144,65 @@ contentRouter.get('/muscle-groups/:id', async (req: AuthedRequest, res) => {
     : [];
   const ladderMap = new Map(ladder.map((l) => [l.id, l]));
 
-  res.json({
-    ...group,
-    exercises: pickVideos(group.exercises, gender).map((e) => {
-      const areas = parseArray((e as any).contraindications) as string[];
-      // Only the overlap with what THIS user said hurts. Everyone else sees a
-      // clean list — a warning shown to people it doesn't apply to is noise.
-      const hits = areas.filter((x) => limits.includes(x));
-      return {
-        ...e,
-        instructions: parseArray(e.instructions),
-        equipment: parseArray(e.equipment),
-        contraindications: areas,
-        flaggedFor: hits,
-        caution: hits.length > 0,
-        easier: e.easierId ? ladderMap.get(e.easierId) ?? null : null,
-        harder: e.harderId ? ladderMap.get(e.harderId) ?? null : null,
-      };
-    }),
+  const shaped = pickVideos(group.exercises, gender).map((e) => {
+    const areas = parseArray((e as any).contraindications) as string[];
+    // Only the overlap with what THIS user said hurts. Everyone else sees a
+    // clean list — a warning shown to people it doesn't apply to is noise.
+    const hits = areas.filter((x) => limits.includes(x));
+    const equipment = parseArray(e.equipment) as string[];
+    const tier = equipmentTier(equipment);
+    return {
+      ...e,
+      instructions: parseArray(e.instructions),
+      equipment,
+      equipmentTier: tier,
+      /** The intake asks what they train with; until now nothing used the
+       *  answer, so a "no equipment" user was shown barbell-only lists. */
+      fitsEquipment: tier <= myTier,
+      contraindications: areas,
+      flaggedFor: hits,
+      caution: hits.length > 0,
+      easier: e.easierId ? ladderMap.get(e.easierId) ?? null : null,
+      harder: e.harderId ? ladderMap.get(e.harderId) ?? null : null,
+    };
   });
+  // Doable-today first; the rest stay visible (aspirational, and correct if
+  // they visit a gym) but never lead the list.
+  shaped.sort((a, b) => Number(b.fitsEquipment) - Number(a.fitsEquipment) || a.equipmentTier - b.equipmentTier);
+
+  res.json({ ...group, myEquipmentTier: myTier, exercises: shaped });
 });
+
+/** Equipment tiers. 0 = nothing but your body (and household objects),
+ *  1 = the basics a home trainee owns, 2 = a real gym. */
+const HOME_BASIC = /dumbbell|band|kettlebell|bench|pull-?up bar|jump rope|ball|mat|chair|towel|step/i;
+const GYM_ONLY = /barbell|machine|cable|smith|rack|press|pulldown|pulley|sled|treadmill|bike|rower|ez.?bar|plate/i;
+
+/** Highest tier of kit an exercise demands. */
+export function equipmentTier(equipment: string[]): 0 | 1 | 2 {
+  if (equipment.length === 0) return 0;
+  let tier: 0 | 1 | 2 = 0;
+  for (const raw of equipment) {
+    const item = String(raw);
+    if (/bodyweight|none|no equipment/i.test(item)) continue;
+    if (GYM_ONLY.test(item)) return 2;
+    if (HOME_BASIC.test(item)) tier = 1;
+    else tier = tier === 0 ? 1 : tier; // unknown kit: treat as home-basic, not gym
+  }
+  return tier;
+}
+
+const TIER_OF_ANSWER: Record<string, 0 | 1 | 2> = { none: 0, home_basic: 1, full_gym: 2 };
+
+/** What the user said they train with. Missing assessment → assume a full gym
+ *  so nothing is hidden from someone who never answered. */
+async function userEquipmentTier(userId?: string): Promise<0 | 1 | 2> {
+  if (!userId) return 2;
+  const a = await prisma.assessment
+    .findFirst({ where: { userId }, orderBy: { createdAt: 'desc' }, select: { equipment: true } })
+    .catch(() => null);
+  return TIER_OF_ANSWER[a?.equipment ?? ''] ?? 2;
+}
 
 /** Body areas the user's latest assessment said to work around. */
 async function userLimitations(userId?: string): Promise<string[]> {

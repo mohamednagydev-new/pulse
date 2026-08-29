@@ -94,9 +94,19 @@ export default function MuscleGroupPage() {
                         </p>
                       )}
                       {ex.description && <p className="text-center leading-relaxed text-gray-300">{ex.description}</p>}
-                      {Array.isArray(ex.equipment) && ex.equipment.length > 0 && (
-                        <p className="flex items-center justify-center gap-2 text-gray-400"><Dumbbell size={14} /> {ex.equipment.join(', ')}</p>
-                      )}
+                      {/* Say plainly whether they can do this TODAY with what
+                          they told us they own — the intake asked, so the app
+                          owes them the answer. */}
+                      {ex.equipmentTier === 0 ? (
+                        <p className="flex items-center justify-center gap-2 font-semibold text-emerald-300">
+                          🏠 {isAr ? 'من غير أي معدات' : 'No equipment needed'}
+                        </p>
+                      ) : Array.isArray(ex.equipment) && ex.equipment.length > 0 ? (
+                        <p className={`flex items-center justify-center gap-2 ${ex.fitsEquipment === false ? 'text-amber-300' : 'text-gray-400'}`}>
+                          <Dumbbell size={14} /> {ex.equipment.join(', ')}
+                          {ex.fitsEquipment === false && <span className="font-semibold">· {isAr ? 'محتاج معدات مش عندك' : 'needs kit you don’t have'}</span>}
+                        </p>
+                      ) : null}
                       {Array.isArray(ex.instructions) && ex.instructions.length > 0 && (
                         <div className="space-y-2">
                           {ex.instructions.map((step: string, i: number) => (
