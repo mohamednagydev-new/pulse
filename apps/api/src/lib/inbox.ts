@@ -48,6 +48,10 @@ export async function pollGrowthInbox(): Promise<string> {
       secure: true,
       auth: { user: process.env.GROWTH_IMAP_USER!, pass: process.env.GROWTH_IMAP_PASS! },
       logger: false,
+      // Without these a bad network hangs connect() indefinitely: the polling
+      // flag stays up and every later run reports vague connection failures.
+      greetingTimeout: 15_000,
+      socketTimeout: 60_000,
     });
     await client.connect();
     let processed = 0;
