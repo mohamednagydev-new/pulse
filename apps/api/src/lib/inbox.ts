@@ -58,17 +58,38 @@ export async function pollGrowthInbox(): Promise<string> {
     let matched = 0;
     let autoSent = 0;
     let newLeads = 0;
+
+    // PHASE 1 — IMAP only, fast. Download the raw messages and mark them seen,
+    // then HANG UP. The old code ran classification/drafting (10-30s of OpenAI
+    // + SMTP per message) inside this loop with the connection idling mid-FETCH
+    // — Gmail dropped it and the next command died with "Connection not
+    // available" (seen live on the server, Aug 2026).
+    const collected: Buffer[] = [];
     try {
       const lock = await client.getMailboxLock('INBOX');
       try {
         for await (const msg of client.fetch({ seen: false }, { source: true, uid: true })) {
           processed++;
-          const parsed = await simpleParser(msg.source as Buffer);
+          collected.push(msg.source as Buffer);
+          await client.messageFlagsAdd({ uid: String(msg.uid) }, ['\\Seen'], { uid: true });
+        }
+      } finally {
+        lock.release();
+      }
+    } finally {
+      await client.logout().catch(() => {});
+    }
+
+    // PHASE 2 — no IMAP involved: parse, classify, draft, send at any pace.
+    {
+      {
+        // (indentation kept — the whole per-message pipeline below is unchanged)
+        for (const source of collected) {
+          const parsed = await simpleParser(source);
           const fromEmail = parsed.from?.value?.[0]?.address?.toLowerCase();
           const fromName = parsed.from?.value?.[0]?.name || fromEmail || 'Unknown';
           const html = typeof parsed.html === 'string' ? parsed.html : '';
           const body = cleanBody(parsed.text || html.replace(/<[^>]+>/g, ' ') || '');
-          await client.messageFlagsAdd({ uid: String(msg.uid) }, ['\\Seen'], { uid: true });
           if (!fromEmail || !body) continue;
           // Ignore our own bounces/self-mail and machine senders — Google welcome
           // mails and mailer-daemons must never become "leads".
@@ -128,11 +149,7 @@ export async function pollGrowthInbox(): Promise<string> {
             await notifyAdmins('🔥 Interested lead replied', `${lead.name}: ${cls.summary}`);
           }
         }
-      } finally {
-        lock.release();
       }
-    } finally {
-      await client.logout().catch(() => {});
     }
     if (matched > 0 && autoSent < matched) {
       await notifyAdmins('📥 Growth inbox', `${matched} repl${matched === 1 ? 'y' : 'ies'} processed — drafts waiting for review`);
