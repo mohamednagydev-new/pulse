@@ -170,6 +170,20 @@ export default function Home() {
       {(() => {
         const prizeChal = (challenges as any[]).find((c) => c.prizeText);
         if (!prizeChal) return null;
+        const isAr = i18n.language.startsWith('ar');
+        const today = new Date().toISOString().slice(0, 10);
+        const upcoming = prizeChal.startsOn > today;
+        const dayMs = 86_400_000;
+        const daysTo = (d: string) => Math.max(0, Math.ceil((new Date(`${d}T00:00:00`).getTime() - Date.now()) / dayMs));
+        const inDays = daysTo(prizeChal.startsOn);
+        const leftDays = daysTo(prizeChal.endsOn);
+        // Urgency line: before it opens count down to the start, after it opens
+        // count down to the end. A prize with no clock is just a poster.
+        const urgency = upcoming
+          ? inDays <= 1 ? (isAr ? 'يبدأ بكرة!' : 'Starts tomorrow!') : (isAr ? `يبدأ بعد ${inDays} يوم` : `Starts in ${inDays} days`)
+          : leftDays <= 1 ? (isAr ? 'آخر يوم!' : 'Last day!') : (isAr ? `باقي ${leftDays} يوم` : `${leftDays} days left`);
+        const title = (isAr && prizeChal.titleAr) || prizeChal.title;
+        const prize = (isAr && prizeChal.prizeTextAr) || prizeChal.prizeText;
         return (
           <motion.button
             initial={{ opacity: 0, y: 12 }}
@@ -177,15 +191,35 @@ export default function Home() {
             viewport={{ once: true }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate(`/challenge/${prizeChal.id}`)}
-            className="scene-tex mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-3.5 text-start text-white shadow-md shadow-amber-500/30"
+            className="scene-tex relative mx-4 mt-2 w-[calc(100%-2rem)] overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600 p-4 text-start text-white shadow-lg shadow-amber-500/40"
           >
-            <span className="text-2xl" aria-hidden>🏆</span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-extrabold">{prizeChal.title}</span>
-              <span className="block truncate text-[11px] text-white/85">🎁 {prizeChal.prizeText}</span>
+            {/* Countdown pill, top corner — the first thing the eye lands on. */}
+            <span className="absolute end-3 top-3 flex items-center gap-1 rounded-full bg-black/25 px-2.5 py-1 text-[10px] font-extrabold backdrop-blur">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+              </span>
+              {urgency}
             </span>
-            <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-extrabold text-orange-600">
-              {t('challenge.enterNow')}
+
+            <span className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wide text-white/85">
+              🏆 {upcoming ? (isAr ? 'تحدي جديد بجوايز' : 'New prize challenge') : (isAr ? 'تحدي شغال دلوقتي' : 'Challenge running now')}
+            </span>
+            <span className="mt-1 block text-lg font-extrabold leading-tight">{title}</span>
+            {/* The money is the headline — full text, not truncated to nothing. */}
+            <span className="mt-1.5 block rounded-xl bg-black/20 px-3 py-2 text-[12px] font-bold leading-relaxed">
+              🎁 {prize}
+            </span>
+
+            <span className="mt-3 flex items-center justify-between gap-2">
+              <span className="text-[11px] font-semibold text-white/85">
+                {prizeChal.participants > 0
+                  ? (isAr ? `🔥 ${prizeChal.participants} مشترك` : `🔥 ${prizeChal.participants} joined`)
+                  : (isAr ? '🔥 كن أول المشتركين' : '🔥 Be the first to join')}
+              </span>
+              <span className="shrink-0 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-orange-600">
+                {upcoming ? (isAr ? 'احجز مكانك' : 'Save my spot') : t('challenge.enterNow')}
+              </span>
             </span>
           </motion.button>
         );

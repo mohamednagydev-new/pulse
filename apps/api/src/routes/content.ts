@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
 import { parseArray } from '../lib/json';
-import { dayString } from '../lib/time';
+import { dayString, daysFromNowStr } from '../lib/time';
 import { optionalAuth, AuthedRequest } from '../middleware/auth';
 import { preferredGender, pickVideo, pickVideos } from '../lib/genderMedia';
 
@@ -22,8 +22,20 @@ contentRouter.get('/home', async (_req, res) => {
     // same page — while 37 joinable challenges sat unused behind them.
     // Live window only: startsOn ≤ today ≤ endsOn. Without the startsOn bound,
     // seasonal challenges staged months ahead (Ramadan, future waves) leak onto Home.
+    // Live ones, PLUS prize challenges opening within the next 7 days: a cash
+    // challenge that only becomes visible on day 1 starts from zero
+    // participants. Announcing it early lets people join in advance, so it
+    // opens with a crowd. Non-prize seasonal content still stays hidden until
+    // its window (staged Ramadan waves must not leak onto Home).
     prisma.challenge.findMany({
-      where: { kind: 'global', startsOn: { lte: dayString() }, endsOn: { gte: dayString() } },
+      where: {
+        kind: 'global',
+        endsOn: { gte: dayString() },
+        OR: [
+          { startsOn: { lte: dayString() } },
+          { prizeText: { not: null }, startsOn: { lte: daysFromNowStr(7) } },
+        ],
+      },
       orderBy: [{ startsOn: 'desc' }],
       take: 10,
       include: { _count: { select: { participants: true } } },

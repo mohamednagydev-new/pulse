@@ -33,6 +33,13 @@ export function daysAgoStr(n: number): string {
   return dayString(d);
 }
 
+/** YYYY-MM-DD n days AHEAD, in the app timezone. */
+export function daysFromNowStr(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return dayString(d);
+}
+
 /** YYYY-MM in the app timezone. */
 export function monthKey(d: Date = new Date()): string {
   return dayString(d).slice(0, 7);
