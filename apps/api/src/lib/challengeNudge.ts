@@ -63,7 +63,7 @@ export async function runChallengeNudges(): Promise<string> {
       // Stalled: no counted workout in the last 3 days.
       const since = new Date(Date.now() - 3 * 86_400_000);
       const recent = await prisma.xpEvent.findFirst({
-        where: { userId: p.userId, reason: { in: ['workout-session', 'wearable_import'] }, createdAt: { gte: since } },
+        where: { userId: p.userId, reason: { in: ['workout-session', 'workout-lesson', 'wearable_import'] }, createdAt: { gte: since } },
         select: { id: true },
       });
       if (recent) continue;

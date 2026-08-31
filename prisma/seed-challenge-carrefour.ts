@@ -1,7 +1,13 @@
 /**
- * Seeds the Carrefour prize challenge (Sept 1-14, 2026). Idempotent — upserts
- * by title, so re-running updates fields without duplicating or touching
- * participants. Cover image is left for the admin to upload via the dashboard.
+ * Seeds the Carrefour prize challenge (Sept 1-14, 2026) — ONCE.
+ *
+ * CREATE-ONLY on purpose. install.ps1 runs this on every deploy, and it used to
+ * `update` the existing row with the hardcoded pack below — so every edit the
+ * admin made in the dashboard (dates, prizes, description, goal) was silently
+ * reverted on the next deploy. Reported live, Aug 2026.
+ *
+ * Once the challenge exists, the dashboard owns it. To reset it deliberately,
+ * delete the challenge in Admin and redeploy, or run with --force.
  */
 import { PrismaClient } from '@prisma/client';
 
@@ -50,11 +56,15 @@ const CHALLENGE = {
 };
 
 async function main() {
+  const force = process.argv.includes('--force');
   const existing = await prisma.challenge.findFirst({ where: { title: CHALLENGE.title } });
+  if (existing && !force) {
+    console.log('· Carrefour challenge already exists — left untouched (admin edits win).');
+    return;
+  }
   if (existing) {
-    // Never overwrite a cover the admin uploaded; everything else follows the pack.
     await prisma.challenge.update({ where: { id: existing.id }, data: CHALLENGE });
-    console.log('✓ Carrefour challenge updated');
+    console.log('✓ Carrefour challenge RESET to the seed pack (--force)');
   } else {
     await prisma.challenge.create({ data: CHALLENGE });
     console.log('✓ Carrefour challenge created');

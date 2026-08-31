@@ -100,7 +100,10 @@ export async function bumpChallenges(userId: string, trigger: 'workout' | 'calor
       const rows = await prisma.xpEvent.findMany({
         where: {
           userId,
-          reason: { in: ['workout-session', 'wearable_import'] },
+          // 'workout-lesson' MUST be here: finishing a programme lesson is
+          // training too. Leaving it out silently stopped every lesson-based
+          // programme from moving a challenge forward.
+          reason: { in: ['workout-session', 'workout-lesson', 'wearable_import'] },
           createdAt: { gte: since(p.challenge.startsOn) },
         },
         select: { createdAt: true },
