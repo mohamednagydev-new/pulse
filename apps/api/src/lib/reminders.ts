@@ -124,6 +124,13 @@ async function runCheck() {
     await runLogged('ig-refresh', false, refreshIgToken);
   }
 
+  // Daily 19:00 — personal challenge nudges (stalled participants + a final
+  // -days call). Evening so there is still time to train today.
+  if (hour === 19 && (await claimJob(`chalnudge:${day}`))) {
+    const { runChallengeNudges } = await import('./challengeNudge');
+    await runLogged('challenge-nudge', false, runChallengeNudges);
+  }
+
   // Daily 20:00 — fair-play watch on PRIZE challenges. Cheating gets caught
   // during the challenge instead of after the money is announced.
   if (hour === 20 && (await claimJob(`chalwatch:${day}`))) {

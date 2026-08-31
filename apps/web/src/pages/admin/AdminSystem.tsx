@@ -39,6 +39,7 @@ const JOBS: { name: string; label: string; schedule: string; runnable: boolean }
   { name: 'growth-inbox', label: 'Growth inbox poll', schedule: 'Every 10 min', runnable: true },
   { name: 'social-post', label: 'Daily social auto-post', schedule: 'Daily 17:00', runnable: true },
   { name: 'ig-refresh', label: 'Instagram token refresh', schedule: 'Sunday 03:00', runnable: true },
+  { name: 'challenge-nudge', label: 'Challenge nudges (stalled + final days)', schedule: 'Daily 19:00', runnable: true },
   { name: 'challenge-watch', label: 'Prize-challenge fair-play watch', schedule: 'Daily 20:00', runnable: true },
   { name: 'broadcast', label: 'Broadcast', schedule: 'Manual only', runnable: false },
 ];

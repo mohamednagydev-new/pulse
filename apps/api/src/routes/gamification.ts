@@ -153,7 +153,17 @@ gamificationRouter.post('/challenges/:id/join', async (req: AuthedRequest, res) 
     create: { challengeId: req.params.id, userId: req.userId! },
     update: {},
   });
-  res.json(p);
+  // Count what they ALREADY did inside the window, right now. Progress is
+  // measured from the challenge's start date, not the join date — but it was
+  // only ever recomputed on the next finished workout, so someone who joined
+  // on day 6 having trained five days saw a demoralising 0 until they trained
+  // again. Recompute on join so the number is true immediately.
+  const { bumpChallenges } = await import('../lib/social');
+  await bumpChallenges(req.userId!, 'workout').catch(() => {});
+  const fresh = await prisma.challengeParticipant.findUnique({
+    where: { challengeId_userId: { challengeId: req.params.id, userId: req.userId! } },
+  });
+  res.json(fresh ?? p);
 });
 
 gamificationRouter.get('/challenges/:id/leaderboard', async (req: AuthedRequest, res) => {

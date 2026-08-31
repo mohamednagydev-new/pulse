@@ -153,17 +153,52 @@ const COACH_PROMPTS = [
 ];
 
 /** Post today's coach prompt into every open official challenge room. */
+/** Messages that only make sense at a particular point in the run. Picking
+ *  purely by date meant "آخر كام يوم في التحدي!" could land on day 3 and
+ *  "مين وصل لنص التحدي؟" on day 28 — the room contradicting itself. */
+const PHASE_PROMPTS = {
+  start: [
+    'التحدي بدأ 🔥 مين خلص تمرين النهارده؟ اكتب هنا وخلينا نشوف',
+    'اللي لسه مبدأش: أول خطوة أصعب خطوة. ابدأ بتمرين واحد بس النهارده 💪',
+    'عرّفونا بنفسكم — انت بتتمرن في البيت ولا في الجيم؟ 👋',
+  ],
+  mid: [
+    'ورونا تقدمكم! مين وصل لنص التحدي؟ 🔥',
+    'نصيحة: متقارنش نفسك بحد غير نفسك الأسبوع اللي فات 📈',
+    'اللي خلص تمرين النهارده يحط 🔥 في الكومنتات — عايزين نشوف نار',
+    'مين محتاج شريك يشجعه؟ اعمل منشن لصاحبك يدخل معانا 👊',
+  ],
+  final: [
+    'آخر أيام في التحدي! شد حيلك، البوديوم مستنيك 🏁',
+    'اللي فاضلّه يوم أو يومين: دي أهم أيام في التحدي كله. متوقفش دلوقتي 💪',
+    'قربنا نخلص — كل يوم تمرين دلوقتي بيفرق في الترتيب النهائي 🏆',
+  ],
+} as const;
+
 export async function postDailyChallengePrompts() {
   const today = dayString();
   const open = await prisma.challenge.findMany({
     where: { kind: 'global', startsOn: { lte: today }, endsOn: { gte: today } },
-    select: { id: true, title: true },
+    select: { id: true, title: true, startsOn: true, endsOn: true },
   });
   if (!open.length) return;
   const dayIdx = Math.floor(Date.parse(`${today}T00:00:00Z`) / 86400000);
+  const dayNum = (d: string) => Math.floor(Date.parse(`${d}T00:00:00Z`) / 86400000);
+
   for (let i = 0; i < open.length; i++) {
-    const text = COACH_PROMPTS[(dayIdx + i) % COACH_PROMPTS.length];
-    await prisma.challengeMessage.create({ data: { challengeId: open[i].id, isCoach: true, text } }).catch(() => {});
+    const ch = open[i];
+    const total = Math.max(1, dayNum(ch.endsOn) - dayNum(ch.startsOn));
+    const elapsed = dayIdx - dayNum(ch.startsOn);
+    const left = dayNum(ch.endsOn) - dayIdx;
+    // Phase by where we actually are, then rotate within that phase.
+    const phase = left <= 3 ? 'final' : elapsed <= 2 ? 'start' : 'mid';
+    const pool = PHASE_PROMPTS[phase];
+    // General-purpose lines stay in the mid rotation so the room keeps variety
+    // across a 30-day run instead of repeating 4 messages.
+    const bank = phase === 'mid' ? [...pool, ...COACH_PROMPTS] : pool;
+    const text = bank[(dayIdx + i) % bank.length];
+    await prisma.challengeMessage.create({ data: { challengeId: ch.id, isCoach: true, text } }).catch(() => {});
+    void total;
   }
   console.log(`[weekly] coach prompt posted to ${open.length} room(s)`);
 }
