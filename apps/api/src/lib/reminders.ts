@@ -405,7 +405,9 @@ async function runCheck() {
     const yesterday = daysAgoStr(1);
     const ended = await prisma.challenge.findMany({
       where: { kind: 'global', endsOn: yesterday, prizeText: { not: null } },
-      include: { participants: { orderBy: { progress: 'desc' }, take: 3, where: { progress: { gt: 0 } } } },
+      // Ties broken by who reached the goal first, then who joined first —
+      // never by raw database order, which is what decided a cash podium before.
+      include: { participants: { orderBy: [{ progress: 'desc' }, { completedAt: { sort: 'asc', nulls: 'last' } }, { joinedAt: 'asc' }], take: 3, where: { progress: { gt: 0 } } } },
     });
     for (const ch of ended) {
       if (!ch.participants.length) continue;

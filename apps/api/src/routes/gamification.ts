@@ -173,7 +173,10 @@ gamificationRouter.get('/challenges/:id/leaderboard', async (req: AuthedRequest,
   const rows = await prisma.challengeParticipant.findMany({
     where: { challengeId: req.params.id },
     include: { user: { select: { firstName: true, lastName: true, avatarUrl: true } } },
-    orderBy: { progress: 'desc' },
+    // Same rule as the podium: equal progress is broken by WHO GOT THERE
+    // FIRST. Ordering on progress alone left ties to database order — with a
+    // capped goal most finishers tie, so a cash podium was effectively random.
+    orderBy: [{ progress: 'desc' }, { completedAt: { sort: 'asc', nulls: 'last' } }, { joinedAt: 'asc' }],
     take: 50,
   });
   res.json(
