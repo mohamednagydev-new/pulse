@@ -82,7 +82,7 @@ export default function AdminChallengeAudit() {
                     <span className="shrink-0 text-sm font-extrabold tabular-nums">{p.progress}</span>
                   </div>
                   <p className="mt-1 text-[11px] text-gray-500">
-                    {p.email} · account {p.accountAgeDays}d old · {p.totalXpInWindow} XP in window · max/day: {p.maxXpDay} XP, {p.maxWorkoutsDay} workouts, {p.maxCalDay} kcal · {p.entryCount} food entries · 📸 {p.proofCount} proof check-ins
+                    {p.email} · account {p.accountAgeDays}d old · {p.totalXpInWindow} XP in window · max/day: {p.maxXpDay} XP, {p.maxWorkoutsDay} workouts, {p.maxCalDay} kcal · {p.entryCount} food entries · 📸 {p.proofCount} proof check-ins · 👥 {p.referrals ?? 0} invited
                   </p>
                   {p.flags.length > 0 && (
                     <ul className="mt-1.5 space-y-0.5">
