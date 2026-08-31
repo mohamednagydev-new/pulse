@@ -94,6 +94,16 @@ export function openPlayStore() {
   window.location.href = PLAY_STORE_URL;
 }
 
+/** What to call the install action for THIS device, so the button says where
+ *  it actually goes instead of a vague "install". */
+export function installLabel(isAr: boolean): string {
+  if (isAndroid()) return isAr ? 'نزّل التطبيق من Google Play' : 'Get it on Google Play';
+  if (isIOS()) return APP_STORE_URL
+    ? (isAr ? 'نزّل التطبيق من App Store' : 'Download on the App Store')
+    : (isAr ? 'ضيف PULSE على شاشتك' : 'Add PULSE to your Home Screen');
+  return isAr ? 'نزّل تطبيق PULSE' : 'Install the PULSE app';
+}
+
 /** Where THIS platform's users can leave a store review — null when nowhere
  *  (desktop web, or iPhone before the App Store release goes live). */
 export function storeReviewUrl(): string | null {

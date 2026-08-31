@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Bookmark, Camera, Download, Dumbbell, ChevronRight, Flame, Gift, Loader2, Pencil, Ruler, TrendingUp, Medal, Settings, Weight } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { api, uploadWithAuth } from '../lib/api';
-import { installAvailable, openInstall } from '../lib/install';
+import { installAvailable, installLabel, openInstall, preferPlayStore, openPlayStore } from '../lib/install';
 import { toast } from '../lib/toast';
 import { MediaImage } from '../components/ui';
 import MenuDrawer from '../components/MenuDrawer';
@@ -400,14 +400,16 @@ export default function Profile() {
           viewport={{ once: true }}
           transition={spring}
           whileTap={{ scale: 0.97 }}
-          onClick={openInstall}
+          onClick={() => (preferPlayStore() ? openPlayStore() : openInstall())}
           className="mx-5 mt-5 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl bg-white p-4 text-start shadow-sm"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundImage: 'linear-gradient(135deg,#fb923c,#ea580c)' }}>
             <Download size={20} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold">{t('install.title')}</span>
+            {/* Name the destination: "Install" told an Android user nothing
+                about the Play app that actually exists for them. */}
+            <span className="block text-sm font-bold">{installLabel(i18n.language.startsWith('ar'))}</span>
             <span className="block text-xs text-gray-500">{t('install.desc')}</span>
           </span>
           <ChevronRight size={18} className="shrink-0 text-gray-300 rtl:rotate-180" />

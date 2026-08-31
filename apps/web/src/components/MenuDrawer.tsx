@@ -8,13 +8,14 @@ import {
   ChevronDown, Award, UserPlus, ShoppingBag, HelpCircle, Ticket, Building2,
   Bot, Gem, Salad, Handshake, Dumbbell, Users, Flame, HeartHandshake,
   TrendingUp, Medal, HeartPulse, ClipboardList, ScanLine, ListChecks, Music,
-  UtensilsCrossed, Trophy, Clapperboard, Crown, Search, type LucideIcon,
+  UtensilsCrossed, Trophy, Clapperboard, Crown, Search, Download, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../store/auth';
 import { MediaImage } from './ui';
 import { rankRing } from '../lib/levels';
 import LanguageToggle from './LanguageToggle';
 import { currentTheme, toggleTheme } from '../lib/theme';
+import { installAvailable, installLabel, openInstall, preferPlayStore, openPlayStore } from '../lib/install';
 
 type Item = { to: string; en: string; ar: string; icon: LucideIcon };
 type Group = { en: string; ar: string; items: Item[] };
@@ -294,6 +295,21 @@ export default function MenuDrawer({ className = '' }: { className?: string }) {
               </nav>
 
               <div className="shrink-0 space-y-2 border-t border-white/10 p-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}>
+                {/* Get-the-app row — the drawer is the only navigation on inner
+                    screens, and web users (especially fresh sign-ups) had no
+                    install affordance here at all. Gone once installed. */}
+                {installAvailable() && (
+                  <button
+                    onClick={() => {
+                      close();
+                      if (preferPlayStore()) openPlayStore();
+                      else openInstall();
+                    }}
+                    className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-extrabold text-ink transition active:scale-95"
+                  >
+                    <Download size={16} /> {installLabel(isAr)}
+                  </button>
+                )}
                 {/* Social channels — brand-colored, official icons. */}
                 <div className="flex items-center justify-between px-1">
                   <span className="text-xs font-bold text-white/50">{L('Follow PULSE', 'تابع PULSE')}</span>
