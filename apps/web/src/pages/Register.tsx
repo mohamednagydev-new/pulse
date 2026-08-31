@@ -8,7 +8,7 @@ import { API_BASE } from '../lib/api';
 import { track } from '../lib/track';
 import { utmMeta } from '../lib/utm';
 import { pixelRegistration } from '../lib/pixels';
-import { isInAppBrowser } from '../lib/install';
+import { isInAppBrowser, isNativeApp } from '../lib/install';
 import LanguageToggle from '../components/LanguageToggle';
 
 function GoogleLogo() {
@@ -115,8 +115,12 @@ export default function Register() {
 
           {/* Google FIRST — one tap beats six fields, especially arriving from a
               coach/gym invite link. Hidden in in-app webviews, where Google
-              blocks OAuth (403 disallowed_useragent) — same guard as Login. */}
-          {!isInAppBrowser() && (
+              blocks OAuth (403 disallowed_useragent) — same guard as Login.
+              AND hidden in the iOS App Store build: offering a third-party
+              login there triggers guideline 4.8 (must add Sign in with Apple).
+              Login.tsx was fixed first and this screen was missed, which cost
+              a second rejection — keep the two in lockstep. */}
+          {!isNativeApp() && !isInAppBrowser() && (
             <>
               <motion.button
                 type="button"

@@ -61,6 +61,13 @@ export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=onl
  *  badge flips to a live install link automatically. */
 export const APP_STORE_URL: string | null = null;
 
+/** Runtime check — evaluated on every call, unlike the module-load IS_NATIVE
+ *  constant. Used to gate anything that MUST be right inside the App Store
+ *  build (guideline 4.8), where being wrong costs a rejection cycle. */
+export function isNativeApp(): boolean {
+  return !!(window as any).Capacitor?.isNativePlatform?.();
+}
+
 export function isAndroid() {
   return /android/i.test(navigator.userAgent);
 }
