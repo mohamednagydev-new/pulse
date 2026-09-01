@@ -240,6 +240,48 @@ export default function ChallengeRoom() {
               <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
                 <div className="h-full rounded-full bg-gradient-to-r from-brand-blue to-blue-400" style={{ width: `${goalPct}%` }} />
               </div>
+              {/* "4/10" makes people do arithmetic against the end date. Say
+                  what's left, whether it's still reachable, and where they
+                  rank — the three questions the bar itself can't answer. */}
+              {(() => {
+                if (challenge.completedAt) {
+                  return (
+                    <p className="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-center text-xs font-extrabold text-emerald-700">
+                      🎉 {L('Done! You are in the draw and on the board.', 'خلّصت! انت في القرعة وعلى اللوحة.')}
+                    </p>
+                  );
+                }
+                const need = Math.max(0, challenge.goalValue - (challenge.myProgress ?? 0));
+                const left = daysLeft ?? 0;
+                const reachable = need <= left;
+                const myRank = rows.findIndex((r: any) => r.userId === meId) + 1;
+                return (
+                  <div className="mt-2 space-y-1.5">
+                    <p className={`rounded-xl px-3 py-2 text-center text-xs font-bold ${reachable ? 'bg-blue-50 text-brand-blue' : 'bg-gray-100 text-gray-500'}`}>
+                      {reachable
+                        ? L(`${need} more to go — ${left} days left. You can do it 💪`, `باقي لك ${need} ${need === 1 ? 'يوم' : 'أيام'} تمرين — وفاضل ${left} يوم. تقدر 💪`)
+                        : L('Keep going for the XP reward and your streak 💪', 'كمّل عشان مكافأة الـXP والسلسلة 💪')}
+                    </p>
+                    {myRank > 0 && (
+                      <p className="text-center text-[11px] font-bold text-gray-400">
+                        {L(`You're #${myRank} on the board`, `ترتيبك رقم ${myRank} في اللوحة`)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* The missing action. The card said "you're at 4/10" and then
+                  offered nothing to do about it. */}
+              {!challenge.completedAt && (
+                <button
+                  onClick={() => navigate('/programs')}
+                  className="btn-pill btn-primary mt-3 flex min-h-[46px] w-full items-center justify-center gap-2"
+                >
+                  <Zap size={16} /> {L('Train now', 'اتمرن دلوقتي')}
+                </button>
+              )}
+
               <div className="mt-2 flex items-center justify-between">
                 <p className="text-xs font-semibold text-emerald-600">
                   {challenge.completedAt ? t('challenge.completed') : t('challenge.joined')}
