@@ -1378,12 +1378,16 @@ adminRouter.post('/email/send', async (req: AuthedRequest, res) => {
  * ------------------------------------------------------------------ */
 
 adminRouter.get('/challenge-audit', async (_req, res) => {
-  const list = await prisma.challenge.findMany({
-    where: { kind: 'global' },
-    orderBy: { endsOn: 'desc' },
-    take: 30,
-    include: { _count: { select: { participants: true } } },
-  });
+  // PRIZE challenges first, always. Ordering everything by endsOn desc buried
+  // the live prize challenge under dozens of seasonal ones staged months (even
+  // years) ahead by polish-content — the one row with real money on it was off
+  // the end of the list.
+  const include = { _count: { select: { participants: true } } };
+  const [prized, others] = await Promise.all([
+    prisma.challenge.findMany({ where: { kind: 'global', prizeText: { not: null } }, orderBy: { endsOn: 'desc' }, take: 30, include }),
+    prisma.challenge.findMany({ where: { kind: 'global', prizeText: null }, orderBy: { endsOn: 'desc' }, take: 20, include }),
+  ]);
+  const list = [...prized, ...others];
   res.json(list.map((c) => ({
     id: c.id, title: c.title, goalType: c.goalType, goalValue: c.goalValue,
     startsOn: c.startsOn, endsOn: c.endsOn, prizeText: c.prizeText,
