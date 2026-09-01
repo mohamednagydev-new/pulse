@@ -67,7 +67,7 @@ export async function sendInstallNudge(claim: (key: string) => Promise<boolean>)
           '',
           'Did you know PULSE works as an app on your phone? No store, no download:',
           '',
-          '📱 Android: open pulse.geddo.online in Chrome → tap ⋮ → "Add to Home Screen"',
+          '📱 Android: download PULSE free from Google Play — real notifications, opens instantly.',
           '🍎 iPhone: open it in Safari → Share button ⬆️ → "Add to Home Screen"',
           '',
           'Then enable notifications inside the app — so workout reminders and friend challenges reach you on time 🔔',
@@ -79,7 +79,7 @@ export async function sendInstallNudge(claim: (key: string) => Promise<boolean>)
       `<div dir="${ar ? 'rtl' : 'ltr'}" style="font-family:sans-serif;line-height:1.7">` +
       bodyLines.map((l) => (l ? `<p style="margin:4px 0">${l.replace('https://pulse.geddo.online', '<a href="https://pulse.geddo.online" style="color:#f97316;font-weight:bold">pulse.geddo.online</a>')}</p>` : '')).join('') +
       `<p style="margin-top:20px;font-size:11px;color:#999"><a href="${unsub}" style="color:#999">${ar ? 'إلغاء الاشتراك في رسائل التذكير' : 'Unsubscribe from these emails'}</a></p></div>`;
-    await sendMail({ to: u.email, subject, html, text }).catch(() => {});
+    await sendMail({ to: u.email, subject, html, text, appLinks: true }).catch(() => {});
     sent++;
   }
   if (sent) console.log(`[instmail] install nudge sent to ${sent} push-less user(s)`);
@@ -142,7 +142,7 @@ export async function sendWeeklyDigest() {
       `<div dir="${ar ? 'rtl' : 'ltr'}" style="font-family:sans-serif;line-height:1.7">` +
       bodyLines.map((l) => (l ? `<p style="margin:4px 0">${l.replace('https://pulse.geddo.online', '<a href="https://pulse.geddo.online" style="color:#f97316;font-weight:bold">pulse.geddo.online</a>')}</p>` : '')).join('') +
       `<p style="margin-top:20px;font-size:11px;color:#999"><a href="${unsub}" style="color:#999">${ar ? 'إلغاء الاشتراك في رسائل التذكير' : 'Unsubscribe from these emails'}</a></p></div>`;
-    await sendMail({ to: u.email, subject, html, text }).catch(() => {});
+    await sendMail({ to: u.email, subject, html, text, appLinks: true }).catch(() => {});
     sent++;
   }
   console.log(`[digest] weekly win-back sent to ${sent} lapsed user(s)`);

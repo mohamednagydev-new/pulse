@@ -131,7 +131,7 @@ adminBroadcastRouter.post('/send', async (req: AuthedRequest, res) => {
         await notifyUser(req.userId!, { title, body, titleAr: title, bodyAr: body, url, type: 'general' });
       }
       if (channels.email) {
-        await sendMail({ to: me.email, subject: title, html: emailHtml(body, url), text: body });
+        await sendMail({ to: me.email, subject: title, html: emailHtml(body, url), text: body, appLinks: true });
       }
     } catch {
       return res.status(500).json({ error: 'Test send failed' });
@@ -165,7 +165,7 @@ adminBroadcastRouter.post('/send', async (req: AuthedRequest, res) => {
         if (channels.email && !u.emailOptOut) {
           try {
             // sendMail never throws — it reports success in the result.
-            const r = await sendMail({ to: u.email, subject: title, html: emailHtml(body, url), text: body });
+            const r = await sendMail({ to: u.email, subject: title, html: emailHtml(body, url), text: body, appLinks: true });
             if (r.ok) nEmail++;
             else nFail++;
           } catch {
@@ -188,7 +188,7 @@ adminBroadcastRouter.post('/send', async (req: AuthedRequest, res) => {
   if (copyTo) {
     sendMail({
       to: copyTo,
-      subject: `[COPY] ${title}`,
+      subject: `📋 Archive · ${title}`,
       html: `<p><i>Broadcast archive — audience ${users.length} (${note})</i></p><hr/>${emailHtml(body, url)}`,
       text: `Broadcast archive — audience ${users.length} (${note})\n\n${body}`,
     }).catch(() => {});

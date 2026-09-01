@@ -7,6 +7,42 @@ export interface MailOptions {
   text?: string;
   /** Growth outreach sets this to the agent's mailbox so replies flow to the inbox poller. */
   replyTo?: string;
+  /** Append the store-download footer. On for automated emails to OUR USERS —
+   *  every reminder is a chance to move a browser user onto the real app. Off
+   *  for B2B growth outreach, where an app badge reads as consumer spam. */
+  appLinks?: boolean;
+}
+
+export const PLAY_URL = 'https://play.google.com/store/apps/details?id=online.geddo.pulse';
+/** Set the day Apple approves — the footer starts offering it automatically. */
+export const APP_STORE_URL: string | null = null;
+const WEB_URL = 'https://pulse.geddo.online';
+
+/** Download footer appended to automated user emails. */
+export function appFooterHtml(ar = true): string {
+  const rows = [
+    `<a href="${PLAY_URL}" style="color:#f97316;font-weight:bold;text-decoration:none">${ar ? '📲 نزّل التطبيق من Google Play' : '📲 Get it on Google Play'}</a>`,
+    APP_STORE_URL
+      ? `<a href="${APP_STORE_URL}" style="color:#f97316;font-weight:bold;text-decoration:none">${ar ? '🍎 نزّله من App Store' : '🍎 Download on the App Store'}</a>`
+      : '',
+    `<a href="${WEB_URL}" style="color:#999;text-decoration:none">${ar ? '🌐 أو افتحه من المتصفح' : '🌐 or open it in your browser'}</a>`,
+  ].filter(Boolean);
+  return (
+    `<div dir="${ar ? 'rtl' : 'ltr'}" style="margin-top:22px;padding-top:14px;border-top:1px solid #eee;font-family:sans-serif;font-size:13px;line-height:2">` +
+    rows.map((r) => `<div>${r}</div>`).join('') +
+    '</div>'
+  );
+}
+
+export function appFooterText(ar = true): string {
+  const lines = [
+    '',
+    ar ? '— نزّل تطبيق PULSE —' : '— Get the PULSE app —',
+    `${ar ? 'أندرويد' : 'Android'}: ${PLAY_URL}`,
+    ...(APP_STORE_URL ? [`${ar ? 'آيفون' : 'iPhone'}: ${APP_STORE_URL}`] : []),
+    `${ar ? 'أو من المتصفح' : 'Or in your browser'}: ${WEB_URL}`,
+  ];
+  return lines.join('\n');
 }
 
 let transporter: Transporter | null = null;
@@ -48,19 +84,21 @@ export type MailResult = { ok: true } | { ok: false; reason: string };
  * reported "sent ✅" for months while SMTP was unconfigured because every
  * caller assumed resolve = delivered.
  */
-export async function sendMail({ to, subject, html, text, replyTo }: MailOptions): Promise<MailResult> {
+export async function sendMail({ to, subject, html, text, replyTo, appLinks }: MailOptions): Promise<MailResult> {
   const tx = getTransporter();
   if (!tx) {
     logFallback(to, subject, text ?? html);
     return { ok: false, reason: 'SMTP not configured (SMTP_HOST is not set in .env)' };
   }
+  const body = appLinks ? html + appFooterHtml() : html;
+  const plain = (text ?? stripHtml(html)) + (appLinks ? appFooterText() : '');
   try {
     await tx.sendMail({
       from: process.env.SMTP_FROM ?? process.env.SMTP_USER ?? 'no-reply@fit-it.local',
       to,
       subject,
-      html,
-      text: text ?? stripHtml(html),
+      html: body,
+      text: plain,
       ...(replyTo ? { replyTo } : {}),
     });
     return { ok: true };

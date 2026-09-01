@@ -60,6 +60,7 @@ async function sendDrip(user: { id: string; email: string; emailOptOut: boolean 
       subject: msg.title,
       text: `${msg.body}\n\n${link}`,
       html: `<p>${msg.body}</p><p><a href="${link}">${link}</a></p>`,
+      appLinks: true,
     }).catch(() => ({ ok: false as const, reason: 'threw' }));
     return true; // emailed
   }
