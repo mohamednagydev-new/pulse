@@ -205,9 +205,22 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
   ]);
   const blockedSet = new Set(blocks.flatMap((b) => [b.blockerId, b.blockedId]));
   blockedSet.delete(req.userId!);
-  const ids = Array.from(
-    new Set([req.userId!, ...following.map((f) => f.followingId), ...admins.map((a) => a.id)]),
-  ).filter((i) => !blockedSet.has(i));
+  const blockedIds = [...blockedSet];
+  void following; void admins; // kept for the counts below; the queries use relation filters
+
+  /** "Mine, admins', or someone I follow" as a RELATION filter rather than a
+   *  list of ids. Passing the ids inline expanded to one SQL variable each, and
+   *  SQLite caps variables per statement — an account following ~1000 people
+   *  blew past it and the whole community feed came back empty (reported live).
+   *  A subquery stays one statement no matter how many people you follow. */
+  const mineOrFollowedOrAdmin = {
+    OR: [
+      { userId: req.userId! },
+      { user: { is: { role: 'ADMIN' } } },
+      { user: { is: { followers: { some: { followerId: req.userId! } } } } },
+    ],
+  };
+  const notBlocked = blockedIds.length ? { userId: { notIn: blockedIds } } : {};
 
   const include = {
     user: { select: userSelect },
@@ -237,7 +250,7 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
       include,
     }),
     prisma.feedPost.findMany({
-      where: { userId: { in: ids }, ...kindWhere },
+      where: { ...mineOrFollowedOrAdmin, ...notBlocked, ...kindWhere },
       orderBy: { createdAt: 'desc' },
       take: 50,
       include,
@@ -255,7 +268,9 @@ socialRouter.get('/feed', async (req: AuthedRequest, res) => {
   if (filter !== 'progress' && rest.length < 30) {
     const discover = await prisma.feedPost.findMany({
       where: {
-        userId: { notIn: [...ids, ...blockedSet] },
+        // Same reasoning: "not me and not anyone I follow" as a subquery.
+        userId: { not: req.userId!, ...(blockedIds.length ? { notIn: blockedIds } : {}) },
+        user: { is: { followers: { none: { followerId: req.userId! } } } },
         pinned: false,
         createdAt: { gte: new Date(Date.now() - 7 * 86400000) },
         ...kindWhere,
@@ -610,31 +625,26 @@ socialRouter.get('/users/:id', async (req: AuthedRequest, res) => {
 socialRouter.get('/suggested', async (req: AuthedRequest, res) => {
   try {
   const me = req.userId!;
-  const [following, blocks] = await Promise.all([
-    prisma.follow.findMany({ where: { followerId: me }, select: { followingId: true } }),
-    prisma.block.findMany({
-      where: { OR: [{ blockerId: me }, { blockedId: me }] },
-      select: { blockerId: true, blockedId: true },
-    }),
-  ]);
-  const exclude = new Set<string>([
-    me,
-    ...following.map((f) => f.followingId),
-    ...blocks.flatMap((b) => [b.blockerId, b.blockedId]),
-  ]);
+  const blocks = await prisma.block.findMany({
+    where: { OR: [{ blockerId: me }, { blockedId: me }] },
+    select: { blockerId: true, blockedId: true },
+  });
+  const blockedIds = [...new Set(blocks.flatMap((b) => [b.blockerId, b.blockedId]))].filter((id) => id !== me);
 
-  // Filter in memory instead of `NOT IN (…the whole exclude list…)`. Prisma
-  // expands that to one SQL variable per id, and SQLite caps variables per
-  // statement — once an account followed enough people the query threw and the
-  // People screen showed "Something went wrong" (reported at ~1000 users).
-  // A window of 200 by XP always yields 10 after filtering.
-  const pool = await prisma.user.findMany({
-    where: { bannedAt: null },
+  // "People I do NOT already follow" as a subquery. Listing the followed ids
+  // inline hit SQLite's per-statement variable cap once an account followed
+  // ~1000 people, and a fixed XP window was no better: for a heavy follower
+  // every top user was already followed, so the strip came back empty.
+  const users = await prisma.user.findMany({
+    where: {
+      bannedAt: null,
+      id: { not: me, ...(blockedIds.length ? { notIn: blockedIds } : {}) },
+      followers: { none: { followerId: me } },
+    },
     select: { ...userSelect, currentStreak: true },
     orderBy: { xp: 'desc' },
-    take: 200,
+    take: 10,
   });
-  const users = pool.filter((u) => !exclude.has(u.id)).slice(0, 10);
 
   const statuses = await connectionStatusMap(me, users.map((u) => u.id));
   res.json(users.map((u) => ({ ...u, isFollowing: false, connectionStatus: statuses.get(u.id) ?? 'none' })));
