@@ -103,6 +103,20 @@ try {
     }
   }
 
+  # Keep the PREVIOUS build's hashed chunks aside before the build wipes them.
+  # vite must stay emptyOutDir:true (a clean dist = a clean PWA precache
+  # manifest — accumulation blew it up from 99 to 514 entries), so the
+  # carry-over happens HERE. Without it every deploy 404s the chunks that
+  # already-open apps and cached index.html files still ask for, which is the
+  # "empty chunk" error users hit right after a release.
+  $distPre = Join-Path $Root 'apps\web\dist\assets'
+  $carry = Join-Path $env:TEMP 'pulse-prev-assets'
+  if (Test-Path $carry) { Remove-Item $carry -Recurse -Force }
+  if (Test-Path $distPre) {
+    New-Item -ItemType Directory -Path $carry -Force | Out-Null
+    Copy-Item (Join-Path $distPre '*') $carry -Force -ErrorAction SilentlyContinue
+  }
+
   Step 'Building API + web (npm run build)'
   & $npm run build
   if ($LASTEXITCODE -ne 0) { Die 'npm run build failed.' }
@@ -113,6 +127,19 @@ try {
   Copy-Item (Join-Path $Root 'deploy\iis\web.config') (Join-Path $dist 'web.config') -Force
   Ok 'web.config in place.'
 
+  # Restore any old chunk the new build no longer produces, so a browser still
+  # holding the previous index.html can finish loading instead of erroring.
+  if (Test-Path $carry) {
+    $assetsDir = Join-Path $dist 'assets'
+    $restored = 0
+    Get-ChildItem $carry -File | ForEach-Object {
+      $target = Join-Path $assetsDir $_.Name
+      if (-not (Test-Path $target)) { Copy-Item $_.FullName $target -Force; $restored++ }
+    }
+    Remove-Item $carry -Recurse -Force
+    Ok ("Carried over " + $restored + " chunk(s) from the previous build (stale-client safety).")
+  }
+
   # SEO prerender: static crawlable HTML for every article/recipe + /blog hub.
   # IIS serves these physical files before the SPA fallback fires. Non-fatal:
   # the app works without them, they just stop being indexed until next deploy.
@@ -120,8 +147,8 @@ try {
   & $NodeExe (Join-Path $Root 'tools\prerender.mjs')
   if ($LASTEXITCODE -ne 0) { Ok 'Prerender FAILED - site still works, SEO pages skipped this deploy.' } else { Ok 'Static SEO pages written.' }
 
-  # Old builds' hashed chunks stay servable (emptyOutDir:false) so apps that
-  # were open during the deploy keep working; prune leftovers after 14 days.
+  # Carried-over chunks accumulate across deploys — prune ones untouched for
+  # 14 days so the folder cannot grow forever.
   $assets = Join-Path $dist 'assets'
   if (Test-Path $assets) {
     $old = Get-ChildItem $assets -File | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-14) }
