@@ -608,16 +608,43 @@ socialRouter.get('/users/:id', async (req: AuthedRequest, res) => {
 
 // ---- Suggested people (top by XP I don't follow) ----
 socialRouter.get('/suggested', async (req: AuthedRequest, res) => {
-  const following = await prisma.follow.findMany({ where: { followerId: req.userId! }, select: { followingId: true } });
-  const exclude = [req.userId!, ...following.map((f) => f.followingId)];
-  const users = await prisma.user.findMany({
-    where: { id: { notIn: exclude } },
+  try {
+  const me = req.userId!;
+  const [following, blocks] = await Promise.all([
+    prisma.follow.findMany({ where: { followerId: me }, select: { followingId: true } }),
+    prisma.block.findMany({
+      where: { OR: [{ blockerId: me }, { blockedId: me }] },
+      select: { blockerId: true, blockedId: true },
+    }),
+  ]);
+  const exclude = new Set<string>([
+    me,
+    ...following.map((f) => f.followingId),
+    ...blocks.flatMap((b) => [b.blockerId, b.blockedId]),
+  ]);
+
+  // Filter in memory instead of `NOT IN (…the whole exclude list…)`. Prisma
+  // expands that to one SQL variable per id, and SQLite caps variables per
+  // statement — once an account followed enough people the query threw and the
+  // People screen showed "Something went wrong" (reported at ~1000 users).
+  // A window of 200 by XP always yields 10 after filtering.
+  const pool = await prisma.user.findMany({
+    where: { bannedAt: null },
     select: { ...userSelect, currentStreak: true },
     orderBy: { xp: 'desc' },
-    take: 10,
+    take: 200,
   });
-  const statuses = await connectionStatusMap(req.userId!, users.map((u) => u.id));
+  const users = pool.filter((u) => !exclude.has(u.id)).slice(0, 10);
+
+  const statuses = await connectionStatusMap(me, users.map((u) => u.id));
   res.json(users.map((u) => ({ ...u, isFollowing: false, connectionStatus: statuses.get(u.id) ?? 'none' })));
+  } catch (e: any) {
+    // "Who to follow" is a nice-to-have strip. Failing it took down the whole
+    // People screen with "Something went wrong" — an empty list is a far better
+    // outcome, and the tagged log makes the real cause findable.
+    console.error('[social/suggested] failed:', e?.message, e?.code ?? '');
+    res.json([]);
+  }
 });
 
 // ---- Connections (buddy requests) ----
